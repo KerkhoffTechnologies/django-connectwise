@@ -8,7 +8,6 @@ from django.core.management import call_command
 
 settings.configure(DEBUG=True,
                    INSTALLED_APPS=(
-                       #'django.contrib.contenttypes',
                        'djconnectwise',
                        'easy_thumbnails',
                    ),

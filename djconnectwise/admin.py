@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 
-from django import forms
 from django.contrib import admin
 from .models import TicketStatus, ServiceTicket, ServiceProvider, Member, Company
 
@@ -20,7 +19,7 @@ class ServiceProviderAdmin(admin.ModelAdmin):
 
 class MemberAdmin(admin.ModelAdmin):
     model = Member
-    list_display = ('user', 'service_provider')
+    list_display = ('service_provider',)
 
 
 class CompanyAdmin(admin.ModelAdmin):

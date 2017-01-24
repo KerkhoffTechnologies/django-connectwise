@@ -21,7 +21,7 @@ TODO: update this when it's on pypi
 
 TODO
 
-* Uses easy-thumbnails- can use settings from that project to change behaviour
+* Uses easy-thumbnails- can use settings from that project to change behaviour http://easy-thumbnails.readthedocs.io/en/stable/ref/settings/. Also must add to INSTALLED_APPS (I think)
 
 ## License
 
