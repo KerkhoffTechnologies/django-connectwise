@@ -15,9 +15,13 @@ As of January 2017, this project is highly volatile. Expect lots of changes.
     cd django-connectwise
     python setup.py install
 
+TODO: update this when it's on pypi
+
 ## Documentation
 
 TODO
+
+* Uses easy-thumbnails- can use settings from that project to change behaviour
 
 ## License
 
@@ -25,4 +29,4 @@ TODO
 
 ## Copyright
 
-© 2016 Kerkhoff Technologies Inc.
+© 2017 Kerkhoff Technologies Inc.
