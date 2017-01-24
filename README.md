@@ -21,8 +21,8 @@ TODO
 
 ## License
 
-(MIT)[LICENSE]
+[MIT](LICENSE)
 
 ## Copyright
 
-© 2015 Kerkhoff Technologies Inc.
+© 2016 Kerkhoff Technologies Inc.

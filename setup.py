@@ -7,7 +7,7 @@ import djconnectwise
 LONG_DESCRIPTION = open('README.md').read()
 
 setup(
-    name="djconnectwise",
+    name="django-connectwise",
     version=djconnectwise.__version__,
     description='Django app for working with ConnectWise. Defines models (tickets, members, companies, etc.) and callbacks.',
     long_description=LONG_DESCRIPTION,
@@ -15,13 +15,12 @@ setup(
     packages=find_packages(),
     author='Kerkhoff Technologies Inc.',
     author_email='matt@kerkhofftech.ca',
-    url="https://github.com/KerkhoffTechnologies/djconnectwise",
+    url="https://github.com/KerkhoffTechnologies/django-connectwise",
     include_package_data=True,
     test_suite='djconnectwise.tests.runtests.runtests',
     license='MIT',
     install_requires=[
         'requests',
         'django',
-        'dateutil',
     ],
 )
