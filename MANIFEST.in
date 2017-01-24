@@ -1,0 +1,3 @@
+recursive-include djconnectwise *
+include README.md
+exclude *.orig *.pyc *.wpr *.swp
