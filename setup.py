@@ -4,7 +4,7 @@
 from setuptools import setup, find_packages
 import djconnectwise
 
-LONG_DESCRIPTION = open('README.md').read()
+LONG_DESCRIPTION = open('README.rst').read()
 
 setup(
     name="django-connectwise",
@@ -29,4 +29,16 @@ setup(
     ],
     zip_safe=False,  # Django likes to inspect apps for /migrations directories,
     # and can't if package is installed as a egg. zip_safe=False disables installation as an egg.
+    classifiers=[
+        'Environment :: Web Environment',
+        'Framework :: Django',
+        'Intended Audience :: Developers',
+        'License :: OSI Approved :: MIT License',
+        'Operating System :: OS Independent',
+        'Programming Language :: Python',
+        'Programming Language :: Python :: 3',
+        'Topic :: Internet :: WWW/HTTP',
+        'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
+        'Development Status :: 3 - Alpha',
+    ],
 )
