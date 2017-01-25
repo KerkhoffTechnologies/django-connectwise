@@ -193,39 +193,27 @@ class ServiceTicketSynchronizer(object):
 
         for api_member in members_json:
             username = api_member['identifier']
-            member_qset = Member.objects.filter(user__username=username)
+            member_qset = Member.objects.filter(identifier=username)
             if member_qset.exists():
                 member = member_qset.first()
-                log.info('Update Member: {0}'.format(member.user.username))
+                log.info('Update Member: {0}'.format(member.identifier))
             else:
                 member = Member.create_member(
-                    username,
-                    settings.MEMBER_DEFAULT_PASSWORD,
+                    api_member,
                     self.service_provider
                 )
-                log.info('Create Member: {0}'.format(member.user.username))
+                log.info('Create Member: {0}'.format(member.identifier))
 
             # only update the avatar if the member profile was updated since last sync
-
             member_last_updated = parse(api_member['_info']['lastUpdated'])
 
             if not self.last_sync_job or member_last_updated > self.last_sync_job.start_time:
                 api_member_image = self.system_client.get_member_image_by_identifier(username)
-                member.avatar.save('%s.jpg'%(uuid.uuid4(),), ContentFile(api_member_image))
+                member.avatar.save('%s.jpg' % (uuid.uuid4(),), ContentFile(api_member_image))
                 pass
 
-            user = member.user
-            user.name = api_member['firstName'] + ' ' + api_member['lastName']
-            name_tokens = user.name.split(' ')
-            if name_tokens:
-                user.first_name = name_tokens[0]
-                user.last_name = ' '.join(name_tokens[1:])
-
-            user.email = api_member['officeEmail']
-            user.active = not api_member['inactiveFlag']
-            user.save()
             member.save()
-            self.members_map[member.user.username] = member
+            self.members_map[member.identifier] = member
 
     def sync_ticket(self, api_ticket, service_provider):
         """

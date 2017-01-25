@@ -25,6 +25,7 @@ setup(
         'django',
         'easy-thumbnails',
         'python-dateutil',
+        'django-braces',
     ],
     zip_safe=False,  # Django likes to inspect apps for /migrations directories,
     # and can't if package is installed as a egg. zip_safe=False disables installation as an egg.

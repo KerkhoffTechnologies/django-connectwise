@@ -1,4 +1,16 @@
 # -*- coding: utf-8 -*-
+from braces import views
+from djconnectwise.sync import ServiceTicketSynchronizer
+import json
+from .models import ServiceTicket, ServiceProvider
+from django.http import HttpResponse
+import logging
+from django.views.generic import FormView,View,TemplateView
+
+
+log = logging.getLogger('kanban')
+
+
 class ConnectWiseCallBackView(views.CsrfExemptMixin, views.JsonRequestResponseMixin, View):
     def __init__(self, *args, **kwargs):
         super(ConnectWiseCallBackView, self).__init__(*args, **kwargs)

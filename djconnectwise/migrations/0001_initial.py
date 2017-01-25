@@ -15,7 +15,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='CallBackEntry',
             fields=[
-                ('id', models.AutoField(primary_key=True, auto_created=True, serialize=False, verbose_name='ID')),
+                ('id', models.AutoField(auto_created=True, serialize=False, verbose_name='ID', primary_key=True)),
                 ('callback_type', models.CharField(max_length=25)),
                 ('url', models.CharField(max_length=255)),
                 ('level', models.CharField(max_length=255)),
@@ -28,7 +28,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Company',
             fields=[
-                ('id', models.AutoField(primary_key=True, auto_created=True, serialize=False, verbose_name='ID')),
+                ('id', models.AutoField(auto_created=True, serialize=False, verbose_name='ID', primary_key=True)),
                 ('created', django_extensions.db.fields.CreationDateTimeField(auto_now_add=True, verbose_name='created')),
                 ('modified', django_extensions.db.fields.ModificationDateTimeField(auto_now=True, verbose_name='modified')),
                 ('company_name', models.CharField(null=True, blank=True, max_length=250)),
@@ -53,15 +53,15 @@ class Migration(migrations.Migration):
                 ('lastupdated', models.CharField(null=True, blank=True, max_length=250)),
             ],
             options={
+                'get_latest_by': 'modified',
                 'ordering': ('-modified', '-created'),
                 'abstract': False,
-                'get_latest_by': 'modified',
             },
         ),
         migrations.CreateModel(
             name='ConnectWiseBoard',
             fields=[
-                ('id', models.AutoField(primary_key=True, auto_created=True, serialize=False, verbose_name='ID')),
+                ('id', models.AutoField(auto_created=True, serialize=False, verbose_name='ID', primary_key=True)),
                 ('created', django_extensions.db.fields.CreationDateTimeField(auto_now_add=True, verbose_name='created')),
                 ('modified', django_extensions.db.fields.ModificationDateTimeField(auto_now=True, verbose_name='modified')),
                 ('board_id', models.PositiveSmallIntegerField()),
@@ -75,7 +75,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='ConnectWiseBoardStatus',
             fields=[
-                ('id', models.AutoField(primary_key=True, auto_created=True, serialize=False, verbose_name='ID')),
+                ('id', models.AutoField(auto_created=True, serialize=False, verbose_name='ID', primary_key=True)),
                 ('created', django_extensions.db.fields.CreationDateTimeField(auto_now_add=True, verbose_name='created')),
                 ('modified', django_extensions.db.fields.ModificationDateTimeField(auto_now=True, verbose_name='modified')),
                 ('board_id', models.PositiveSmallIntegerField()),
@@ -89,21 +89,26 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Member',
             fields=[
-                ('id', models.AutoField(primary_key=True, auto_created=True, serialize=False, verbose_name='ID')),
+                ('id', models.AutoField(auto_created=True, serialize=False, verbose_name='ID', primary_key=True)),
                 ('created', django_extensions.db.fields.CreationDateTimeField(auto_now_add=True, verbose_name='created')),
                 ('modified', django_extensions.db.fields.ModificationDateTimeField(auto_now=True, verbose_name='modified')),
-                ('avatar', easy_thumbnails.fields.ThumbnailerImageField(help_text='Member Avatar', verbose_name='Member Avatar', null=True, blank=True, upload_to='')),
+                ('first_name', models.CharField(max_length=30)),
+                ('last_name', models.CharField(max_length=30)),
+                ('identifier', models.CharField(max_length=15)),
+                ('office_email', models.EmailField(max_length=250)),
+                ('inactive', models.BooleanField(default=False)),
+                ('avatar', easy_thumbnails.fields.ThumbnailerImageField(null=True, upload_to='', blank=True, verbose_name='Member Avatar', help_text='Member Avatar')),
             ],
             options={
+                'get_latest_by': 'modified',
                 'ordering': ('-modified', '-created'),
                 'abstract': False,
-                'get_latest_by': 'modified',
             },
         ),
         migrations.CreateModel(
             name='Project',
             fields=[
-                ('id', models.AutoField(primary_key=True, auto_created=True, serialize=False, verbose_name='ID')),
+                ('id', models.AutoField(auto_created=True, serialize=False, verbose_name='ID', primary_key=True)),
                 ('created', django_extensions.db.fields.CreationDateTimeField(auto_now_add=True, verbose_name='created')),
                 ('modified', django_extensions.db.fields.ModificationDateTimeField(auto_now=True, verbose_name='modified')),
                 ('name', models.CharField(max_length=200)),
@@ -111,32 +116,32 @@ class Migration(migrations.Migration):
                 ('project_href', models.CharField(max_length=200)),
             ],
             options={
+                'get_latest_by': 'modified',
                 'ordering': ('-modified', '-created'),
                 'abstract': False,
-                'get_latest_by': 'modified',
             },
         ),
         migrations.CreateModel(
             name='ServiceProvider',
             fields=[
-                ('id', models.AutoField(primary_key=True, auto_created=True, serialize=False, verbose_name='ID')),
+                ('id', models.AutoField(auto_created=True, serialize=False, verbose_name='ID', primary_key=True)),
                 ('created', django_extensions.db.fields.CreationDateTimeField(auto_now_add=True, verbose_name='created')),
                 ('modified', django_extensions.db.fields.ModificationDateTimeField(auto_now=True, verbose_name='modified')),
                 ('title', models.CharField(verbose_name='title', max_length=255)),
                 ('description', models.TextField(null=True, blank=True, verbose_name='description')),
-                ('slug', django_extensions.db.fields.AutoSlugField(verbose_name='slug', editable=False, populate_from='title', blank=True)),
-                ('logo', easy_thumbnails.fields.ThumbnailerImageField(help_text='Service Provider Logo', verbose_name='Service Provider Logo', null=True, blank=True, upload_to='')),
+                ('slug', django_extensions.db.fields.AutoSlugField(blank=True, editable=False, verbose_name='slug', populate_from='title')),
+                ('logo', easy_thumbnails.fields.ThumbnailerImageField(null=True, upload_to='', blank=True, verbose_name='Service Provider Logo', help_text='Service Provider Logo')),
             ],
             options={
+                'get_latest_by': 'modified',
                 'ordering': ('-modified', '-created'),
                 'abstract': False,
-                'get_latest_by': 'modified',
             },
         ),
         migrations.CreateModel(
             name='ServiceTicket',
             fields=[
-                ('id', models.AutoField(primary_key=True, auto_created=True, serialize=False, verbose_name='ID')),
+                ('id', models.AutoField(auto_created=True, serialize=False, verbose_name='ID', primary_key=True)),
                 ('created', django_extensions.db.fields.CreationDateTimeField(auto_now_add=True, verbose_name='created')),
                 ('modified', django_extensions.db.fields.ModificationDateTimeField(auto_now=True, verbose_name='modified')),
                 ('closed_flag', models.NullBooleanField()),
@@ -153,8 +158,8 @@ class Migration(migrations.Migration):
                 ('required_date_utc', models.DateTimeField(null=True, blank=True)),
                 ('closed_date_utc', models.DateTimeField(null=True, blank=True)),
                 ('site_name', models.CharField(null=True, blank=True, max_length=250)),
-                ('budget_hours', models.DecimalField(decimal_places=2, null=True, max_digits=6, blank=True)),
-                ('actual_hours', models.DecimalField(decimal_places=2, null=True, max_digits=6, blank=True)),
+                ('budget_hours', models.DecimalField(null=True, blank=True, decimal_places=2, max_digits=6)),
+                ('actual_hours', models.DecimalField(null=True, blank=True, decimal_places=2, max_digits=6)),
                 ('approved', models.NullBooleanField()),
                 ('closed_by', models.CharField(null=True, blank=True, max_length=250)),
                 ('resolve_mins', models.IntegerField(null=True, blank=True)),
@@ -174,32 +179,32 @@ class Migration(migrations.Migration):
                 ('board_name', models.CharField(null=True, blank=True, max_length=250)),
                 ('board_id', models.IntegerField(null=True, blank=True)),
                 ('board_status_id', models.IntegerField(null=True, blank=True)),
-                ('company', models.ForeignKey(null=True, related_name='company_tickets', blank=True, to='djconnectwise.Company')),
+                ('company', models.ForeignKey(blank=True, null=True, related_name='company_tickets', to='djconnectwise.Company')),
             ],
             options={
-                'verbose_name': 'Service Ticket',
                 'verbose_name_plural': 'Service Tickets',
+                'verbose_name': 'Service Ticket',
             },
         ),
         migrations.CreateModel(
             name='ServiceTicketAssignment',
             fields=[
-                ('id', models.AutoField(primary_key=True, auto_created=True, serialize=False, verbose_name='ID')),
+                ('id', models.AutoField(auto_created=True, serialize=False, verbose_name='ID', primary_key=True)),
                 ('created', django_extensions.db.fields.CreationDateTimeField(auto_now_add=True, verbose_name='created')),
                 ('modified', django_extensions.db.fields.ModificationDateTimeField(auto_now=True, verbose_name='modified')),
                 ('member', models.ForeignKey(to='djconnectwise.Member')),
                 ('service_ticket', models.ForeignKey(to='djconnectwise.ServiceTicket')),
             ],
             options={
+                'get_latest_by': 'modified',
                 'ordering': ('-modified', '-created'),
                 'abstract': False,
-                'get_latest_by': 'modified',
             },
         ),
         migrations.CreateModel(
             name='SyncJob',
             fields=[
-                ('id', models.AutoField(primary_key=True, auto_created=True, serialize=False, verbose_name='ID')),
+                ('id', models.AutoField(auto_created=True, serialize=False, verbose_name='ID', primary_key=True)),
                 ('start_time', models.DateTimeField(auto_now_add=True)),
                 ('end_time', models.DateTimeField(null=True, blank=True)),
             ],
@@ -207,57 +212,57 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='TicketPriority',
             fields=[
-                ('id', models.AutoField(primary_key=True, auto_created=True, serialize=False, verbose_name='ID')),
+                ('id', models.AutoField(auto_created=True, serialize=False, verbose_name='ID', primary_key=True)),
                 ('created', django_extensions.db.fields.CreationDateTimeField(auto_now_add=True, verbose_name='created')),
                 ('modified', django_extensions.db.fields.ModificationDateTimeField(auto_now=True, verbose_name='modified')),
                 ('title', models.CharField(verbose_name='title', max_length=255)),
                 ('description', models.TextField(null=True, blank=True, verbose_name='description')),
             ],
             options={
+                'get_latest_by': 'modified',
                 'ordering': ('-modified', '-created'),
                 'abstract': False,
-                'get_latest_by': 'modified',
             },
         ),
         migrations.CreateModel(
             name='TicketStatus',
             fields=[
-                ('id', models.AutoField(primary_key=True, auto_created=True, serialize=False, verbose_name='ID')),
+                ('id', models.AutoField(auto_created=True, serialize=False, verbose_name='ID', primary_key=True)),
                 ('created', django_extensions.db.fields.CreationDateTimeField(auto_now_add=True, verbose_name='created')),
                 ('modified', django_extensions.db.fields.ModificationDateTimeField(auto_now=True, verbose_name='modified')),
-                ('status_id', models.IntegerField(unique=True, null=True, blank=True)),
+                ('status_id', models.IntegerField(null=True, blank=True, unique=True)),
                 ('ticket_status', models.CharField(null=True, blank=True, max_length=250)),
                 ('status_name', models.CharField(null=True, blank=True, max_length=250)),
             ],
             options={
+                'get_latest_by': 'modified',
                 'ordering': ('-modified', '-created'),
                 'abstract': False,
-                'get_latest_by': 'modified',
             },
         ),
         migrations.AddField(
             model_name='serviceticket',
             name='members',
-            field=models.ManyToManyField(related_name='member_tickets', through='djconnectwise.ServiceTicketAssignment', to='djconnectwise.Member'),
+            field=models.ManyToManyField(related_name='member_tickets', to='djconnectwise.Member', through='djconnectwise.ServiceTicketAssignment'),
         ),
         migrations.AddField(
             model_name='serviceticket',
             name='priority',
-            field=models.ForeignKey(null=True, blank=True, to='djconnectwise.TicketPriority'),
+            field=models.ForeignKey(blank=True, null=True, to='djconnectwise.TicketPriority'),
         ),
         migrations.AddField(
             model_name='serviceticket',
             name='project',
-            field=models.ForeignKey(null=True, related_name='project_tickets', blank=True, to='djconnectwise.Project'),
+            field=models.ForeignKey(blank=True, null=True, related_name='project_tickets', to='djconnectwise.Project'),
         ),
         migrations.AddField(
             model_name='serviceticket',
             name='status',
-            field=models.ForeignKey(null=True, related_name='status_tickets', blank=True, to='djconnectwise.TicketStatus'),
+            field=models.ForeignKey(blank=True, null=True, related_name='status_tickets', to='djconnectwise.TicketStatus'),
         ),
         migrations.AddField(
             model_name='member',
             name='service_provider',
-            field=models.ForeignKey(to='djconnectwise.ServiceProvider', related_name='members'),
+            field=models.ForeignKey(related_name='members', to='djconnectwise.ServiceProvider'),
         ),
     ]

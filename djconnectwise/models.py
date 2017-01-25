@@ -60,7 +60,7 @@ class ServiceProvider(TimeStampedModel, TitleSlugDescriptionModel):
     """
     A firm that provides IT services
     """
-    logo = ThumbnailerImageField(null=True, blank=True, \
+    logo = ThumbnailerImageField(null=True, blank=True,
                                  verbose_name=_('Service Provider Logo'),
                                  help_text=_('Service Provider Logo'))
 
@@ -69,11 +69,13 @@ class ServiceProvider(TimeStampedModel, TitleSlugDescriptionModel):
 
 
 class Member(TimeStampedModel):
+    first_name = models.CharField(max_length=30, blank=False)
+    last_name = models.CharField(max_length=30, blank=False)
+    identifier = models.CharField(max_length=15, blank=False)  # This is the CW username
+    office_email = models.EmailField(max_length=250)
+    inactive = models.BooleanField(default=False)
     service_provider = models.ForeignKey('ServiceProvider', related_name='members')
-    #user = models.OneToOneField(User)
-    avatar = ThumbnailerImageField(null=True, blank=True, \
-                                 verbose_name=_('Member Avatar'),
-                                 help_text=_('Member Avatar'))
+    avatar = ThumbnailerImageField(null=True, blank=True, verbose_name=_('Member Avatar'), help_text=_('Member Avatar'))
 
     def get_initials(self):
         name_segs = str(self).split(' ')
@@ -87,17 +89,19 @@ class Member(TimeStampedModel):
         return initial
 
     def __str__(self):
-        return self.user.get_full_name() or self.user.username
+        return '{0} {1}'.format(self.first_name, self.last_name)
 
     @staticmethod
-    def create_member(username, password, service_provider):
-        """
-        Creates a new Member/User pair and registers the account with
-        the system.
-        """
-        # TODO: send member created signal
-        member = Member.objects.create(service_provider=service_provider)
-        return member
+    def create_member(api_member, service_provider):
+        m = Member()
+        m.first_name = api_member['firstName']
+        m.last_name = api_member['lastName']
+        m.identifier = api_member['identifier']
+        m.office_email = api_member['officeEmail']
+        m.inactive = api_member['inactiveFlag']
+        m.service_provider = service_provider
+        m.save()
+        return m
 
 
 class Company(TimeStampedModel):
