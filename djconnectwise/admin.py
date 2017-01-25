@@ -2,7 +2,7 @@
 
 
 from django.contrib import admin
-from .models import TicketStatus, ServiceTicket, ServiceProvider, Member, Company
+from .models import TicketStatus, ServiceTicket, Member, Company
 
 
 class TicketStatusAdmin(admin.ModelAdmin):
@@ -11,15 +11,8 @@ class TicketStatusAdmin(admin.ModelAdmin):
     search_fields = ['status_name']
 
 
-class ServiceProviderAdmin(admin.ModelAdmin):
-    model = ServiceProvider
-    list_display = ('title',)
-    search_fields = ['title']
-
-
 class MemberAdmin(admin.ModelAdmin):
     model = Member
-    list_display = ('service_provider',)
 
 
 class CompanyAdmin(admin.ModelAdmin):
@@ -39,7 +32,6 @@ class ServiceTicketAdmin(admin.ModelAdmin):
         return ', '.join([str(m) for m in obj.members.all()])
 
 admin.site.register(TicketStatus, TicketStatusAdmin)
-admin.site.register(ServiceProvider, ServiceProviderAdmin)
 admin.site.register(Member, MemberAdmin)
 admin.site.register(ServiceTicket, ServiceTicketAdmin)
 admin.site.register(Company, CompanyAdmin)

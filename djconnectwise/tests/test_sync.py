@@ -8,7 +8,7 @@ from django.core.urlresolvers import reverse
 from django.conf import settings
 from test_plus.test import TestCase
 
-from djconnectwise.models import ServiceTicket, ServiceProvider, TicketStatus
+from djconnectwise.models import ServiceTicket, TicketStatus
 from ..sync import (
     ServiceTicketSynchronizer
 )
@@ -24,11 +24,10 @@ class TestServiceTicketSynchronizer(TestCase):
         setup.init()
         self.synchronizer = ServiceTicketSynchronizer()
         self.synchronizer.sync_tickets()
-        self.provider = ServiceProvider.objects.all().first()
 
     def _get_local_and_api_ticket(self):
         api_ticket = self.synchronizer.service_client.get_tickets(page=random.randrange(1, 100, 2), page_size=1)[0]
-        local_ticket, created = self.synchronizer.sync_ticket(api_ticket, self.provider)
+        local_ticket, created = self.synchronizer.sync_ticket(api_ticket)
         return local_ticket, api_ticket
 
     def test_sync_tickets(self):
@@ -67,7 +66,6 @@ class TestMemberSynchronization(TestCase):
     def setUp(self):
         setup.init()
         self.synchronizer = ServiceTicketSynchronizer()
-        self.provider = ServiceProvider.objects.all().first()
 
     def test_sync_member(self):
         
@@ -83,13 +81,13 @@ class TestMemberSynchronization(TestCase):
 
         if api_members:
 
-            new_member = self.synchronizer.sync_member(api_members[0]['identifier'],self.provider)
+            new_member = self.synchronizer.sync_member(api_members[0]['identifier'])
             user = new_member.user
             original_name = new_member.user.name
             user.name = 'some name'
             user.save()
             
-            new_member = self.synchronizer.sync_member(api_members[0]['identifier'],self.provider)
+            new_member = self.synchronizer.sync_member(api_members[0]['identifier'])
 
             #verify that the fields are syncing as expected
             self.assertEqual(new_member.user.name,original_name)
@@ -97,6 +95,3 @@ class TestMemberSynchronization(TestCase):
         else:
             raise ValueError('No members to test')
         # self.synchronizer.sync_member(username,self.provider)
-        
-
-        

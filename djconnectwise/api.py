@@ -3,7 +3,7 @@ import logging
 from django.conf import settings
 
 
-log = logging.getLogger('djconnectwise')
+log = logging.getLogger('djconnectwise.api')
 logging.basicConfig(level=logging.INFO)
 
 

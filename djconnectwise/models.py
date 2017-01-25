@@ -56,25 +56,12 @@ RECORD_TYPES = Choices(
     )
 
 
-class ServiceProvider(TimeStampedModel, TitleSlugDescriptionModel):
-    """
-    A firm that provides IT services
-    """
-    logo = ThumbnailerImageField(null=True, blank=True,
-                                 verbose_name=_('Service Provider Logo'),
-                                 help_text=_('Service Provider Logo'))
-
-    def __str__(self):
-        return self.title
-
-
 class Member(TimeStampedModel):
     first_name = models.CharField(max_length=30, blank=False)
     last_name = models.CharField(max_length=30, blank=False)
     identifier = models.CharField(max_length=15, blank=False)  # This is the CW username
     office_email = models.EmailField(max_length=250)
     inactive = models.BooleanField(default=False)
-    service_provider = models.ForeignKey('ServiceProvider', related_name='members')
     avatar = ThumbnailerImageField(null=True, blank=True, verbose_name=_('Member Avatar'), help_text=_('Member Avatar'))
 
     def get_initials(self):
@@ -92,14 +79,13 @@ class Member(TimeStampedModel):
         return '{0} {1}'.format(self.first_name, self.last_name)
 
     @staticmethod
-    def create_member(api_member, service_provider):
+    def create_member(api_member):
         m = Member()
         m.first_name = api_member['firstName']
         m.last_name = api_member['lastName']
         m.identifier = api_member['identifier']
         m.office_email = api_member['officeEmail']
         m.inactive = api_member['inactiveFlag']
-        m.service_provider = service_provider
         m.save()
         return m
 
@@ -125,6 +111,9 @@ class Company(TimeStampedModel):
     defaultbillingcontactid = models.IntegerField(blank=True, null=True)
     updatedby = models.CharField(blank=True, null=True, max_length=250)
     lastupdated = models.CharField(blank=True, null=True, max_length=250)
+
+    class Meta:
+        verbose_name_plural = 'companies'
 
     def __str__(self):
         return self.get_company_identifier()
@@ -158,6 +147,9 @@ class TicketStatus(TimeStampedModel):
     # might ditch this field, it seems to always contain same value as status_name
     ticket_status = models.CharField(blank=True, null=True, max_length=250)
     status_name = models.CharField(blank=True, null=True, max_length=250)
+
+    class Meta:
+        verbose_name_plural = 'ticket statuses'
 
     def __str__(self):
         return self.status_name

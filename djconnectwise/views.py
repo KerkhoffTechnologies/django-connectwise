@@ -2,7 +2,7 @@
 from braces import views
 from djconnectwise.sync import ServiceTicketSynchronizer
 import json
-from .models import ServiceTicket, ServiceProvider
+from .models import ServiceTicket
 from django.http import HttpResponse
 import logging
 from django.views.generic import FormView,View,TemplateView
@@ -37,7 +37,6 @@ class ServiceTicketCallBackView(ConnectWiseCallBackView):
                 log.info('Ticket Updated CallBack: %d' % ticket_id)
                 local_service_ticket = self.synchronizer.sync_ticket(
                     service_ticket,
-                    ServiceProvider.objects.all().first()
                 )
 
         # we need not return anything to connectwise

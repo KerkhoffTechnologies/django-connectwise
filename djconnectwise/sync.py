@@ -10,9 +10,8 @@ from django.utils import timezone
 
 
 from djconnectwise.api import CompanyAPIRestClient, ServiceAPIRestClient, SystemAPIClient
-from djconnectwise.models import (ServiceTicket, Company, ConnectWiseBoardStatus,
-    TicketStatus, ServiceTicketAssignment)
-from djconnectwise.models import TicketPriority, Member, ServiceProvider, Project
+from djconnectwise.models import ServiceTicket, Company, ConnectWiseBoardStatus, TicketStatus, ServiceTicketAssignment
+from djconnectwise.models import TicketPriority, Member, Project
 
 from djconnectwise.models import SyncJob
 
@@ -45,7 +44,6 @@ class ServiceTicketSynchronizer(object):
         self.service_client = ServiceAPIRestClient(extra_conditions=extra_conditions)
         self.company_client = CompanyAPIRestClient()
         self.system_client = SystemAPIClient()
-        self.service_provider = self.load_service_provider()
 
         # we need to remove the underscores to ensure an accurate
         # lookup of the normalized api fieldnames
@@ -198,10 +196,7 @@ class ServiceTicketSynchronizer(object):
                 member = member_qset.first()
                 log.info('Update Member: {0}'.format(member.identifier))
             else:
-                member = Member.create_member(
-                    api_member,
-                    self.service_provider
-                )
+                member = Member.create_member(api_member)
                 log.info('Create Member: {0}'.format(member.identifier))
 
             # only update the avatar if the member profile was updated since last sync
@@ -215,7 +210,7 @@ class ServiceTicketSynchronizer(object):
             member.save()
             self.members_map[member.identifier] = member
 
-    def sync_ticket(self, api_ticket, service_provider):
+    def sync_ticket(self, api_ticket):
         """
         Creates a new local instance of the supplied ConnectWise SOAP ServiceTicket instance
         NOTE:
@@ -248,7 +243,6 @@ class ServiceTicketSynchronizer(object):
 
         service_ticket.company = self.get_or_create_company(api_ticket['company']['id'])
         service_ticket.priority = self.get_or_create_ticket_priority(api_ticket)
-        service_ticket.provider = service_provider
         service_ticket.status = new_ticket_status
         service_ticket.project = self.get_or_create_project(api_ticket)
         service_ticket.save()
@@ -260,7 +254,7 @@ class ServiceTicketSynchronizer(object):
         if original_status != new_ticket_status:
             status_changed = 'Status Changed From: %s To: %s'%(original_status, new_ticket_status)
 
-        log.info('%s Ticket #: %d %s'%(action, service_ticket.id, status_changed))
+        log.info('%s Ticket #: %d %s' % (action, service_ticket.id, status_changed))
 
         self._manage_member_assignments(service_ticket)
         return service_ticket, created
@@ -294,17 +288,6 @@ class ServiceTicketSynchronizer(object):
         log.info('Update API Ticket Status: %s - %s'%(service_ticket.id, api_service_ticket['status']['name'] ))
 
         return self.service_client.update_ticket(api_service_ticket).json()
-
-    def load_service_provider(self):
-        provider_qs = ServiceProvider.objects.all()
-        if not provider_qs.exists():
-            provider = ServiceProvider()
-            provider.title = 'KTI'
-            provider.save()
-        else:
-            provider = provider_qs.first()
-
-        return provider
 
     def close_ticket(self, service_ticket):
         """Closes the specified service ticket returns True if the
@@ -346,7 +329,7 @@ class ServiceTicketSynchronizer(object):
             tickets = self.service_client.get_tickets(page=page)
             num_tickets = len(tickets)
             for ticket in tickets:
-                ticket, created = self.sync_ticket(ticket, self.service_provider)
+                ticket, created = self.sync_ticket(ticket)
                 ticket_ids.append(ticket.id)
 
                 if created:
