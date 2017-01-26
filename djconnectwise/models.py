@@ -2,7 +2,6 @@
 import os
 import urllib.request, urllib.parse, urllib.error
 
-from django_extensions.db.models import TitleSlugDescriptionModel, TitleDescriptionModel
 from easy_thumbnails.fields import ThumbnailerImageField
 
 from django.utils.translation import ugettext_lazy as _
@@ -155,9 +154,11 @@ class TicketStatus(TimeStampedModel):
         return self.status_name
 
 
-class TicketPriority(TimeStampedModel, TitleDescriptionModel):
+class TicketPriority(TimeStampedModel):
+    name = models.CharField(max_length=50, blank=False)
+
     def __str__(self):
-        return self.title
+        return self.name
 
 
 class ServiceTicketAssignment(TimeStampedModel):

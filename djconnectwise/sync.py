@@ -52,7 +52,7 @@ class ServiceTicketSynchronizer(object):
 
         self.companies = {c.id: c for c in Company.objects.all()}
         self.ticket_status_map = {ticket.status_name: ticket for ticket in TicketStatus.objects.all()}
-        self.ticket_priority_map = {ticket.title: ticket for ticket in TicketPriority.objects.all()}
+        self.ticket_priority_map = {ticket.name: ticket for ticket in TicketPriority.objects.all()}
         self.members_map = {m.identifier: m for m in Member.objects.all()}
         self.project_map = {p.name: p for p in Project.objects.all()}
         self.ticket_assignments = {}
@@ -153,10 +153,10 @@ class ServiceTicketSynchronizer(object):
         ticket_priority = self.ticket_priority_map.get(api_ticket['priority']['name'])
         if not ticket_priority:
             ticket_priority = TicketPriority()
-            ticket_priority.title = api_ticket['priority']['name']
+            ticket_priority.name = api_ticket['priority']['name']
             ticket_priority.save()
-            self.ticket_priority_map[ticket_priority.title] = ticket_priority
-            logger.info('TicketPriority Created: %s' % ticket_priority.title)
+            self.ticket_priority_map[ticket_priority.name] = ticket_priority
+            logger.info('TicketPriority Created: %s' % ticket_priority.name)
         return ticket_priority
 
     def get_or_create_company(self, company_id):
