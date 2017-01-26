@@ -57,9 +57,9 @@ RECORD_TYPES = Choices(
 
 
 class Member(TimeStampedModel):
+    identifier = models.CharField(max_length=15, blank=False, unique=True)  # This is the CW username
     first_name = models.CharField(max_length=30, blank=False)
     last_name = models.CharField(max_length=30, blank=False)
-    identifier = models.CharField(max_length=15, blank=False)  # This is the CW username
     office_email = models.EmailField(max_length=250)
     inactive = models.BooleanField(default=False)
     avatar = ThumbnailerImageField(null=True, blank=True, verbose_name=_('Member Avatar'), help_text=_('Member Avatar'))

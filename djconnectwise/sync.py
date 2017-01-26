@@ -15,7 +15,7 @@ from djconnectwise.models import TicketPriority, Member, Project
 
 from djconnectwise.models import SyncJob
 
-log = logging.getLogger('sync')
+logger = logging.getLogger(__name__)
 
 
 class InvalidStatusError(Exception):
@@ -35,7 +35,7 @@ class ServiceTicketSynchronizer(object):
         if sync_job_qset.exists() and not self.reset:
             self.last_sync_job = sync_job_qset.last()
             extra_conditions = "lastUpdated > [{0}]".format(self.last_sync_job.start_time.isoformat())
-            log.info('ServiceTicket Extra Conditions: {0}'.format(extra_conditions))
+            logger.info('ServiceTicket Extra Conditions: {0}'.format(extra_conditions))
         else:
             # absence of a sync job indicates that this is an initial/full sync, in which
             # case we do not want to retrieve closed tickets
@@ -53,8 +53,8 @@ class ServiceTicketSynchronizer(object):
         self.companies = {c.id: c for c in Company.objects.all()}
         self.ticket_status_map = {ticket.status_name: ticket for ticket in TicketStatus.objects.all()}
         self.ticket_priority_map = {ticket.title: ticket for ticket in TicketPriority.objects.all()}
-        self.members_map = {m.user.username:m for m in Member.objects.all()}
-        self.project_map = {p.name:p for p in Project.objects.all()}
+        self.members_map = {m.identifier: m for m in Member.objects.all()}
+        self.project_map = {p.name: p for p in Project.objects.all()}
         self.ticket_assignments = {}
         self.updated_members = []
 
@@ -100,7 +100,7 @@ class ServiceTicketSynchronizer(object):
                 assignment.member = member
                 assignment.service_ticket = service_ticket
                 self.ticket_assignments[(username, service_ticket.id,)] = assignment
-                log.info('Member ServiceTicket Assignment: %s - %s' % (username, service_ticket.id))
+                logger.info('Member ServiceTicket Assignment: %s - %s' % (username, service_ticket.id))
 
     def get_or_create_project(self, api_ticket):
         api_project = api_ticket['project']
@@ -113,7 +113,7 @@ class ServiceTicketSynchronizer(object):
                 project.project_id = api_project['id']
                 project.save()
                 self.project_map[project.name] = project
-                log.info('Project Created: %s'%project.name)
+                logger.info('Project Created: %s' % project.name)
             return project
 
     def get_or_create_ticket_status(self, api_ticket):
@@ -133,7 +133,7 @@ class ServiceTicketSynchronizer(object):
             if TicketStatus.objects.filter(**kwargs).exists():
                 ticket_status = TicketStatus.objects.get(**kwargs)
             else:
-                log.info('TicketStatus Created - %s'%status_name)
+                logger.info('TicketStatus Created - %s' % status_name)
                 ticket_status, created = TicketStatus.objects.get_or_create(**kwargs)
 
             self.ticket_status_map[status_name] = ticket_status
@@ -156,7 +156,7 @@ class ServiceTicketSynchronizer(object):
             ticket_priority.title = api_ticket['priority']['name']
             ticket_priority.save()
             self.ticket_priority_map[ticket_priority.title] = ticket_priority
-            log.info('TicketPriority Created: %s'%ticket_priority.title)
+            logger.info('TicketPriority Created: %s' % ticket_priority.title)
         return ticket_priority
 
     def get_or_create_company(self, company_id):
@@ -182,7 +182,7 @@ class ServiceTicketSynchronizer(object):
             company.zip = api_company['zip']
             company.created = timezone.now()
             company.save()
-            log.info('Company Created: %s'%company_id)
+            logger.info('Company Created: %s' % company_id)
             self.companies[company.id] = company
         return company
 
@@ -194,10 +194,10 @@ class ServiceTicketSynchronizer(object):
             member_qset = Member.objects.filter(identifier=username)
             if member_qset.exists():
                 member = member_qset.first()
-                log.info('Update Member: {0}'.format(member.identifier))
+                logger.info('Update Member: {0}'.format(member.identifier))
             else:
                 member = Member.create_member(api_member)
-                log.info('Create Member: {0}'.format(member.identifier))
+                logger.info('Create Member: {0}'.format(member.identifier))
 
             # only update the avatar if the member profile was updated since last sync
             member_last_updated = parse(api_member['_info']['lastUpdated'])
@@ -254,7 +254,7 @@ class ServiceTicketSynchronizer(object):
         if original_status != new_ticket_status:
             status_changed = 'Status Changed From: %s To: %s'%(original_status, new_ticket_status)
 
-        log.info('%s Ticket #: %d %s' % (action, service_ticket.id, status_changed))
+        logger.info('%s Ticket #: %d %s' % (action, service_ticket.id, status_changed))
 
         self._manage_member_assignments(service_ticket)
         return service_ticket, created
@@ -285,7 +285,7 @@ class ServiceTicketSynchronizer(object):
 
         # no need for a callback update when updating via api
         api_service_ticket['skipCallback'] = True
-        log.info('Update API Ticket Status: %s - %s'%(service_ticket.id, api_service_ticket['status']['name'] ))
+        logger.info('Update API Ticket Status: %s - %s' % (service_ticket.id, api_service_ticket['status']['name']))
 
         return self.service_client.update_ticket(api_service_ticket).json()
 
@@ -298,7 +298,7 @@ class ServiceTicketSynchronizer(object):
 
         service_ticket.closed_flag = True
         service_ticket.save()
-        log.info('Close API Ticket: %s'%service_ticket.id)
+        logger.info('Close API Ticket: %s' % service_ticket.id)
         api_ticket = self.update_api_ticket(service_ticket)
         ticket_is_closed = api_ticket['closedFlag']
 
@@ -322,10 +322,10 @@ class ServiceTicketSynchronizer(object):
         service_ticket_count = self.service_client.tickets_count()
         accumulated = 0
 
-        log.info('Synchronization Started')
+        logger.info('Synchronization Started')
 
         while True:
-            log.info('Processing Batch #: %s' % page)
+            logger.info('Processing Batch #: %s' % page)
             tickets = self.service_client.get_tickets(page=page)
             num_tickets = len(tickets)
             for ticket in tickets:
@@ -342,16 +342,16 @@ class ServiceTicketSynchronizer(object):
             if not num_tickets:
                 break
 
-        log.info('Saving Ticket Assignments')
+        logger.info('Saving Ticket Assignments')
         ServiceTicketAssignment.objects.bulk_create(list(self.ticket_assignments.values()))
-        log.info('Deleting Closed Tickets')
+        logger.info('Deleting Closed Tickets')
 
         # now prune closed service tickets.
         delete_qset = ServiceTicket.objects.filter(closed_flag=True)
         delete_count = delete_qset.count()
         delete_qset.delete()
 
-        log.info('Synchronization Complete - CREATED: %s UPDATED %s DELETED: %s'%(created_count,updated_count,delete_count))
+        logger.info('Synchronization Complete - CREATED: %s UPDATED %s DELETED: %s' % (created_count, updated_count, delete_count))
         return created_count,updated_count,delete_count
 
     def sync_board_statuses(self):
