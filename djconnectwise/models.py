@@ -4,15 +4,20 @@ import urllib.request
 import urllib.parse
 import urllib.error
 
-from easy_thumbnails.fields import ThumbnailerImageField
-
-from django.utils.translation import ugettext_lazy as _
-from django.conf import settings
-
 from django_extensions.db.models import TimeStampedModel
+from easy_thumbnails.fields import ThumbnailerImageField
 from model_utils import Choices
 
+from django.conf import settings
 from django.db import models
+from django.utils.translation import ugettext_lazy as _
+
+
+RECORD_TYPES = Choices(
+    ('ServiceTicket', "Service Ticket"),
+    ('ProjectTicket', "Project Ticket"),
+    ('ProjectIssue', "Project Issue"),
+)
 
 
 class SyncJob(models.Model):
@@ -45,16 +50,12 @@ class ConnectWiseBoard(TimeStampedModel):
     class Meta:
         ordering = ('name',)
 
+    def __str__(self):
+        return self.name
+
     @property
     def board_statuses(self):
         return ConnectWiseBoardStatus.objects.filter(board_id=self.board_id)
-
-
-RECORD_TYPES = Choices(
-    ('ServiceTicket', "Service Ticket"),
-    ('ProjectTicket', "Project Ticket"),
-    ('ProjectIssue', "Project Issue"),
-)
 
 
 class Member(TimeStampedModel):
@@ -67,6 +68,9 @@ class Member(TimeStampedModel):
     avatar = ThumbnailerImageField(null=True, blank=True, verbose_name=_(
         'Member Avatar'), help_text=_('Member Avatar'))
 
+    def __str__(self):
+        return '{} {}'.format(self.first_name, self.last_name)
+
     def get_initials(self):
         name_segs = str(self).split(' ')
         initial = ''
@@ -77,9 +81,6 @@ class Member(TimeStampedModel):
             else:
                 initial += seg[:1]
         return initial
-
-    def __str__(self):
-        return '{0} {1}'.format(self.first_name, self.last_name)
 
     @staticmethod
     def create_member(api_member):
@@ -120,13 +121,13 @@ class Company(TimeStampedModel):
         verbose_name_plural = 'companies'
 
     def __str__(self):
-        return self.get_company_identifier()
+        return self.get_company_identifier() or ''
 
     def get_company_identifier(self):
-        unicode_value = self.company_identifier
+        identifier = self.company_identifier
         if settings.DJCONNECTWISE_COMPANY_ALIAS:
-            unicode_value = self.company_alias or self.company_identifier
-        return unicode_value
+            identifier = self.company_alias or self.company_identifier
+        return identifier
 
 
 class ConnectWiseBoardStatus(TimeStampedModel):
@@ -206,7 +207,8 @@ class ServiceTicket(TimeStampedModel):
     res_plan_mins = models.IntegerField(blank=True, null=True)
     respond_mins = models.IntegerField(blank=True, null=True)
     updated_by = models.CharField(blank=True, null=True, max_length=250)
-    record_type = models.CharField(blank=True, null=True, max_length=250)
+    record_type = models.CharField(blank=True, null=True,
+                                   max_length=250, choices=RECORD_TYPES)
     team_id = models.IntegerField(blank=True, null=True)
     agreement_id = models.IntegerField(blank=True, null=True)
     severity = models.CharField(blank=True, null=True, max_length=250)
@@ -229,12 +231,12 @@ class ServiceTicket(TimeStampedModel):
     members = models.ManyToManyField(
         'Member', through='ServiceTicketAssignment',
         related_name='member_tickets')
+    # TODO: add FK to ConnectWiseBoard
 
     class Meta:
         # ordering = ['priority_text','entered_date_utc','id']
         verbose_name = 'Service Ticket'
         verbose_name_plural = 'Service Tickets'
-        # ordering = ['ticket_ranks__position']
 
     def __str__(self):
         try:

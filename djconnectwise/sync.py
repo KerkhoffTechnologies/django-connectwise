@@ -274,8 +274,6 @@ class ServiceTicketSynchronizer(object):
         service_ticket.save()
         action = created and 'Created' or 'Updated'
 
-        # TODO: send a signal to be caught by what was once _manage_ticket_rank
-
         status_changed = ''
         if original_status != new_ticket_status:
             status_changed = 'Status Changed From: %s To: %s' % (

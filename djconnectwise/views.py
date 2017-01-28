@@ -10,7 +10,7 @@ from django.views.generic import View
 
 from .models import ServiceTicket
 
-log = logging.getLogger('kanban')
+logger = logging.getLogger('kanban')
 
 
 class ConnectWiseCallBackView(views.CsrfExemptMixin,
@@ -27,22 +27,20 @@ class ServiceTicketCallBackView(ConnectWiseCallBackView):
         action = post_body.get('Action')
         ticket_id = post_body.get('ID')
 
-        log.debug('{}: {}'.format(action.upper(), post_body))
+        logger.debug('{}: {}'.format(action.upper(), post_body))
 
         if action == 'deleted':
-            log.info('Ticket Deleted CallBack: {}'.format(ticket_id))
+            logger.info('Ticket Deleted CallBack: {}'.format(ticket_id))
             ServiceTicket.objects.filter(id=ticket_id).delete()
         else:
-            log.info('Ticket Pre-Update: {}'.format(ticket_id))
+            logger.info('Ticket Pre-Update: {}'.format(ticket_id))
             service_ticket = self.synchronizer \
                 .service_client \
                 .get_ticket(ticket_id)
 
             if service_ticket:
-                log.info('Ticket Updated CallBack: %d' % ticket_id)
-                self.synchronizer.sync_ticket(
-                    service_ticket,
-                )
+                logger.info('Ticket Updated CallBack: {}'.format(ticket_id))
+                self.synchronizer.sync_ticket(service_ticket)
 
         # we need not return anything to connectwise
         return HttpResponse(status=204)
