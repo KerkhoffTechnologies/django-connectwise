@@ -84,14 +84,14 @@ class Member(TimeStampedModel):
 
     @staticmethod
     def create_member(api_member):
-        m = Member()
-        m.first_name = api_member['firstName']
-        m.last_name = api_member['lastName']
-        m.identifier = api_member['identifier']
-        m.office_email = api_member['officeEmail']
-        m.inactive = api_member['inactiveFlag']
-        m.save()
-        return m
+        member = Member()
+        member.first_name = api_member['firstName']
+        member.last_name = api_member['lastName']
+        member.identifier = api_member['identifier']
+        member.office_email = api_member['officeEmail']
+        member.inactive = api_member['inactiveFlag']
+        member.save()
+        return member
 
 
 class Company(TimeStampedModel):

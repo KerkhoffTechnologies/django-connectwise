@@ -57,9 +57,8 @@ class ServiceTicketSynchronizer(object):
 
         self.companies = {c.id: c for c in Company.objects.all()}
 
-        ticket_statuses = [ticket for ticket in TicketStatus.objects.all()]
         self.ticket_status_map = {
-            ticket.status_name: ticket_statuses
+            ticket.status_name: ticket for ticket in TicketStatus.objects.all()
         }
 
         self.ticket_priority_map = {
