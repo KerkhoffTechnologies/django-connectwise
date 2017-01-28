@@ -3,8 +3,7 @@ import logging
 from django.conf import settings
 
 
-log = logging.getLogger('djconnectwise.api')
-logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 class ConnectWiseAPIClient(object):
@@ -49,7 +48,7 @@ class ConnectWiseRESTAPIClient(ConnectWiseAPIClient):
         return '{0}{1}'.format(self.url, path)
 
     def _log_failed(self, response):
-        log.info('FAILED API CALL: {0} - {1} - {2}'.format(response.url, response.status_code, response.content))
+        logger.info('FAILED API CALL: {0} - {1} - {2}'.format(response.url, response.status_code, response.content))
 
     def fetch_resource(self, endpoint_url, params=None):
         """
