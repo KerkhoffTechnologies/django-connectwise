@@ -74,7 +74,9 @@ class ServiceTicketSynchronizer(object):
         self.exclude_fields = ('priority', 'status', 'company')
 
     def _create_field_lookup(self, clazz):
-        return dict([(f, f.replace('_', ''))for f in clazz._meta.get_all_field_names()])
+        field_map = [(f, f.replace('_', ''))
+                     for f in clazz._meta.get_all_field_names()]
+        return dict(field_map)
 
     def _normalize_keys(self, api_keys):
         """Returns a lookup dict of api keys in lower case format
@@ -85,8 +87,8 @@ class ServiceTicketSynchronizer(object):
         return {key.lower(): key for key in api_keys}
 
     def _map_field_data(self, service_ticket, api_ticket):
-
-        for local_field, local_lookup_key in list(self.local_service_ticket_fields.items()):
+        ticket_fields = list(self.local_service_ticket_fields.items())
+        for local_field, local_lookup_key in ticket_fields:
 
             if local_field not in self.exclude_fields:
                 if local_field in api_ticket:
@@ -95,7 +97,8 @@ class ServiceTicketSynchronizer(object):
                     if api_field_value:
                         if isinstance(api_field_value, datetime.datetime):
                             api_field_value = timezone.make_aware(
-                                api_field_value, timezone.get_current_timezone())
+                                api_field_value,
+                                timezone.get_current_timezone())
 
                         setattr(service_ticket, local_field, api_field_value)
 
@@ -136,7 +139,8 @@ class ServiceTicketSynchronizer(object):
 
     def get_or_create_ticket_status(self, api_ticket):
         """
-        Creates and returns a TicketStatus instance if it does not already exist
+        Creates and returns a TicketStatus instance if
+        it does not already exist
         """
         api_status = api_ticket['status']
         status_name = api_status['name'].strip()
@@ -166,16 +170,19 @@ class ServiceTicketSynchronizer(object):
 
     def get_or_create_ticket_priority(self, api_ticket):
         """
-        Creates and returns a TicketPriority instance if it does not already exist
+        Creates and returns a TicketPriority instance if
+        it does not already exist
         """
         ticket_priority = self.ticket_priority_map.get(
             api_ticket['priority']['name'])
+
         if not ticket_priority:
             ticket_priority = TicketPriority()
             ticket_priority.name = api_ticket['priority']['name']
             ticket_priority.save()
             self.ticket_priority_map[ticket_priority.name] = ticket_priority
             logger.info('TicketPriority Created: %s' % ticket_priority.name)
+
         return ticket_priority
 
     def get_or_create_company(self, company_id):
@@ -222,24 +229,26 @@ class ServiceTicketSynchronizer(object):
             # only update the avatar if the member profile was updated since
             # last sync
             member_last_updated = parse(api_member['_info']['lastUpdated'])
+            member_stale = member_last_updated > self.last_sync_job.start_time
+            if not self.last_sync_job or member_stale:
+                member_img = self.system_client \
+                                 .get_member_image_by_identifier(username)
 
-            if not self.last_sync_job or member_last_updated > self.last_sync_job.start_time:
-                api_member_image = self.system_client.get_member_image_by_identifier(
-                    username)
-                member.avatar.save('%s.jpg' % (uuid.uuid4(),),
-                                   ContentFile(api_member_image))
-                pass
+                img_name = '{}.jpg'.format(uuid.uuid4())
+                img_file = ContentFile(member_img)
+                member.avatar.save(img_name, img_file)
 
             member.save()
             self.members_map[member.identifier] = member
 
     def sync_ticket(self, api_ticket):
         """
-        Creates a new local instance of the supplied ConnectWise SOAP ServiceTicket instance
-        NOTE:
+        Creates a new local instance of the supplied
+        ConnectWise SOAP ServiceTicket instance
         """
-        service_ticket, created = ServiceTicket.objects.get_or_create(pk=api_ticket[
-                                                                      'id'])
+        api_ticket_id = api_ticket['id']
+        service_ticket, created = ServiceTicket.objects \
+                                               .get_or_create(pk=api_ticket_id)
 
         # if the status results in a move to a different column
         original_status = not created and service_ticket.status or None
@@ -276,11 +285,12 @@ class ServiceTicketSynchronizer(object):
 
         status_changed = ''
         if original_status != new_ticket_status:
-            status_changed = 'Status Changed From: %s To: %s' % (
-                original_status, new_ticket_status)
+            status_txt = 'Status Changed From: {} To: {}'
+            status_changed = status_txt.format(original_status,
+                                               new_ticket_status)
 
-        logger.info('%s Ticket #: %d %s' %
-                    (action, service_ticket.id, status_changed))
+        log_info = '{} Ticket #: {} {}'
+        logger.info(log_info.format(action, service_ticket.id, status_changed))
 
         self._manage_member_assignments(service_ticket)
         return service_ticket, created
@@ -321,7 +331,7 @@ class ServiceTicketSynchronizer(object):
         """Closes the specified service ticket returns True if the
            if the close operation was successful on the connectwise server.
            Note: It appears that the connectwise server does not return a
-           permissions error if the user does not have access to this operation.
+           permissions error if user does not have access to this operation.
         """
 
         service_ticket.closed_flag = True
