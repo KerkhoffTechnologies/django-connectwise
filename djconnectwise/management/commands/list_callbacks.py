@@ -6,9 +6,9 @@ class Command(BaseCommand):
     help = 'Lists existing callbacks on target connectwise system.'
 
     def handle(self, *args, **options):
-        handler = CallBackHandler() 
-
+        handler = CallBackHandler()
         print('Callback List')
-        print('-----------------------------------------')      
+        print('-----------------------------------------')
+
         for c in handler.list_callbacks():
             print('{0} - {1}'.format(c['id'], c['url']))

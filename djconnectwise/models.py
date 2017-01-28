@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 import os
-import urllib.request, urllib.parse, urllib.error
+import urllib.request
+import urllib.parse
+import urllib.error
 
 from easy_thumbnails.fields import ThumbnailerImageField
 
@@ -49,19 +51,21 @@ class ConnectWiseBoard(TimeStampedModel):
 
 
 RECORD_TYPES = Choices(
-        ('ServiceTicket', "Service Ticket"),
-        ('ProjectTicket', "Project Ticket"),
-        ('ProjectIssue', "Project Issue"),
-    )
+    ('ServiceTicket', "Service Ticket"),
+    ('ProjectTicket', "Project Ticket"),
+    ('ProjectIssue', "Project Issue"),
+)
 
 
 class Member(TimeStampedModel):
-    identifier = models.CharField(max_length=15, blank=False, unique=True)  # This is the CW username
+    identifier = models.CharField(
+        max_length=15, blank=False, unique=True)  # This is the CW username
     first_name = models.CharField(max_length=30, blank=False)
     last_name = models.CharField(max_length=30, blank=False)
     office_email = models.EmailField(max_length=250)
     inactive = models.BooleanField(default=False)
-    avatar = ThumbnailerImageField(null=True, blank=True, verbose_name=_('Member Avatar'), help_text=_('Member Avatar'))
+    avatar = ThumbnailerImageField(null=True, blank=True, verbose_name=_(
+        'Member Avatar'), help_text=_('Member Avatar'))
 
     def get_initials(self):
         name_segs = str(self).split(' ')
@@ -92,7 +96,8 @@ class Member(TimeStampedModel):
 class Company(TimeStampedModel):
     company_name = models.CharField(blank=True, null=True, max_length=250)
     company_alias = models.CharField(blank=True, null=True, max_length=250)
-    company_identifier = models.CharField(blank=True, null=True, max_length=250)
+    company_identifier = models.CharField(
+        blank=True, null=True, max_length=250)
     phone_number = models.CharField(blank=True, null=True, max_length=250)
     fax_number = models.CharField(blank=True, null=True, max_length=250)
     address_line1 = models.CharField(blank=True, null=True, max_length=250)
@@ -143,7 +148,8 @@ class TicketStatus(TimeStampedModel):
     CLOSED = 'Closed'
 
     status_id = models.IntegerField(blank=True, null=True, unique=True)
-    # might ditch this field, it seems to always contain same value as status_name
+    # might ditch this field, it seems to always contain same value as
+    # status_name
     ticket_status = models.CharField(blank=True, null=True, max_length=250)
     status_name = models.CharField(blank=True, null=True, max_length=250)
 
@@ -190,8 +196,10 @@ class ServiceTicket(TimeStampedModel):
     required_date_utc = models.DateTimeField(blank=True, null=True)
     closed_date_utc = models.DateTimeField(blank=True, null=True)
     site_name = models.CharField(blank=True, null=True, max_length=250)
-    budget_hours = models.DecimalField(blank=True, null=True, decimal_places=2, max_digits=6)
-    actual_hours = models.DecimalField(blank=True, null=True, decimal_places=2, max_digits=6)
+    budget_hours = models.DecimalField(
+        blank=True, null=True, decimal_places=2, max_digits=6)
+    actual_hours = models.DecimalField(
+        blank=True, null=True, decimal_places=2, max_digits=6)
     approved = models.NullBooleanField(blank=True, null=True)
     closed_by = models.CharField(blank=True, null=True, max_length=250)
     resolve_mins = models.IntegerField(blank=True, null=True)
@@ -212,10 +220,15 @@ class ServiceTicket(TimeStampedModel):
     board_id = models.IntegerField(blank=True, null=True)
     board_status_id = models.IntegerField(blank=True, null=True)
     priority = models.ForeignKey('TicketPriority', blank=True, null=True)
-    status = models.ForeignKey('TicketStatus', blank=True, null=True, related_name='status_tickets')
-    company = models.ForeignKey('Company', blank=True, null=True, related_name='company_tickets')
-    project = models.ForeignKey('Project', blank=True, null=True, related_name='project_tickets')
-    members = models.ManyToManyField('Member', through='ServiceTicketAssignment', related_name='member_tickets' )
+    status = models.ForeignKey(
+        'TicketStatus', blank=True, null=True, related_name='status_tickets')
+    company = models.ForeignKey(
+        'Company', blank=True, null=True, related_name='company_tickets')
+    project = models.ForeignKey(
+        'Project', blank=True, null=True, related_name='project_tickets')
+    members = models.ManyToManyField(
+        'Member', through='ServiceTicketAssignment',
+        related_name='member_tickets')
 
     class Meta:
         # ordering = ['priority_text','entered_date_utc','id']
@@ -226,8 +239,9 @@ class ServiceTicket(TimeStampedModel):
     def __str__(self):
         try:
             return '{0:8d}-{1:100}'.format(self.id, self.summary)
-        except Exception as e:
-            return '{0:8d}-{1:100}'.format(self.id, self.summary.encode('utf8'))
+        except:
+            return '{0:8d}-{1:100}'.format(self.id,
+                                           self.summary.encode('utf8'))
 
     def get_connectwise_url(self):
         params = dict(
