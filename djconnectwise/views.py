@@ -5,10 +5,10 @@ import json
 from .models import ServiceTicket
 from django.http import HttpResponse
 import logging
-from django.views.generic import FormView,View,TemplateView
+from django.views.generic import View
 
 
-log = logging.getLogger('kanban')
+logger = logging.getLogger(__name__)
 
 
 class ConnectWiseCallBackView(views.CsrfExemptMixin, views.JsonRequestResponseMixin, View):
@@ -22,19 +22,19 @@ class ServiceTicketCallBackView(ConnectWiseCallBackView):
         post_body = json.loads(request.body)
         action = post_body.get('Action')
         ticket_id = post_body.get('ID')
-        log.debug('%s: %s' % (action.upper(), post_body))
+        logger.debug('%s: %s' % (action.upper(), post_body))
 
         if action == 'deleted':
-            log.info('Ticket Deleted CallBack: %d' % ticket_id)
+            logger.info('Ticket Deleted CallBack: %d' % ticket_id)
             ServiceTicket.objects.filter(id=ticket_id).delete()
         else:
-            log.info('Ticket Pre-Update: %d' % ticket_id)
+            logger.info('Ticket Pre-Update: %d' % ticket_id)
             service_ticket = self.synchronizer \
                 .service_client \
                 .get_ticket(ticket_id)
 
             if service_ticket:
-                log.info('Ticket Updated CallBack: %d' % ticket_id)
+                logger.info('Ticket Updated CallBack: %d' % ticket_id)
                 local_service_ticket = self.synchronizer.sync_ticket(
                     service_ticket,
                 )
