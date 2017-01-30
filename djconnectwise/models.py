@@ -1,16 +1,23 @@
 # -*- coding: utf-8 -*-
 import os
-import urllib.request, urllib.parse, urllib.error
-
-from easy_thumbnails.fields import ThumbnailerImageField
-
-from django.utils.translation import ugettext_lazy as _
-from django.conf import settings
+import urllib.request
+import urllib.parse
+import urllib.error
 
 from django_extensions.db.models import TimeStampedModel
+from easy_thumbnails.fields import ThumbnailerImageField
 from model_utils import Choices
 
+from django.conf import settings
 from django.db import models
+from django.utils.translation import ugettext_lazy as _
+
+
+RECORD_TYPES = Choices(
+    ('ServiceTicket', "Service Ticket"),
+    ('ProjectTicket', "Project Ticket"),
+    ('ProjectIssue', "Project Issue"),
+)
 
 
 class SyncJob(models.Model):
@@ -52,12 +59,14 @@ class ConnectWiseBoard(TimeStampedModel):
 
 
 class Member(TimeStampedModel):
-    identifier = models.CharField(max_length=15, blank=False, unique=True)  # This is the CW username
+    identifier = models.CharField(
+        max_length=15, blank=False, unique=True)  # This is the CW username
     first_name = models.CharField(max_length=30, blank=False)
     last_name = models.CharField(max_length=30, blank=False)
     office_email = models.EmailField(max_length=250)
     inactive = models.BooleanField(default=False)
-    avatar = ThumbnailerImageField(null=True, blank=True, verbose_name=_('Member Avatar'), help_text=_('Member Avatar'))
+    avatar = ThumbnailerImageField(null=True, blank=True, verbose_name=_(
+        'Member Avatar'), help_text=_('Member Avatar'))
 
     def __str__(self):
         return '{} {}'.format(self.first_name, self.last_name)
@@ -75,20 +84,21 @@ class Member(TimeStampedModel):
 
     @staticmethod
     def create_member(api_member):
-        m = Member()
-        m.first_name = api_member['firstName']
-        m.last_name = api_member['lastName']
-        m.identifier = api_member['identifier']
-        m.office_email = api_member['officeEmail']
-        m.inactive = api_member['inactiveFlag']
-        m.save()
-        return m
+        member = Member()
+        member.first_name = api_member['firstName']
+        member.last_name = api_member['lastName']
+        member.identifier = api_member['identifier']
+        member.office_email = api_member['officeEmail']
+        member.inactive = api_member['inactiveFlag']
+        member.save()
+        return member
 
 
 class Company(TimeStampedModel):
     company_name = models.CharField(blank=True, null=True, max_length=250)
     company_alias = models.CharField(blank=True, null=True, max_length=250)
-    company_identifier = models.CharField(blank=True, null=True, max_length=250)
+    company_identifier = models.CharField(
+        blank=True, null=True, max_length=250)
     phone_number = models.CharField(blank=True, null=True, max_length=250)
     fax_number = models.CharField(blank=True, null=True, max_length=250)
     address_line1 = models.CharField(blank=True, null=True, max_length=250)
@@ -139,7 +149,8 @@ class TicketStatus(TimeStampedModel):
     CLOSED = 'Closed'
 
     status_id = models.IntegerField(blank=True, null=True, unique=True)
-    # might ditch this field, it seems to always contain same value as status_name
+    # might ditch this field, it seems to always contain same value as
+    # status_name
     ticket_status = models.CharField(blank=True, null=True, max_length=250)
     status_name = models.CharField(blank=True, null=True, max_length=250)
 
@@ -171,13 +182,6 @@ class Project(TimeStampedModel):
         return self.name or ''
 
 
-RECORD_TYPES = Choices(
-        ('ServiceTicket', "Service Ticket"),
-        ('ProjectTicket', "Project Ticket"),
-        ('ProjectIssue', "Project Issue"),
-    )
-
-
 class ServiceTicket(TimeStampedModel):
     closed_flag = models.NullBooleanField(blank=True, null=True)
     type = models.CharField(blank=True, null=True, max_length=250)
@@ -193,15 +197,18 @@ class ServiceTicket(TimeStampedModel):
     required_date_utc = models.DateTimeField(blank=True, null=True)
     closed_date_utc = models.DateTimeField(blank=True, null=True)
     site_name = models.CharField(blank=True, null=True, max_length=250)
-    budget_hours = models.DecimalField(blank=True, null=True, decimal_places=2, max_digits=6)
-    actual_hours = models.DecimalField(blank=True, null=True, decimal_places=2, max_digits=6)
+    budget_hours = models.DecimalField(
+        blank=True, null=True, decimal_places=2, max_digits=6)
+    actual_hours = models.DecimalField(
+        blank=True, null=True, decimal_places=2, max_digits=6)
     approved = models.NullBooleanField(blank=True, null=True)
     closed_by = models.CharField(blank=True, null=True, max_length=250)
     resolve_mins = models.IntegerField(blank=True, null=True)
     res_plan_mins = models.IntegerField(blank=True, null=True)
     respond_mins = models.IntegerField(blank=True, null=True)
     updated_by = models.CharField(blank=True, null=True, max_length=250)
-    record_type = models.CharField(blank=True, null=True, max_length=250, choices=RECORD_TYPES)
+    record_type = models.CharField(blank=True, null=True,
+                                   max_length=250, choices=RECORD_TYPES)
     team_id = models.IntegerField(blank=True, null=True)
     agreement_id = models.IntegerField(blank=True, null=True)
     severity = models.CharField(blank=True, null=True, max_length=250)
@@ -215,10 +222,15 @@ class ServiceTicket(TimeStampedModel):
     board_id = models.IntegerField(blank=True, null=True)
     board_status_id = models.IntegerField(blank=True, null=True)
     priority = models.ForeignKey('TicketPriority', blank=True, null=True)
-    status = models.ForeignKey('TicketStatus', blank=True, null=True, related_name='status_tickets')
-    company = models.ForeignKey('Company', blank=True, null=True, related_name='company_tickets')
-    project = models.ForeignKey('Project', blank=True, null=True, related_name='project_tickets')
-    members = models.ManyToManyField('Member', through='ServiceTicketAssignment', related_name='member_tickets')
+    status = models.ForeignKey(
+        'TicketStatus', blank=True, null=True, related_name='status_tickets')
+    company = models.ForeignKey(
+        'Company', blank=True, null=True, related_name='company_tickets')
+    project = models.ForeignKey(
+        'Project', blank=True, null=True, related_name='project_tickets')
+    members = models.ManyToManyField(
+        'Member', through='ServiceTicketAssignment',
+        related_name='member_tickets')
     # TODO: add FK to ConnectWiseBoard
 
     class Meta:
@@ -229,8 +241,9 @@ class ServiceTicket(TimeStampedModel):
     def __str__(self):
         try:
             return '{0:8d}-{1:100}'.format(self.id, self.summary)
-        except Exception as e:
-            return '{0:8d}-{1:100}'.format(self.id, self.summary.encode('utf8'))
+        except:
+            return '{0:8d}-{1:100}'.format(self.id,
+                                           self.summary.encode('utf8'))
 
     def get_connectwise_url(self):
         params = dict(

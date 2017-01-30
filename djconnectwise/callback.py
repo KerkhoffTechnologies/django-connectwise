@@ -1,10 +1,9 @@
-from django.contrib.sites.models import Site
-from django.conf import settings
-from django.core.urlresolvers import reverse
-
-
 from djconnectwise.api import SystemAPIClient
 from djconnectwise.models import CallBackEntry
+
+from django.conf import settings
+from django.contrib.sites.models import Site
+from django.core.urlresolvers import reverse
 
 
 class CallBackHandler(object):
@@ -18,7 +17,7 @@ class CallBackHandler(object):
         Creates and returns a local CallBackEntry instance.
         """
 
-        #removing existing local entries
+        # removing existing local entries
         CallBackEntry.objects.filter(
             callback_type=CallBackEntry.CALLBACK_TYPES.ticket
         ).delete()
@@ -31,10 +30,10 @@ class CallBackHandler(object):
         )
 
         params = {
-            'url': url, 
-            'objectId': 1, 
+            'url': url,
+            'objectId': 1,
             'type': CallBackEntry.CALLBACK_TYPES.ticket,
-            'level': 'owner' 
+            'level': 'owner'
         }
 
         entry_json = self.system_client.create_callback(params)
@@ -47,9 +46,9 @@ class CallBackHandler(object):
                 entry_id=entry_json['id'],
                 member_id=entry_json['memberId'],
                 callback_type=entry_json['type'],
-                enabled = True
+                enabled=True
             )
-           
+
             return entry
 
     def list_callbacks(self):
@@ -62,7 +61,7 @@ class CallBackHandler(object):
     def remove_ticket_callback(self):
         """
         Removes the ticket callback from connectwise
-        and removes the local record 
+        and removes the local record
         """
         entry_qset = CallBackEntry.objects.filter(
             callback_type=CallBackEntry.CALLBACK_TYPES.ticket

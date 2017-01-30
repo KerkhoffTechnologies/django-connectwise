@@ -1,5 +1,6 @@
-import requests
 import logging
+import requests
+
 from django.conf import settings
 
 
@@ -12,8 +13,10 @@ class ConnectWiseAPIClient(object):
     def __init__(
         self,
         company_id=settings.CONNECTWISE_CREDENTIALS['company_id'],
-        integrator_login_id=settings.CONNECTWISE_CREDENTIALS['integrator_login_id'],
-        integrator_password=settings.CONNECTWISE_CREDENTIALS['integrator_password'],
+        integrator_login_id=settings.CONNECTWISE_CREDENTIALS[
+            'integrator_login_id'],
+        integrator_password=settings.CONNECTWISE_CREDENTIALS[
+            'integrator_password'],
         url=settings.CONNECTWISE_SERVER_URL,
         api_public_key=settings.CONNECTWISE_CREDENTIALS['api_public_key'],
         api_private_key=settings.CONNECTWISE_CREDENTIALS['api_private_key'],
@@ -42,17 +45,20 @@ class ConnectWiseRESTAPIClient(ConnectWiseAPIClient):
             self.API,
         )
 
-        self.auth = ('{0}+{1}'.format(self.company_id,self.api_public_key), '{0}'.format(self.api_private_key),)
+        self.auth = ('{0}+{1}'.format(self.company_id, self.api_public_key),
+                     '{0}'.format(self.api_private_key),)
 
-    def _endpoint(self,path):
+    def _endpoint(self, path):
         return '{0}{1}'.format(self.url, path)
 
     def _log_failed(self, response):
-        logger.info('FAILED API CALL: {0} - {1} - {2}'.format(response.url, response.status_code, response.content))
+        logger.info('FAILED API CALL: {0} - {1} - {2}'.format(
+            response.url, response.status_code, response.content))
 
     def fetch_resource(self, endpoint_url, params=None):
         """
-        A convenience method for issuing a request to the specified REST endpoint
+        A convenience method for issuing a request to the
+        specified REST endpoint
         """
         if not params:
             params = {}
@@ -89,7 +95,7 @@ class SystemAPIClient(ConnectWiseRESTAPIClient):
             per_page = response_json['count']
         else:
             per_page = 1000  # max 1000
-        return self.fetch_resource('members/?pageSize='+str(per_page))
+        return self.fetch_resource('members/?pageSize=' + str(per_page))
 
     def get_member_count(self):
         return self.fetch_resource('members/count')
@@ -98,7 +104,7 @@ class SystemAPIClient(ConnectWiseRESTAPIClient):
         return self.fetch_resource('callbacks/')
 
     def delete_callback(self, entry_id):
-        response = requests.request(
+        requests.request(
             'delete',
             self._endpoint('callbacks/{0}'.format(entry_id)),
             auth=self.auth
@@ -166,7 +172,8 @@ class ServiceAPIRestClient(ConnectWiseRESTAPIClient):
     def get_conditions(self):
         default_conditions = settings.DJCONNECTWISE_DEFAULT_TICKET_CONDITIONS
 
-        condition_list = [c for c in [default_conditions,self.extra_conditions] if c]
+        condition_list = [c for c in [
+            default_conditions, self.extra_conditions] if c]
         conditions = ''
 
         for condition in condition_list:
@@ -188,7 +195,7 @@ class ServiceAPIRestClient(ConnectWiseRESTAPIClient):
         return self.fetch_resource(endpoint_url)
 
     def get_tickets(self, page=0, page_size=25):
-        params=dict(
+        params = dict(
             page=page,
             pageSize=page_size,
             conditions=self.get_conditions()
