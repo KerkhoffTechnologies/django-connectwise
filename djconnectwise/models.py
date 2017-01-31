@@ -201,7 +201,7 @@ class ServiceTicket(TimeStampedModel):
     respond_mins = models.IntegerField(blank=True, null=True)
     updated_by = models.CharField(blank=True, null=True, max_length=250)
     record_type = models.CharField(blank=True, null=True,
-                                   max_length=250, choices=RECORD_TYPES)
+                                   max_length=250, choices=RECORD_TYPES, db_index=True)
     team_id = models.IntegerField(blank=True, null=True)
     agreement_id = models.IntegerField(blank=True, null=True)
     severity = models.CharField(blank=True, null=True, max_length=250)
@@ -212,7 +212,7 @@ class ServiceTicket(TimeStampedModel):
     is_in_sla = models.NullBooleanField(blank=True, null=True)
     api_text = models.TextField(blank=True, null=True)
     board_name = models.CharField(blank=True, null=True, max_length=250)
-    board_id = models.IntegerField(blank=True, null=True)
+    board_id = models.IntegerField(blank=True, null=True, db_index=True)
     board_status_id = models.IntegerField(blank=True, null=True)
     priority = models.ForeignKey('TicketPriority', blank=True, null=True)
     status = models.ForeignKey(
