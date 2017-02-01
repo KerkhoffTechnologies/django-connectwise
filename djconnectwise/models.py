@@ -6,18 +6,9 @@ import urllib.error
 
 from django_extensions.db.models import TimeStampedModel
 from easy_thumbnails.fields import ThumbnailerImageField
-from model_utils import Choices
-
 from django.conf import settings
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
-
-
-RECORD_TYPES = Choices(
-    ('ServiceTicket', "Service Ticket"),
-    ('ProjectTicket', "Project Ticket"),
-    ('ProjectIssue', "Project Issue"),
-)
 
 
 class SyncJob(models.Model):
@@ -26,10 +17,6 @@ class SyncJob(models.Model):
 
 
 class CallBackEntry(models.Model):
-    CALLBACK_TYPES = Choices(
-        ('ticket', "Ticket"),
-    )
-
     callback_type = models.CharField(max_length=25)
     url = models.CharField(max_length=255)
     level = models.CharField(max_length=255)
@@ -183,6 +170,12 @@ class Project(TimeStampedModel):
 
 
 class ServiceTicket(TimeStampedModel):
+    RECORD_TYPES = (
+        ('ServiceTicket', "Service Ticket"),
+        ('ProjectTicket', "Project Ticket"),
+        ('ProjectIssue', "Project Issue"),
+    )
+
     closed_flag = models.NullBooleanField(blank=True, null=True)
     type = models.CharField(blank=True, null=True, max_length=250)
     sub_type = models.CharField(blank=True, null=True, max_length=250)
@@ -208,7 +201,7 @@ class ServiceTicket(TimeStampedModel):
     respond_mins = models.IntegerField(blank=True, null=True)
     updated_by = models.CharField(blank=True, null=True, max_length=250)
     record_type = models.CharField(blank=True, null=True,
-                                   max_length=250, choices=RECORD_TYPES)
+                                   max_length=250, choices=RECORD_TYPES, db_index=True)
     team_id = models.IntegerField(blank=True, null=True)
     agreement_id = models.IntegerField(blank=True, null=True)
     severity = models.CharField(blank=True, null=True, max_length=250)
@@ -219,7 +212,7 @@ class ServiceTicket(TimeStampedModel):
     is_in_sla = models.NullBooleanField(blank=True, null=True)
     api_text = models.TextField(blank=True, null=True)
     board_name = models.CharField(blank=True, null=True, max_length=250)
-    board_id = models.IntegerField(blank=True, null=True)
+    board_id = models.IntegerField(blank=True, null=True, db_index=True)
     board_status_id = models.IntegerField(blank=True, null=True)
     priority = models.ForeignKey('TicketPriority', blank=True, null=True)
     status = models.ForeignKey(
