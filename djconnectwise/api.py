@@ -73,7 +73,6 @@ class ConnectWiseRESTAPIClient(ConnectWiseAPIClient):
             return response.json()
         else:
             self._log_failed(response)
-        return {}
 
 
 class ProjectAPIClient(ConnectWiseRESTAPIClient):
@@ -91,10 +90,12 @@ class SystemAPIClient(ConnectWiseRESTAPIClient):
 
     def get_members(self):
         response_json = self.get_member_count()
+
         if len(response_json) == 1:
             per_page = response_json['count']
         else:
             per_page = 1000  # max 1000
+
         return self.fetch_resource('members/?pageSize=' + str(per_page))
 
     def get_member_count(self):
@@ -122,6 +123,7 @@ class SystemAPIClient(ConnectWiseRESTAPIClient):
             return response.json()
         else:
             self._log_failed(response)
+
         return {}
 
     def update_callback(self, callback_entry):
@@ -153,10 +155,15 @@ class SystemAPIClient(ConnectWiseRESTAPIClient):
 
 class CompanyAPIRestClient(ConnectWiseRESTAPIClient):
     API = 'company'
+    ENDPOINT_URL = 'companies'
 
     def get_company_by_id(self, company_id):
-        endpoint_url = 'companies/{0}'.format(company_id)
+        endpoint_url = '{}/{}'.format(self.ENDPOINT_URL,
+                                      company_id)
         return self.fetch_resource(endpoint_url)
+
+    def get(self):
+        return self.fetch_resource(self.ENDPOINT_URL)
 
 
 class ServiceAPIRestClient(ConnectWiseRESTAPIClient):
@@ -177,9 +184,9 @@ class ServiceAPIRestClient(ConnectWiseRESTAPIClient):
         conditions = ''
 
         for condition in condition_list:
-            condition = '({0})'.format(condition)
+            condition = '({})'.format(condition)
             if conditions:
-                condition = ' AND ' + condition
+                condition = ' AND {}'.format(condition)
             conditions += condition
 
         return conditions
@@ -191,7 +198,7 @@ class ServiceAPIRestClient(ConnectWiseRESTAPIClient):
         return self.fetch_resource('tickets/count', params).get('count', 0)
 
     def get_ticket(self, ticket_id):
-        endpoint_url = 'tickets/{0}'.format(ticket_id)
+        endpoint_url = 'tickets/{}'.format(ticket_id)
         return self.fetch_resource(endpoint_url)
 
     def get_tickets(self, page=0, page_size=25):
@@ -206,7 +213,7 @@ class ServiceAPIRestClient(ConnectWiseRESTAPIClient):
     def update_ticket(self, ticket):
         response = requests.request(
             'put',
-            self._endpoint('tickets/{0}'.format(ticket['id'])),
+            self._endpoint('tickets/{}'.format(ticket['id'])),
             params=dict(id=ticket['id'], body=ticket),
             json=ticket,
             auth=self.auth
@@ -219,7 +226,7 @@ class ServiceAPIRestClient(ConnectWiseRESTAPIClient):
         Returns the status types associated with the
         specified board id
         """
-        endpoint_url = 'boards/{0}/statuses'.format(board_id)
+        endpoint_url = 'boards/{}/statuses'.format(board_id)
 
         return self.fetch_resource(endpoint_url)
 
@@ -227,4 +234,4 @@ class ServiceAPIRestClient(ConnectWiseRESTAPIClient):
         return self.fetch_resource('boards')
 
     def get_board(self, board_id):
-        return self.fetch_resource('boards/{0}'.format(board_id))
+        return self.fetch_resource('boards/{}'.format(board_id))
