@@ -104,7 +104,6 @@ class ServiceTicketSynchronizer(object):
     def _manage_member_assignments(self, service_ticket):
         # reset board/ticket assignment in case the assigned resources have
         # changed since last sync
-        service_ticket.ticket_boards.clear()
         member = None
         if service_ticket.resources:
             usernames = [u.strip()
@@ -228,8 +227,7 @@ class ServiceTicketSynchronizer(object):
             # only update the avatar if the member profile was updated since
             # last sync
             member_last_updated = parse(api_member['_info']['lastUpdated'])
-            member_stale = member_last_updated > self.last_sync_job.start_time
-            if not self.last_sync_job or member_stale:
+            if not self.last_sync_job or member_last_updated > self.last_sync_job.start_time:
                 member_img = self.system_client \
                                  .get_member_image_by_identifier(username)
 
