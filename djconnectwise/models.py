@@ -45,6 +45,21 @@ class ConnectWiseBoard(TimeStampedModel):
         return ConnectWiseBoardStatus.objects.filter(board_id=self.board_id)
 
 
+class ConnectWiseBoardStatus(TimeStampedModel):
+    """
+    Used for looking up the status/board id combination
+    """
+    board_id = models.PositiveSmallIntegerField()
+    status_id = models.PositiveSmallIntegerField()
+    status_name = models.CharField(blank=True, null=True, max_length=250)
+
+    class Meta:
+        ordering = ('status_name',)
+
+    def __str__(self):
+        return self.status_name
+
+
 class Member(TimeStampedModel):
     identifier = models.CharField(
         max_length=15, blank=False, unique=True)  # This is the CW username
@@ -115,21 +130,6 @@ class Company(TimeStampedModel):
         if settings.DJCONNECTWISE_COMPANY_ALIAS:
             identifier = self.company_alias or self.company_identifier
         return identifier
-
-
-class ConnectWiseBoardStatus(TimeStampedModel):
-    """
-    Used for looking up the status/board id combination
-    """
-    board_id = models.PositiveSmallIntegerField()
-    status_id = models.PositiveSmallIntegerField()
-    status_name = models.CharField(blank=True, null=True, max_length=250)
-
-    class Meta:
-        ordering = ('status_name',)
-
-    def __str__(self):
-        return self.status_name
 
 
 class TicketStatus(TimeStampedModel):
