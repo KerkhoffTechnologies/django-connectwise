@@ -1,5 +1,7 @@
 import random
 import time
+
+from copy import deepcopy
 from unittest import TestCase
 
 from djconnectwise.models import Company, Member
@@ -13,8 +15,18 @@ from ..sync import CompanySynchronizer, ServiceTicketSynchronizer
 class TestCompanySynchronizer(TestCase):
 
     def setUp(self):
-        # setup.init()
         self.synchronizer = CompanySynchronizer()
+
+    def _assert_fields(self, company, api_company):
+        assert company.company_name == api_company['name']
+        assert company.company_identifier == api_company['identifier']
+        assert company.phone_number == api_company['phoneNumber']
+        assert company.fax_number == api_company['faxNumber']
+        assert company.address_line1 == api_company['addressLine1']
+        assert company.address_line2 == api_company['addressLine1']
+        assert company.city == api_company['city']
+        assert company.state_identifier == api_company['state']
+        assert company.zip == api_company['zip']
 
     def test_sync_companies(self):
         _, get_patch = company_api_get_call(fixtures.API_COMPANY_LIST)
@@ -23,15 +35,24 @@ class TestCompanySynchronizer(TestCase):
 
         for company in Company.objects.all():
             api_company = company_dict[company.id]
-            assert company.company_name == api_company['name']
-            assert company.company_identifier == api_company['identifier']
-            assert company.phone_number == api_company['phoneNumber']
-            assert company.fax_number == api_company['faxNumber']
-            assert company.address_line1 == api_company['addressLine1']
-            assert company.address_line2 == api_company['addressLine1']
-            assert company.city == api_company['city']
-            assert company.state_identifier == api_company['state']
-            assert company.zip == api_company['zip']
+            self._assert_fields(company, api_company)
+
+    def test_sync_companies_update(self):
+        identifier = 'Some New Company'
+        api_company = deepcopy(fixtures.API_COMPANY)
+        api_company['identifier'] = identifier
+        api_company_list = [api_company]
+        company_pre_update = Company.objects \
+                                    .get(id=api_company['id'])
+        _, get_patch = company_api_get_call(api_company_list)
+
+        self.synchronizer.sync_companies()
+        company_post_update = Company.objects \
+                                     .get(id=api_company['id'])
+
+        self.assertNotEquals(company_pre_update.identifier,
+                             identifier)
+        self._assert_fields(company_post_update, api_company)
 
 
 class TestServiceTicketSynchronizer(TestCase):

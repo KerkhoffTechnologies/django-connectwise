@@ -56,19 +56,29 @@ class CompanySynchronizer:
 
     def sync_companies(self):
         api_company_data = self.company_client.get()
+        created_count = 0
+        updated_count = 0
 
         for api_company in api_company_data:
             company_id = api_company['id']
 
             try:
                 company = Company.objects.get(id=company_id)
+                updated_count += 1
             except ObjectDoesNotExist:
                 company = Company.objects.create(id=company_id)
+                created_count += 1
 
             self._assign_field_data(company, api_company)
             company.save()
 
-        logger.info('Synced {} Company'.format(api_company))
+        msg = 'Synced Companies - Created: {} , Updated: {}'.format(
+            created_count, updated_count)
+
+        logger.info('Synced Companies - Created: {} , Updated: {}'.format(
+            created_count, updated_count))
+
+        return created_count, updated_count, msg
 
     def get_or_create_company(self, company_id):
         """
