@@ -7,8 +7,11 @@ clean:
 install: clean
 	python setup.py install
 
-upload: install
+sdist: clean
+	python setup.py sdist
+
+upload: sdist
     # TODO: add testing step
     # You must have a ~/.pypirc file with your username and password.
     # You don't need to register new packages first- just upload and everything is taken care of.
-	twine upload dist/*
+	twine upload dist/*.tar.gz
