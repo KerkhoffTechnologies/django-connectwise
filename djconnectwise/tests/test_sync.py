@@ -50,7 +50,7 @@ class TestCompanySynchronizer(TestCase):
         company_post_update = Company.objects \
                                      .get(id=api_company['id'])
 
-        self.assertNotEquals(company_pre_update.identifier,
+        self.assertNotEquals(company_pre_update.company_identifier,
                              identifier)
         self._assert_fields(company_post_update, api_company)
 
