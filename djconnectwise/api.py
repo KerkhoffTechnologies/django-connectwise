@@ -104,11 +104,13 @@ class SystemAPIClient(ConnectWiseRESTAPIClient):
         return self.fetch_resource('callbacks/')
 
     def delete_callback(self, entry_id):
-        requests.request(
+        response = requests.request(
             'delete',
             self._endpoint('callbacks/{0}'.format(entry_id)),
             auth=self.auth
         )
+        response.raise_for_status()
+        return response
 
     def create_callback(self, callback_entry):
         response = requests.request(
