@@ -9,6 +9,8 @@ from easy_thumbnails.fields import ThumbnailerImageField
 from django.conf import settings
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
+from model_utils import Choices
+
 
 
 class SyncJob(models.Model):
@@ -17,6 +19,10 @@ class SyncJob(models.Model):
 
 
 class CallBackEntry(models.Model):
+    CALLBACK_TYPES = Choices(
+        ('ticket', "Ticket"),
+    )
+
     callback_type = models.CharField(max_length=25)
     url = models.CharField(max_length=255)
     level = models.CharField(max_length=255)

@@ -25,7 +25,7 @@ class CallBackHandler(object):
         url = '%s://%s%s%s' % (
             settings.SITE_PROTOCOL,
             Site.objects.get_current().domain,
-            reverse('service-ticket-callback'),
+            reverse('djconnectwise:service-ticket-callback'),
             '?id='
         )
 

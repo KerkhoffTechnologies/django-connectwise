@@ -69,7 +69,7 @@ class ConnectWiseRESTAPIClient(ConnectWiseAPIClient):
             auth=self.auth
         )
 
-        if response.status_code == 200:
+        if 200 <= response.status_code < 300:
             return response.json()
         else:
             self._log_failed(response)
@@ -118,7 +118,7 @@ class SystemAPIClient(ConnectWiseRESTAPIClient):
             auth=self.auth
         )
 
-        if response.status_code == 200:
+        if 200 <= response.status_code < 300:
             return response.json()
         else:
             self._log_failed(response)
@@ -144,7 +144,7 @@ class SystemAPIClient(ConnectWiseRESTAPIClient):
             auth=self.auth
         )
 
-        if response.status_code == 200:
+        if 200 <= response.status_code < 300:
             return response.content
         else:
             self._log_failed(response)
