@@ -10,7 +10,8 @@ from django.views.generic import View
 
 from .models import ServiceTicket
 
-logger = logging.getLogger('kanban')
+
+logger = logging.getLogger(__name__)
 
 
 class ConnectWiseCallBackView(views.CsrfExemptMixin,
