@@ -21,7 +21,6 @@ class CallBackHandler(object):
         Registers the ticket callback with the target connectwise system.
         Creates and returns a local CallBackEntry instance.
         """
-
         # removing existing local entries
         CallBackEntry.objects.filter(
             callback_type=CallBackEntry.CALLBACK_TYPES.ticket

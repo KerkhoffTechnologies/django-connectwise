@@ -23,8 +23,8 @@ class ConnectWiseCallBackView(views.CsrfExemptMixin,
 
 class ServiceTicketCallBackView(ConnectWiseCallBackView):
 
-    def get(self, request, *args, **kwargs):
-        body = json.loads(request.body)
+    def post(self, request, *args, **kwargs):
+        body = json.loads(request.body.decode(encoding='utf-8'))
         action = request.GET.get('action')
         if action is None:
             logger.warning('Received ticket callback with no action parameter.')
