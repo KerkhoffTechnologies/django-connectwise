@@ -1,14 +1,13 @@
-import random
-import time
-
 from copy import deepcopy
 from unittest import TestCase
 
 from djconnectwise.models import Company, Member
-from djconnectwise.models import ServiceTicket, TicketStatus
+from djconnectwise.models import ServiceTicket
 
 from . import fixtures
-from .mocks import company_api_get_call
+from .mocks import company_api_get_call, company_api_by_id_call
+from .mocks import service_api_tickets_call, service_api_update_ticket_call
+from .mocks import system_api_get_members_call, service_api_get_ticket_call
 from ..sync import CompanySynchronizer, ServiceTicketSynchronizer
 
 
@@ -58,89 +57,78 @@ class TestCompanySynchronizer(TestCase):
 class TestServiceTicketSynchronizer(TestCase):
 
     def setUp(self):
-        # setup.init()
         self.synchronizer = ServiceTicketSynchronizer()
-        self.synchronizer.sync_tickets()
 
     def _get_local_and_api_ticket(self):
-        api_ticket = self.synchronizer.service_client.get_tickets(
-            page=random.randrange(1, 100, 2), page_size=1)[0]
+        api_ticket = self.synchronizer.service_client.get_tickets()[0]
+
         local_ticket, created = self.synchronizer.sync_ticket(api_ticket)
         return local_ticket, api_ticket
 
+    def _sync_tickets(self):
+        company_api_by_id_call(fixtures.API_COMPANY)
+        service_api_tickets_call()
+
+        return self.synchronizer.sync_tickets()
+
     def test_sync_tickets(self):
-        num_tickets = self.synchronizer.service_client.tickets_count()
-
-        start = time.time()
-        created_count, updated_count, delete_count = self.synchronizer \
-                                                         .sync_tickets()
-        end = time.time()
-
-        # sync took less than 60 seconds
-        self.assertLess(end - start, 45)
-
-        self.assertEqual(num_tickets, ServiceTicket.objects.all().count())
+        created_count, _, _ = self._sync_tickets()
+        self.assertEqual(created_count, 1)
 
     def test_update_api_ticket(self):
-        local_ticket, api_ticket = self._get_local_and_api_ticket()
-        # find a new random status
-        ticket_status_types = [s for s in TicketStatus.objects.all()]
-        status_index = random.randrange(0, len(ticket_status_types), 1)
+        ServiceTicket.objects.all().delete()
+        self._sync_tickets()
 
-        local_ticket.status = ticket_status_types[status_index]
+        board_name = 'Some Board Name'
+        api_service_ticket = deepcopy(fixtures.API_SERVICE_TICKET)
+        api_service_ticket['board']['name'] = board_name
+
+        service_api_update_ticket_call(api_service_ticket)
+        service_api_get_ticket_call()
+
+        local_ticket = ServiceTicket.objects.first()
+        local_ticket.board_name = board_name
+        local_ticket.closed_flag = True
         local_ticket.save()
-        self.synchronizer.update_api_ticket(local_ticket)
-        updated_api_ticket = self.synchronizer.service_client.get_ticket(
-            local_ticket.id)
-        self.assertEqual(updated_api_ticket['status'][
-                         'name'], local_ticket.status.status_name)
 
-    def test_close_ticket(self):
-        local_ticket, api_ticket = self._get_local_and_api_ticket()
-        self.synchronizer.close_ticket(local_ticket)
+        updated_api_ticket = self.synchronizer.update_api_ticket(local_ticket)
 
-        updated_api_ticket = self.synchronizer.service_client.get_ticket(
-            local_ticket.id)
-        self.assertTrue(updated_api_ticket['closedFlag'])
+        self.assertEqual(updated_api_ticket['board'][
+                         'name'], local_ticket.board_name)
 
 
 class TestMemberSynchronization(TestCase):
 
     def setUp(self):
-        # setup.init()
+        self.member_id = 'User1'
         self.synchronizer = ServiceTicketSynchronizer()
+        system_api_get_members_call([fixtures.API_MEMBER])
+
+    def _assert_member_fields(self, local_member, api_member):
+        self.assertEquals(local_member.first_name, api_member['firstName'])
+        self.assertEquals(local_member.last_name, api_member['lastName'])
+        self.assertEquals(local_member.office_email, api_member['officeEmail'])
+
+    def _clear_members(self):
+        Member.objects.all().delete()
+
+    def test_sync_member_update(self):
+        self._clear_members()
         member = Member()
-        member.identifier = 'some_member'
-        member.first_name = 'Bob'
-        member.last_name = 'Dobbs'
-        member.office_email = 'bdobbs@example.ca'
+        member.identifier = self.member_id
+        member.first_name = 'some stale first name'
+        member.last_name = 'some stale last name'
+        member.office_email = 'some@stale.com'
         member.save()
 
-    def test_sync_member(self):
+        self.synchronizer.sync_members()
+        local_member = Member.objects.get(identifier=self.member_id)
+        api_member = fixtures.API_MEMBER
+        self._assert_member_fields(local_member, api_member)
 
-        # get members list
-        local_members = [m for m in list(self.synchronizer.members_map.keys())]
-        members_json = self.synchronizer.system_client.get_members()
-        api_members = []
-
-        for member in members_json:
-            if member['identifier'] not in local_members:
-                api_members.append(member)
-
-        if api_members:
-
-            new_member = self.synchronizer.sync_member(
-                api_members[0]['identifier'])
-            user = new_member.user
-            original_name = new_member.user.name
-            user.name = 'some name'
-            user.save()
-
-            new_member = self.synchronizer.sync_member(
-                api_members[0]['identifier'])
-
-            # verify that the fields are syncing as expected
-            self.assertEqual(new_member.user.name, original_name)
-
-        else:
-            raise ValueError('No members to test')
+    def test_sync_member_create(self):
+        self._clear_members()
+        self.synchronizer.sync_members()
+        local_member = Member.objects.all().first()
+        api_member = fixtures.API_MEMBER
+        self._assert_member_fields(local_member, api_member)

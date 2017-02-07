@@ -84,10 +84,8 @@ class Member(TimeStampedModel):
         initial = ''
         for seg in name_segs:
             seg = seg.strip()
-            if initial == '':  # TODO: what's the difference?
-                initial += seg[:1]
-            else:
-                initial += seg[:1]
+            initial += seg[:1]
+
         return initial
 
     @staticmethod
