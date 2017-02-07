@@ -5,7 +5,7 @@ import logging
 from braces import views
 from djconnectwise.sync import ServiceTicketSynchronizer
 
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseBadRequest
 from django.views.generic import View
 
 from .models import ServiceTicket
@@ -23,12 +23,18 @@ class ConnectWiseCallBackView(views.CsrfExemptMixin,
 
 class ServiceTicketCallBackView(ConnectWiseCallBackView):
 
-    def post(self, request, *args, **kwargs):
-        post_body = json.loads(request.body)
-        action = post_body.get('Action')
-        ticket_id = post_body.get('ID')
+    def get(self, request, *args, **kwargs):
+        body = json.loads(request.body)
+        action = request.GET.get('action')
+        if action is None:
+            logger.warning('Received ticket callback with no action parameter.')
+            return HttpResponseBadRequest("The 'action' parameter is required.")
+        ticket_id = request.GET.get('id')
+        if ticket_id is None:
+            logger.warning('Received ticket callback with no ticket_id parameter.')
+            return HttpResponseBadRequest("The 'ticket_id' parameter is required.")
 
-        logger.debug('{}: {}'.format(action.upper(), post_body))
+        logger.debug('{} {}: {}'.format(action.upper(), ticket_id, body))
 
         if action == 'deleted':
             logger.info('Ticket Deleted CallBack: {}'.format(ticket_id))
