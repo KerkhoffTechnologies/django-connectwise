@@ -43,6 +43,7 @@ TODO
 -  Uses easy-thumbnails- can use settings from that project to change
    behaviour http://easy-thumbnails.readthedocs.io/en/stable/ref/settings/. Also
    must add to INSTALLED\_APPS (I think)
+-  To use callbacks, must use Sites app- registers with ConnectWise with URL of first Sites instance
 
 License
 -------
