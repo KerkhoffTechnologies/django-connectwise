@@ -25,6 +25,7 @@ setup(
         'django',
         'easy-thumbnails',
         'python-dateutil',
+        'django-model-utils',
         'django-braces',
     ],
     zip_safe=False,  # Django likes to inspect apps for /migrations directories,

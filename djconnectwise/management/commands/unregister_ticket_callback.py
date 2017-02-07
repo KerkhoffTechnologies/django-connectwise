@@ -8,4 +8,3 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         handler = CallBackHandler()
         handler.remove_ticket_callback()
-        print('Removed ticket callback')

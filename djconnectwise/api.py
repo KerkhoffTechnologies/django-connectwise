@@ -68,7 +68,7 @@ class ConnectWiseRESTAPIClient(ConnectWiseAPIClient):
             auth=self.auth
         )
 
-        if response.status_code == 200:
+        if 200 <= response.status_code < 300:
             return response.json()
         else:
             msg = response.content
@@ -121,12 +121,14 @@ class SystemAPIClient(ConnectWiseRESTAPIClient):
         return self.fetch_resource(self.ENDPOINT_CALLBACKS)
 
     def delete_callback(self, entry_id):
-        requests.request(
+        response = requests.request(
             'delete',
             self._endpoint('{}/{}'.format(self.ENDPOINT_CALLBACKS,
                                           entry_id)),
             auth=self.auth
         )
+        response.raise_for_status()
+        return response
 
     def create_callback(self, callback_entry):
         response = requests.request(
@@ -136,7 +138,7 @@ class SystemAPIClient(ConnectWiseRESTAPIClient):
             auth=self.auth
         )
 
-        if response.status_code == 200:
+        if 200 <= response.status_code < 300:
             return response.json()
         else:
             self._log_failed(response)
@@ -163,7 +165,7 @@ class SystemAPIClient(ConnectWiseRESTAPIClient):
             auth=self.auth
         )
 
-        if response.status_code == 200:
+        if 200 <= response.status_code < 300:
             return response.content
         else:
             self._log_failed(response)

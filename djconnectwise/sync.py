@@ -183,7 +183,6 @@ class ServiceTicketSynchronizer:
     def _manage_member_assignments(self, service_ticket):
         # reset board/ticket assignment in case the assigned resources have
         # changed since last sync
-        service_ticket.ticket_boards.clear()
         member = None
         if service_ticket.resources:
             usernames = [u.strip()
