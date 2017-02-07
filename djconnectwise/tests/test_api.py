@@ -1,6 +1,9 @@
 from django.test import TestCase
 
-from ..api import SystemAPIClient, ProjectAPIClient
+from ..api import CompanyAPIRestClient, ProjectAPIClient
+from ..api import SystemAPIClient
+from .mocks import company_api_get_call
+from . import fixtures
 
 
 class TestSystemAPIClient(TestCase):
@@ -14,7 +17,6 @@ class TestSystemAPIClient(TestCase):
 
     def test_get_members(self):
         result = self.client.get_members()
-        print(result)
         self.assertIsNotNone(result)
 
 
@@ -29,3 +31,27 @@ class TestProjectAPIClient(TestCase):
             boards_map[r['board']['id']] = r['board']
 
         self.assertIsNotNone(result)
+
+
+class TestCompanyAPIRestClient(TestCase):
+
+    def setUp(self):
+        super(TestCompanyAPIRestClient, self).setUp()
+        self.client = CompanyAPIRestClient()
+
+    def test_get(self):
+        return_value = fixtures.API_COMPANY_LIST
+        _, get_patch = company_api_get_call(return_value)
+
+        result = self.client.get()
+        get_patch.stop()
+
+        self.assertEquals(len(result), len(return_value))
+
+    def test_get_no_results(self):
+        _, get_patch = company_api_get_call(None)
+
+        result = self.client.get()
+        get_patch.stop()
+
+        self.assertIsNone(result)
