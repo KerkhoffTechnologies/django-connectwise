@@ -1,8 +1,7 @@
 import logging
-import requests
 
 from django.conf import settings
-
+import requests
 
 logger = logging.getLogger(__name__)
 
@@ -52,7 +51,7 @@ class ConnectWiseRESTAPIClient(ConnectWiseAPIClient):
         return '{0}{1}'.format(self.url, path)
 
     def _log_failed(self, response):
-        logger.info('FAILED API CALL: {0} - {1} - {2}'.format(
+        logger.error('FAILED API CALL: {0} - {1} - {2}'.format(
             response.url, response.status_code, response.content))
 
     def fetch_resource(self, endpoint_url, params=None):
@@ -72,21 +71,33 @@ class ConnectWiseRESTAPIClient(ConnectWiseAPIClient):
         if response.status_code == 200:
             return response.json()
         else:
+            msg = response.content
             self._log_failed(response)
+
+            raise requests.ConnectionError(msg)
 
 
 class ProjectAPIClient(ConnectWiseRESTAPIClient):
     API = 'project'
+    ENDPOINT_PROJECT = 'projects/'
 
     def get_projects(self):
-        return self.fetch_resource('projects/')
+        return self.fetch_resource(self.ENDPOINT_PROJECT)
 
 
 class SystemAPIClient(ConnectWiseRESTAPIClient):
     API = 'system'
+    MAX_PER_PAGE = 1000
+
+    # endpoints
+    ENDPOINT_MEMBERS = 'members/'
+    ENDPOINT_MEMBERS_COUNT = 'members/count'
+    ENDPOINT_CALLBACKS = 'callbacks/'
+    ENDPOINT_INFO = 'info/'
 
     def get_connectwise_version(self):
-        return self.fetch_resource('info/').get('version', '')
+        result = self.fetch_resource(self.ENDPOINT_INFO)
+        return result.get('version', '')
 
     def get_members(self):
         response_json = self.get_member_count()
@@ -94,27 +105,33 @@ class SystemAPIClient(ConnectWiseRESTAPIClient):
         if len(response_json) == 1:
             per_page = response_json['count']
         else:
-            per_page = 1000  # max 1000
+            per_page = self.MAX_PER_PAGE
 
-        return self.fetch_resource('members/?pageSize=' + str(per_page))
+        params = {
+            'pageSize': per_page,
+        }
+
+        return self.fetch_resource(self.ENDPOINT_MEMBERS,
+                                   params=params)
 
     def get_member_count(self):
-        return self.fetch_resource('members/count')
+        return self.fetch_resource(self.ENDPOINT_MEMBERS_COUNT)
 
     def get_callbacks(self):
-        return self.fetch_resource('callbacks/')
+        return self.fetch_resource(self.ENDPOINT_CALLBACKS)
 
     def delete_callback(self, entry_id):
         requests.request(
             'delete',
-            self._endpoint('callbacks/{0}'.format(entry_id)),
+            self._endpoint('{}/{}'.format(self.ENDPOINT_CALLBACKS,
+                                          entry_id)),
             auth=self.auth
         )
 
     def create_callback(self, callback_entry):
         response = requests.request(
             'post',
-            self._endpoint('callbacks/'),
+            self._endpoint(self.ENDPOINT_CALLBACKS),
             json=callback_entry,
             auth=self.auth
         )
@@ -155,15 +172,15 @@ class SystemAPIClient(ConnectWiseRESTAPIClient):
 
 class CompanyAPIRestClient(ConnectWiseRESTAPIClient):
     API = 'company'
-    ENDPOINT_URL = 'companies'
+    ENDPOINT_COMPANIES = 'companies'
 
-    def get_company_by_id(self, company_id):
-        endpoint_url = '{}/{}'.format(self.ENDPOINT_URL,
+    def by_id(self, company_id):
+        endpoint_url = '{}/{}'.format(self.ENDPOINT_COMPANIES,
                                       company_id)
         return self.fetch_resource(endpoint_url)
 
     def get(self):
-        return self.fetch_resource(self.ENDPOINT_URL)
+        return self.fetch_resource(self.ENDPOINT_COMPANIES)
 
 
 class ServiceAPIRestClient(ConnectWiseRESTAPIClient):

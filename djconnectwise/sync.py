@@ -90,7 +90,7 @@ class CompanySynchronizer:
         company = self.companies.get(company_id)
         if not company:
             # fetch company from api
-            api_company = self.company_client.get_company_by_id(company_id)
+            api_company = self.company_client.by_id(company_id)
             company = Company.objects.create(id=company_id)
 
             self._assign_field_data(company, api_company)
@@ -107,6 +107,8 @@ class ServiceTicketSynchronizer:
     """
 
     def __init__(self, reset=False):
+
+        self.company_synchronizer = CompanySynchronizer()
         self.reset = reset
         self.last_sync_job = None
         extra_conditions = ''
@@ -269,6 +271,11 @@ class ServiceTicketSynchronizer:
             member_qset = Member.objects.filter(identifier=username)
             if member_qset.exists():
                 member = member_qset.first()
+
+                member.first_name = api_member['firstName']
+                member.last_name = api_member['lastName']
+                member.office_email = api_member['officeEmail']
+
                 logger.info('Update Member: {0}'.format(member.identifier))
             else:
                 member = Member.create_member(api_member)
@@ -277,14 +284,18 @@ class ServiceTicketSynchronizer:
             # only update the avatar if the member profile was updated since
             # last sync
             member_last_updated = parse(api_member['_info']['lastUpdated'])
-            member_stale = member_last_updated > self.last_sync_job.start_time
-            if not self.last_sync_job or member_stale:
-                member_img = self.system_client \
-                                 .get_member_image_by_identifier(username)
 
-                img_name = '{}.jpg'.format(uuid.uuid4())
-                img_file = ContentFile(member_img)
-                member.avatar.save(img_name, img_file)
+            if self.last_sync_job:
+                member_stale = member_last_updated > \
+                    self.last_sync_job.start_time
+
+                if not self.last_sync_job or member_stale:
+                    member_img = self.system_client \
+                                     .get_member_image_by_identifier(username)
+
+                    img_name = '{}.jpg'.format(uuid.uuid4())
+                    img_file = ContentFile(member_img)
+                    member.avatar.save(img_name, img_file)
 
             member.save()
             self.members_map[member.identifier] = member
@@ -322,8 +333,10 @@ class ServiceTicketSynchronizer:
         service_ticket.board_id = api_ticket['board']['id']
         service_ticket.board_status_id = api_ticket['status']['id']
 
-        service_ticket.company = self.get_or_create_company(
-            api_ticket['company']['id'])
+        company_id = api_ticket['company']['id']
+        service_ticket.company = self.company_synchronizer \
+                                     .get_or_create_company(company_id)
+
         service_ticket.priority = self.get_or_create_ticket_priority(
             api_ticket)
         service_ticket.status = new_ticket_status
@@ -358,6 +371,7 @@ class ServiceTicketSynchronizer:
             ticket_status = service_ticket.status
 
         if not service_ticket.closed_flag:
+
             try:
                 board_status = ConnectWiseBoardStatus.objects.get(
                     board_id=service_ticket.board_id,
@@ -373,7 +387,7 @@ class ServiceTicketSynchronizer:
         logger.info('Update API Ticket Status: %s - %s' %
                     (service_ticket.id, api_service_ticket['status']['name']))
 
-        return self.service_client.update_ticket(api_service_ticket).json()
+        return self.service_client.update_ticket(api_service_ticket)
 
     def close_ticket(self, service_ticket):
         """Closes the specified service ticket returns True if the
@@ -413,6 +427,7 @@ class ServiceTicketSynchronizer:
             logger.info('Processing Batch #: {}'.format(page))
             tickets = self.service_client.get_tickets(page=page)
             num_tickets = len(tickets)
+
             for ticket in tickets:
                 ticket, created = self.sync_ticket(ticket)
                 ticket_ids.append(ticket.id)
