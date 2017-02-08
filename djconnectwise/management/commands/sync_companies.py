@@ -8,6 +8,6 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         synchronizer = CompanySynchronizer()
 
-        _, _, msg = synchronizer.sync_companies()
-        self.stdout.write(msg)
-        return msg
+        created_count, updated_count = synchronizer.sync_companies()
+        self.stdout.write('Synced Companies - Created: {} , Updated: {}'.format(
+            created_count, updated_count))
