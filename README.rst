@@ -45,6 +45,33 @@ TODO
    must add to INSTALLED\_APPS (I think)
 -  To use callbacks, must use Sites app- registers with ConnectWise with URL of first Sites instance
 
+Testing
+_______
+
+Try one of:
+
+::
+
+    ./runtests.py
+
+::
+
+    python setup.py test
+
+::
+
+    make test
+
+
+Contributing
+____________
+
+- Fork this repo
+- Make a branch
+- Make your improvements
+- Run the tests (see above)
+- Make a pull request
+
 License
 -------
 

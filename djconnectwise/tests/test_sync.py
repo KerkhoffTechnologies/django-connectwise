@@ -49,8 +49,8 @@ class TestCompanySynchronizer(TestCase):
         company_post_update = Company.objects \
                                      .get(id=api_company['id'])
 
-        self.assertNotEquals(company_pre_update.company_identifier,
-                             identifier)
+        self.assertNotEqual(company_pre_update.company_identifier,
+                            identifier)
         self._assert_fields(company_post_update, api_company)
 
 
@@ -105,9 +105,9 @@ class TestMemberSynchronization(TestCase):
         system_api_get_members_call([fixtures.API_MEMBER])
 
     def _assert_member_fields(self, local_member, api_member):
-        self.assertEquals(local_member.first_name, api_member['firstName'])
-        self.assertEquals(local_member.last_name, api_member['lastName'])
-        self.assertEquals(local_member.office_email, api_member['officeEmail'])
+        self.assertEqual(local_member.first_name, api_member['firstName'])
+        self.assertEqual(local_member.last_name, api_member['lastName'])
+        self.assertEqual(local_member.office_email, api_member['officeEmail'])
 
     def _clear_members(self):
         Member.objects.all().delete()
