@@ -2,8 +2,7 @@ import responses
 
 from django.test import TestCase
 
-from ..api import CompanyAPIRestClient, ProjectAPIClient
-from ..api import SystemAPIClient
+from .. import api
 
 from . import fixtures
 from . import mocks as mk
@@ -12,10 +11,35 @@ from . import mocks as mk
 API_URL = 'https://localhost/v4_6_release/apis/3.0/system/members/count'
 
 
+class TestServiceAPIClient(TestCase):
+
+    def setUp(self):
+        self.client = api.ServiceAPIClient()
+
+    def _get_boards_stub(self, return_value):
+        endpoint = self.client._endpoint(self.client.ENDPOINT_BOARDS)
+        return mk.get(endpoint, return_value)
+
+    @responses.activate
+    def test_get_boards(self):
+        self._get_boards_stub(fixtures.API_BOARD_LIST)
+
+        result = self.client.get_boards()
+        self.assertEquals(result, fixtures.API_BOARD_LIST)
+
+    @responses.activate
+    def test_get_boards_no_data(self):
+        return_value = {}
+        self._get_boards_stub(return_value)
+
+        result = self.client.get_boards()
+        self.assertEquals(result, return_value)
+
+
 class TestSystemAPIClient(TestCase):
 
     def setUp(self):
-        self.client = SystemAPIClient()
+        self.client = api.SystemAPIClient()
 
     @responses.activate
     def test_get_connectwise_version(self):
@@ -41,7 +65,7 @@ class TestSystemAPIClient(TestCase):
 
 class TestProjectAPIClient(TestCase):
     def setUp(self):
-        self.client = ProjectAPIClient()
+        self.client = api.ProjectAPIClient()
 
     @responses.activate
     def test_get_projects(self):
@@ -54,11 +78,11 @@ class TestProjectAPIClient(TestCase):
         self.assertIsNotNone(result)
 
 
-class TestCompanyAPIRestClient(TestCase):
+class TestCompanyAPIClient(TestCase):
 
     def setUp(self):
-        super(TestCompanyAPIRestClient, self).setUp()
-        self.client = CompanyAPIRestClient()
+        super(TestCompanyAPIClient, self).setUp()
+        self.client = api.CompanyAPIClient()
         self.endpoint = self.client._endpoint(self.client.ENDPOINT_COMPANIES)
 
     @responses.activate
