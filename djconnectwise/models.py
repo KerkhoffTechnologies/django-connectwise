@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
 import os
-import urllib.request
-import urllib.parse
 import urllib.error
+import urllib.parse
+import urllib.request
 
-from django_extensions.db.models import TimeStampedModel
 from easy_thumbnails.fields import ThumbnailerImageField
+from model_utils import Choices
+
 from django.conf import settings
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
-from model_utils import Choices
-
+from django_extensions.db.models import TimeStampedModel
 
 
 class SyncJob(models.Model):
@@ -205,7 +205,8 @@ class ServiceTicket(TimeStampedModel):
     respond_mins = models.IntegerField(blank=True, null=True)
     updated_by = models.CharField(blank=True, null=True, max_length=250)
     record_type = models.CharField(blank=True, null=True,
-                                   max_length=250, choices=RECORD_TYPES, db_index=True)
+                                   max_length=250, choices=RECORD_TYPES,
+                                   db_index=True)
     team_id = models.IntegerField(blank=True, null=True)
     agreement_id = models.IntegerField(blank=True, null=True)
     severity = models.CharField(blank=True, null=True, max_length=250)
