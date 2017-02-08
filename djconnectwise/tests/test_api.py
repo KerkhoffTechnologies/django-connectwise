@@ -59,7 +59,7 @@ class TestSystemAPIClient(TestCase):
         mk.get(endpoint,
                fixtures.API_CW_VERSION)
         result = self.client.get_connectwise_version()
-        self.assertEquals(result, fixtures.API_CW_VERSION['version'])
+        self.assertEqual(result, fixtures.API_CW_VERSION['version'])
 
     @responses.activate
     def test_get_members(self):
@@ -72,7 +72,7 @@ class TestSystemAPIClient(TestCase):
                fixtures.API_MEMBER_LIST)
 
         result = self.client.get_members()
-        self.assertEquals(result, fixtures.API_MEMBER_LIST)
+        self.assertEqual(result, fixtures.API_MEMBER_LIST)
 
 
 class TestProjectAPIClient(TestCase):
@@ -102,7 +102,7 @@ class TestCompanyAPIClient(TestCase):
         mk.get(self.endpoint,
                fixtures.API_COMPANY_LIST)
         result = self.client.get()
-        self.assertEquals(len(result), len(fixtures.API_COMPANY_LIST))
+        self.assertEqual(len(result), len(fixtures.API_COMPANY_LIST))
 
     @responses.activate
     def test_get_no_results(self):
@@ -110,4 +110,4 @@ class TestCompanyAPIClient(TestCase):
         mk.get(self.endpoint,
                data)
         result = self.client.get()
-        self.assertEquals(result, data)
+        self.assertEqual(result, data)

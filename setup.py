@@ -18,7 +18,6 @@ setup(
     author_email='matt@kerkhofftech.ca',
     url="https://github.com/KerkhoffTechnologies/django-connectwise",
     include_package_data=True,
-    test_suite='djconnectwise.tests.runtests.runtests',
     license='MIT',
     install_requires=[
         'requests',
@@ -27,6 +26,10 @@ setup(
         'python-dateutil',
         'django-model-utils',
         'django-braces',
+    ],
+    test_suite='runtests.suite',
+    tests_require=[
+        'responses',
     ],
     zip_safe=False,  # Django likes to inspect apps for /migrations directories,
     # and can't if package is installed as a egg. zip_safe=False disables installation as an egg.

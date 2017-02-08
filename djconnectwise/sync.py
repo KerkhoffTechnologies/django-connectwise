@@ -61,7 +61,6 @@ class CompanySynchronizer:
 
         for api_company in api_company_data:
             company_id = api_company['id']
-
             try:
                 company = Company.objects.get(id=company_id)
                 updated_count += 1
@@ -72,13 +71,7 @@ class CompanySynchronizer:
             self._assign_field_data(company, api_company)
             company.save()
 
-        msg = 'Synced Companies - Created: {} , Updated: {}'.format(
-            created_count, updated_count)
-
-        logger.info('Synced Companies - Created: {} , Updated: {}'.format(
-            created_count, updated_count))
-
-        return created_count, updated_count, msg
+        return created_count, updated_count
 
     def get_or_create_company(self, company_id):
         """
@@ -159,7 +152,7 @@ class ServiceTicketSynchronizer:
                 'ServiceTicket Extra Conditions: {0}'.format(extra_conditions))
         else:
             # absence of a sync job indicates that this is an initial/full
-            # sync, in whichcase we do not want to retrieve closed tickets
+            # sync, in which case we do not want to retrieve closed tickets
             extra_conditions = 'ClosedFlag = False'
 
         self.service_client = ServiceAPIClient(
@@ -189,33 +182,11 @@ class ServiceTicketSynchronizer:
         self.exclude_fields = ('priority', 'status', 'company')
 
     def _create_field_lookup(self, clazz):
-        field_map = [(f, f.replace('_', ''))
-                     for f in clazz._meta.get_all_field_names()]
+        field_map = [
+            (f.name, f.name.replace('_', '')) for
+            f in clazz._meta.get_fields(include_parents=False, include_hidden=True)
+        ]
         return dict(field_map)
-
-    def _normalize_keys(self, api_keys):
-        """Returns a lookup dict of api keys in lower case format
-
-        It is necessary to normalize the field names of the SOAP element
-        in order to map field data to a local service ticket
-        """
-        return {key.lower(): key for key in api_keys}
-
-    def _map_field_data(self, service_ticket, api_ticket):
-        ticket_fields = list(self.local_service_ticket_fields.items())
-        for local_field, local_lookup_key in ticket_fields:
-
-            if local_field not in self.exclude_fields:
-                if local_field in api_ticket:
-                    api_field_value = api_ticket.get(local_field)
-
-                    if api_field_value:
-                        if isinstance(api_field_value, datetime.datetime):
-                            api_field_value = timezone.make_aware(
-                                api_field_value,
-                                timezone.get_current_timezone())
-
-                        setattr(service_ticket, local_field, api_field_value)
 
     def _manage_member_assignments(self, service_ticket):
         # reset board/ticket assignment in case the assigned resources have
@@ -338,8 +309,7 @@ class ServiceTicketSynchronizer:
 
     def sync_ticket(self, api_ticket):
         """
-        Creates a new local instance of the supplied
-        ConnectWise SOAP ServiceTicket instance
+        Creates a new local instance of the supplied ConnectWise ServiceTicket instance.
         """
         api_ticket_id = api_ticket['id']
         service_ticket, created = ServiceTicket.objects \
