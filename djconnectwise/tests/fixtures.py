@@ -1,3 +1,14 @@
+API_BOARD = {
+    'id': 1,
+    'name': 'board-name',
+    'locationId': 1,
+    'businessUnitId': 10,
+    'inactive': False,
+    'projectFlag': False
+}
+
+API_BOARD_LIST = [API_BOARD]
+
 API_COMPANY = {
     "id": 2,
     "identifier": "YourCompany",
