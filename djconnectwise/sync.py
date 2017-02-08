@@ -3,7 +3,7 @@ import logging
 import uuid
 
 from dateutil.parser import parse
-from djconnectwise.api import CompanyAPIRestClient, ServiceAPIRestClient
+from djconnectwise.api import CompanyAPIClient, ServiceAPIClient
 from djconnectwise.api import SystemAPIClient
 from djconnectwise.models import ServiceTicket, Company, ConnectWiseBoardStatus
 from djconnectwise.models import SyncJob
@@ -29,7 +29,7 @@ class CompanySynchronizer:
     """
 
     def __init__(self, *args, **kwargs):
-        self.company_client = CompanyAPIRestClient()
+        self.company_client = CompanyAPIClient()
         self.companies = self.load_company_dict()
 
     def load_company_dict(self):
@@ -125,7 +125,7 @@ class ServiceTicketSynchronizer:
             # sync, in whichcase we do not want to retrieve closed tickets
             extra_conditions = 'ClosedFlag = False'
 
-        self.service_client = ServiceAPIRestClient(
+        self.service_client = ServiceAPIClient(
             extra_conditions=extra_conditions)
 
         self.system_client = SystemAPIClient()
