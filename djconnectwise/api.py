@@ -1,6 +1,7 @@
 import logging
 
 from django.conf import settings
+
 import requests
 
 logger = logging.getLogger(__name__)
@@ -25,7 +26,6 @@ class ConnectWiseAPIClient(object):
         if not self.API:
             raise ValueError('API not specified')
 
-        self.url = url
         self.company_id = company_id
         self.integrator_login_id = integrator_login_id
         self.integrator_password = integrator_password
@@ -33,13 +33,8 @@ class ConnectWiseAPIClient(object):
         self.api_private_key = api_private_key
         self.api_codebase = api_codebase
 
-
-class ConnectWiseRESTAPIClient(ConnectWiseAPIClient):
-
-    def __init__(self, *args, **kwargs):
-        super(ConnectWiseRESTAPIClient, self).__init__(*args, **kwargs)
         self.url = '{0}/{1}/apis/3.0/{2}/'.format(
-            self.url,
+            url,
             self.api_codebase,
             self.API,
         )
@@ -48,6 +43,7 @@ class ConnectWiseRESTAPIClient(ConnectWiseAPIClient):
                      '{0}'.format(self.api_private_key),)
 
     def _endpoint(self, path):
+        print('ENDPOINT:', '{0}{1}'.format(self.url, path))
         return '{0}{1}'.format(self.url, path)
 
     def _log_failed(self, response):
@@ -59,6 +55,7 @@ class ConnectWiseRESTAPIClient(ConnectWiseAPIClient):
         A convenience method for issuing a request to the
         specified REST endpoint
         """
+
         if not params:
             params = {}
 
@@ -77,7 +74,7 @@ class ConnectWiseRESTAPIClient(ConnectWiseAPIClient):
             raise requests.ConnectionError(msg)
 
 
-class ProjectAPIClient(ConnectWiseRESTAPIClient):
+class ProjectAPIClient(ConnectWiseAPIClient):
     API = 'project'
     ENDPOINT_PROJECT = 'projects/'
 
@@ -85,7 +82,7 @@ class ProjectAPIClient(ConnectWiseRESTAPIClient):
         return self.fetch_resource(self.ENDPOINT_PROJECT)
 
 
-class SystemAPIClient(ConnectWiseRESTAPIClient):
+class SystemAPIClient(ConnectWiseAPIClient):
     API = 'system'
     MAX_PER_PAGE = 1000
 
@@ -172,7 +169,7 @@ class SystemAPIClient(ConnectWiseRESTAPIClient):
         return {}
 
 
-class CompanyAPIRestClient(ConnectWiseRESTAPIClient):
+class CompanyAPIClient(ConnectWiseAPIClient):
     API = 'company'
     ENDPOINT_COMPANIES = 'companies'
 
@@ -185,15 +182,16 @@ class CompanyAPIRestClient(ConnectWiseRESTAPIClient):
         return self.fetch_resource(self.ENDPOINT_COMPANIES)
 
 
-class ServiceAPIRestClient(ConnectWiseRESTAPIClient):
+class ServiceAPIClient(ConnectWiseAPIClient):
     API = 'service'
+    ENDPOINT_BOARDS = 'boards'
 
     def __init__(self, *args, **kwargs):
         self.extra_conditions = None
         if 'extra_conditions' in kwargs:
             self.extra_conditions = kwargs.pop('extra_conditions')
 
-        super(ServiceAPIRestClient, self).__init__(*args, **kwargs)
+        super(ServiceAPIClient, self).__init__(*args, **kwargs)
 
     def get_conditions(self):
         default_conditions = settings.DJCONNECTWISE_DEFAULT_TICKET_CONDITIONS
@@ -207,7 +205,6 @@ class ServiceAPIRestClient(ConnectWiseRESTAPIClient):
             if conditions:
                 condition = ' AND {}'.format(condition)
             conditions += condition
-
         return conditions
 
     def tickets_count(self):
@@ -250,7 +247,7 @@ class ServiceAPIRestClient(ConnectWiseRESTAPIClient):
         return self.fetch_resource(endpoint_url)
 
     def get_boards(self):
-        return self.fetch_resource('boards')
+        return self.fetch_resource(self.ENDPOINT_BOARDS)
 
     def get_board(self, board_id):
         return self.fetch_resource('boards/{}'.format(board_id))
