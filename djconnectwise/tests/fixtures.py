@@ -1,6 +1,6 @@
 API_BOARD = {
     'id': 1,
-    'name': 'board-name',
+    'name': 'Projects-2-10',
     'locationId': 1,
     'businessUnitId': 10,
     'inactive': False,
@@ -8,6 +8,19 @@ API_BOARD = {
 }
 
 API_BOARD_LIST = [API_BOARD]
+
+API_BOARD_STATUS_LIST = [
+    {
+        'id': 1,
+        'name': 'New',
+        'boardId': 1,
+    },
+    {
+        'id': 2,
+        'name': 'In Progress',
+        'boardId': 1
+    },
+]
 
 API_COMPANY = {
     "id": 2,
@@ -125,17 +138,17 @@ API_SERVICE_TICKET = {
     'summary': 'Schedule and Execute Conversion',
     'recordType': 'ProjectTicket',
     'board': {
-        'id': 3,
+        'id': 1,
         'name': 'Projects-2-10',
         '_info': {
-            'board_href': 'https://some-host.com/v4_6_release/apis/3.0/service/boards/3'
+            'board_href': 'https://some-host.com/v4_6_release/apis/3.0/service/boards/1'
         }
     },
     'status': {
-        'id': 45,
+        'id': 1,
         'name': 'New',
         '_info': {
-            'status_href': 'https://some-host.com/v4_6_release/apis/3.0/service/boards/3/statuses/45'
+            'status_href': 'https://some-host.com/v4_6_release/apis/3.0/service/boards/1/statuses/1'
         }
     },
     'project': {

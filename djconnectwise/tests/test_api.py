@@ -35,6 +35,18 @@ class TestServiceAPIClient(TestCase):
         result = self.client.get_boards()
         self.assertEquals(result, return_value)
 
+    @responses.activate
+    def test_get_statuses(self):
+        endpoint_url = 'boards/{}/statuses'.format(
+            fixtures.API_BOARD['id'])
+
+        endpoint_url = self.client._endpoint(endpoint_url)
+
+        mk.get(endpoint_url, fixtures.API_BOARD_STATUS_LIST)
+
+        result = self.client.get_statuses(fixtures.API_BOARD['id'])
+        self.assertEquals(result, fixtures.API_BOARD_STATUS_LIST)
+
 
 class TestSystemAPIClient(TestCase):
 

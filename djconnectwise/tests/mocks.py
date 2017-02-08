@@ -56,8 +56,18 @@ def service_api_get_ticket_call():
     return mock_call, _patch
 
 
+def service_api_get_boards_call(return_value):
+    method_name = 'djconnectwise.api.ServiceAPIClient.get_boards'
+    return _create_mock_call(method_name, return_value)
+
+
 def service_api_update_ticket_call(return_value):
     method_name = 'djconnectwise.api.ServiceAPIClient.update_ticket'
+    return _create_mock_call(method_name, return_value)
+
+
+def service_api_get_statuses_call(return_value):
+    method_name = 'djconnectwise.api.ServiceAPIClient.get_statuses'
     return _create_mock_call(method_name, return_value)
 
 

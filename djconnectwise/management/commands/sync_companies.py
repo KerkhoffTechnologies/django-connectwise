@@ -8,6 +8,6 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         synchronizer = CompanySynchronizer()
 
-        _, _, msg = synchronizer.sync_companies()
+        _, _, msg = synchronizer.sync()
         self.stdout.write(msg)
         return msg

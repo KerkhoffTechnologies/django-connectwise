@@ -5,8 +5,8 @@ import uuid
 from dateutil.parser import parse
 from djconnectwise.api import CompanyAPIClient, ServiceAPIClient
 from djconnectwise.api import SystemAPIClient
-from djconnectwise.models import ServiceTicket, Company, ConnectWiseBoardStatus
-from djconnectwise.models import SyncJob
+from djconnectwise.models import Company, ConnectWiseBoard, ConnectWiseBoardStatus
+from djconnectwise.models import ServiceTicket, SyncJob
 from djconnectwise.models import TicketPriority, Member, Project
 from djconnectwise.models import TicketStatus, ServiceTicketAssignment
 
@@ -29,7 +29,7 @@ class CompanySynchronizer:
     """
 
     def __init__(self, *args, **kwargs):
-        self.company_client = CompanyAPIClient()
+        self.client = CompanyAPIClient()
         self.companies = self.load_company_dict()
 
     def load_company_dict(self):
@@ -54,8 +54,8 @@ class CompanySynchronizer:
         company.zip = api_company['zip']
         company.created = timezone.now()
 
-    def sync_companies(self):
-        api_company_data = self.company_client.get()
+    def sync(self):
+        api_company_data = self.client.get()
         created_count = 0
         updated_count = 0
 
@@ -90,7 +90,7 @@ class CompanySynchronizer:
         company = self.companies.get(company_id)
         if not company:
             # fetch company from api
-            api_company = self.company_client.by_id(company_id)
+            api_company = self.client.by_id(company_id)
             company = Company.objects.create(id=company_id)
 
             self._assign_field_data(company, api_company)
@@ -99,6 +99,42 @@ class CompanySynchronizer:
             self.companies[company.id] = company
         return company
 
+
+class BoardSynchronizer:
+    def __init__(self, *args, **kwargs):
+        self.client = ServiceAPIClient()
+
+    def sync(self):
+        for board in self.client.get_boards():
+            ConnectWiseBoard.objects.update_or_create(
+                    board_id=board['id'],
+                    defaults={
+                        'name': board['name'],
+                        'inactive': board['inactive'],
+                    }
+                )
+
+
+class BoardStatusSynchronizer:
+    def __init__(self, *args, **kwargs):
+        self.client = ServiceAPIClient()
+
+    def sync(self, board_ids):
+
+        for board_id in board_ids:
+            # TODO - Django doesn't provide an efficient
+            # way to bulk get or create. May need to
+            # invest time in a more efficient approach
+            for status in self.client.get_statuses(board_id):
+                 
+                cw_status, _ = ConnectWiseBoardStatus.objects.update_or_create(
+                    status_id=status['id'],
+                    defaults={
+                        'board_id': board_id,
+                        'status_name': status['name'],
+                    }
+                )
+               
 
 class ServiceTicketSynchronizer:
     """
@@ -109,6 +145,7 @@ class ServiceTicketSynchronizer:
     def __init__(self, reset=False):
 
         self.company_synchronizer = CompanySynchronizer()
+        self.status_synchronizer = BoardStatusSynchronizer()
         self.reset = reset
         self.last_sync_job = None
         extra_conditions = ''
@@ -457,23 +494,15 @@ class ServiceTicketSynchronizer:
                                      updated_count, delete_count))
         return created_count, updated_count, delete_count
 
-    def sync_board_statuses(self):
-        board_ids = [board_id for board_id in ServiceTicket.objects.all(
-        ).values_list('board_id', flat=True).distinct() if board_id]
-        for board_id in board_ids:
-            for status in self.service_client.get_statuses(board_id):
-                ConnectWiseBoardStatus.objects.get_or_create(
-                    board_id=board_id,
-                    status_id=status['id'],
-                    status_name=status['name']
-                )
-
     def start(self):
         """
         Initiates the sync mechanism. Returns the number of tickets created
         """
+        board_ids = [board_id for board_id in ServiceTicket.objects.all(
+        ).values_list('board_id', flat=True).distinct() if board_id]
+
         print("------------------------- 1 -------------------------------")
-        self.sync_board_statuses()
+        self.status_synchronizer.sync_board_statuses(board_ids)
         print("------------------------- 2 -------------------------------")
         self.sync_job = SyncJob.objects.create()
         print("------------------------- 3 -------------------------------")
@@ -481,7 +510,9 @@ class ServiceTicketSynchronizer:
         print("------------------------- 4 -------------------------------")
         created_count, updated_count, delete_count = self.sync_tickets()
         print("------------------------- 5 -------------------------------")
-        self.sync_board_statuses()
+
+        # TODO - Investigate - It looks like this is not necessary
+        self.status_synchronizer.sync_board_statuses(board_ids)
         print("------------------------- 6 -------------------------------")
         self.sync_job.end_time = timezone.now()
         print("------------------------- 7 -------------------------------")

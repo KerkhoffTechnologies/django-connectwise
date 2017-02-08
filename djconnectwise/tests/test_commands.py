@@ -9,7 +9,7 @@ from . import fixtures
 
 class TestSyncCompaniesCommand(TestCase):
 
-    def test_sync_companies(self):
+    def test_sync(self):
         " Test sync companies command."
         _, get_patch = company_api_get_call(fixtures.API_COMPANY_LIST)
         out = io.StringIO()
