@@ -1,11 +1,9 @@
 #!/usr/bin/env python
-import django
-from unittest import TextTestResult
-
 from django.conf import settings
 from django.core.management import call_command
 from django.test.utils import get_runner
-import sys
+import django
+
 
 settings.configure(
     DEBUG=True,
@@ -39,6 +37,7 @@ def _setup():
     django.setup()
     call_command('migrate', 'djconnectwise')  # Set up the test DB, if necessary
     call_command('flush', '--noinput')  # Clear out the test DB
+
 
 def suite():
     """

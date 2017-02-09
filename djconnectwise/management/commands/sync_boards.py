@@ -8,4 +8,3 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         client = ServiceAPIClient()
         print(client.get_boards())
-     	

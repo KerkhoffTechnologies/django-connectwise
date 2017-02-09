@@ -1,14 +1,20 @@
-import datetime
 import logging
 import uuid
 
 from dateutil.parser import parse
-from djconnectwise.api import CompanyAPIClient, ServiceAPIClient
+from djconnectwise.api import CompanyAPIClient
+from djconnectwise.api import ServiceAPIClient
 from djconnectwise.api import SystemAPIClient
-from djconnectwise.models import Company, ConnectWiseBoard, ConnectWiseBoardStatus
-from djconnectwise.models import ServiceTicket, SyncJob
-from djconnectwise.models import TicketPriority, Member, Project
-from djconnectwise.models import TicketStatus, ServiceTicketAssignment
+from djconnectwise.models import Company
+from djconnectwise.models import ConnectWiseBoard
+from djconnectwise.models import ConnectWiseBoardStatus
+from djconnectwise.models import Member
+from djconnectwise.models import Project
+from djconnectwise.models import ServiceTicket
+from djconnectwise.models import ServiceTicketAssignment
+from djconnectwise.models import SyncJob
+from djconnectwise.models import TicketPriority
+from djconnectwise.models import TicketStatus
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.files.base import ContentFile
@@ -94,21 +100,23 @@ class CompanySynchronizer:
 
 
 class BoardSynchronizer:
+
     def __init__(self, *args, **kwargs):
         self.client = ServiceAPIClient()
 
     def sync(self):
         for board in self.client.get_boards():
             ConnectWiseBoard.objects.update_or_create(
-                    board_id=board['id'],
-                    defaults={
-                        'name': board['name'],
-                        'inactive': board['inactive'],
-                    }
-                )
+                board_id=board['id'],
+                defaults={
+                    'name': board['name'],
+                    'inactive': board['inactive'],
+                }
+            )
 
 
 class BoardStatusSynchronizer:
+
     def __init__(self, *args, **kwargs):
         self.client = ServiceAPIClient()
 
@@ -119,7 +127,7 @@ class BoardStatusSynchronizer:
             # way to bulk get or create. May need to
             # invest time in a more efficient approach
             for status in self.client.get_statuses(board_id):
-                 
+
                 cw_status, _ = ConnectWiseBoardStatus.objects.update_or_create(
                     status_id=status['id'],
                     defaults={
@@ -127,7 +135,7 @@ class BoardStatusSynchronizer:
                         'status_name': status['name'],
                     }
                 )
-               
+
 
 class ServiceTicketSynchronizer:
     """
@@ -184,7 +192,8 @@ class ServiceTicketSynchronizer:
     def _create_field_lookup(self, clazz):
         field_map = [
             (f.name, f.name.replace('_', '')) for
-            f in clazz._meta.get_fields(include_parents=False, include_hidden=True)
+            f in clazz._meta.get_fields(
+                include_parents=False, include_hidden=True)
         ]
         return dict(field_map)
 

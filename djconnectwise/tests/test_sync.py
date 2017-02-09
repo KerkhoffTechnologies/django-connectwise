@@ -1,12 +1,15 @@
 from copy import deepcopy
 from unittest import TestCase
 
-from djconnectwise.models import Company, ConnectWiseBoard, ConnectWiseBoardStatus
-from djconnectwise.models import Member, ServiceTicket
+from djconnectwise.models import Company
+from djconnectwise.models import ConnectWiseBoard
+from djconnectwise.models import ConnectWiseBoardStatus
+from djconnectwise.models import Member
+from djconnectwise.models import ServiceTicket
 
 from . import fixtures
 from . import mocks
-from .. import sync 
+from .. import sync
 
 
 class TestCompanySynchronizer(TestCase):
@@ -53,6 +56,7 @@ class TestCompanySynchronizer(TestCase):
 
 
 class TestBoardSynchronizer(TestCase):
+
     def setUp(self):
         self.synchronizer = sync.BoardSynchronizer()
 
@@ -64,12 +68,14 @@ class TestBoardSynchronizer(TestCase):
         local_boards = set(ConnectWiseBoard.objects.all()
                                                    .values_list('board_id', 'name'))
 
-        api_boards = set([(s['id'], s['name']) for s in fixtures.API_BOARD_LIST])
+        api_boards = set([(s['id'], s['name'])
+                          for s in fixtures.API_BOARD_LIST])
         self.assertEquals(len(local_boards), len(api_boards))
         self.assertEquals(local_boards, api_boards)
 
 
 class TestBoardStatusSynchronizer(TestCase):
+
     def setUp(self):
         self.synchronizer = sync.BoardStatusSynchronizer()
 
@@ -82,7 +88,8 @@ class TestBoardStatusSynchronizer(TestCase):
                                                    .all()
                                                    .values_list('id', 'status_name'))
 
-        api_statuses = set([(s['id'], s['name']) for s in fixtures.API_BOARD_STATUS_LIST])
+        api_statuses = set([(s['id'], s['name'])
+                            for s in fixtures.API_BOARD_STATUS_LIST])
         self.assertEquals(len(local_statuses), len(api_statuses))
         self.assertEquals(local_statuses, api_statuses)
 
