@@ -1,4 +1,3 @@
-
 from mock import patch
 
 import json
@@ -96,4 +95,3 @@ def get(url, data):
                   url,
                   body=json.dumps(data),
                   content_type="application/json")
-
