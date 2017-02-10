@@ -523,7 +523,7 @@ class ServiceTicketSynchronizer:
         ).values_list('board_id', flat=True).distinct() if board_id]
 
         print("------------------------- 1 -------------------------------")
-        self.status_synchronizer.sync_board_statuses(board_ids)
+        self.status_synchronizer.sync()
         print("------------------------- 2 -------------------------------")
         self.sync_job = SyncJob.objects.create()
         print("------------------------- 3 -------------------------------")
@@ -533,7 +533,8 @@ class ServiceTicketSynchronizer:
         print("------------------------- 5 -------------------------------")
 
         # TODO - Investigate - It looks like this is not necessary
-        self.status_synchronizer.sync_board_statuses(board_ids)
+        # Also, BoardStatusSynchronizer has no sync_board_statuses method
+        #self.status_synchronizer.sync_board_statuses(board_ids)
         print("------------------------- 6 -------------------------------")
         self.sync_job.end_time = timezone.now()
         print("------------------------- 7 -------------------------------")
