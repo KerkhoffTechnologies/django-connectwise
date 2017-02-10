@@ -43,7 +43,6 @@ class ConnectWiseAPIClient(object):
                      '{0}'.format(self.api_private_key),)
 
     def _endpoint(self, path):
-        print('ENDPOINT:', '{0}{1}'.format(self.url, path))
         return '{0}{1}'.format(self.url, path)
 
     def _log_failed(self, response):
