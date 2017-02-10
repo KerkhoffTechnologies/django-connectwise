@@ -1,5 +1,6 @@
 from copy import deepcopy
 from unittest import TestCase
+import os
 
 from djconnectwise.models import Company, Member
 from djconnectwise.models import ServiceTicket
@@ -7,7 +8,8 @@ from djconnectwise.models import ServiceTicket
 from . import fixtures
 from .mocks import company_api_get_call, company_api_by_id_call
 from .mocks import service_api_tickets_call, service_api_update_ticket_call
-from .mocks import system_api_get_members_call, service_api_get_ticket_call
+from .mocks import system_api_get_members_call, system_api_get_member_image_by_identifier_call, \
+    service_api_get_ticket_call, get_member_avatar, CW_MEMBER_IMAGE_FILENAME
 from ..sync import CompanySynchronizer, ServiceTicketSynchronizer
 
 
@@ -103,6 +105,7 @@ class TestMemberSynchronization(TestCase):
         self.member_id = 'User1'
         self.synchronizer = ServiceTicketSynchronizer()
         system_api_get_members_call([fixtures.API_MEMBER])
+        system_api_get_member_image_by_identifier_call((CW_MEMBER_IMAGE_FILENAME, get_member_avatar()))
 
     def _assert_member_fields(self, local_member, api_member):
         self.assertEqual(local_member.first_name, api_member['firstName'])
