@@ -105,8 +105,11 @@ class BoardSynchronizer:
         self.client = ServiceAPIClient()
 
     def sync(self):
+        updated_count = 0
+        created_count = 0
+
         for board in self.client.get_boards():
-            ConnectWiseBoard.objects.update_or_create(
+            _, created = ConnectWiseBoard.objects.update_or_create(
                 board_id=board['id'],
                 defaults={
                     'name': board['name'],
@@ -114,27 +117,51 @@ class BoardSynchronizer:
                 }
             )
 
+            if created:
+                created_count += 1
+            else:
+                updated_count += 1
+
+        return created_count, updated_count
+
 
 class BoardStatusSynchronizer:
 
     def __init__(self, *args, **kwargs):
         self.client = ServiceAPIClient()
 
-    def sync(self, board_ids):
+    def _sync(self, board_ids):
+
+        updated_count = 0
+        created_count = 0
 
         for board_id in board_ids:
             # TODO - Django doesn't provide an efficient
             # way to bulk get or create. May need to
             # invest time in a more efficient approach
             for status in self.client.get_statuses(board_id):
-
-                cw_status, _ = ConnectWiseBoardStatus.objects.update_or_create(
+                _, created = ConnectWiseBoardStatus.objects.update_or_create(
                     status_id=status['id'],
                     defaults={
                         'board_id': board_id,
                         'status_name': status['name'],
                     }
                 )
+
+                if created:
+                    created_count += 1
+                else:
+                    updated_count += 1
+
+        return created_count, updated_count
+
+    def sync(self, board_ids=None):
+
+        if not board_ids:
+            board_qs = ConnectWiseBoard.objects.all()
+            board_ids = board_qs.values_list('board_id', flat=True)
+
+        return self._sync(board_ids)
 
 
 class ServiceTicketSynchronizer:
