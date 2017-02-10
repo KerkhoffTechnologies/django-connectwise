@@ -1,3 +1,4 @@
+import os
 from mock import patch
 
 import json
@@ -80,6 +81,11 @@ def system_api_get_members_call(return_value):
     return create_mock_call(method_name, return_value)
 
 
+def system_api_get_member_image_by_identifier_call(return_value):
+    method_name = 'djconnectwise.api.SystemAPIClient.get_member_image_by_identifier'
+    return create_mock_call(method_name, return_value)
+
+
 def system_api_get_member_count_call(return_value):
     method_name = 'djconnectwise.api.SystemAPIClient.get_members'
     return create_mock_call(method_name, return_value)
@@ -90,8 +96,28 @@ def cw_api_fetch_resource_call(return_value):
     return create_mock_call(method_name, return_value)
 
 
-def get(url, data):
-    responses.add(responses.GET,
-                  url,
-                  body=json.dumps(data),
-                  content_type="application/json")
+def get(url, data, headers=None):
+    """Set up requests mock for given URL and JSON-serializable data."""
+    get_raw(url, json.dumps(data), "application/json", headers)
+
+
+def get_raw(url, data, content_type="application/octet-stream", headers=None):
+    """Set up requests mock for given URL."""
+    responses.add(
+        responses.GET,
+        url,
+        body=data,
+        content_type=content_type,
+        adding_headers=headers,
+    )
+
+
+CW_MEMBER_IMAGE_FILENAME = 'AnonymousMember.png'
+def get_member_avatar():
+    """Return the avatar image data in the tests directory."""
+    cw_member_image_path = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        CW_MEMBER_IMAGE_FILENAME
+    )
+    with open(cw_member_image_path, 'rb') as anonymous_image_file:
+        return anonymous_image_file.read()

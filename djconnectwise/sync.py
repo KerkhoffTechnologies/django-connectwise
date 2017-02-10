@@ -1,5 +1,4 @@
 import logging
-import uuid
 
 from dateutil.parser import parse
 from djconnectwise.api import CompanyAPIClient
@@ -19,7 +18,9 @@ from djconnectwise.models import TicketStatus
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.files.base import ContentFile
 from django.utils import timezone
+from djconnectwise.utils import get_hash, get_filename_extension
 
+DEFAULT_AVATAR_EXTENSION = 'jpg'
 
 logger = logging.getLogger(__name__)
 
@@ -171,7 +172,6 @@ class ServiceTicketSynchronizer:
     """
 
     def __init__(self, reset=False):
-
         self.company_synchronizer = CompanySynchronizer()
         self.status_synchronizer = BoardStatusSynchronizer()
         self.reset = reset
@@ -181,11 +181,13 @@ class ServiceTicketSynchronizer:
 
         if sync_job_qset.exists() and not self.reset:
             self.last_sync_job = sync_job_qset.last()
-            extra_conditions = "lastUpdated > [{0}]".format(
-                self.last_sync_job.start_time.isoformat())
+            last_sync_job_time = self.last_sync_job.start_time.isoformat()
+            extra_conditions = "lastUpdated > [{0}]".format(last_sync_job_time)
+            logger.info('Preparing sync job for objects updated since {}.'.format(last_sync_job_time))
             logger.info(
                 'ServiceTicket Extra Conditions: {0}'.format(extra_conditions))
         else:
+            logger.info('Preparing full ticket sync job.')
             # absence of a sync job indicates that this is an initial/full
             # sync, in which case we do not want to retrieve closed tickets
             extra_conditions = 'ClosedFlag = False'
@@ -324,24 +326,39 @@ class ServiceTicketSynchronizer:
                 member = Member.create_member(api_member)
                 logger.info('Create Member: {0}'.format(member.identifier))
 
-            # only update the avatar if the member profile was updated since
-            # last sync
+            # only update the avatar if the member profile was updated since last sync
             member_last_updated = parse(api_member['_info']['lastUpdated'])
-
+            member_stale = False
             if self.last_sync_job:
-                member_stale = member_last_updated > \
-                    self.last_sync_job.start_time
+                member_stale = member_last_updated > self.last_sync_job.start_time
 
-                if not self.last_sync_job or member_stale:
-                    member_img = self.system_client \
-                                     .get_member_image_by_identifier(username)
-
-                    img_name = '{}.jpg'.format(uuid.uuid4())
-                    img_file = ContentFile(member_img)
-                    member.avatar.save(img_name, img_file)
+            if not self.last_sync_job or member_stale:
+                (attachment_filename, avatar) = self.system_client \
+                                 .get_member_image_by_identifier(username)
+                self._save_avatar(member, avatar, attachment_filename)
 
             member.save()
             self.members_map[member.identifier] = member
+
+    def _save_avatar(self, member, avatar, attachment_filename):
+        """
+        The Django ImageField (and ThumbnailerImageField) field adjusts our filename if the file already exists-
+        it adds some random characters at the end of the name. This means if we just save a new image when the old one
+        still exists, we'll get a new image for each save, resulting in lots of unnecessary images. So we'll delete the
+        old image first, and then the save will use the exact name we give it.
+
+        Well, except in the case where two or more members share the same image, because we're using content hashes as
+        names, and ConnectWise gives users a common default avatar. In that case, the first save will use the expected
+        name, while subsequent saves for other members will have some random characters added to the filename.
+
+        This method tells Django not to call save() on the given model, so the caller must be sure to do that itself.
+        """
+        extension = get_filename_extension(attachment_filename)
+        filename = '{}.{}'.format(get_hash(avatar), extension or DEFAULT_AVATAR_EXTENSION)
+        avatar_file = ContentFile(avatar)
+        member.avatar.delete(save=False)
+        member.avatar.save(filename, avatar_file, save=False)
+        logger.info("Saved member '{}' avatar to {}.".format(member.identifier, member.avatar.name))
 
     def sync_ticket(self, api_ticket):
         """
@@ -488,16 +505,13 @@ class ServiceTicketSynchronizer:
         logger.info('Saving Ticket Assignments')
         ServiceTicketAssignment.objects.bulk_create(
             list(self.ticket_assignments.values()))
-        logger.info('Deleting Closed Tickets')
 
         # now prune closed service tickets.
+        logger.info('Deleting Closed Tickets')
         delete_qset = ServiceTicket.objects.filter(closed_flag=True)
         delete_count = delete_qset.count()
         delete_qset.delete()
 
-        sync_info = 'SYNC COMPLETE - CREATED: {} UPDATED {} DELETED: {}'
-        logger.info(sync_info.format(created_count,
-                                     updated_count, delete_count))
         return created_count, updated_count, delete_count
 
     def start(self):
@@ -508,7 +522,7 @@ class ServiceTicketSynchronizer:
         ).values_list('board_id', flat=True).distinct() if board_id]
 
         print("------------------------- 1 -------------------------------")
-        self.status_synchronizer.sync_board_statuses(board_ids)
+        self.status_synchronizer.sync()
         print("------------------------- 2 -------------------------------")
         self.sync_job = SyncJob.objects.create()
         print("------------------------- 3 -------------------------------")
@@ -518,7 +532,8 @@ class ServiceTicketSynchronizer:
         print("------------------------- 5 -------------------------------")
 
         # TODO - Investigate - It looks like this is not necessary
-        self.status_synchronizer.sync_board_statuses(board_ids)
+        # Also, BoardStatusSynchronizer has no sync_board_statuses method
+        #self.status_synchronizer.sync_board_statuses(board_ids)
         print("------------------------- 6 -------------------------------")
         self.sync_job.end_time = timezone.now()
         print("------------------------- 7 -------------------------------")

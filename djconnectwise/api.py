@@ -3,6 +3,10 @@ import logging
 from django.conf import settings
 
 import requests
+import re
+
+
+CONTENT_DISPOSITION_RE = re.compile('^attachment; filename=([\S]*)$')
 
 logger = logging.getLogger(__name__)
 
@@ -87,6 +91,7 @@ class SystemAPIClient(ConnectWiseAPIClient):
 
     # endpoints
     ENDPOINT_MEMBERS = 'members/'
+    ENDPOINT_MEMBERS_IMAGE = 'members/{}/image'
     ENDPOINT_MEMBERS_COUNT = 'members/count'
     ENDPOINT_CALLBACKS = 'callbacks/'
     ENDPOINT_INFO = 'info/'
@@ -155,17 +160,35 @@ class SystemAPIClient(ConnectWiseAPIClient):
         return self.fetch_resource('members/{0}'.format(identifier))
 
     def get_member_image_by_identifier(self, identifier):
-
+        """
+        Return a (filename, content) tuple.
+        """
         response = requests.get(
-            self._endpoint('members/{0}/image'.format(identifier)),
+            self._endpoint(self.ENDPOINT_MEMBERS_IMAGE.format(identifier)),
             auth=self.auth
         )
 
         if 200 <= response.status_code < 300:
-            return response.content
+            content_disposition_header = response.headers.get('Content-Disposition', default='')
+            logger.info("Got member '{}' image; size {} bytes and content-disposition header '{}'".format(
+                identifier,
+                len(response.content),
+                content_disposition_header
+            ))
+            attachment_filename = self._attachment_filename(content_disposition_header)
+            return attachment_filename, response.content
         else:
             self._log_failed(response)
-        return {}
+        return None, None
+
+    def _attachment_filename(self, content_disposition):
+        """
+        Return the attachment filename from the content disposition header.
+
+        If there's no match, return None.
+        """
+        m = CONTENT_DISPOSITION_RE.match(content_disposition)
+        return m.group(1) if m else None
 
 
 class CompanyAPIClient(ConnectWiseAPIClient):
