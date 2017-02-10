@@ -35,8 +35,10 @@ settings.configure(
 def _setup():
     """Configure Django stuff for tests."""
     django.setup()
-    call_command('migrate', 'djconnectwise')  # Set up the test DB, if necessary
-    call_command('flush', '--noinput')  # Clear out the test DB
+    # Set up the test DB, if necessary
+    call_command('migrate', 'djconnectwise')
+    # Clear out the test DB
+    call_command('flush', '--noinput')
 
 
 def suite():
@@ -46,6 +48,7 @@ def suite():
     _setup()
     runner_cls = get_runner(settings)
     return runner_cls().build_suite(test_labels=None)
+
 
 if __name__ == '__main__':
     _setup()
