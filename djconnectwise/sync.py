@@ -468,7 +468,6 @@ class ServiceTicketSynchronizer:
         return ticket_is_closed
 
     def sync_tickets(self):
-        #return (0,0,0)  # TODO: remove this
         """
         Synchronizes tickets between the ConnectWise server and the
         local database. Synchronization is performed in batches
