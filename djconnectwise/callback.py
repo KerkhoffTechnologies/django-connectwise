@@ -21,7 +21,7 @@ class CallBackHandler(object):
         Registers the ticket callback with the target connectwise system.
         Creates and returns a local CallBackEntry instance.
         """
-        url = '%s://%s%s%s' % (
+        url = '{}://{}{}{}'.format(
             settings.DJCONNECTWISE_CALLBACK_PROTOCOL,
             Site.objects.get_current().domain,
             reverse('djconnectwise:service-ticket-callback'),
