@@ -12,9 +12,11 @@ settings.configure(
     ),
 )
 
+
 def makemigrations():
     django.setup()
     call_command('makemigrations', 'djconnectwise')
+
 
 if __name__ == '__main__':
     makemigrations()
