@@ -60,18 +60,40 @@ class TestBoardSynchronizer(TestCase):
     def setUp(self):
         self.synchronizer = sync.BoardSynchronizer()
 
-    def test_sync(self):
+    def _sync(self):
         ConnectWiseBoard.objects.all().delete()
         mocks.service_api_get_boards_call(fixtures.API_BOARD_LIST)
-        self.synchronizer.sync()
+        return self.synchronizer.sync()
 
-        local_boards = set(ConnectWiseBoard.objects.all()
-                                                   .values_list('board_id', 'name'))
+    def _local_board_set(self):
+        board_qs = ConnectWiseBoard.objects.all()
+        return set(board_qs.values_list('board_id', 'name'))
 
-        api_boards = set([(s['id'], s['name'])
-                          for s in fixtures.API_BOARD_LIST])
-        self.assertEquals(len(local_boards), len(api_boards))
+    def _api_board_set(self, board_data):
+        return set([(s['id'], s['name']) for s in board_data])
+
+    def test_sync(self):
+        created_count, updated_count = self._sync()
+        local_boards = self._local_board_set()
+        api_boards = self._api_board_set(fixtures.API_BOARD_LIST)
+
         self.assertEquals(local_boards, api_boards)
+        self.assertEquals(updated_count, 0)
+        self.assertEquals(created_count, len(fixtures.API_BOARD_LIST))
+
+    def test_sync_update(self):
+        self._sync()
+        updated_boards = deepcopy(fixtures.API_BOARD_LIST)
+        updated_boards[0]['name'] = 'New Board Name'
+        mocks.service_api_get_boards_call(updated_boards)
+        created_count, updated_count = self.synchronizer.sync()
+
+        local_boards = self._local_board_set()
+        api_boards = self._api_board_set(updated_boards)
+
+        self.assertEquals(local_boards, api_boards)
+        self.assertEquals(updated_count, len(fixtures.API_BOARD_LIST))
+        self.assertEquals(created_count, 0)
 
 
 class TestBoardStatusSynchronizer(TestCase):
@@ -79,19 +101,44 @@ class TestBoardStatusSynchronizer(TestCase):
     def setUp(self):
         self.synchronizer = sync.BoardStatusSynchronizer()
 
-    def test_sync(self):
+    def _board_ids(self, board_status_list):
+        return [b['id'] for b in board_status_list]
+
+    def _sync(self):
         ConnectWiseBoardStatus.objects.all().delete()
         mocks.service_api_get_statuses_call(fixtures.API_BOARD_STATUS_LIST)
-        self.synchronizer.sync([b['id'] for b in fixtures.API_BOARD_LIST])
+        board_ids = self._board_ids(fixtures.API_BOARD_LIST)
+        return self.synchronizer.sync(board_ids)
 
-        local_statuses = set(ConnectWiseBoardStatus.objects
-                                                   .all()
-                                                   .values_list('id', 'status_name'))
-
+    def _assert_sync(self, board_status_list):
+        status_qs = ConnectWiseBoardStatus.objects.all()
+        local_statuses = set(status_qs.values_list('status_id', 'status_name'))
         api_statuses = set([(s['id'], s['name'])
-                            for s in fixtures.API_BOARD_STATUS_LIST])
-        self.assertEquals(len(local_statuses), len(api_statuses))
+                            for s in board_status_list])
+        num_local_statuses = len(local_statuses)
+
+        self.assertEquals(num_local_statuses, len(api_statuses))
         self.assertEquals(local_statuses, api_statuses)
+
+    def test_sync_updated(self):
+        self._sync()
+        updated_statuses = deepcopy(fixtures.API_BOARD_STATUS_LIST)
+        updated_statuses[0]['name'] = 'New Status Name'
+        mocks.service_api_get_statuses_call(updated_statuses)
+
+        board_ids = self._board_ids(fixtures.API_BOARD_LIST)
+
+        created_count, updated_count = self.synchronizer.sync(board_ids)
+
+        self.assertEquals(created_count, 0)
+        self.assertEquals(updated_count, len(fixtures.API_BOARD_STATUS_LIST))
+        self._assert_sync(updated_statuses)
+
+    def test_sync(self):
+        created_count, updated_count = self._sync()
+        self.assertEquals(created_count, len(fixtures.API_BOARD_STATUS_LIST))
+        self.assertEquals(updated_count, 0)
+        self._assert_sync(fixtures.API_BOARD_STATUS_LIST)
 
 
 class TestServiceTicketSynchronizer(TestCase):
