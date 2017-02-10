@@ -9,5 +9,5 @@ class Command(BaseCommand):
         synchronizer = CompanySynchronizer()
 
         created_count, updated_count = synchronizer.sync()
-        self.stdout.write('Synced Companies - Created: {} , Updated: {}'.format(
-            created_count, updated_count))
+        msg = 'Synced Companies - Created: {} , Updated: {}'
+        self.stdout.write(msg.format(created_count, updated_count))
