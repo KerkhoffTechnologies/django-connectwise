@@ -12,10 +12,10 @@ from .. import sync
 
 class BaseSyncTest(TestCase):
 
-    def _test_sync(self, mock_call, return_value, command, msg):
+    def _test_sync(self, mock_call, return_value, cw_object, msg):
         mock_call(return_value)
         out = io.StringIO()
-        call_command(command, stdout=out)
+        call_command('cwsync', cw_object, stdout=out)
         self.assertIn(msg, out.getvalue().strip())
 
 
@@ -25,8 +25,8 @@ class TestSyncCompaniesCommand(BaseSyncTest):
         " Test sync companies command."
         self._test_sync(mocks.company_api_get_call,
                         fixtures.API_COMPANY_LIST,
-                        'sync_companies',
-                        'Synced Companies - Created: 1 , Updated: 0')
+                        'company',
+                        'Sync Summary - Created: 1 , Updated: 0')
 
 
 class TestSyncBoardsCommand(BaseSyncTest):
@@ -35,8 +35,8 @@ class TestSyncBoardsCommand(BaseSyncTest):
         " Test sync boards command."
         self._test_sync(mocks.service_api_get_boards_call,
                         fixtures.API_BOARD_LIST,
-                        'sync_boards',
-                        'Synced Boards - Created: 1 , Updated: 0')
+                        'board',
+                        'Sync Summary - Created: 1 , Updated: 0')
 
 
 class TestSyncBoardsStatusesCommand(BaseSyncTest):
@@ -52,5 +52,5 @@ class TestSyncBoardsStatusesCommand(BaseSyncTest):
         " Test sync_board_statuses command."
         self._test_sync(mocks.service_api_get_statuses_call,
                         fixtures.API_BOARD_STATUS_LIST,
-                        'sync_board_statuses',
-                        'Synced Board Statuses - Created: 2 , Updated: 0')
+                        'board_status',
+                        'Sync Summary - Created: 2 , Updated: 0')
