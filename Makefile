@@ -22,7 +22,7 @@ install: clean
 	python setup.py install
 
 lint: ## check style with flake8
-	flake8 djconnectwise
+	flake8 .
 
 test: clean lint
 	python setup.py test
