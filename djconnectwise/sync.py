@@ -65,6 +65,7 @@ class CompanySynchronizer:
         api_company_data = self.client.get()
         created_count = 0
         updated_count = 0
+        deleted_count = 0
 
         for api_company in api_company_data:
             company_id = api_company['id']
@@ -78,7 +79,7 @@ class CompanySynchronizer:
             self._assign_field_data(company, api_company)
             company.save()
 
-        return created_count, updated_count
+        return created_count, updated_count, deleted_count
 
     def get_or_create_company(self, company_id):
         """
@@ -108,6 +109,7 @@ class BoardSynchronizer:
     def sync(self):
         updated_count = 0
         created_count = 0
+        deleted_count = 0
 
         for board in self.client.get_boards():
             _, created = ConnectWiseBoard.objects.update_or_create(
@@ -123,7 +125,7 @@ class BoardSynchronizer:
             else:
                 updated_count += 1
 
-        return created_count, updated_count
+        return created_count, updated_count, deleted_count
 
 
 class BoardStatusSynchronizer:
@@ -135,6 +137,7 @@ class BoardStatusSynchronizer:
 
         updated_count = 0
         created_count = 0
+        deleted_count = 0
 
         for board_id in board_ids:
             # TODO - Django doesn't provide an efficient
@@ -154,7 +157,7 @@ class BoardStatusSynchronizer:
                 else:
                     updated_count += 1
 
-        return created_count, updated_count
+        return created_count, updated_count, deleted_count
 
     def sync(self, board_ids=None):
 
@@ -206,6 +209,10 @@ class MemberSynchronizer:
     def sync(self):
         members_json = self.client.get_members()
 
+        updated_count = 0
+        created_count = 0
+        deleted_count = 0
+
         for api_member in members_json:
             username = api_member['identifier']
             member_qset = Member.objects.filter(identifier=username)
@@ -215,16 +222,18 @@ class MemberSynchronizer:
                 member.first_name = api_member['firstName']
                 member.last_name = api_member['lastName']
                 member.office_email = api_member['officeEmail']
-
+                updated_count += 1
                 logger.info('Update Member: {0}'.format(member.identifier))
             else:
                 member = Member.create_member(api_member)
+                created_count += 1
                 logger.info('Create Member: {0}'.format(member.identifier))
 
             # only update the avatar if the member profile
             # was updated since last sync
             member_last_updated = parse(api_member['_info']['lastUpdated'])
             member_stale = False
+
             if self.last_sync_job:
                 member_stale = member_last_updated > \
                     self.last_sync_job.start_time
@@ -235,6 +244,8 @@ class MemberSynchronizer:
                 self._save_avatar(member, avatar, attachment_filename)
 
             member.save()
+
+        return created_count, updated_count, deleted_count
 
 
 class ServiceTicketSynchronizer:
@@ -407,8 +418,8 @@ class ServiceTicketSynchronizer:
         service_ticket.budget_hours = api_ticket['budgetHours']
         service_ticket.actual_hours = api_ticket['actualHours']
         service_ticket.record_type = api_ticket['recordType']
-        team = api_ticket['team']
 
+        team = api_ticket['team']
         if team:
             service_ticket.team_id = api_ticket['team']['id']
 
@@ -492,7 +503,7 @@ class ServiceTicketSynchronizer:
 
         return ticket_is_closed
 
-    def sync_tickets(self):
+    def sync(self):
         """
         Synchronizes tickets between the ConnectWise server and the
         local database. Synchronization is performed in batches
@@ -551,7 +562,7 @@ class ServiceTicketSynchronizer:
         print("------------------------- 2 -------------------------------")
         self.sync_job = SyncJob.objects.create()
         print("------------------------- 3 -------------------------------")
-        created_count, updated_count, delete_count = self.sync_tickets()
+        created_count, updated_count, delete_count = self.sync()
         print("------------------------- 4 -------------------------------")
 
         # TODO - Investigate - It looks like this is not necessary

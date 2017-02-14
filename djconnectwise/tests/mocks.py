@@ -10,6 +10,7 @@ CW_MEMBER_IMAGE_FILENAME = 'AnonymousMember.png'
 
 
 def create_mock_call(method_name, return_value, side_effect=None):
+    """Utility function for mocking the specified function or method"""
     _patch = patch(method_name, side_effect=side_effect)
     mock_get_call = _patch.start()
 
