@@ -1,5 +1,6 @@
 from copy import deepcopy
 from unittest import TestCase
+import os
 
 from djconnectwise.models import Company
 from djconnectwise.models import ConnectWiseBoard
@@ -77,9 +78,9 @@ class TestBoardSynchronizer(TestCase):
         local_boards = self._local_board_set()
         api_boards = self._api_board_set(fixtures.API_BOARD_LIST)
 
-        self.assertEquals(local_boards, api_boards)
-        self.assertEquals(updated_count, 0)
-        self.assertEquals(created_count, len(fixtures.API_BOARD_LIST))
+        self.assertEqual(local_boards, api_boards)
+        self.assertEqual(updated_count, 0)
+        self.assertEqual(created_count, len(fixtures.API_BOARD_LIST))
 
     def test_sync_update(self):
         self._sync()
@@ -91,9 +92,9 @@ class TestBoardSynchronizer(TestCase):
         local_boards = self._local_board_set()
         api_boards = self._api_board_set(updated_boards)
 
-        self.assertEquals(local_boards, api_boards)
-        self.assertEquals(updated_count, len(fixtures.API_BOARD_LIST))
-        self.assertEquals(created_count, 0)
+        self.assertEqual(local_boards, api_boards)
+        self.assertEqual(updated_count, len(fixtures.API_BOARD_LIST))
+        self.assertEqual(created_count, 0)
 
 
 class TestBoardStatusSynchronizer(TestCase):
@@ -117,8 +118,8 @@ class TestBoardStatusSynchronizer(TestCase):
                             for s in board_status_list])
         num_local_statuses = len(local_statuses)
 
-        self.assertEquals(num_local_statuses, len(api_statuses))
-        self.assertEquals(local_statuses, api_statuses)
+        self.assertEqual(num_local_statuses, len(api_statuses))
+        self.assertEqual(local_statuses, api_statuses)
 
     def test_sync_updated(self):
         self._sync()
@@ -130,14 +131,14 @@ class TestBoardStatusSynchronizer(TestCase):
 
         created_count, updated_count = self.synchronizer.sync(board_ids)
 
-        self.assertEquals(created_count, 0)
-        self.assertEquals(updated_count, len(fixtures.API_BOARD_STATUS_LIST))
+        self.assertEqual(created_count, 0)
+        self.assertEqual(updated_count, len(fixtures.API_BOARD_STATUS_LIST))
         self._assert_sync(updated_statuses)
 
     def test_sync(self):
         created_count, updated_count = self._sync()
-        self.assertEquals(created_count, len(fixtures.API_BOARD_STATUS_LIST))
-        self.assertEquals(updated_count, 0)
+        self.assertEqual(created_count, len(fixtures.API_BOARD_STATUS_LIST))
+        self.assertEqual(updated_count, 0)
         self._assert_sync(fixtures.API_BOARD_STATUS_LIST)
 
 
@@ -190,6 +191,7 @@ class TestMemberSynchronization(TestCase):
         self.member_id = 'User1'
         self.synchronizer = sync.ServiceTicketSynchronizer()
         mocks.system_api_get_members_call([fixtures.API_MEMBER])
+        mocks.system_api_get_member_image_by_identifier_call((mocks.CW_MEMBER_IMAGE_FILENAME, mocks.get_member_avatar()))
 
     def _assert_member_fields(self, local_member, api_member):
         self.assertEqual(local_member.first_name, api_member['firstName'])
