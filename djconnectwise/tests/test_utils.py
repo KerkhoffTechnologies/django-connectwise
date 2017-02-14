@@ -21,7 +21,6 @@ class TestUtils(TestCase):
             'jpg'
         )
 
-
     def test_get_filename_extension_returns_none_when_invalid(self):
         self.assertEqual(
             get_filename_extension('avatar'),

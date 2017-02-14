@@ -1,6 +1,5 @@
 from copy import deepcopy
 from unittest import TestCase
-import os
 
 from djconnectwise.models import Company
 from djconnectwise.models import ConnectWiseBoard
@@ -191,7 +190,8 @@ class TestMemberSynchronization(TestCase):
         self.member_id = 'User1'
         self.synchronizer = sync.ServiceTicketSynchronizer()
         mocks.system_api_get_members_call([fixtures.API_MEMBER])
-        mocks.system_api_get_member_image_by_identifier_call((mocks.CW_MEMBER_IMAGE_FILENAME, mocks.get_member_avatar()))
+        mocks.system_api_get_member_image_by_identifier_call(
+            (mocks.CW_MEMBER_IMAGE_FILENAME, mocks.get_member_avatar()))
 
     def _assert_member_fields(self, local_member, api_member):
         self.assertEqual(local_member.first_name, api_member['firstName'])

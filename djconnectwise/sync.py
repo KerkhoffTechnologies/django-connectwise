@@ -183,7 +183,8 @@ class ServiceTicketSynchronizer:
             self.last_sync_job = sync_job_qset.last()
             last_sync_job_time = self.last_sync_job.start_time.isoformat()
             extra_conditions = "lastUpdated > [{0}]".format(last_sync_job_time)
-            logger.info('Preparing sync job for objects updated since {}.'.format(last_sync_job_time))
+            logger.info('Preparing sync job for objects updated since {}.'.format(
+                last_sync_job_time))
             logger.info(
                 'ServiceTicket Extra Conditions: {0}'.format(extra_conditions))
         else:
@@ -326,15 +327,17 @@ class ServiceTicketSynchronizer:
                 member = Member.create_member(api_member)
                 logger.info('Create Member: {0}'.format(member.identifier))
 
-            # only update the avatar if the member profile was updated since last sync
+            # only update the avatar if the member profile
+            # was updated since last sync
             member_last_updated = parse(api_member['_info']['lastUpdated'])
             member_stale = False
             if self.last_sync_job:
-                member_stale = member_last_updated > self.last_sync_job.start_time
+                member_stale = member_last_updated > \
+                    self.last_sync_job.start_time
 
             if not self.last_sync_job or member_stale:
                 (attachment_filename, avatar) = self.system_client \
-                                 .get_member_image_by_identifier(username)
+                    .get_member_image_by_identifier(username)
                 self._save_avatar(member, avatar, attachment_filename)
 
             member.save()
@@ -342,27 +345,35 @@ class ServiceTicketSynchronizer:
 
     def _save_avatar(self, member, avatar, attachment_filename):
         """
-        The Django ImageField (and ThumbnailerImageField) field adjusts our filename if the file already exists-
-        it adds some random characters at the end of the name. This means if we just save a new image when the old one
-        still exists, we'll get a new image for each save, resulting in lots of unnecessary images. So we'll delete the
-        old image first, and then the save will use the exact name we give it.
+        The Django ImageField (and ThumbnailerImageField) field adjusts our
+        filename if the file already exists- it adds some random characters at
+        the end of the name. This means if we just save a new image when the
+        old one still exists, we'll get a new image for each save, resulting
+        in lots of unnecessary images. So we'll delete the old image first,
+        and then the save   will use the exact name we give it.
 
-        Well, except in the case where two or more members share the same image, because we're using content hashes as
-        names, and ConnectWise gives users a common default avatar. In that case, the first save will use the expected
-        name, while subsequent saves for other members will have some random characters added to the filename.
+        Well, except in the case where two or more members share the same
+        image,because we're using content hashes as names, and ConnectWise
+        gives users a common default avatar. In that case, the first save
+        will use the expected name, while subsequent saves for other members
+        will have some random characters added to the filename.
 
-        This method tells Django not to call save() on the given model, so the caller must be sure to do that itself.
+        This method tells Django not to call save() on the given model,
+        so the caller must be sure to do that itself.
         """
         extension = get_filename_extension(attachment_filename)
-        filename = '{}.{}'.format(get_hash(avatar), extension or DEFAULT_AVATAR_EXTENSION)
+        filename = '{}.{}'.format(
+            get_hash(avatar), extension or DEFAULT_AVATAR_EXTENSION)
         avatar_file = ContentFile(avatar)
         member.avatar.delete(save=False)
         member.avatar.save(filename, avatar_file, save=False)
-        logger.info("Saved member '{}' avatar to {}.".format(member.identifier, member.avatar.name))
+        logger.info("Saved member '{}' avatar to {}.".format(
+            member.identifier, member.avatar.name))
 
     def sync_ticket(self, api_ticket):
         """
-        Creates a new local instance of the supplied ConnectWise ServiceTicket instance.
+        Creates a new local instance of the supplied ConnectWise
+        ServiceTicket instance.
         """
         api_ticket_id = api_ticket['id']
         service_ticket, created = ServiceTicket.objects \
@@ -518,7 +529,7 @@ class ServiceTicketSynchronizer:
         """
         Initiates the sync mechanism. Returns the number of tickets created
         """
-        board_ids = [board_id for board_id in ServiceTicket.objects.all(
+        [board_id for board_id in ServiceTicket.objects.all(
         ).values_list('board_id', flat=True).distinct() if board_id]
 
         print("------------------------- 1 -------------------------------")
@@ -533,7 +544,7 @@ class ServiceTicketSynchronizer:
 
         # TODO - Investigate - It looks like this is not necessary
         # Also, BoardStatusSynchronizer has no sync_board_statuses method
-        #self.status_synchronizer.sync_board_statuses(board_ids)
+        # self.status_synchronizer.sync_board_statuses(board_ids)
         print("------------------------- 6 -------------------------------")
         self.sync_job.end_time = timezone.now()
         print("------------------------- 7 -------------------------------")
