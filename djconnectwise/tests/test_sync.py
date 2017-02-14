@@ -188,7 +188,7 @@ class TestMemberSynchronization(TestCase):
 
     def setUp(self):
         self.member_id = 'User1'
-        self.synchronizer = sync.ServiceTicketSynchronizer()
+        self.synchronizer = sync.MemberSynchronizer()
         mocks.system_api_get_members_call([fixtures.API_MEMBER])
         mocks.system_api_get_member_image_by_identifier_call(
             (mocks.CW_MEMBER_IMAGE_FILENAME, mocks.get_member_avatar()))
@@ -210,14 +210,14 @@ class TestMemberSynchronization(TestCase):
         member.office_email = 'some@stale.com'
         member.save()
 
-        self.synchronizer.sync_members()
+        self.synchronizer.sync()
         local_member = Member.objects.get(identifier=self.member_id)
         api_member = fixtures.API_MEMBER
         self._assert_member_fields(local_member, api_member)
 
     def test_sync_member_create(self):
         self._clear_members()
-        self.synchronizer.sync_members()
+        self.synchronizer.sync()
         local_member = Member.objects.all().first()
         api_member = fixtures.API_MEMBER
         self._assert_member_fields(local_member, api_member)
