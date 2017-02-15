@@ -62,7 +62,9 @@ def exit_on_failure(command, message=None):
 
 def flake8_main():
     print('Running: flake8')
-    command = subprocess.call(['flake8'] + ['.'])
+    _call = ['flake8'] + ['.'] + ['--exclude=*/migrations/*']
+    command = subprocess.call(_call)
+
     print("Failed: flake8 failed." if command else "Success. flake8 passed.")
     return command
 
