@@ -75,6 +75,9 @@ class Member(TimeStampedModel):
     avatar = ThumbnailerImageField(null=True, blank=True, verbose_name=_(
         'Member Avatar'), help_text=_('Member Avatar'))
 
+    class Meta:
+        ordering = ('first_name', 'last_name')
+
     def __str__(self):
         return '{} {}'.format(self.first_name, self.last_name)
 
@@ -124,6 +127,7 @@ class Company(TimeStampedModel):
 
     class Meta:
         verbose_name_plural = 'companies'
+        ordering = ('company_identifier', )
 
     def __str__(self):
         return self.get_company_identifier() or ''
@@ -146,6 +150,7 @@ class TicketStatus(TimeStampedModel):
 
     class Meta:
         verbose_name_plural = 'ticket statuses'
+        ordering = ('ticket_status',)
 
     def __str__(self):
         return self.status_name
@@ -153,6 +158,9 @@ class TicketStatus(TimeStampedModel):
 
 class TicketPriority(TimeStampedModel):
     name = models.CharField(max_length=50, blank=False)
+
+    class Meta:
+        ordering = ('name', )
 
     def __str__(self):
         return self.name
@@ -167,6 +175,9 @@ class Project(TimeStampedModel):
     name = models.CharField(max_length=200)
     project_id = models.PositiveSmallIntegerField()
     project_href = models.CharField(max_length=200)
+
+    class Meta:
+        ordering = ('name', )
 
     def __str__(self):
         return self.name or ''
@@ -234,6 +245,7 @@ class ServiceTicket(TimeStampedModel):
         # ordering = ['priority_text','entered_date_utc','id']
         verbose_name = 'Service Ticket'
         verbose_name_plural = 'Service Tickets'
+        ordering = ('summary', )
 
     def __str__(self):
         try:
