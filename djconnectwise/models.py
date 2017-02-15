@@ -163,6 +163,7 @@ class TicketPriority(TimeStampedModel):
     color = models.CharField(max_length=50, blank=False)
 
     class Meta:
+        verbose_name_plural = 'ticket priorities'
         ordering = ('name', )
 
     def __str__(self):

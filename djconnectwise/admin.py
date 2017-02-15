@@ -47,7 +47,7 @@ class ServiceTicketAdmin(admin.ModelAdmin):
 
 class TicketPriorityAdmin(admin.ModelAdmin):
     model = TicketPriority
-    list_display = ('priority_id', 'name', 'sort',)
+    list_display = ('priority_id', 'name', 'sort', 'color')
 
 
 admin.site.register(ConnectWiseBoard, ConnectWiseBoardAdmin)
