@@ -246,7 +246,8 @@ class ServiceAPIClient(ConnectWiseAPIClient):
         endpoint_url = 'tickets/{}'.format(ticket_id)
         return self.fetch_resource(endpoint_url)
 
-    def get_tickets(self, page=0, page_size=25):
+    def get_tickets(self, page=0,
+                    page_size=settings.DJCONNECTWISE_API_BATCH_LIMIT):
         params = dict(
             page=page,
             pageSize=page_size,
