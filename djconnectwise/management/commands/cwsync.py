@@ -11,13 +11,22 @@ OPTION_NAME = 'connectwise_object'
 class Command(BaseCommand):
     help = _('Synchronize the specified object with the Connectwise API')
 
-    synchronizer_map = OrderedDict(
-        board=(sync.BoardSynchronizer, _('Board')),
-        board_status=(sync.BoardStatusSynchronizer, _('Board Status')),
-        company=(sync.CompanySynchronizer, _('Company')),
-        member=(sync.MemberSynchronizer, _('Member')),
-        ticket=(sync.ServiceTicketSynchronizer, _('Ticket'))
-    )
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # This can be replaced with a single instantiation of an OrderedDict
+        # using kwargs in Python 3.6.
+        # See https://www.python.org/dev/peps/pep-0468/.
+        synchronizers = (
+            ('board', sync.BoardSynchronizer, _('Board')),
+            ('board_status', sync.BoardStatusSynchronizer, _('Board Status')),
+            ('company', sync.CompanySynchronizer, _('Company')),
+            ('member', sync.MemberSynchronizer, _('Member')),
+            ('ticket', sync.ServiceTicketSynchronizer, _('Ticket')),
+        )
+        self.synchronizer_map = OrderedDict()
+        for name, syncronizer, obj_name in synchronizers:
+            self.synchronizer_map[name] = (syncronizer, obj_name)
 
     def add_arguments(self, parser):
         parser.add_argument(OPTION_NAME, nargs='?', type=str)
@@ -27,10 +36,10 @@ class Command(BaseCommand):
                             default=False)
 
     def sync_by_class(self, sync_class, obj_name, reset=False):
-        synchronizer = sync_class()
-
         if reset and sync_class == sync.ServiceTicketSynchronizer:
             synchronizer = sync_class(reset=reset)
+        else:
+            synchronizer = sync_class()
 
         created_count, updated_count, deleted_count = synchronizer.sync()
         msg = _('{} Sync Summary - Created: {} , Updated: {}')
