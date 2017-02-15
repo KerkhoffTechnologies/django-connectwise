@@ -176,7 +176,7 @@ class MemberSynchronizer:
 
         sync_job_qset = SyncJob.objects.all()
 
-        if sync_job_qset.exists() and not self.reset:
+        if sync_job_qset.exists():
             self.last_sync_job = sync_job_qset.last()
 
     def _save_avatar(self, member, avatar, attachment_filename):
@@ -186,10 +186,10 @@ class MemberSynchronizer:
         the end of the name. This means if we just save a new image when the
         old one still exists, we'll get a new image for each save, resulting
         in lots of unnecessary images. So we'll delete the old image first,
-        and then the save   will use the exact name we give it.
+        and then the save will use the exact name we give it.
 
         Well, except in the case where two or more members share the same
-        image,because we're using content hashes as names, and ConnectWise
+        image, because we're using content hashes as names, and ConnectWise
         gives users a common default avatar. In that case, the first save
         will use the expected name, while subsequent saves for other members
         will have some random characters added to the filename.
@@ -509,6 +509,8 @@ class ServiceTicketSynchronizer:
         local database. Synchronization is performed in batches
         specified in the DJCONNECTWISE_API_BATCH_LIMIT setting
         """
+        sync_job = SyncJob.objects.create()
+
         created_count = 0
         updated_count = 0
         ticket_ids = []
@@ -548,29 +550,7 @@ class ServiceTicketSynchronizer:
         delete_count = delete_qset.count()
         delete_qset.delete()
 
-        return created_count, updated_count, delete_count
-
-    def start(self):
-        """
-        Initiates the sync mechanism. Returns the number of tickets created
-        """
-        [board_id for board_id in ServiceTicket.objects.all(
-        ).values_list('board_id', flat=True).distinct() if board_id]
-
-        print("------------------------- 1 -------------------------------")
-        self.status_synchronizer.sync()
-        print("------------------------- 2 -------------------------------")
-        self.sync_job = SyncJob.objects.create()
-        print("------------------------- 3 -------------------------------")
-        created_count, updated_count, delete_count = self.sync()
-        print("------------------------- 4 -------------------------------")
-
-        # TODO - Investigate - It looks like this is not necessary
-        # Also, BoardStatusSynchronizer has no sync_board_statuses method
-        # self.status_synchronizer.sync_board_statuses(board_ids)
-        print("------------------------- 5 -------------------------------")
-        self.sync_job.end_time = timezone.now()
-        print("------------------------- 6 -------------------------------")
-        self.sync_job.save()
+        sync_job.end_time = timezone.now()
+        sync_job.save()
 
         return created_count, updated_count, delete_count
