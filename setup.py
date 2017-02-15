@@ -9,7 +9,8 @@ LONG_DESCRIPTION = open('README.rst').read()
 setup(
     name="django-connectwise",
     version=djconnectwise.__version__,
-    description='Django app for working with ConnectWise. Defines models (tickets, members, companies, etc.) '
+    description='Django app for working with ConnectWise. Defines models '
+                '(tickets, members, companies, etc.) '
     'and callbacks.',
     long_description=LONG_DESCRIPTION,
     keywords='django connectwise rest api python',
@@ -31,8 +32,10 @@ setup(
     tests_require=[
         'responses',
     ],
-    zip_safe=False,  # Django likes to inspect apps for /migrations directories,
-    # and can't if package is installed as a egg. zip_safe=False disables installation as an egg.
+    # Django likes to inspect apps for /migrations directories, and can't if
+    # package is installed as a egg. zip_safe=False disables installation as
+    # an egg.
+    zip_safe=False,
     classifiers=[
         'Environment :: Web Environment',
         'Framework :: Django',

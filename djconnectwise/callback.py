@@ -52,13 +52,15 @@ class CallBackHandler(object):
 
     def list_callbacks(self):
         """
-        Returns a list of dict callback entries that are registered with the target system.
+        Returns a list of dict callback entries that are registered
+        with the target system.
         """
         return self.system_client.get_callbacks()
 
     def remove_ticket_callback(self):
         """
-        Removes the ticket callback from connectwise and removes the local record.
+        Removes the ticket callback from connectwise and removes
+        the local record.
         """
         entry_qset = CallBackEntry.objects.filter(
             callback_type=CallBackEntry.CALLBACK_TYPES.ticket
@@ -69,9 +71,11 @@ class CallBackHandler(object):
 
         for entry in entry_qset:
             try:
-                # Only delete the DB entry once CW has accepted our delete request.
+                # Only delete the DB entry once CW has accepted our
+                # delete request.
                 self.system_client.delete_callback(entry.entry_id)
                 logger.info('Deleted ticket callback {}.'.format(entry.id))
                 entry.delete()
             except RequestException as e:
-                logger.warning('Failed to remove ticket callback for callback {}: {}'.format(entry.id, e))
+                logger.warning('Failed to remove ticket callback for '
+                               'callback {}: {}'.format(entry.id, e))

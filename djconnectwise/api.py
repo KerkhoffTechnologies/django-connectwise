@@ -169,13 +169,20 @@ class SystemAPIClient(ConnectWiseAPIClient):
         )
 
         if 200 <= response.status_code < 300:
-            content_disposition_header = response.headers.get('Content-Disposition', default='')
-            logger.info("Got member '{}' image; size {} bytes and content-disposition header '{}'".format(
-                identifier,
-                len(response.content),
-                content_disposition_header
-            ))
-            attachment_filename = self._attachment_filename(content_disposition_header)
+            content_disposition_header = response.headers.get(
+                'Content-Disposition',
+                default=''
+            )
+            logger.info(
+                "Got member '{}' image; size {} bytes and "
+                "content-disposition header '{}'".format(
+                    identifier,
+                    len(response.content),
+                    content_disposition_header
+                )
+            )
+            attachment_filename = \
+                self._attachment_filename(content_disposition_header)
             return attachment_filename, response.content
         else:
             self._log_failed(response)
