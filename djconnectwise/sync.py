@@ -206,7 +206,9 @@ class PrioritySynchronizer:
         Creates and returns a TicketPriority instance if
         it does not already exist
         """
-        ticket_priority, created = self.get_or_create_ticket(api_priority)
+        ticket_priority, created = self.get_or_create_ticket_priority(
+            api_priority)
+
         action = 'Created' if created else 'Updated'
 
         if not created:
