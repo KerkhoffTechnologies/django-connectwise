@@ -2,8 +2,8 @@ import logging
 
 from django.conf import settings
 
-import requests
 import re
+import requests
 
 
 CONTENT_DISPOSITION_RE = re.compile('^attachment; filename=([\S]*)$')
@@ -213,6 +213,7 @@ class CompanyAPIClient(ConnectWiseAPIClient):
 class ServiceAPIClient(ConnectWiseAPIClient):
     API = 'service'
     ENDPOINT_BOARDS = 'boards'
+    ENDPOINT_PRIORITIES = 'priorities'
 
     def __init__(self, *args, **kwargs):
         self.extra_conditions = None
@@ -279,3 +280,6 @@ class ServiceAPIClient(ConnectWiseAPIClient):
 
     def get_board(self, board_id):
         return self.fetch_resource('boards/{}'.format(board_id))
+
+    def get_priorities(self):
+        return self.fetch_resource(self.ENDPOINT_PRIORITIES)
