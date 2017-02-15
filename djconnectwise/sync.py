@@ -65,6 +65,7 @@ class CompanySynchronizer:
         api_company_data = self.client.get()
         created_count = 0
         updated_count = 0
+        deleted_count = 0
 
         for api_company in api_company_data:
             company_id = api_company['id']
@@ -78,7 +79,7 @@ class CompanySynchronizer:
             self._assign_field_data(company, api_company)
             company.save()
 
-        return created_count, updated_count
+        return created_count, updated_count, deleted_count
 
     def get_or_create_company(self, company_id):
         """
@@ -108,6 +109,7 @@ class BoardSynchronizer:
     def sync(self):
         updated_count = 0
         created_count = 0
+        deleted_count = 0
 
         for board in self.client.get_boards():
             _, created = ConnectWiseBoard.objects.update_or_create(
@@ -123,7 +125,7 @@ class BoardSynchronizer:
             else:
                 updated_count += 1
 
-        return created_count, updated_count
+        return created_count, updated_count, deleted_count
 
 
 class BoardStatusSynchronizer:
@@ -135,6 +137,7 @@ class BoardStatusSynchronizer:
 
         updated_count = 0
         created_count = 0
+        deleted_count = 0
 
         for board_id in board_ids:
             # TODO - Django doesn't provide an efficient
@@ -154,7 +157,7 @@ class BoardStatusSynchronizer:
                 else:
                     updated_count += 1
 
-        return created_count, updated_count
+        return created_count, updated_count, deleted_count
 
     def sync(self, board_ids=None):
 
@@ -163,6 +166,86 @@ class BoardStatusSynchronizer:
             board_ids = board_qs.values_list('board_id', flat=True)
 
         return self._sync(board_ids)
+
+
+class MemberSynchronizer:
+
+    def __init__(self, *args, **kwargs):
+        self.client = SystemAPIClient()
+        self.last_sync_job = None
+
+        sync_job_qset = SyncJob.objects.all()
+
+        if sync_job_qset.exists():
+            self.last_sync_job = sync_job_qset.last()
+
+    def _save_avatar(self, member, avatar, attachment_filename):
+        """
+        The Django ImageField (and ThumbnailerImageField) field adjusts our
+        filename if the file already exists- it adds some random characters at
+        the end of the name. This means if we just save a new image when the
+        old one still exists, we'll get a new image for each save, resulting
+        in lots of unnecessary images. So we'll delete the old image first,
+        and then the save will use the exact name we give it.
+
+        Well, except in the case where two or more members share the same
+        image, because we're using content hashes as names, and ConnectWise
+        gives users a common default avatar. In that case, the first save
+        will use the expected name, while subsequent saves for other members
+        will have some random characters added to the filename.
+
+        This method tells Django not to call save() on the given model,
+        so the caller must be sure to do that itself.
+        """
+        extension = get_filename_extension(attachment_filename)
+        filename = '{}.{}'.format(
+            get_hash(avatar), extension or DEFAULT_AVATAR_EXTENSION)
+        avatar_file = ContentFile(avatar)
+        member.avatar.delete(save=False)
+        member.avatar.save(filename, avatar_file, save=False)
+        logger.info("Saved member '{}' avatar to {}.".format(
+            member.identifier, member.avatar.name))
+
+    def sync(self):
+        members_json = self.client.get_members()
+
+        updated_count = 0
+        created_count = 0
+        deleted_count = 0
+
+        for api_member in members_json:
+            username = api_member['identifier']
+            member_qset = Member.objects.filter(identifier=username)
+            if member_qset.exists():
+                member = member_qset.first()
+
+                member.first_name = api_member['firstName']
+                member.last_name = api_member['lastName']
+                member.office_email = api_member['officeEmail']
+                updated_count += 1
+                logger.info('Update Member: {0}'.format(member.identifier))
+            else:
+                member = Member.create_member(api_member)
+                created_count += 1
+                logger.info('Create Member: {0}'.format(member.identifier))
+
+            # only update the avatar if the member profile
+            # was updated since last sync
+            member_last_updated = parse(api_member['_info']['lastUpdated'])
+            member_stale = False
+
+            if self.last_sync_job:
+                member_stale = member_last_updated > \
+                    self.last_sync_job.start_time
+
+            if not self.last_sync_job or member_stale:
+                (attachment_filename, avatar) = self.client \
+                    .get_member_image_by_identifier(username)
+                self._save_avatar(member, avatar, attachment_filename)
+
+            member.save()
+
+        return created_count, updated_count, deleted_count
 
 
 class ServiceTicketSynchronizer:
@@ -174,6 +257,7 @@ class ServiceTicketSynchronizer:
     def __init__(self, reset=False):
         self.company_synchronizer = CompanySynchronizer()
         self.status_synchronizer = BoardStatusSynchronizer()
+
         self.reset = reset
         self.last_sync_job = None
         extra_conditions = ''
@@ -183,7 +267,9 @@ class ServiceTicketSynchronizer:
             self.last_sync_job = sync_job_qset.last()
             last_sync_job_time = self.last_sync_job.start_time.isoformat()
             extra_conditions = "lastUpdated > [{0}]".format(last_sync_job_time)
-            logger.info('Preparing sync job for objects updated since {}.'.format(last_sync_job_time))
+
+            log_msg = 'Preparing sync job for objects updated since {}.'
+            logger.info(log_msg.format(last_sync_job_time))
             logger.info(
                 'ServiceTicket Extra Conditions: {0}'.format(extra_conditions))
         else:
@@ -308,61 +394,10 @@ class ServiceTicketSynchronizer:
 
         return ticket_priority
 
-    def sync_members(self):
-        members_json = self.system_client.get_members()
-
-        for api_member in members_json:
-            username = api_member['identifier']
-            member_qset = Member.objects.filter(identifier=username)
-            if member_qset.exists():
-                member = member_qset.first()
-
-                member.first_name = api_member['firstName']
-                member.last_name = api_member['lastName']
-                member.office_email = api_member['officeEmail']
-
-                logger.info('Update Member: {0}'.format(member.identifier))
-            else:
-                member = Member.create_member(api_member)
-                logger.info('Create Member: {0}'.format(member.identifier))
-
-            # only update the avatar if the member profile was updated since last sync
-            member_last_updated = parse(api_member['_info']['lastUpdated'])
-            member_stale = False
-            if self.last_sync_job:
-                member_stale = member_last_updated > self.last_sync_job.start_time
-
-            if not self.last_sync_job or member_stale:
-                (attachment_filename, avatar) = self.system_client \
-                                 .get_member_image_by_identifier(username)
-                self._save_avatar(member, avatar, attachment_filename)
-
-            member.save()
-            self.members_map[member.identifier] = member
-
-    def _save_avatar(self, member, avatar, attachment_filename):
-        """
-        The Django ImageField (and ThumbnailerImageField) field adjusts our filename if the file already exists-
-        it adds some random characters at the end of the name. This means if we just save a new image when the old one
-        still exists, we'll get a new image for each save, resulting in lots of unnecessary images. So we'll delete the
-        old image first, and then the save will use the exact name we give it.
-
-        Well, except in the case where two or more members share the same image, because we're using content hashes as
-        names, and ConnectWise gives users a common default avatar. In that case, the first save will use the expected
-        name, while subsequent saves for other members will have some random characters added to the filename.
-
-        This method tells Django not to call save() on the given model, so the caller must be sure to do that itself.
-        """
-        extension = get_filename_extension(attachment_filename)
-        filename = '{}.{}'.format(get_hash(avatar), extension or DEFAULT_AVATAR_EXTENSION)
-        avatar_file = ContentFile(avatar)
-        member.avatar.delete(save=False)
-        member.avatar.save(filename, avatar_file, save=False)
-        logger.info("Saved member '{}' avatar to {}.".format(member.identifier, member.avatar.name))
-
     def sync_ticket(self, api_ticket):
         """
-        Creates a new local instance of the supplied ConnectWise ServiceTicket instance.
+        Creates a new local instance of the supplied ConnectWise
+        ServiceTicket instance.
         """
         api_ticket_id = api_ticket['id']
         service_ticket, created = ServiceTicket.objects \
@@ -383,10 +418,11 @@ class ServiceTicketSynchronizer:
         service_ticket.budget_hours = api_ticket['budgetHours']
         service_ticket.actual_hours = api_ticket['actualHours']
         service_ticket.record_type = api_ticket['recordType']
-        team = api_ticket['team']
 
+        team = api_ticket['team']
         if team:
             service_ticket.team_id = api_ticket['team']['id']
+
         service_ticket.api_text = str(api_ticket)
         service_ticket.board_name = api_ticket['board']['name']
         service_ticket.board_id = api_ticket['board']['id']
@@ -467,12 +503,14 @@ class ServiceTicketSynchronizer:
 
         return ticket_is_closed
 
-    def sync_tickets(self):
+    def sync(self):
         """
         Synchronizes tickets between the ConnectWise server and the
         local database. Synchronization is performed in batches
         specified in the DJCONNECTWISE_API_BATCH_LIMIT setting
         """
+        sync_job = SyncJob.objects.create()
+
         created_count = 0
         updated_count = 0
         ticket_ids = []
@@ -512,31 +550,7 @@ class ServiceTicketSynchronizer:
         delete_count = delete_qset.count()
         delete_qset.delete()
 
-        return created_count, updated_count, delete_count
-
-    def start(self):
-        """
-        Initiates the sync mechanism. Returns the number of tickets created
-        """
-        board_ids = [board_id for board_id in ServiceTicket.objects.all(
-        ).values_list('board_id', flat=True).distinct() if board_id]
-
-        print("------------------------- 1 -------------------------------")
-        self.status_synchronizer.sync()
-        print("------------------------- 2 -------------------------------")
-        self.sync_job = SyncJob.objects.create()
-        print("------------------------- 3 -------------------------------")
-        self.sync_members()
-        print("------------------------- 4 -------------------------------")
-        created_count, updated_count, delete_count = self.sync_tickets()
-        print("------------------------- 5 -------------------------------")
-
-        # TODO - Investigate - It looks like this is not necessary
-        # Also, BoardStatusSynchronizer has no sync_board_statuses method
-        #self.status_synchronizer.sync_board_statuses(board_ids)
-        print("------------------------- 6 -------------------------------")
-        self.sync_job.end_time = timezone.now()
-        print("------------------------- 7 -------------------------------")
-        self.sync_job.save()
+        sync_job.end_time = timezone.now()
+        sync_job.save()
 
         return created_count, updated_count, delete_count

@@ -5,6 +5,7 @@ _underscorer1 = re.compile(r'(.)([A-Z][a-z]+)')
 _underscorer2 = re.compile('([a-z0-9])([A-Z])')
 FILENAME_EXTENSION_RE = re.compile('\.([\w]*)$')
 
+
 def camel_to_snake(s):
     """
     Is it ironic that this function is written in camel case, yet it
@@ -25,6 +26,8 @@ def get_hash(content):
 
 
 def get_filename_extension(filename):
-    """From the given filename, return the extension, or None if it can't be parsed."""
+    """From the given filename, return the extension,
+    or None if it can't be parsed.
+    """
     m = FILENAME_EXTENSION_RE.search(filename)
     return m.group(1) if m else None

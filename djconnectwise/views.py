@@ -27,12 +27,20 @@ class ServiceTicketCallBackView(ConnectWiseCallBackView):
         body = json.loads(request.body.decode(encoding='utf-8'))
         action = request.GET.get('action')
         if action is None:
-            logger.warning('Received ticket callback with no action parameter.')
-            return HttpResponseBadRequest("The 'action' parameter is required.")
+            logger.warning(
+                'Received ticket callback with no action parameter.'
+            )
+            return HttpResponseBadRequest(
+                "The 'action' parameter is required."
+            )
         ticket_id = request.GET.get('id')
         if ticket_id is None:
-            logger.warning('Received ticket callback with no ticket_id parameter.')
-            return HttpResponseBadRequest("The 'ticket_id' parameter is required.")
+            logger.warning(
+                'Received ticket callback with no ticket_id parameter.'
+            )
+            return HttpResponseBadRequest(
+                "The 'ticket_id' parameter is required."
+            )
 
         logger.debug('{} {}: {}'.format(action.upper(), ticket_id, body))
 

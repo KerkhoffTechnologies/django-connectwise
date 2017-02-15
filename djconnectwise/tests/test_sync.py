@@ -1,6 +1,5 @@
 from copy import deepcopy
 from unittest import TestCase
-import os
 
 from djconnectwise.models import Company
 from djconnectwise.models import ConnectWiseBoard
@@ -74,7 +73,7 @@ class TestBoardSynchronizer(TestCase):
         return set([(s['id'], s['name']) for s in board_data])
 
     def test_sync(self):
-        created_count, updated_count = self._sync()
+        created_count, updated_count, _ = self._sync()
         local_boards = self._local_board_set()
         api_boards = self._api_board_set(fixtures.API_BOARD_LIST)
 
@@ -87,7 +86,7 @@ class TestBoardSynchronizer(TestCase):
         updated_boards = deepcopy(fixtures.API_BOARD_LIST)
         updated_boards[0]['name'] = 'New Board Name'
         mocks.service_api_get_boards_call(updated_boards)
-        created_count, updated_count = self.synchronizer.sync()
+        created_count, updated_count, _ = self.synchronizer.sync()
 
         local_boards = self._local_board_set()
         api_boards = self._api_board_set(updated_boards)
@@ -129,14 +128,14 @@ class TestBoardStatusSynchronizer(TestCase):
 
         board_ids = self._board_ids(fixtures.API_BOARD_LIST)
 
-        created_count, updated_count = self.synchronizer.sync(board_ids)
+        created_count, updated_count, _ = self.synchronizer.sync(board_ids)
 
         self.assertEqual(created_count, 0)
         self.assertEqual(updated_count, len(fixtures.API_BOARD_STATUS_LIST))
         self._assert_sync(updated_statuses)
 
     def test_sync(self):
-        created_count, updated_count = self._sync()
+        created_count, updated_count, _ = self._sync()
         self.assertEqual(created_count, len(fixtures.API_BOARD_STATUS_LIST))
         self.assertEqual(updated_count, 0)
         self._assert_sync(fixtures.API_BOARD_STATUS_LIST)
@@ -153,19 +152,19 @@ class TestServiceTicketSynchronizer(TestCase):
         local_ticket, created = self.synchronizer.sync_ticket(api_ticket)
         return local_ticket, api_ticket
 
-    def _sync_tickets(self):
+    def _sync(self):
         mocks.company_api_by_id_call(fixtures.API_COMPANY)
         mocks.service_api_tickets_call()
 
-        return self.synchronizer.sync_tickets()
+        return self.synchronizer.sync()
 
-    def test_sync_tickets(self):
-        created_count, _, _ = self._sync_tickets()
+    def test_sync(self):
+        created_count, _, _ = self._sync()
         self.assertEqual(created_count, 1)
 
     def test_update_api_ticket(self):
         ServiceTicket.objects.all().delete()
-        self._sync_tickets()
+        self._sync()
 
         board_name = 'Some Board Name'
         api_service_ticket = deepcopy(fixtures.API_SERVICE_TICKET)
@@ -189,9 +188,10 @@ class TestMemberSynchronization(TestCase):
 
     def setUp(self):
         self.member_id = 'User1'
-        self.synchronizer = sync.ServiceTicketSynchronizer()
+        self.synchronizer = sync.MemberSynchronizer()
         mocks.system_api_get_members_call([fixtures.API_MEMBER])
-        mocks.system_api_get_member_image_by_identifier_call((mocks.CW_MEMBER_IMAGE_FILENAME, mocks.get_member_avatar()))
+        mocks.system_api_get_member_image_by_identifier_call(
+            (mocks.CW_MEMBER_IMAGE_FILENAME, mocks.get_member_avatar()))
 
     def _assert_member_fields(self, local_member, api_member):
         self.assertEqual(local_member.first_name, api_member['firstName'])
@@ -210,14 +210,14 @@ class TestMemberSynchronization(TestCase):
         member.office_email = 'some@stale.com'
         member.save()
 
-        self.synchronizer.sync_members()
+        self.synchronizer.sync()
         local_member = Member.objects.get(identifier=self.member_id)
         api_member = fixtures.API_MEMBER
         self._assert_member_fields(local_member, api_member)
 
     def test_sync_member_create(self):
         self._clear_members()
-        self.synchronizer.sync_members()
+        self.synchronizer.sync()
         local_member = Member.objects.all().first()
         api_member = fixtures.API_MEMBER
         self._assert_member_fields(local_member, api_member)

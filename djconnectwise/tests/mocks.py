@@ -6,8 +6,11 @@ import responses
 
 from . import fixtures
 
+CW_MEMBER_IMAGE_FILENAME = 'AnonymousMember.png'
+
 
 def create_mock_call(method_name, return_value, side_effect=None):
+    """Utility function for mocking the specified function or method"""
     _patch = patch(method_name, side_effect=side_effect)
     mock_get_call = _patch.start()
 
@@ -82,7 +85,9 @@ def system_api_get_members_call(return_value):
 
 
 def system_api_get_member_image_by_identifier_call(return_value):
-    method_name = 'djconnectwise.api.SystemAPIClient.get_member_image_by_identifier'
+    method_name = 'djconnectwise.api.SystemAPIClient.' \
+                  + 'get_member_image_by_identifier'
+
     return create_mock_call(method_name, return_value)
 
 
@@ -112,7 +117,6 @@ def get_raw(url, data, content_type="application/octet-stream", headers=None):
     )
 
 
-CW_MEMBER_IMAGE_FILENAME = 'AnonymousMember.png'
 def get_member_avatar():
     """Return the avatar image data in the tests directory."""
     cw_member_image_path = os.path.join(

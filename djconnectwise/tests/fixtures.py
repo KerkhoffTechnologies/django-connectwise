@@ -1,3 +1,5 @@
+
+
 API_BOARD = {
     'id': 1,
     'name': 'Projects-2-10',
@@ -30,14 +32,16 @@ API_COMPANY = {
         "id": 1,
         "name": "Active",
         "_info": {
-            "status_href": "https: //some-host.com/v4_6_release/apis/3.0/company/companies/statuses/1"
+            "status_href": "https: //some-host.com/v4_6_release/" +
+                           "apis/3.0/company/companies/statuses/1"
         }
     },
     "type": {
         "id": 5,
         "name": "Partner",
         "_info": {
-            "type_href": "https: //some-host.com/v4_6_release/apis/3.0/company/companies/types/5"
+            "type_href": "https: //some-host.com/v4_6_release/" +
+                         "apis/3.0/company/companies/types/5"
         }
     },
     "addressLine1": None,
@@ -56,7 +60,8 @@ API_COMPANY = {
         "id": 77,
         "name": "Bob Dobbs",
         "_info": {
-            "contact_href": "https: //some-host.com/v4_6_release/apis/3.0/company/contacts/77"
+            "contact_href": "https: //some-host.com/v4_6_release/" +
+                            "apis/3.0/company/contacts/77"
         }
     },
     "dateAcquired": "2002-08-20T18: 04: 26Z",
@@ -210,7 +215,8 @@ API_SERVICE_TICKET = {
         'sort': 6,
         '_info': {
             'priority_href': 'https://some-host.com/v4_6_release/apis/3.0/service/priorities/4',
-            'image_href': 'https://some-host.com/v4_6_release/apis/3.0/service/priorities/4/image?lm=2005-05-27T14:58:21Z'
+            'image_href': 'https://some-host.com/v4_6_release/' +
+                'apis/3.0/service/priorities/4/image?lm=2005-05-27T14:58:21Z'
         }
     },
     'serviceLocation': {
@@ -433,7 +439,8 @@ API_MEMBER = {
     '_info': {
         'lastUpdated': '2015-08-24T19:50:10Z',
         'updatedBy': 'User1',
-        'image_href': 'https://some-host.com/v4_6_release/apis/3.0/system/members/176/image?lastModified=2015-08-24T19:50:10Z'
+        'image_href': 'https://some-host.com/v4_6_release/apis/3.0/' +
+        'system/members/176/image?lastModified=2015-08-24T19:50:10Z'
     }
 }
 
