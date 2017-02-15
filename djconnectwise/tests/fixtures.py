@@ -139,7 +139,7 @@ API_COMPANY_LIST = [API_COMPANY]
 API_SERVICE_PRIORITY = {
     'id': 4,
     'name': 'Priority 3 - Normal Response',
-    'sort': 6,
+    'sortOrder': 6,
     'color': 'blue',
     '_info': {
         'priority_href': 'https://some-host.com/v4_6_release/apis/3.0/service/priorities/4',

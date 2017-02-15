@@ -65,7 +65,7 @@ class TestPrioritySynchronizer(TestCase):
         assert priority.name == api_priority['name']
         assert priority.priority_id == api_priority['id']
         assert priority.color == api_priority['color']
-        assert priority.sort == api_priority['sort']
+        assert priority.sort == api_priority['sortOrder']
 
     def test_sync(self):
         _, get_patch = mocks.service_api_get_priorities_call(
