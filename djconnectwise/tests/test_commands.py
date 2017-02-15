@@ -12,6 +12,12 @@ from .. import sync
 
 class BaseSyncTest(TestCase):
 
+    BOARD_SYNC_SUMMARY = 'Board Sync Summary - Created: 1 , Updated: 0'
+    COMPANY_SYNC_SUMMARY = 'Company Sync Summary - Created: 1 , Updated: 0'
+    STATUS_SYNC_SUMMARY = 'Board Status Sync Summary - Created: 2 , Updated: 0'
+    MEMBER_SYNC_SUMMARY = 'Member Sync Summary - Created: 1 , Updated: 0'
+    TICKET_SYNC_SUMMARY = 'Ticket Sync Summary - Created: 1 , Updated: 0'
+
     def _test_sync(self, mock_call, return_value, cw_object, msg):
         mock_call(return_value)
         out = io.StringIO()
@@ -26,7 +32,8 @@ class TestSyncCompaniesCommand(BaseSyncTest):
         self._test_sync(mocks.company_api_get_call,
                         fixtures.API_COMPANY_LIST,
                         'company',
-                        'Sync Summary - Created: 1 , Updated: 0')
+                        self.COMPANY_SYNC_SUMMARY
+                        )
 
 
 class TestSyncBoardsCommand(BaseSyncTest):
@@ -36,7 +43,7 @@ class TestSyncBoardsCommand(BaseSyncTest):
         self._test_sync(mocks.service_api_get_boards_call,
                         fixtures.API_BOARD_LIST,
                         'board',
-                        'Sync Summary - Created: 1 , Updated: 0')
+                        self.BOARD_SYNC_SUMMARY)
 
 
 class TestSyncBoardsStatusesCommand(BaseSyncTest):
@@ -53,4 +60,32 @@ class TestSyncBoardsStatusesCommand(BaseSyncTest):
         self._test_sync(mocks.service_api_get_statuses_call,
                         fixtures.API_BOARD_STATUS_LIST,
                         'board_status',
-                        'Sync Summary - Created: 2 , Updated: 0')
+                        self.STATUS_SYNC_SUMMARY
+                        )
+
+
+class TestSyncAllCommand(BaseSyncTest):
+    def test_sync(self):
+        " Test sync all objects command."
+        mocks.company_api_get_call(fixtures.API_COMPANY_LIST)
+        mocks.service_api_get_boards_call(fixtures.API_BOARD_LIST)
+        mocks.service_api_get_statuses_call(fixtures.API_BOARD_STATUS_LIST)
+        mocks.system_api_get_members_call([fixtures.API_MEMBER])
+        mocks.system_api_get_member_image_by_identifier_call(
+            (mocks.CW_MEMBER_IMAGE_FILENAME, mocks.get_member_avatar()))
+        mocks.company_api_by_id_call(fixtures.API_COMPANY)
+        mocks.service_api_tickets_call()
+
+        out = io.StringIO()
+        call_command('cwsync', stdout=out)
+        actual_output = out.getvalue().strip()
+
+        summaries = [
+            self.BOARD_SYNC_SUMMARY,
+            self.COMPANY_SYNC_SUMMARY,
+            self.STATUS_SYNC_SUMMARY,
+            self.MEMBER_SYNC_SUMMARY,
+            self.TICKET_SYNC_SUMMARY]
+
+        for summary in summaries:
+            self.assertIn(summary, actual_output)

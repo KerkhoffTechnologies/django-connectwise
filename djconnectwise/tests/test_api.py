@@ -25,7 +25,7 @@ class TestServiceAPIClient(TestCase):
         self._get_boards_stub(fixtures.API_BOARD_LIST)
 
         result = self.client.get_boards()
-        self.assertEquals(result, fixtures.API_BOARD_LIST)
+        self.assertEqual(result, fixtures.API_BOARD_LIST)
 
     @responses.activate
     def test_get_boards_no_data(self):
@@ -33,7 +33,7 @@ class TestServiceAPIClient(TestCase):
         self._get_boards_stub(return_value)
 
         result = self.client.get_boards()
-        self.assertEquals(result, return_value)
+        self.assertEqual(result, return_value)
 
     @responses.activate
     def test_get_statuses(self):
@@ -45,7 +45,7 @@ class TestServiceAPIClient(TestCase):
         mk.get(endpoint_url, fixtures.API_BOARD_STATUS_LIST)
 
         result = self.client.get_statuses(fixtures.API_BOARD['id'])
-        self.assertEquals(result, fixtures.API_BOARD_STATUS_LIST)
+        self.assertEqual(result, fixtures.API_BOARD_STATUS_LIST)
 
 
 class TestSystemAPIClient(TestCase):
@@ -73,6 +73,42 @@ class TestSystemAPIClient(TestCase):
 
         result = self.client.get_members()
         self.assertEqual(result, fixtures.API_MEMBER_LIST)
+
+    @responses.activate
+    def test_get_member_image_by_identifier(self):
+        member = fixtures.API_MEMBER
+        avatar = mk.get_member_avatar()
+        avatar_filename = 'AnonymousMember.png'  # Requests will fake returning this as the filename
+        endpoint = self.client._endpoint(self.client.ENDPOINT_MEMBERS_IMAGE.format(member['identifier']))
+        mk.get_raw(
+            endpoint,
+            avatar,
+            headers={
+                'content-disposition': 'attachment; filename={}'.format(avatar_filename),
+            }
+        )
+
+        result_filename, result_avatar = self.client.get_member_image_by_identifier(member['identifier'])
+        self.assertEqual(result_filename, avatar_filename)
+        self.assertEqual(result_avatar, avatar)
+
+    def test_attachment_filename_returns_filename(self):
+        # It works with a file extension
+        self.assertEqual(
+            self.client._attachment_filename('attachment; filename=somefile.jpg'),
+            'somefile.jpg',
+        )
+        # It also works without a file extension
+        self.assertEqual(
+            self.client._attachment_filename('attachment; filename=somefile'),
+            'somefile',
+        )
+
+    def test_attachment_filename_returns_none_on_invalid(self):
+        self.assertEqual(
+            self.client._attachment_filename(''),
+            None,
+        )
 
 
 class TestProjectAPIClient(TestCase):
