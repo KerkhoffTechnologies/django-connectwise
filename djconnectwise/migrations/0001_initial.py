@@ -268,7 +268,8 @@ class Migration(migrations.Migration):
             name='TicketPriority',
             fields=[
                 ('id', models.AutoField(auto_created=True,
-                                        serialize=False, verbose_name='ID', primary_key=True)),
+                                        serialize=False, verbose_name='ID',
+                                        primary_key=True)),
                 ('created', django_extensions.db.fields.CreationDateTimeField(
                     auto_now_add=True, verbose_name='created')),
                 ('modified', django_extensions.db.fields.ModificationDateTimeField(

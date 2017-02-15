@@ -153,6 +153,9 @@ class TicketStatus(TimeStampedModel):
 
 class TicketPriority(TimeStampedModel):
     name = models.CharField(max_length=50, blank=False)
+    priority_id = models.PositiveSmallIntegerField()
+    sort = models.PositiveSmallIntegerField()
+    color = models.CharField(max_length=50, blank=False)
 
     def __str__(self):
         return self.name
