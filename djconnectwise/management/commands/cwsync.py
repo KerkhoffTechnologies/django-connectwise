@@ -12,6 +12,7 @@ class Command(BaseCommand):
     help = _('Synchronize the specified object with the Connectwise API')
 
     synchronizer_map = OrderedDict(
+        priority=(sync.PrioritySynchronizer, _('Priority')),
         board=(sync.BoardSynchronizer, _('Board')),
         board_status=(sync.BoardStatusSynchronizer, _('Board Status')),
         company=(sync.CompanySynchronizer, _('Company')),
