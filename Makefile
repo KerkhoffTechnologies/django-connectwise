@@ -15,6 +15,7 @@ clean-pyc: ## remove Python file artifacts
 clean: clean-build clean-pyc
 
 coverage: ## check code coverage quickly with the default Python
+	# Coverage config file at .coveragerc
 	coverage run --source djconnectwise runtests.py tests
 	coverage report -m
 
@@ -22,6 +23,7 @@ install: clean
 	python setup.py install
 
 lint: ## check style with flake8
+	# flake8 config file at tox.ini
 	flake8 .
 
 test: clean lint

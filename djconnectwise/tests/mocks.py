@@ -74,6 +74,11 @@ def service_api_get_statuses_call(return_value):
     return create_mock_call(method_name, return_value)
 
 
+def service_api_get_priorities_call(return_value):
+    method_name = 'djconnectwise.api.ServiceAPIClient.get_priorities'
+    return create_mock_call(method_name, return_value)
+
+
 def system_api_get_connectwise_version_call(return_value):
     method_name = 'djconnectwise.api.SystemAPIClient.get_connectwise_version'
     return create_mock_call(method_name, return_value)

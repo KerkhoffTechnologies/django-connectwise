@@ -5,7 +5,8 @@ import logging
 from braces import views
 from djconnectwise.sync import ServiceTicketSynchronizer
 
-from django.http import HttpResponse, HttpResponseBadRequest
+from django.http import HttpResponse
+from django.http import HttpResponseBadRequest
 from django.views.generic import View
 
 from .models import ServiceTicket
@@ -26,21 +27,21 @@ class ServiceTicketCallBackView(ConnectWiseCallBackView):
     def post(self, request, *args, **kwargs):
         body = json.loads(request.body.decode(encoding='utf-8'))
         action = request.GET.get('action')
+
         if action is None:
-            logger.warning(
-                'Received ticket callback with no action parameter.'
-            )
-            return HttpResponseBadRequest(
-                "The 'action' parameter is required."
-            )
+            msg = 'Received ticket callback with no action parameter.'
+            logger.warning(msg)
+
+            err = "The 'action' parameter is required."
+            return HttpResponseBadRequest(err)
         ticket_id = request.GET.get('id')
+
         if ticket_id is None:
-            logger.warning(
-                'Received ticket callback with no ticket_id parameter.'
-            )
-            return HttpResponseBadRequest(
-                "The 'ticket_id' parameter is required."
-            )
+            msg = 'Received ticket callback with no ticket_id parameter.'
+            logger.warning(msg)
+
+            err = "The 'ticket_id' parameter is required."
+            return HttpResponseBadRequest(err)
 
         logger.debug('{} {}: {}'.format(action.upper(), ticket_id, body))
 

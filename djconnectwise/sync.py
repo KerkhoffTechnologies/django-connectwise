@@ -1,6 +1,7 @@
 import logging
 
 from dateutil.parser import parse
+
 from djconnectwise.api import CompanyAPIClient
 from djconnectwise.api import ServiceAPIClient
 from djconnectwise.api import SystemAPIClient
@@ -14,11 +15,11 @@ from djconnectwise.models import ServiceTicketAssignment
 from djconnectwise.models import SyncJob
 from djconnectwise.models import TicketPriority
 from djconnectwise.models import TicketStatus
+from djconnectwise.utils import get_hash, get_filename_extension
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.files.base import ContentFile
 from django.utils import timezone
-from djconnectwise.utils import get_hash, get_filename_extension
 
 DEFAULT_AVATAR_EXTENSION = 'jpg'
 
@@ -168,6 +169,75 @@ class BoardStatusSynchronizer:
         return self._sync(board_ids)
 
 
+class PrioritySynchronizer:
+
+    def __init__(self, *args, **kwargs):
+        self.client = ServiceAPIClient()
+        self.ticket_priority_map = {
+            ticket.name: ticket for ticket in TicketPriority.objects.all()
+        }
+
+    def _assign_field_data(self, ticket_priority, api_priority):
+        ticket_priority.name = api_priority['name']
+        ticket_priority.priority_id = api_priority['id']
+        ticket_priority.color = api_priority['color']
+        ticket_priority.sort = api_priority['sortOrder']
+        return ticket_priority
+
+    def get_or_create_ticket_priority(self, api_priority):
+        """
+        Gets or creates a TicketPriority instance for
+        the supplied API Priority JSON structure
+        """
+        ticket_priority = self.ticket_priority_map.get(
+            api_priority['name'])
+
+        created = False
+        if not ticket_priority:
+            ticket_priority = TicketPriority()
+            self._assign_field_data(ticket_priority, api_priority)
+            ticket_priority.save()
+            created = True
+
+        return ticket_priority, created
+
+    def update_or_create_ticket_priority(self, api_priority):
+        """
+        Creates and returns a TicketPriority instance if
+        it does not already exist
+        """
+        ticket_priority, created = self.get_or_create_ticket_priority(
+            api_priority)
+
+        action = 'Created' if created else 'Updated'
+
+        if not created:
+            self._assign_field_data(ticket_priority, api_priority)
+            ticket_priority.save()
+
+        self.ticket_priority_map[ticket_priority.name] = ticket_priority
+
+        msg = 'TicketPriority {}: {}'
+        logger.info(msg.format(action, ticket_priority.name))
+
+        return ticket_priority, created
+
+    def sync(self):
+        created_count = 0
+        updated_count = 0
+        deleted_count = 0
+
+        for api_priority in self.client.get_priorities():
+            _, created = self.update_or_create_ticket_priority(api_priority)
+
+            if created:
+                created_count += 1
+            else:
+                updated_count += 1
+
+        return created_count, updated_count, deleted_count
+
+
 class MemberSynchronizer:
 
     def __init__(self, *args, **kwargs):
@@ -257,6 +327,7 @@ class ServiceTicketSynchronizer:
     def __init__(self, reset=False):
         self.company_synchronizer = CompanySynchronizer()
         self.status_synchronizer = BoardStatusSynchronizer()
+        self.priority_synchronizer = PrioritySynchronizer()
 
         self.reset = reset
         self.last_sync_job = None
@@ -291,10 +362,6 @@ class ServiceTicketSynchronizer:
 
         self.ticket_status_map = {
             ticket.status_name: ticket for ticket in TicketStatus.objects.all()
-        }
-
-        self.ticket_priority_map = {
-            ticket.name: ticket for ticket in TicketPriority.objects.all()
         }
 
         self.members_map = {m.identifier: m for m in Member.objects.all()}
@@ -377,23 +444,6 @@ class ServiceTicketSynchronizer:
 
         return ticket_status
 
-    def get_or_create_ticket_priority(self, api_ticket):
-        """
-        Creates and returns a TicketPriority instance if
-        it does not already exist
-        """
-        ticket_priority = self.ticket_priority_map.get(
-            api_ticket['priority']['name'])
-
-        if not ticket_priority:
-            ticket_priority = TicketPriority()
-            ticket_priority.name = api_ticket['priority']['name']
-            ticket_priority.save()
-            self.ticket_priority_map[ticket_priority.name] = ticket_priority
-            logger.info('TicketPriority Created: %s' % ticket_priority.name)
-
-        return ticket_priority
-
     def sync_ticket(self, api_ticket):
         """
         Creates a new local instance of the supplied ConnectWise
@@ -432,8 +482,10 @@ class ServiceTicketSynchronizer:
         service_ticket.company = self.company_synchronizer \
                                      .get_or_create_company(company_id)
 
-        service_ticket.priority = self.get_or_create_ticket_priority(
-            api_ticket)
+        priority, _ = self.priority_synchronizer \
+            .get_or_create_ticket_priority(api_ticket['priority'])
+        service_ticket.priority = priority
+
         service_ticket.status = new_ticket_status
         service_ticket.project = self.get_or_create_project(api_ticket)
         service_ticket.save()
