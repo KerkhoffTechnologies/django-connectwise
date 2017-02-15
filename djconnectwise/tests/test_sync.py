@@ -4,6 +4,7 @@ from unittest import TestCase
 from djconnectwise.models import Company
 from djconnectwise.models import ConnectWiseBoard
 from djconnectwise.models import ConnectWiseBoardStatus
+from djconnectwise.models import TicketPriority
 from djconnectwise.models import Member
 from djconnectwise.models import ServiceTicket
 
@@ -53,6 +54,47 @@ class TestCompanySynchronizer(TestCase):
         self.assertNotEqual(company_pre_update.company_identifier,
                             identifier)
         self._assert_fields(company_post_update, api_company)
+
+
+class TestPrioritySynchronizer(TestCase):
+
+    def setUp(self):
+        self.synchronizer = sync.PrioritySynchronizer()
+
+    def _assert_fields(self, priority, api_priority):
+        assert priority.name == api_priority['name']
+        assert priority.priority_id == api_priority['id']
+        assert priority.color == api_priority['color']
+        assert priority.sort == api_priority['sort']
+
+    def test_sync(self):
+        _, get_patch = mocks.service_api_get_priorities_call(
+            fixtures.API_SERVICE_PRIORITY_LIST)
+
+        self.synchronizer.sync()
+        priorities = fixtures.API_SERVICE_PRIORITY_LIST
+        priority_dict = {p['id']: p for p in priorities}
+
+        for priority in TicketPriority.objects.all():
+            api_priority = priority_dict[priority.priority_id]
+            self._assert_fields(priority, api_priority)
+
+    def test_sync_update(self):
+        color = 'green'
+        api_priority = deepcopy(fixtures.API_SERVICE_PRIORITY)
+        api_priority['color'] = color
+        api_priority_list = [api_priority]
+        priority_pre_update = TicketPriority.objects \
+            .get(priority_id=api_priority['id'])
+        _, get_patch = mocks.service_api_get_priorities_call(api_priority_list)
+
+        self.synchronizer.sync()
+        priority_post_update = TicketPriority.objects \
+            .get(priority_id=api_priority['id'])
+
+        self.assertNotEqual(priority_pre_update.color,
+                            color)
+        self._assert_fields(priority_post_update, api_priority)
 
 
 class TestBoardSynchronizer(TestCase):

@@ -2,7 +2,7 @@
 from django.contrib import admin
 
 from .models import Company, ConnectWiseBoard, Member
-from .models import ServiceTicket, TicketStatus
+from .models import ServiceTicket, TicketStatus, TicketPriority
 
 
 class ConnectWiseBoardAdmin(admin.ModelAdmin):
@@ -45,8 +45,14 @@ class ServiceTicketAdmin(admin.ModelAdmin):
         return ', '.join([str(m) for m in obj.members.all()])
 
 
+class TicketPriorityAdmin(admin.ModelAdmin):
+    model = TicketPriority
+    list_display = ('priority_id', 'name', 'sort',)
+
+
 admin.site.register(ConnectWiseBoard, ConnectWiseBoardAdmin)
 admin.site.register(TicketStatus, TicketStatusAdmin)
 admin.site.register(Member, MemberAdmin)
 admin.site.register(ServiceTicket, ServiceTicketAdmin)
 admin.site.register(Company, CompanyAdmin)
+admin.site.register(TicketPriority, TicketPriorityAdmin)

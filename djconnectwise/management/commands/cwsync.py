@@ -18,6 +18,7 @@ class Command(BaseCommand):
         # using kwargs in Python 3.6.
         # See https://www.python.org/dev/peps/pep-0468/.
         synchronizers = (
+            ('priority', sync.PrioritySynchronizer, _('Priority')),
             ('board', sync.BoardSynchronizer, _('Board')),
             ('board_status', sync.BoardStatusSynchronizer, _('Board Status')),
             ('company', sync.CompanySynchronizer, _('Company')),

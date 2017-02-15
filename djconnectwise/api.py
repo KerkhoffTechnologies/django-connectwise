@@ -2,8 +2,8 @@ import logging
 
 from django.conf import settings
 
-import requests
 import re
+import requests
 
 
 CONTENT_DISPOSITION_RE = re.compile('^attachment; filename=([\S]*)$')
@@ -169,20 +169,19 @@ class SystemAPIClient(ConnectWiseAPIClient):
         )
 
         if 200 <= response.status_code < 300:
-            content_disposition_header = response.headers.get(
-                'Content-Disposition',
-                default=''
-            )
-            logger.info(
-                "Got member '{}' image; size {} bytes and "
-                "content-disposition header '{}'".format(
-                    identifier,
-                    len(response.content),
-                    content_disposition_header
-                )
-            )
-            attachment_filename = \
-                self._attachment_filename(content_disposition_header)
+            headers = response.headers
+            content_disposition_header = headers.get('Content-Disposition',
+                                                     default='')
+            msg = "Got member '{}' image; size {} bytes " \
+                "and content-disposition header '{}'"
+
+            logger.info(msg.format(
+                identifier,
+                len(response.content),
+                content_disposition_header
+            ))
+            attachment_filename = self._attachment_filename(
+                content_disposition_header)
             return attachment_filename, response.content
         else:
             self._log_failed(response)
@@ -214,6 +213,7 @@ class CompanyAPIClient(ConnectWiseAPIClient):
 class ServiceAPIClient(ConnectWiseAPIClient):
     API = 'service'
     ENDPOINT_BOARDS = 'boards'
+    ENDPOINT_PRIORITIES = 'priorities'
 
     def __init__(self, *args, **kwargs):
         self.extra_conditions = None
@@ -280,3 +280,6 @@ class ServiceAPIClient(ConnectWiseAPIClient):
 
     def get_board(self, board_id):
         return self.fetch_resource('boards/{}'.format(board_id))
+
+    def get_priorities(self):
+        return self.fetch_resource(self.ENDPOINT_PRIORITIES)

@@ -1,5 +1,3 @@
-
-
 API_BOARD = {
     'id': 1,
     'name': 'Projects-2-10',
@@ -138,6 +136,20 @@ API_COMPANY = {
 
 API_COMPANY_LIST = [API_COMPANY]
 
+API_SERVICE_PRIORITY = {
+    'id': 4,
+    'name': 'Priority 3 - Normal Response',
+    'sort': 6,
+    'color': 'blue',
+    '_info': {
+        'priority_href': 'https://some-host.com/v4_6_release/apis/3.0/service/priorities/4',
+        'image_href': 'https://some-host.com/v4_6_release/'
+            'apis/3.0/service/priorities/4/image?lm=2005-05-27T14:58:21Z'
+    }
+}
+
+API_SERVICE_PRIORITY_LIST = [API_SERVICE_PRIORITY]
+
 API_SERVICE_TICKET = {
     'id': 69,
     'summary': 'Schedule and Execute Conversion',
@@ -213,6 +225,7 @@ API_SERVICE_TICKET = {
         'id': 4,
         'name': 'Priority 3 - Normal Response',
         'sort': 6,
+        'color': 'blue',
         '_info': {
             'priority_href': 'https://some-host.com/v4_6_release/apis/3.0/service/priorities/4',
             'image_href': 'https://some-host.com/v4_6_release/' +

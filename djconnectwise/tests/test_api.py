@@ -47,6 +47,14 @@ class TestServiceAPIClient(TestCase):
         result = self.client.get_statuses(fixtures.API_BOARD['id'])
         self.assertEqual(result, fixtures.API_BOARD_STATUS_LIST)
 
+    @responses.activate
+    def test_get_priorities(self):
+        endpoint_url = self.client._endpoint(self.client.ENDPOINT_PRIORITIES)
+        mk.get(endpoint_url, fixtures.API_SERVICE_PRIORITY_LIST)
+
+        result = self.client.get_priorities()
+        self.assertEqual(result, fixtures.API_SERVICE_PRIORITY_LIST)
+
 
 class TestSystemAPIClient(TestCase):
 
@@ -77,33 +85,31 @@ class TestSystemAPIClient(TestCase):
     @responses.activate
     def test_get_member_image_by_identifier(self):
         member = fixtures.API_MEMBER
-        avatar = mk.get_member_avatar()
         # Requests will fake returning this as the filename
+        avatar = mk.get_member_avatar()
         avatar_filename = 'AnonymousMember.png'
         endpoint = self.client._endpoint(
-            self.client.ENDPOINT_MEMBERS_IMAGE.format(member['identifier'])
-        )
+            self.client.ENDPOINT_MEMBERS_IMAGE.format(member['identifier']))
         mk.get_raw(
             endpoint,
             avatar,
             headers={
-                'content-disposition': 'attachment; filename={}'.format(
-                    avatar_filename
-                ),
+                'content-disposition':
+                    'attachment; filename={}'.format(avatar_filename),
             }
         )
 
-        result_filename, result_avatar = \
-            self.client.get_member_image_by_identifier(member['identifier'])
+        result_filename, result_avatar = self.client \
+            .get_member_image_by_identifier(member['identifier'])
+
         self.assertEqual(result_filename, avatar_filename)
         self.assertEqual(result_avatar, avatar)
 
     def test_attachment_filename_returns_filename(self):
         # It works with a file extension
+        filename = 'attachment; filename=somefile.jpg'
         self.assertEqual(
-            self.client._attachment_filename(
-                'attachment; filename=somefile.jpg'
-            ),
+            self.client._attachment_filename(filename),
             'somefile.jpg',
         )
         # It also works without a file extension
