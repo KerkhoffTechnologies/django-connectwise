@@ -505,8 +505,8 @@ class ServiceTicketSynchronizer:
 
     def update_api_ticket(self, service_ticket):
         """"
-            Updates the state of a generic ticket
-            and determines which api to send the updated ticket data to
+        Updates the state of a generic ticket and determines which api
+        to send the updated ticket data to.
         """
         api_service_ticket = self.service_client.get_ticket(service_ticket.id)
 
@@ -518,31 +518,33 @@ class ServiceTicketSynchronizer:
             ticket_status = service_ticket.status
 
         if not service_ticket.closed_flag:
-
             try:
                 board_status = ConnectWiseBoardStatus.objects.get(
                     board_id=service_ticket.board_id,
                     status_name=ticket_status.status_name
                 )
-            except Exception as e:
+            except ConnectWiseBoardStatus.DoesNotExist as e:
                 raise InvalidStatusError(e)
 
             api_service_ticket['status']['id'] = board_status.status_id
 
         # no need for a callback update when updating via api
         api_service_ticket['skipCallback'] = True
-        logger.info('Update API Ticket Status: %s - %s' %
-                    (service_ticket.id, api_service_ticket['status']['name']))
+        logger.info(
+            'Update API Ticket Status: {} - {}'.format(
+                service_ticket.id, api_service_ticket['status']['name']
+            )
+        )
 
         return self.service_client.update_ticket(api_service_ticket)
 
     def close_ticket(self, service_ticket):
-        """Closes the specified service ticket returns True if the
-           if the close operation was successful on the connectwise server.
-           Note: It appears that the connectwise server does not return a
-           permissions error if user does not have access to this operation.
         """
-
+        Closes the specified service ticket returns True if the close
+        operation was successful on the connectwise server.
+        Note: It appears that the connectwise server does not return a
+        permissions error if user does not have access to this operation.
+        """
         service_ticket.closed_flag = True
         service_ticket.save()
         logger.info('Close API Ticket: %s' % service_ticket.id)
