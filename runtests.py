@@ -39,6 +39,7 @@ settings.configure(
     USE_TZ=True,  # Prevent 'ValueError: SQLite backend does not support
     # timezone-aware datetimes when USE_TZ is False.'
     DJCONNECTWISE_COMPANY_ALIAS=False,
+    DJCONNECTWISE_API_BATCH_LIMIT=25,
 )
 
 
