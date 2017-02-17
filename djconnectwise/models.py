@@ -252,11 +252,7 @@ class ServiceTicket(TimeStampedModel):
         ordering = ('summary', )
 
     def __str__(self):
-        try:
-            return '{0:8d}-{1:100}'.format(self.id, self.summary)
-        except:
-            return '{0:8d}-{1:100}'.format(self.id,
-                                           self.summary.encode('utf8'))
+        return '{}-{}'.format(self.id, self.summary)
 
     def get_connectwise_url(self):
         params = dict(
