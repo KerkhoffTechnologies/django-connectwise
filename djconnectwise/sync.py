@@ -577,16 +577,25 @@ class ServiceTicketUpdater(object):
 
         if not service_ticket.closed_flag:
             try:
+                cw_board = ConnectWiseBoard.objects.get(
+                    id=service_ticket.board_id)
                 board_status = ConnectWiseBoardStatus.objects.get(
                     board_id=service_ticket.board_id,
                     status_name=ticket_status.status_name
                 )
-            except ConnectWiseBoardStatus.DoesNotExist as e:
-                raise InvalidStatusError(e)
+                api_service_ticket['status']['id'] = board_status.status_id
+            except ConnectWiseBoard.DoesNotExist:
+                raise InvalidStatusError("Failed to find the ticket's board.")
+            except ConnectWiseBoardStatus.DoesNotExist:
+                raise InvalidStatusError(
+                    '{} is not a valid status for the ConnectWise {} board.'.
+                    format(
+                        ticket_status.status_name,
+                        cw_board.name
+                    )
+                )
 
-            api_service_ticket['status']['id'] = board_status.status_id
-
-        # no need for a callback update when updating via api
+        # No need for a callback update when updating via api
         api_service_ticket['skipCallback'] = True
         logger.info(
             'Update API Ticket Status: {} - {}'.format(
