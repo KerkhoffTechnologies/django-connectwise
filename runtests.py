@@ -39,6 +39,7 @@ settings.configure(
     # timezone-aware datetimes when USE_TZ is False.'
     DJCONNECTWISE_COMPANY_ALIAS=False,
     DJCONNECTWISE_API_BATCH_LIMIT=25,
+    DJCONNECTWISE_API_TIMEOUT=10.0,
 )
 
 
