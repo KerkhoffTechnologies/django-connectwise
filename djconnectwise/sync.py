@@ -169,58 +169,90 @@ class BoardStatusSynchronizer:
         return self._sync(board_ids)
 
 
-class PrioritySynchronizer:
+class Synchronizer:
 
     def __init__(self, *args, **kwargs):
-        self.client = ServiceAPIClient()
-        self.ticket_priority_map = {
-            ticket.name: ticket for ticket in TicketPriority.objects.all()
+        self.instance_map = {}
+        self.client = self.client_class()
+
+    def load_instance_map(self):
+        self.instance_map = {
+            i[self.lookup_key]: i for i in self.client_class.objects.all()
         }
+
+    def get_or_create_instance(self, api_instance):
+        instance = self.instance_map.get(
+            api_instance[self.lookup_key])
+
+        created = False
+
+        if not instance:
+            instance = self.model_class()
+            self._assign_field_data(instance, api_instance)
+            instance.save()
+            created = True
+
+        return instance, created
+
+    def update_or_create_instance(self, api_instance):
+        """
+        Creates and returns an instance if
+        it does not already exist
+        """
+        instance, created = self.get_or_create_instance(
+            api_instance)
+
+        action = 'Created' if created else 'Updated'
+
+        if not created:
+            self._assign_field_data(instance, api_instance)
+            instance.save()
+
+        self.instance_map[instance.name] = instance
+
+        msg = ' {}: {}'
+        logger.info(msg.format(action, self.model_class.__name__))
+
+        return instance, created
+
+
+class TeamSynchronizer(Synchronizer):
+    client_class = ServiceAPIClient
+    # model_class = Team
+    lookup_key = 'team_id'
+
+    def sync(self, board_ids=None):
+
+        if not board_ids:
+            board_qs = ConnectWiseBoard.objects.all()
+            board_ids = board_qs.values_list('board_id', flat=True)
+
+        updated_count = 0
+        created_count = 0
+        deleted_count = 0
+
+        # for board_id in board_ids:
+        #     for team in self.client.get_teams(board_id):
+
+        return created_count, updated_count, deleted_count
+
+
+class PrioritySynchronizer(Synchronizer):
+    client_class = ServiceAPIClient
+    model_class = TicketPriority
+    lookup_key = 'name'
 
     def _assign_field_data(self, ticket_priority, api_priority):
         ticket_priority.name = api_priority['name']
         ticket_priority.priority_id = api_priority['id']
         ticket_priority.color = api_priority['color']
-        ticket_priority.sort = api_priority['sortOrder']
+
+        # work around due to api data inconsistencies
+        sort_value = api_priority.get('sort') or api_priority.get('sortOrder')
+        if sort_value:
+            ticket_priority.sort = sort_value
+
         return ticket_priority
-
-    def get_or_create_ticket_priority(self, api_priority):
-        """
-        Gets or creates a TicketPriority instance for
-        the supplied API Priority JSON structure
-        """
-        ticket_priority = self.ticket_priority_map.get(
-            api_priority['name'])
-
-        created = False
-        if not ticket_priority:
-            ticket_priority = TicketPriority()
-            self._assign_field_data(ticket_priority, api_priority)
-            ticket_priority.save()
-            created = True
-
-        return ticket_priority, created
-
-    def update_or_create_ticket_priority(self, api_priority):
-        """
-        Creates and returns a TicketPriority instance if
-        it does not already exist
-        """
-        ticket_priority, created = self.get_or_create_ticket_priority(
-            api_priority)
-
-        action = 'Created' if created else 'Updated'
-
-        if not created:
-            self._assign_field_data(ticket_priority, api_priority)
-            ticket_priority.save()
-
-        self.ticket_priority_map[ticket_priority.name] = ticket_priority
-
-        msg = 'TicketPriority {}: {}'
-        logger.info(msg.format(action, ticket_priority.name))
-
-        return ticket_priority, created
 
     def sync(self):
         created_count = 0
@@ -228,7 +260,7 @@ class PrioritySynchronizer:
         deleted_count = 0
 
         for api_priority in self.client.get_priorities():
-            _, created = self.update_or_create_ticket_priority(api_priority)
+            _, created = self.update_or_create_instance(api_priority)
 
             if created:
                 created_count += 1
@@ -483,7 +515,8 @@ class ServiceTicketSynchronizer:
                                      .get_or_create_company(company_id)
 
         priority, _ = self.priority_synchronizer \
-            .get_or_create_ticket_priority(api_ticket['priority'])
+            .get_or_create_instance(api_ticket['priority'])
+
         service_ticket.priority = priority
 
         service_ticket.status = new_ticket_status

@@ -67,11 +67,18 @@ class TestPrioritySynchronizer(TestCase):
         assert priority.color == api_priority['color']
         assert priority.sort == api_priority['sortOrder']
 
-    def test_sync(self):
+    def _clean(self):
+        TicketPriority.objects.all().delete()
+
+    def _sync(self, return_value):
         _, get_patch = mocks.service_api_get_priorities_call(
-            fixtures.API_SERVICE_PRIORITY_LIST)
+            return_value)
 
         self.synchronizer.sync()
+
+    def test_sync(self):
+        self._clean()
+        self._sync(fixtures.API_SERVICE_PRIORITY_LIST)
         priorities = fixtures.API_SERVICE_PRIORITY_LIST
         priority_dict = {p['id']: p for p in priorities}
 
@@ -80,21 +87,24 @@ class TestPrioritySynchronizer(TestCase):
             self._assert_fields(priority, api_priority)
 
     def test_sync_update(self):
-        color = 'green'
-        api_priority = deepcopy(fixtures.API_SERVICE_PRIORITY)
-        api_priority['color'] = color
-        api_priority_list = [api_priority]
+        self._clean()
+        self._sync(fixtures.API_SERVICE_PRIORITY_LIST)
+        priority_id = fixtures.API_SERVICE_PRIORITY['id']
         priority_pre_update = TicketPriority.objects \
-            .get(priority_id=api_priority['id'])
-        _, get_patch = mocks.service_api_get_priorities_call(api_priority_list)
+            .get(priority_id=priority_id)
 
-        self.synchronizer.sync()
+        color = 'green'
+        updated_api_priority = deepcopy(fixtures.API_SERVICE_PRIORITY)
+        updated_api_priority['color'] = color
+
+        self._sync([updated_api_priority])
+
         priority_post_update = TicketPriority.objects \
-            .get(priority_id=api_priority['id'])
+            .get(priority_id=updated_api_priority['id'])
 
         self.assertNotEqual(priority_pre_update.color,
                             color)
-        self._assert_fields(priority_post_update, api_priority)
+        self._assert_fields(priority_post_update, updated_api_priority)
 
 
 class TestBoardSynchronizer(TestCase):
