@@ -66,6 +66,7 @@ class ConnectWiseBoardStatus(TimeStampedModel):
 
 
 class Member(TimeStampedModel):
+    member_id = models.PositiveSmallIntegerField()
     identifier = models.CharField(
         max_length=15, blank=False, unique=True)  # This is the CW username
     first_name = models.CharField(max_length=30, blank=False)
@@ -93,6 +94,7 @@ class Member(TimeStampedModel):
     @staticmethod
     def create_member(api_member):
         member = Member()
+        member.member_id = api_member['id']
         member.first_name = api_member['firstName']
         member.last_name = api_member['lastName']
         member.identifier = api_member['identifier']
@@ -143,7 +145,7 @@ class Company(TimeStampedModel):
 class Team(TimeStampedModel):
     team_id = models.PositiveSmallIntegerField()
     name = models.CharField(max_length=30)
-    status = models.ForeignKey('ConnectWiseBoard')
+    board = models.ForeignKey('ConnectWiseBoard')
     members = models.ManyToManyField('Member')
 
 

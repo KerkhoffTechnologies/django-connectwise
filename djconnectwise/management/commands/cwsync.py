@@ -23,6 +23,7 @@ class Command(BaseCommand):
             ('board_status', sync.BoardStatusSynchronizer, _('Board Status')),
             ('company', sync.CompanySynchronizer, _('Company')),
             ('member', sync.MemberSynchronizer, _('Member')),
+            ('team', sync.TeamSynchronizer, _('Team')),
             ('ticket', sync.ServiceTicketSynchronizer, _('Ticket')),
         )
         self.synchronizer_map = OrderedDict()

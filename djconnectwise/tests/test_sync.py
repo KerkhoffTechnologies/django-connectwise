@@ -4,11 +4,13 @@ from unittest import TestCase
 from djconnectwise.models import Company
 from djconnectwise.models import ConnectWiseBoard
 from djconnectwise.models import ConnectWiseBoardStatus
+from djconnectwise.models import Team
 from djconnectwise.models import TicketPriority
 from djconnectwise.models import Member
 from djconnectwise.models import ServiceTicket
 
 from . import fixtures
+from . import fixture_utils
 from . import mocks
 from .. import sync
 
@@ -67,6 +69,61 @@ class TestCompanySynchronizer(TestCase):
         self.assertNotEqual(company_pre_update.company_name,
                             name)
         self._assert_fields(company_post_update, api_company)
+
+
+class TestTeamSynchronizer(TestCase):
+
+    def setUp(self):
+        self.synchronizer = sync.TeamSynchronizer()
+        self._clean()
+        fixture_utils.init_boards()
+
+    def _clean(self):
+        Team.objects.all().delete()
+
+    def _sync(self, return_data):
+        _, get_patch = mocks.service_api_get_teams_call(return_data)
+        self.synchronizer.sync()
+        return _, get_patch
+
+    def _assert_fields(self, team, team_json):
+        member_ids = set([t.member_id for t in team.members.all()])
+        self.assertEquals(team.team_id, team_json['id'])
+        self.assertEquals(team.name, team_json['name'])
+        self.assertEquals(team.board.board_id, team_json['boardId'])
+        self.assertTrue(member_ids < set(team_json['members']))
+
+    def test_sync(self):
+        team_dict = {t['id']: t for t in fixtures.API_SERVICE_TEAM_LIST}
+        self._sync(fixtures.API_SERVICE_TEAM_LIST)
+
+        teams = list(Team.objects.all())
+        self.assertEquals(len(teams), len(team_dict))
+        for team in Team.objects.all():
+            team_json = team_dict[team.team_id]
+            self._assert_fields(team, team_json)
+
+    def test_sync_update(self):
+        self._clean()
+        self._sync(fixtures.API_SERVICE_TEAM_LIST)
+
+        api_team = fixtures.API_SERVICE_TEAM_LIST[0]
+        team_id = api_team['id']
+        team_pre_update = Team.objects \
+            .get(team_id=team_id)
+
+        name = 'Some New Name'
+        api_team = deepcopy(api_team)
+        api_team['name'] = name
+        api_team_list = [api_team]
+        self._sync(api_team_list)
+
+        team_post_update = Team.objects \
+            .get(team_id=team_id)
+
+        self.assertNotEqual(team_pre_update.name,
+                            name)
+        self._assert_fields(team_post_update, api_team)
 
 
 class TestPrioritySynchronizer(TestCase):
@@ -252,7 +309,7 @@ class TestServiceTicketSynchronizer(TestCase):
 class TestMemberSynchronization(TestCase):
 
     def setUp(self):
-        self.member_id = 'User1'
+        self.member_identifier = 'User1'
         self.synchronizer = sync.MemberSynchronizer()
         mocks.system_api_get_members_call([fixtures.API_MEMBER])
         mocks.system_api_get_member_image_by_identifier_call(
@@ -269,14 +326,15 @@ class TestMemberSynchronization(TestCase):
     def test_sync_member_update(self):
         self._clear_members()
         member = Member()
-        member.identifier = self.member_id
+        member.member_id = 176
+        member.identifier = self.member_identifier
         member.first_name = 'some stale first name'
         member.last_name = 'some stale last name'
         member.office_email = 'some@stale.com'
         member.save()
 
         self.synchronizer.sync()
-        local_member = Member.objects.get(identifier=self.member_id)
+        local_member = Member.objects.get(identifier=self.member_identifier)
         api_member = fixtures.API_MEMBER
         self._assert_member_fields(local_member, api_member)
 

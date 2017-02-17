@@ -8,7 +8,6 @@ from djconnectwise.api import SystemAPIClient
 from djconnectwise import models
 from djconnectwise.utils import get_hash, get_filename_extension
 
-from django.core.exceptions import ObjectDoesNotExist
 from django.core.files.base import ContentFile
 from django.utils import timezone
 
@@ -48,8 +47,6 @@ class Synchronizer:
             created = True
             self.instance_map[lookup_key] = instance
 
-        print('INSTANCESES:', self.instance_map)
-
         return instance, created
 
     def update_or_create_instance(self, api_instance):
@@ -79,6 +76,7 @@ class Synchronizer:
         deleted_count = 0
 
         for json_data in self.get_json():
+
             _, created = self.update_or_create_instance(json_data)
 
             if created:
@@ -160,34 +158,31 @@ class BoardStatusSynchronizer:
 class TeamSynchronizer(Synchronizer):
     client_class = ServiceAPIClient
     model_class = models.Team
-    lookup_key = 'team_id'
+    lookup_key = 'id'
 
     def _assign_field_data(self, team, team_json):
+        team.team_id = team_json['id']
         team.name = team_json['name']
-        team.priority_id = team_json['id']
-        team.color = team_json['color']
+        team.board = models.ConnectWiseBoard.objects.get(
+            board_id=team_json['boardId'])
 
+        members = list(models.Member.objects.filter(
+            member_id__in=team_json['members']))
+
+        team.save()
+
+        team.members.clear()
+        team.members.add(*members)
         return team
 
-    # def get_json(self):
-    #     results_json = []
-    #     board_qs = models.ConnectWiseBoard.objects.all()
-    #         board_ids = board_qs.values_list('board_id', flat=True)
-    #     return self.client.get_teams()
+    def get_json(self):
+        results_json = []
+        board_qs = models.ConnectWiseBoard.objects.all()
 
-    # def sync(self):
+        for board_id in board_qs.values_list('board_id', flat=True):
+            results_json += self.client.get_teams(board_id)
 
-    #     if not board_ids:
-            
-
-    #     updated_count = 0
-    #     created_count = 0
-    #     deleted_count = 0
-
-    #     # for board_id in board_ids:
-    #     #     for team in self.client.get_teams(board_id):
-
-    #     return created_count, updated_count, deleted_count
+        return results_json
 
 
 class CompanySynchronizer(Synchronizer):
@@ -292,7 +287,6 @@ class MemberSynchronizer:
             member_qset = models.Member.objects.filter(identifier=username)
             if member_qset.exists():
                 member = member_qset.first()
-
                 member.first_name = api_member['firstName']
                 member.last_name = api_member['lastName']
                 member.office_email = api_member['officeEmail']
