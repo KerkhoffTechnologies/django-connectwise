@@ -17,6 +17,15 @@ class TestCompanySynchronizer(TestCase):
 
     def setUp(self):
         self.synchronizer = sync.CompanySynchronizer()
+        self._clean()
+
+    def _clean(self):
+        Company.objects.all().delete()
+
+    def _sync(self, return_data):
+        _, get_patch = mocks.company_api_get_call(return_data)
+        self.synchronizer.sync()
+        return _, get_patch
 
     def _assert_fields(self, company, api_company):
         assert company.company_name == api_company['name']
@@ -30,29 +39,33 @@ class TestCompanySynchronizer(TestCase):
         assert company.zip == api_company['zip']
 
     def test_sync(self):
-        _, get_patch = mocks.company_api_get_call(fixtures.API_COMPANY_LIST)
-        self.synchronizer.sync()
         company_dict = {c['id']: c for c in fixtures.API_COMPANY_LIST}
 
         for company in Company.objects.all():
-            api_company = company_dict[company.id]
+            api_company = company_dict[company.company_id]
             self._assert_fields(company, api_company)
 
     def test_sync_update(self):
-        identifier = 'Some New Company'
-        api_company = deepcopy(fixtures.API_COMPANY)
-        api_company['identifier'] = identifier
-        api_company_list = [api_company]
+        self._clean()
+        self._sync(fixtures.API_COMPANY_LIST)
+
+        api_company = fixtures.API_COMPANY
+        company_id = api_company['id']
         company_pre_update = Company.objects \
-                                    .get(id=api_company['id'])
-        _, get_patch = mocks.company_api_get_call(api_company_list)
+            .get(company_id=company_id)
 
-        self.synchronizer.sync()
+        name = 'Some New Company Name'
+        api_company = deepcopy(fixtures.API_COMPANY)
+        api_company['name'] = name
+        api_company_list = [api_company]
+        print(Company.objects.filter(company_id=company_id))
+        self._sync(api_company_list)
+
         company_post_update = Company.objects \
-                                     .get(id=api_company['id'])
+                                     .get(company_id=company_id)
 
-        self.assertNotEqual(company_pre_update.company_identifier,
-                            identifier)
+        self.assertNotEqual(company_pre_update.company_name,
+                            name)
         self._assert_fields(company_post_update, api_company)
 
 

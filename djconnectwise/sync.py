@@ -21,76 +21,72 @@ class InvalidStatusError(Exception):
     pass
 
 
-class CompanySynchronizer:
-    """
-    Coordinates retrieval and demarshalling of ConnectWise JSON
-    Company instances.
-    """
+class Synchronizer:
 
     def __init__(self, *args, **kwargs):
-        self.client = CompanyAPIClient()
-        self.companies = self.load_company_dict()
+        self.instance_map = {}
+        self.client = self.client_class()
 
-    def load_company_dict(self):
-        """
-        Returns a dict of all companies that reside locally
-        """
-        return {c.id: c for c in models.Company.objects.all()}
+    def load_instance_map(self):
+        self.instance_map = {
+            i[self.lookup_key]: i for i in self.client_class.objects.all()
+        }
 
-    def _assign_field_data(self, company, api_company):
+    def get_json(self):
+        raise NotImplementedError
+
+    def get_or_create_instance(self, api_instance):
+        lookup_key = api_instance[self.lookup_key]
+        instance = self.instance_map.get(lookup_key)
+
+        created = False
+
+        if not instance:
+            instance = self.model_class()
+            self._assign_field_data(instance, api_instance)
+            instance.save()
+            created = True
+            self.instance_map[lookup_key] = instance
+
+        print('INSTANCESES:', self.instance_map)
+
+        return instance, created
+
+    def update_or_create_instance(self, api_instance):
         """
-        Assigns field data from an api_company instance
-        to a local Company model instance
+        Creates and returns an instance if
+        it does not already exist
         """
-        company.company_name = api_company['name']
-        company.company_identifier = api_company['identifier']
-        company.phone_number = api_company['phoneNumber']
-        company.fax_number = api_company['faxNumber']
-        company.address_line1 = api_company['addressLine1']
-        company.address_line2 = api_company['addressLine1']
-        company.city = api_company['city']
-        company.state_identifier = api_company['state']
-        company.zip = api_company['zip']
-        company.created = timezone.now()
+        instance, created = self.get_or_create_instance(
+            api_instance)
+
+        action = 'Created' if created else 'Updated'
+
+        if not created:
+            self._assign_field_data(instance, api_instance)
+            instance.save()
+
+        self.instance_map[self.lookup_key] = instance
+
+        msg = ' {}: {}'
+        logger.info(msg.format(action, self.model_class.__name__))
+
+        return instance, created
 
     def sync(self):
-        api_company_data = self.client.get()
         created_count = 0
         updated_count = 0
         deleted_count = 0
 
-        for api_company in api_company_data:
-            company_id = api_company['id']
-            try:
-                company = models.Company.objects.get(id=company_id)
-                updated_count += 1
-            except ObjectDoesNotExist:
-                company = models.Company.objects.create(id=company_id)
-                created_count += 1
+        for json_data in self.get_json():
+            _, created = self.update_or_create_instance(json_data)
 
-            self._assign_field_data(company, api_company)
-            company.save()
+            if created:
+                created_count += 1
+            else:
+                updated_count += 1
 
         return created_count, updated_count, deleted_count
-
-    def get_or_create_company(self, company_id):
-        """
-        Creates and returns a Company instance if it does not already exist
-        """
-        # Assign company to ticket. Create a new company if it does not already
-        # exist
-
-        company = self.companies.get(company_id)
-        if not company:
-            # fetch company from api
-            api_company = self.client.by_id(company_id)
-            company = models.Company.objects.create(id=company_id)
-
-            self._assign_field_data(company, api_company)
-            company.save()
-            logger.info('Company Created: {}'.format(company_id))
-            self.companies[company.id] = company
-        return company
 
 
 class BoardSynchronizer:
@@ -161,72 +157,68 @@ class BoardStatusSynchronizer:
         return self._sync(board_ids)
 
 
-class Synchronizer:
-
-    def __init__(self, *args, **kwargs):
-        self.instance_map = {}
-        self.client = self.client_class()
-
-    def load_instance_map(self):
-        self.instance_map = {
-            i[self.lookup_key]: i for i in self.client_class.objects.all()
-        }
-
-    def get_or_create_instance(self, api_instance):
-        instance = self.instance_map.get(
-            api_instance[self.lookup_key])
-
-        created = False
-
-        if not instance:
-            instance = self.model_class()
-            self._assign_field_data(instance, api_instance)
-            instance.save()
-            created = True
-
-        return instance, created
-
-    def update_or_create_instance(self, api_instance):
-        """
-        Creates and returns an instance if
-        it does not already exist
-        """
-        instance, created = self.get_or_create_instance(
-            api_instance)
-
-        action = 'Created' if created else 'Updated'
-
-        if not created:
-            self._assign_field_data(instance, api_instance)
-            instance.save()
-
-        self.instance_map[instance.name] = instance
-
-        msg = ' {}: {}'
-        logger.info(msg.format(action, self.model_class.__name__))
-
-        return instance, created
-
-
 class TeamSynchronizer(Synchronizer):
     client_class = ServiceAPIClient
     model_class = models.Team
     lookup_key = 'team_id'
 
-    def sync(self, board_ids=None):
+    def _assign_field_data(self, team, team_json):
+        team.name = team_json['name']
+        team.priority_id = team_json['id']
+        team.color = team_json['color']
 
-        if not board_ids:
-            board_qs = models.ConnectWiseBoard.objects.all()
-            board_ids = board_qs.values_list('board_id', flat=True)
+        return team
 
-        updated_count = 0
-        created_count = 0
-        deleted_count = 0
+    # def get_json(self):
+    #     results_json = []
+    #     board_qs = models.ConnectWiseBoard.objects.all()
+    #         board_ids = board_qs.values_list('board_id', flat=True)
+    #     return self.client.get_teams()
 
-        # for board_id in board_ids:
-        #     for team in self.client.get_teams(board_id):
+    # def sync(self):
 
-        return created_count, updated_count, deleted_count
+    #     if not board_ids:
+            
+
+    #     updated_count = 0
+    #     created_count = 0
+    #     deleted_count = 0
+
+    #     # for board_id in board_ids:
+    #     #     for team in self.client.get_teams(board_id):
+
+    #     return created_count, updated_count, deleted_count
+
+
+class CompanySynchronizer(Synchronizer):
+    """
+    Coordinates retrieval and demarshalling of ConnectWise JSON
+    Company instances.
+    """
+    client_class = CompanyAPIClient
+    model_class = models.Company
+    lookup_key = 'id'
+
+    def _assign_field_data(self, company, company_json):
+        """
+        Assigns field data from an company_json instance
+        to a local Company model instance
+        """
+        company.company_id = company_json['id']
+        company.company_name = company_json['name']
+        company.company_identifier = company_json['identifier']
+        company.phone_number = company_json['phoneNumber']
+        company.fax_number = company_json['faxNumber']
+        company.address_line1 = company_json['addressLine1']
+        company.address_line2 = company_json['addressLine1']
+        company.city = company_json['city']
+        company.state_identifier = company_json['state']
+        company.zip = company_json['zip']
+        company.created = timezone.now()
+        return company
+
+    def get_json(self):
+        return self.client.get()
 
 
 class PrioritySynchronizer(Synchronizer):
@@ -246,20 +238,8 @@ class PrioritySynchronizer(Synchronizer):
 
         return ticket_priority
 
-    def sync(self):
-        created_count = 0
-        updated_count = 0
-        deleted_count = 0
-
-        for api_priority in self.client.get_priorities():
-            _, created = self.update_or_create_instance(api_priority)
-
-            if created:
-                created_count += 1
-            else:
-                updated_count += 1
-
-        return created_count, updated_count, deleted_count
+    def get_json(self):
+        return self.client.get_priorities()
 
 
 class MemberSynchronizer:
@@ -506,9 +486,8 @@ class ServiceTicketSynchronizer:
         service_ticket.board_id = api_ticket['board']['id']
         service_ticket.board_status_id = api_ticket['status']['id']
 
-        company_id = api_ticket['company']['id']
-        service_ticket.company = self.company_synchronizer \
-                                     .get_or_create_company(company_id)
+        service_ticket.company, _ = self.company_synchronizer \
+            .get_or_create_instance(api_ticket['company'])
 
         priority, _ = self.priority_synchronizer \
             .get_or_create_instance(api_ticket['priority'])
