@@ -204,6 +204,18 @@ class TestServiceTicketSynchronizer(TestCase):
         created_count, _, _ = self._sync()
         self.assertEqual(created_count, 1)
 
+
+class TestServiceTicketUpdater(TestCase):
+    def setUp(self):
+        self.updater = sync.ServiceTicketUpdater()
+        self.synchronizer = sync.ServiceTicketSynchronizer()
+
+    def _sync(self):
+        mocks.company_api_by_id_call(fixtures.API_COMPANY)
+        mocks.service_api_tickets_call()
+
+        return self.synchronizer.sync()
+
     def test_update_api_ticket(self):
         ServiceTicket.objects.all().delete()
         self._sync()
@@ -220,10 +232,12 @@ class TestServiceTicketSynchronizer(TestCase):
         local_ticket.closed_flag = True
         local_ticket.save()
 
-        updated_api_ticket = self.synchronizer.update_api_ticket(local_ticket)
+        updated_api_ticket = self.updater.update_api_ticket(local_ticket)
 
-        self.assertEqual(updated_api_ticket['board'][
-                         'name'], local_ticket.board_name)
+        self.assertEqual(
+            updated_api_ticket['board']['name'],
+            local_ticket.board_name
+        )
 
 
 class TestMemberSynchronization(TestCase):

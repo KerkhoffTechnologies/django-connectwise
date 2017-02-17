@@ -323,7 +323,6 @@ class ServiceTicketSynchronizer:
     Coordinates retrieval and demarshalling of ConnectWise JSON
     objects to the local counterparts.
     """
-
     def __init__(self, reset=False):
         self.company_synchronizer = CompanySynchronizer()
         self.status_synchronizer = BoardStatusSynchronizer()
@@ -503,6 +502,65 @@ class ServiceTicketSynchronizer:
         self._manage_member_assignments(service_ticket)
         return service_ticket, created
 
+    def sync(self):
+        """
+        Synchronizes tickets between the ConnectWise server and the
+        local database. Synchronization is performed in batches
+        specified in the DJCONNECTWISE_API_BATCH_LIMIT setting
+        """
+        sync_job = SyncJob.objects.create()
+
+        created_count = 0
+        updated_count = 0
+        ticket_ids = []
+
+        page = 0
+        accumulated = 0
+
+        logger.info('Synchronization Started')
+
+        while True:
+            logger.info('Processing Batch #: {}'.format(page))
+            tickets = self.service_client.get_tickets(page=page)
+            num_tickets = len(tickets)
+
+            for ticket in tickets:
+                ticket, created = self.sync_ticket(ticket)
+                ticket_ids.append(ticket.id)
+
+                if created:
+                    created_count += 1
+                else:
+                    updated_count += 1
+
+            page += 1
+            accumulated += len(tickets)
+
+            if not num_tickets:
+                break
+
+        logger.info('Saving Ticket Assignments')
+        ServiceTicketAssignment.objects.bulk_create(
+            list(self.ticket_assignments.values()))
+
+        # now prune closed service tickets.
+        logger.info('Deleting Closed Tickets')
+        delete_qset = ServiceTicket.objects.filter(closed_flag=True)
+        delete_count = delete_qset.count()
+        delete_qset.delete()
+
+        sync_job.end_time = timezone.now()
+        sync_job.save()
+
+        return created_count, updated_count, delete_count
+
+
+class ServiceTicketUpdater(object):
+    """Send ticket updates to ConnectWise."""
+
+    def __init__(self):
+        self.service_client = ServiceAPIClient()
+
     def update_api_ticket(self, service_ticket):
         """"
         Updates the state of a generic ticket and determines which api
@@ -556,55 +614,3 @@ class ServiceTicketSynchronizer:
             service_ticket.save()
 
         return ticket_is_closed
-
-    def sync(self):
-        """
-        Synchronizes tickets between the ConnectWise server and the
-        local database. Synchronization is performed in batches
-        specified in the DJCONNECTWISE_API_BATCH_LIMIT setting
-        """
-        sync_job = SyncJob.objects.create()
-
-        created_count = 0
-        updated_count = 0
-        ticket_ids = []
-
-        page = 0
-        accumulated = 0
-
-        logger.info('Synchronization Started')
-
-        while True:
-            logger.info('Processing Batch #: {}'.format(page))
-            tickets = self.service_client.get_tickets(page=page)
-            num_tickets = len(tickets)
-
-            for ticket in tickets:
-                ticket, created = self.sync_ticket(ticket)
-                ticket_ids.append(ticket.id)
-
-                if created:
-                    created_count += 1
-                else:
-                    updated_count += 1
-
-            page += 1
-            accumulated += len(tickets)
-
-            if not num_tickets:
-                break
-
-        logger.info('Saving Ticket Assignments')
-        ServiceTicketAssignment.objects.bulk_create(
-            list(self.ticket_assignments.values()))
-
-        # now prune closed service tickets.
-        logger.info('Deleting Closed Tickets')
-        delete_qset = ServiceTicket.objects.filter(closed_flag=True)
-        delete_count = delete_qset.count()
-        delete_qset.delete()
-
-        sync_job.end_time = timezone.now()
-        sync_job.save()
-
-        return created_count, updated_count, delete_count
