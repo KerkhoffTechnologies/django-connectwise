@@ -562,10 +562,6 @@ class ServiceTicketUpdater(object):
         self.service_client = ServiceAPIClient()
 
     def update_api_ticket(self, service_ticket):
-        """"
-        Updates the state of a generic ticket and determines which api
-        to send the updated ticket data to.
-        """
         api_service_ticket = self.service_client.get_ticket(service_ticket.id)
 
         if service_ticket.closed_flag:
@@ -576,6 +572,7 @@ class ServiceTicketUpdater(object):
             ticket_status = service_ticket.status
 
         if not service_ticket.closed_flag:
+            # Ensure that the new status is valid for the CW board.
             try:
                 cw_board = ConnectWiseBoard.objects.get(
                     id=service_ticket.board_id)
@@ -588,7 +585,8 @@ class ServiceTicketUpdater(object):
                 raise InvalidStatusError("Failed to find the ticket's board.")
             except ConnectWiseBoardStatus.DoesNotExist:
                 raise InvalidStatusError(
-                    '{} is not a valid status for the ConnectWise {} board.'.
+                    "{} is not a valid status for the ticket's "
+                    "ConnectWise board ({}).".
                     format(
                         ticket_status.status_name,
                         cw_board.name
