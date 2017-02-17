@@ -60,7 +60,6 @@ class TestCompanySynchronizer(TestCase):
         api_company = deepcopy(fixtures.API_COMPANY)
         api_company['name'] = name
         api_company_list = [api_company]
-        print(Company.objects.filter(company_id=company_id))
         self._sync(api_company_list)
 
         company_post_update = Company.objects \
