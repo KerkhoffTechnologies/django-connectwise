@@ -10,7 +10,9 @@ class ConnectWiseAPIError(Exception):
     """Raise this, not request exceptions."""
     pass
 
-CONTENT_DISPOSITION_RE = re.compile('^attachment; filename=([\S]*)$')
+CONTENT_DISPOSITION_RE = re.compile(
+    '^attachment; filename=\"{0,1}(.*?)\"{0,1}$'
+)
 
 logger = logging.getLogger(__name__)
 

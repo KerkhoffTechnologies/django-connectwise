@@ -20,6 +20,11 @@ class TestUtils(TestCase):
             get_filename_extension('avatar.one.jpg'),
             'jpg'
         )
+        # It also works with spaces in the name
+        self.assertEqual(
+            get_filename_extension('avatar me.jpg'),
+            'jpg'
+        )
 
     def test_get_filename_extension_returns_none_when_invalid(self):
         self.assertEqual(

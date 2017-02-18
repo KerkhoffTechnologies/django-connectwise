@@ -311,7 +311,8 @@ class MemberSynchronizer:
             if not self.last_sync_job or member_stale:
                 (attachment_filename, avatar) = self.client \
                     .get_member_image_by_identifier(username)
-                self._save_avatar(member, avatar, attachment_filename)
+                if attachment_filename and avatar:
+                    self._save_avatar(member, avatar, attachment_filename)
 
             member.save()
 
