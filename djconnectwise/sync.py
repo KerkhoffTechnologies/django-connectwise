@@ -391,13 +391,19 @@ class ServiceTicketSynchronizer:
                 service_ticket=service_ticket).delete()
             for username in usernames:
                 member = self.members_map.get(username)
-                assignment = ServiceTicketAssignment()
-                assignment.member = member
-                assignment.service_ticket = service_ticket
-                self.ticket_assignments[
-                    (username, service_ticket.id,)] = assignment
-                logger.info('Member ServiceTicket Assignment: %s - %s' %
-                            (username, service_ticket.id))
+                if member:
+                    assignment = ServiceTicketAssignment()
+                    assignment.member = member
+                    assignment.service_ticket = service_ticket
+                    self.ticket_assignments[
+                        (username, service_ticket.id,)] = assignment
+                    logger.info('Member ServiceTicket Assignment: %s - %s' %
+                                (username, service_ticket.id))
+                else:
+                    logger.error(
+                        'Failed to locate member with username {} for ticket '
+                        '{} assignment.'.format(username, service_ticket.id)
+                    )
 
     def get_or_create_project(self, api_ticket):
         api_project = api_ticket['project']
