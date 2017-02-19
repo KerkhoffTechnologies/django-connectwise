@@ -17,7 +17,6 @@ settings.configure(
         'djconnectwise',
         'easy_thumbnails',
     ),
-    DJCONNECTWISE_API_BATCH_LIMIT=20,
     CONNECTWISE_SERVER_URL='https://localhost',
     CONNECTWISE_CREDENTIALS={
         'company_id': 'training',

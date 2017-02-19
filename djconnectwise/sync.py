@@ -525,7 +525,7 @@ class ServiceTicketSynchronizer:
                     board_id=service_ticket.board_id,
                     status_name=ticket_status.status_name
                 )
-            except ConnectWiseBoardStatus.DoesNotExist as e:
+            except models.ConnectWiseBoardStatus.DoesNotExist as e:
                 raise InvalidStatusError(e)
 
             api_service_ticket['status']['id'] = board_status.status_id
