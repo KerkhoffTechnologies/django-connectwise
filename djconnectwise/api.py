@@ -6,7 +6,13 @@ import re
 import requests
 
 
-CONTENT_DISPOSITION_RE = re.compile('^attachment; filename=([\S]*)$')
+class ConnectWiseAPIError(Exception):
+    """Raise this, not request exceptions."""
+    pass
+
+CONTENT_DISPOSITION_RE = re.compile(
+    '^attachment; filename=\"{0,1}(.*?)\"{0,1}$'
+)
 
 logger = logging.getLogger(__name__)
 
@@ -58,15 +64,20 @@ class ConnectWiseAPIClient(object):
         A convenience method for issuing a request to the
         specified REST endpoint
         """
-
         if not params:
             params = {}
 
-        response = requests.get(
-            self._endpoint(endpoint_url),
-            params=params,
-            auth=self.auth
-        )
+        try:
+            endpoint = self._endpoint(endpoint_url)
+            response = requests.get(
+                endpoint,
+                params=params,
+                auth=self.auth,
+                timeout=settings.DJCONNECTWISE_API_TIMEOUT,
+            )
+        except requests.RequestException as e:
+            logger.error('Request failed: GET {}: {}'.format(endpoint, e))
+            raise ConnectWiseAPIError('{}'.format(e))
 
         if 200 <= response.status_code < 300:
             return response.json()
@@ -74,7 +85,7 @@ class ConnectWiseAPIClient(object):
             msg = response.content
             self._log_failed(response)
 
-            raise requests.ConnectionError(msg)
+            raise ConnectWiseAPIError(msg)
 
 
 class ProjectAPIClient(ConnectWiseAPIClient):
@@ -122,22 +133,36 @@ class SystemAPIClient(ConnectWiseAPIClient):
         return self.fetch_resource(self.ENDPOINT_CALLBACKS)
 
     def delete_callback(self, entry_id):
-        response = requests.request(
-            'delete',
-            self._endpoint('{}/{}'.format(self.ENDPOINT_CALLBACKS,
-                                          entry_id)),
-            auth=self.auth
-        )
+        try:
+            endpoint = self._endpoint(
+                '{}/{}'.format(self.ENDPOINT_CALLBACKS, entry_id)
+            )
+            response = requests.request(
+                'delete',
+                endpoint,
+                auth=self.auth,
+                timeout=settings.DJCONNECTWISE_API_TIMEOUT,
+            )
+        except requests.RequestException as e:
+            logger.error('Request failed: DELETE {}: {}'.format(endpoint, e))
+            raise ConnectWiseAPIError('{}'.format(e))
+
         response.raise_for_status()
         return response
 
     def create_callback(self, callback_entry):
-        response = requests.request(
-            'post',
-            self._endpoint(self.ENDPOINT_CALLBACKS),
-            json=callback_entry,
-            auth=self.auth
-        )
+        try:
+            endpoint = self._endpoint(self.ENDPOINT_CALLBACKS)
+            response = requests.request(
+                'post',
+                endpoint,
+                json=callback_entry,
+                auth=self.auth,
+                timeout=settings.DJCONNECTWISE_API_TIMEOUT,
+            )
+        except requests.RequestException as e:
+            logger.error('Request failed: POST {}: {}'.format(endpoint, e))
+            raise ConnectWiseAPIError('{}'.format(e))
 
         if 200 <= response.status_code < 300:
             return response.json()
@@ -147,12 +172,20 @@ class SystemAPIClient(ConnectWiseAPIClient):
         return {}
 
     def update_callback(self, callback_entry):
-        response = requests.request(
-            'put',
-            self._endpoint('callbacks/{0}'.format(callback_entry.entry_id)),
-            json=callback_entry,
-            auth=self.auth
-        )
+        try:
+            endpoint = self._endpoint(
+                'callbacks/{0}'.format(callback_entry.entry_id)
+            )
+            response = requests.request(
+                'put',
+                endpoint,
+                json=callback_entry,
+                auth=self.auth,
+                timeout=settings.DJCONNECTWISE_API_TIMEOUT,
+            )
+        except requests.RequestException as e:
+            logger.error('Request failed: PUT {}: {}'.format(endpoint, e))
+            raise ConnectWiseAPIError('{}'.format(e))
 
         return response
 
@@ -163,10 +196,18 @@ class SystemAPIClient(ConnectWiseAPIClient):
         """
         Return a (filename, content) tuple.
         """
-        response = requests.get(
-            self._endpoint(self.ENDPOINT_MEMBERS_IMAGE.format(identifier)),
-            auth=self.auth
-        )
+        try:
+            endpoint = self._endpoint(
+                self.ENDPOINT_MEMBERS_IMAGE.format(identifier)
+            )
+            response = requests.get(
+                endpoint,
+                auth=self.auth,
+                timeout=settings.DJCONNECTWISE_API_TIMEOUT,
+            )
+        except requests.RequestException as e:
+            logger.error('Request failed: GET {}: {}'.format(endpoint, e))
+            raise ConnectWiseAPIError('{}'.format(e))
 
         if 200 <= response.status_code < 300:
             headers = response.headers
@@ -185,7 +226,7 @@ class SystemAPIClient(ConnectWiseAPIClient):
             return attachment_filename, response.content
         else:
             self._log_failed(response)
-        return None, None
+            return None, None
 
     def _attachment_filename(self, content_disposition):
         """
@@ -257,15 +298,19 @@ class ServiceAPIClient(ConnectWiseAPIClient):
         return self.fetch_resource('tickets', params=params)
 
     def update_ticket(self, ticket):
-        response = requests.request(
-            'put',
-            self._endpoint('tickets/{}'.format(ticket['id'])),
-            params=dict(id=ticket['id'], body=ticket),
-            json=ticket,
-            auth=self.auth
-        )
-
-        return response
+        try:
+            endpoint = self._endpoint('tickets/{}'.format(ticket['id']))
+            response = requests.put(
+                endpoint,
+                params=dict(id=ticket['id'], body=ticket),
+                json=ticket,
+                auth=self.auth,
+                timeout=settings.DJCONNECTWISE_API_TIMEOUT,
+            )
+            return response
+        except requests.RequestException as e:
+            logger.error('Request failed: PUT {}: {}'.format(endpoint, e))
+            raise ConnectWiseAPIError('{}'.format(e))
 
     def get_statuses(self, board_id):
         """

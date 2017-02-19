@@ -309,7 +309,8 @@ class MemberSynchronizer:
             if not self.last_sync_job or member_stale:
                 (attachment_filename, avatar) = self.client \
                     .get_member_image_by_identifier(username)
-                self._save_avatar(member, avatar, attachment_filename)
+                if attachment_filename and avatar:
+                    self._save_avatar(member, avatar, attachment_filename)
 
             member.save()
 
@@ -321,7 +322,6 @@ class ServiceTicketSynchronizer:
     Coordinates retrieval and demarshalling of ConnectWise JSON
     objects to the local counterparts.
     """
-
     def __init__(self, reset=False):
         self.company_synchronizer = CompanySynchronizer()
         self.status_synchronizer = BoardStatusSynchronizer()
@@ -392,13 +392,20 @@ class ServiceTicketSynchronizer:
                 service_ticket=service_ticket).delete()
             for username in usernames:
                 member = self.members_map.get(username)
-                assignment = models.ServiceTicketAssignment()
-                assignment.member = member
-                assignment.service_ticket = service_ticket
-                self.ticket_assignments[
-                    (username, service_ticket.id,)] = assignment
-                logger.info('Member ServiceTicket Assignment: %s - %s' %
-                            (username, service_ticket.id))
+
+                if member:
+                    assignment = models.ServiceTicketAssignment()
+                    assignment.member = member
+                    assignment.service_ticket = service_ticket
+                    self.ticket_assignments[
+                        (username, service_ticket.id,)] = assignment
+                    msg = 'Member ServiceTicket Assignment: {} - {}'
+                    logger.info(msg.format(username, service_ticket.id))
+                else:
+                    logger.error(
+                        'Failed to locate member with username {} for ticket '
+                        '{} assignment.'.format(username, service_ticket.id)
+                    )
 
     def get_or_create_project(self, api_ticket):
         api_project = api_ticket['project']
@@ -610,3 +617,71 @@ class ServiceTicketSynchronizer:
         sync_job.save()
 
         return created_count, updated_count, delete_count
+
+
+class ServiceTicketUpdater(object):
+    """Send ticket updates to ConnectWise."""
+
+    def __init__(self):
+        self.service_client = ServiceAPIClient()
+
+    def update_api_ticket(self, service_ticket):
+        api_service_ticket = self.service_client.get_ticket(service_ticket.id)
+
+        if service_ticket.closed_flag:
+            api_service_ticket['closedFlag'] = service_ticket.closed_flag
+            ticket_status, created = models.TicketStatus.objects.get_or_create(
+                status_name__iexact='Closed')
+        else:
+            ticket_status = service_ticket.status
+
+        if not service_ticket.closed_flag:
+            # Ensure that the new status is valid for the CW board.
+            try:
+                cw_board = models.ConnectWiseBoard.objects.get(
+                    id=service_ticket.board_id)
+                board_status = models.ConnectWiseBoardStatus.objects.get(
+                    board_id=service_ticket.board_id,
+                    status_name=ticket_status.status_name
+                )
+                api_service_ticket['status']['id'] = board_status.status_id
+            except models.ConnectWiseBoard.DoesNotExist:
+                raise InvalidStatusError("Failed to find the ticket's board.")
+            except models.ConnectWiseBoardStatus.DoesNotExist:
+                raise InvalidStatusError(
+                    "{} is not a valid status for the ticket's "
+                    "ConnectWise board ({}).".
+                    format(
+                        ticket_status.status_name,
+                        cw_board.name
+                    )
+                )
+
+        # No need for a callback update when updating via api
+        api_service_ticket['skipCallback'] = True
+        logger.info(
+            'Update API Ticket Status: {} - {}'.format(
+                service_ticket.id, api_service_ticket['status']['name']
+            )
+        )
+
+        return self.service_client.update_ticket(api_service_ticket)
+
+    def close_ticket(self, service_ticket):
+        """
+        Closes the specified service ticket returns True if the close
+        operation was successful on the connectwise server.
+        Note: It appears that the connectwise server does not return a
+        permissions error if user does not have access to this operation.
+        """
+        service_ticket.closed_flag = True
+        service_ticket.save()
+        logger.info('Close API Ticket: %s' % service_ticket.id)
+        api_ticket = self.update_api_ticket(service_ticket)
+        ticket_is_closed = api_ticket['closedFlag']
+
+        if not ticket_is_closed:
+            service_ticket.closed_flag = ticket_is_closed
+            service_ticket.save()
+
+        return ticket_is_closed

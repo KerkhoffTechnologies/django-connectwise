@@ -116,15 +116,29 @@ class TestSystemAPIClient(TestCase):
 
     def test_attachment_filename_returns_filename(self):
         # It works with a file extension
-        filename = 'attachment; filename=somefile.jpg'
         self.assertEqual(
-            self.client._attachment_filename(filename),
+            self.client._attachment_filename(
+                'attachment; filename=somefile.jpg'
+            ),
             'somefile.jpg',
         )
         # It also works without a file extension
         self.assertEqual(
             self.client._attachment_filename('attachment; filename=somefile'),
             'somefile',
+        )
+        # It also works with a space and quoted filename
+        self.assertEqual(
+            self.client._attachment_filename(
+                'attachment; filename="somefile and a space.jpg"'
+            ),
+            'somefile and a space.jpg',
+        )
+        # And it works with Unicode
+        filename = 'attachment; filename=Ƨōmefile.jpg'
+        self.assertEqual(
+            self.client._attachment_filename(filename),
+            'Ƨōmefile.jpg',
         )
 
     def test_attachment_filename_returns_none_on_invalid(self):
