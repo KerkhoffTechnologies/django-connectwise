@@ -55,6 +55,15 @@ class TestServiceAPIClient(TestCase):
         result = self.client.get_priorities()
         self.assertEqual(result, fixtures.API_SERVICE_PRIORITY_LIST)
 
+    @responses.activate
+    def test_get_teams(self):
+        board_id = fixtures.API_BOARD_LIST[0]['id']
+        endpoint = '{}/{}/teams/'.format(self.client.ENDPOINT_BOARDS, board_id)
+        endpoint_url = self.client._endpoint(endpoint)
+        mk.get(endpoint_url, fixtures.API_SERVICE_TEAM_LIST)
+        result = self.client.get_teams(board_id)
+        self.assertEqual(result, fixtures.API_SERVICE_TEAM_LIST)
+
 
 class TestSystemAPIClient(TestCase):
 

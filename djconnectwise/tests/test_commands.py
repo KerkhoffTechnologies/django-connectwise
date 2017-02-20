@@ -7,17 +7,18 @@ from djconnectwise.models import ConnectWiseBoard
 
 from . import mocks
 from . import fixtures
+from . import fixture_utils
 from .. import sync
 
 
-class BaseSyncTest(TestCase):
+def sync_summary(class_name):
+    created_count = 2 if class_name == 'Priority' else 1
+    return '{} Sync Summary - Created: {} , Updated: 0'.format(
+        class_name, created_count
+    )
 
-    BOARD_SYNC_SUMMARY = 'Board Sync Summary - Created: 1 , Updated: 0'
-    COMPANY_SYNC_SUMMARY = 'Company Sync Summary - Created: 1 , Updated: 0'
-    STATUS_SYNC_SUMMARY = 'Board Status Sync Summary - Created: 2 , Updated: 0'
-    MEMBER_SYNC_SUMMARY = 'Member Sync Summary - Created: 1 , Updated: 0'
-    TICKET_SYNC_SUMMARY = 'Ticket Sync Summary - Created: 1 , Updated: 0'
-    PRIORITY_SYNC_SUMMARY = 'Priority Sync Summary - Created: 2 , Updated: 0'
+
+class BaseSyncTest(TestCase):
 
     def _test_sync(self, mock_call, return_value, cw_object, msg):
         mock_call(return_value)
@@ -33,7 +34,19 @@ class TestSyncCompaniesCommand(BaseSyncTest):
         self._test_sync(mocks.company_api_get_call,
                         fixtures.API_COMPANY_LIST,
                         'company',
-                        self.COMPANY_SYNC_SUMMARY
+                        sync_summary('Company')
+                        )
+
+
+class TestSyncTeamsCommand(BaseSyncTest):
+
+    def test_sync(self):
+        """Test sync teams command."""
+        fixture_utils.init_boards()
+        self._test_sync(mocks.service_api_get_teams_call,
+                        [fixtures.API_SERVICE_TEAM_LIST[0]],
+                        'team',
+                        sync_summary('Team')
                         )
 
 
@@ -44,7 +57,7 @@ class TestSyncBoardsCommand(BaseSyncTest):
         self._test_sync(mocks.service_api_get_boards_call,
                         fixtures.API_BOARD_LIST,
                         'board',
-                        self.BOARD_SYNC_SUMMARY)
+                        sync_summary('Board'))
 
 
 class TestSyncPrioritiesCommand(BaseSyncTest):
@@ -54,7 +67,7 @@ class TestSyncPrioritiesCommand(BaseSyncTest):
         self._test_sync(mocks.service_api_get_priorities_call,
                         fixtures.API_SERVICE_PRIORITY_LIST,
                         'priority',
-                        self.PRIORITY_SYNC_SUMMARY)
+                        sync_summary('Priority'))
 
 
 class TestSyncBoardsStatusesCommand(BaseSyncTest):
@@ -69,9 +82,9 @@ class TestSyncBoardsStatusesCommand(BaseSyncTest):
     def test_sync(self):
         """Test sync_board_statuses command."""
         self._test_sync(mocks.service_api_get_statuses_call,
-                        fixtures.API_BOARD_STATUS_LIST,
+                        [fixtures.API_BOARD_STATUS_LIST[0]],
                         'board_status',
-                        self.STATUS_SYNC_SUMMARY
+                        sync_summary('Board Status')
                         )
 
 
@@ -80,7 +93,8 @@ class TestSyncAllCommand(BaseSyncTest):
         """Test sync all objects command."""
         mocks.company_api_get_call(fixtures.API_COMPANY_LIST)
         mocks.service_api_get_boards_call(fixtures.API_BOARD_LIST)
-        mocks.service_api_get_statuses_call(fixtures.API_BOARD_STATUS_LIST)
+        mocks.service_api_get_statuses_call(
+            [fixtures.API_BOARD_STATUS_LIST[0]])
         mocks.system_api_get_members_call([fixtures.API_MEMBER])
         mocks.system_api_get_member_image_by_identifier_call(
             (mocks.CW_MEMBER_IMAGE_FILENAME, mocks.get_member_avatar()))
@@ -89,16 +103,20 @@ class TestSyncAllCommand(BaseSyncTest):
         mocks.service_api_get_priorities_call(
             fixtures.API_SERVICE_PRIORITY_LIST)
 
+        mocks.service_api_get_teams_call([fixtures.API_SERVICE_TEAM_LIST[0]])
+
         out = io.StringIO()
         call_command('cwsync', stdout=out)
         actual_output = out.getvalue().strip()
 
         summaries = [
-            self.BOARD_SYNC_SUMMARY,
-            self.COMPANY_SYNC_SUMMARY,
-            self.STATUS_SYNC_SUMMARY,
-            self.MEMBER_SYNC_SUMMARY,
-            self.TICKET_SYNC_SUMMARY]
+            sync_summary('Board'),
+            sync_summary('Company'),
+            sync_summary('Board Status'),
+            sync_summary('Member'),
+            sync_summary('Team'),
+            sync_summary('Priority'),
+            sync_summary('Ticket')]
 
         for summary in summaries:
             self.assertIn(summary, actual_output)

@@ -5,19 +5,9 @@ from dateutil.parser import parse
 from djconnectwise.api import CompanyAPIClient
 from djconnectwise.api import ServiceAPIClient
 from djconnectwise.api import SystemAPIClient
-from djconnectwise.models import Company
-from djconnectwise.models import ConnectWiseBoard
-from djconnectwise.models import ConnectWiseBoardStatus
-from djconnectwise.models import Member
-from djconnectwise.models import Project
-from djconnectwise.models import ServiceTicket
-from djconnectwise.models import ServiceTicketAssignment
-from djconnectwise.models import SyncJob
-from djconnectwise.models import TicketPriority
-from djconnectwise.models import TicketStatus
+from djconnectwise import models
 from djconnectwise.utils import get_hash, get_filename_extension
 
-from django.core.exceptions import ObjectDoesNotExist
 from django.core.files.base import ContentFile
 from django.utils import timezone
 
@@ -30,76 +20,71 @@ class InvalidStatusError(Exception):
     pass
 
 
-class CompanySynchronizer:
-    """
-    Coordinates retrieval and demarshalling of ConnectWise JSON
-    Company instances.
-    """
+class Synchronizer:
 
     def __init__(self, *args, **kwargs):
-        self.client = CompanyAPIClient()
-        self.companies = self.load_company_dict()
+        self.instance_map = {}
+        self.client = self.client_class()
 
-    def load_company_dict(self):
-        """
-        Returns a dict of all companies that reside locally
-        """
-        return {c.id: c for c in Company.objects.all()}
+    def load_instance_map(self):
+        self.instance_map = {
+            i[self.lookup_key]: i for i in self.client_class.objects.all()
+        }
 
-    def _assign_field_data(self, company, api_company):
+    def get_json(self):
+        raise NotImplementedError
+
+    def get_or_create_instance(self, api_instance):
+        lookup_key = api_instance[self.lookup_key]
+        instance = self.instance_map.get(lookup_key)
+
+        created = False
+
+        if not instance:
+            instance = self.model_class()
+            self._assign_field_data(instance, api_instance)
+            instance.save()
+            created = True
+            self.instance_map[lookup_key] = instance
+
+        return instance, created
+
+    def update_or_create_instance(self, api_instance):
         """
-        Assigns field data from an api_company instance
-        to a local Company model instance
+        Creates and returns an instance if
+        it does not already exist
         """
-        company.company_name = api_company['name']
-        company.company_identifier = api_company['identifier']
-        company.phone_number = api_company['phoneNumber']
-        company.fax_number = api_company['faxNumber']
-        company.address_line1 = api_company['addressLine1']
-        company.address_line2 = api_company['addressLine1']
-        company.city = api_company['city']
-        company.state_identifier = api_company['state']
-        company.zip = api_company['zip']
-        company.created = timezone.now()
+        instance, created = self.get_or_create_instance(
+            api_instance)
+
+        action = 'Created' if created else 'Updated'
+
+        if not created:
+            self._assign_field_data(instance, api_instance)
+            instance.save()
+
+        self.instance_map[self.lookup_key] = instance
+
+        msg = ' {}: {}'
+        logger.info(msg.format(action, self.model_class.__name__))
+
+        return instance, created
 
     def sync(self):
-        api_company_data = self.client.get()
         created_count = 0
         updated_count = 0
         deleted_count = 0
 
-        for api_company in api_company_data:
-            company_id = api_company['id']
-            try:
-                company = Company.objects.get(id=company_id)
-                updated_count += 1
-            except ObjectDoesNotExist:
-                company = Company.objects.create(id=company_id)
-                created_count += 1
+        for json_data in self.get_json():
 
-            self._assign_field_data(company, api_company)
-            company.save()
+            _, created = self.update_or_create_instance(json_data)
+
+            if created:
+                created_count += 1
+            else:
+                updated_count += 1
 
         return created_count, updated_count, deleted_count
-
-    def get_or_create_company(self, company_id):
-        """
-        Creates and returns a Company instance if it does not already exist
-        """
-        # Assign company to ticket. Create a new company if it does not already
-        # exist
-
-        company = self.companies.get(company_id)
-        if not company:
-            # fetch company from api
-            api_company = self.client.by_id(company_id)
-            company = Company.objects.create(id=company_id)
-
-            self._assign_field_data(company, api_company)
-            company.save()
-            logger.info('Company Created: {}'.format(company_id))
-            self.companies[company.id] = company
-        return company
 
 
 class BoardSynchronizer:
@@ -113,7 +98,7 @@ class BoardSynchronizer:
         deleted_count = 0
 
         for board in self.client.get_boards():
-            _, created = ConnectWiseBoard.objects.update_or_create(
+            _, created = models.ConnectWiseBoard.objects.update_or_create(
                 board_id=board['id'],
                 defaults={
                     'name': board['name'],
@@ -145,13 +130,14 @@ class BoardStatusSynchronizer:
             # way to bulk get or create. May need to
             # invest time in a more efficient approach
             for status in self.client.get_statuses(board_id):
-                _, created = ConnectWiseBoardStatus.objects.update_or_create(
-                    status_id=status['id'],
-                    defaults={
-                        'board_id': board_id,
-                        'status_name': status['name'],
-                    }
-                )
+                _, created = models.ConnectWiseBoardStatus.objects \
+                    .update_or_create(
+                        status_id=status['id'],
+                        defaults={
+                            'board_id': board_id,
+                            'status_name': status['name'],
+                        }
+                    )
 
                 if created:
                     created_count += 1
@@ -163,79 +149,92 @@ class BoardStatusSynchronizer:
     def sync(self, board_ids=None):
 
         if not board_ids:
-            board_qs = ConnectWiseBoard.objects.all()
+            board_qs = models.ConnectWiseBoard.objects.all()
             board_ids = board_qs.values_list('board_id', flat=True)
 
         return self._sync(board_ids)
 
 
-class PrioritySynchronizer:
+class TeamSynchronizer(Synchronizer):
+    client_class = ServiceAPIClient
+    model_class = models.Team
+    lookup_key = 'id'
 
-    def __init__(self, *args, **kwargs):
-        self.client = ServiceAPIClient()
-        self.ticket_priority_map = {
-            ticket.name: ticket for ticket in TicketPriority.objects.all()
-        }
+    def _assign_field_data(self, team, team_json):
+        team.team_id = team_json['id']
+        team.name = team_json['name']
+        team.board = models.ConnectWiseBoard.objects.get(
+            board_id=team_json['boardId'])
+
+        members = list(models.Member.objects.filter(
+            member_id__in=team_json['members']))
+
+        team.save()
+
+        team.members.clear()
+        team.members.add(*members)
+        return team
+
+    def get_json(self):
+        results_json = []
+        board_qs = models.ConnectWiseBoard.objects.all()
+
+        for board_id in board_qs.values_list('board_id', flat=True):
+            results_json += self.client.get_teams(board_id)
+
+        return results_json
+
+
+class CompanySynchronizer(Synchronizer):
+    """
+    Coordinates retrieval and demarshalling of ConnectWise JSON
+    Company instances.
+    """
+    client_class = CompanyAPIClient
+    model_class = models.Company
+    lookup_key = 'id'
+
+    def _assign_field_data(self, company, company_json):
+        """
+        Assigns field data from an company_json instance
+        to a local Company model instance
+        """
+        company.company_id = company_json['id']
+        company.company_name = company_json['name']
+        company.company_identifier = company_json['identifier']
+        company.phone_number = company_json['phoneNumber']
+        company.fax_number = company_json['faxNumber']
+        company.address_line1 = company_json['addressLine1']
+        company.address_line2 = company_json['addressLine1']
+        company.city = company_json['city']
+        company.state_identifier = company_json['state']
+        company.zip = company_json['zip']
+        company.created = timezone.now()
+        return company
+
+    def get_json(self):
+        return self.client.get()
+
+
+class PrioritySynchronizer(Synchronizer):
+    client_class = ServiceAPIClient
+    model_class = models.TicketPriority
+    lookup_key = 'name'
 
     def _assign_field_data(self, ticket_priority, api_priority):
         ticket_priority.name = api_priority['name']
         ticket_priority.priority_id = api_priority['id']
         ticket_priority.color = api_priority.get('color')
-        ticket_priority.sort = api_priority.get('sortOrder')
+
+        # work around due to api data inconsistencies
+        sort_value = api_priority.get('sort') or api_priority.get('sortOrder')
+        if sort_value:
+            ticket_priority.sort = sort_value
+
         return ticket_priority
 
-    def get_or_create_ticket_priority(self, api_priority):
-        """
-        Gets or creates a TicketPriority instance for
-        the supplied API Priority JSON structure
-        """
-        ticket_priority = self.ticket_priority_map.get(
-            api_priority['name'])
-
-        created = False
-        if not ticket_priority:
-            ticket_priority = TicketPriority()
-            self._assign_field_data(ticket_priority, api_priority)
-            ticket_priority.save()
-            created = True
-
-        return ticket_priority, created
-
-    def update_or_create_ticket_priority(self, api_priority):
-        """
-        Creates and returns a TicketPriority instance if
-        it does not already exist
-        """
-        ticket_priority, created = self.get_or_create_ticket_priority(
-            api_priority)
-
-        action = 'Created' if created else 'Updated'
-
-        if not created:
-            self._assign_field_data(ticket_priority, api_priority)
-            ticket_priority.save()
-
-        self.ticket_priority_map[ticket_priority.name] = ticket_priority
-
-        msg = 'TicketPriority {}: {}'
-        logger.info(msg.format(action, ticket_priority.name))
-
-        return ticket_priority, created
-
-    def sync(self):
-        created_count = 0
-        updated_count = 0
-        deleted_count = 0
-
-        for api_priority in self.client.get_priorities():
-            _, created = self.update_or_create_ticket_priority(api_priority)
-
-            if created:
-                created_count += 1
-            else:
-                updated_count += 1
-
-        return created_count, updated_count, deleted_count
+    def get_json(self):
+        return self.client.get_priorities()
 
 
 class MemberSynchronizer:
@@ -244,7 +243,7 @@ class MemberSynchronizer:
         self.client = SystemAPIClient()
         self.last_sync_job = None
 
-        sync_job_qset = SyncJob.objects.all()
+        sync_job_qset = models.SyncJob.objects.all()
 
         if sync_job_qset.exists():
             self.last_sync_job = sync_job_qset.last()
@@ -285,17 +284,16 @@ class MemberSynchronizer:
 
         for api_member in members_json:
             username = api_member['identifier']
-            member_qset = Member.objects.filter(identifier=username)
+            member_qset = models.Member.objects.filter(identifier=username)
             if member_qset.exists():
                 member = member_qset.first()
-
                 member.first_name = api_member['firstName']
                 member.last_name = api_member['lastName']
                 member.office_email = api_member['officeEmail']
                 updated_count += 1
                 logger.info('Update Member: {0}'.format(member.identifier))
             else:
-                member = Member.create_member(api_member)
+                member = models.Member.create_member(api_member)
                 created_count += 1
                 logger.info('Create Member: {0}'.format(member.identifier))
 
@@ -332,7 +330,7 @@ class ServiceTicketSynchronizer:
         self.reset = reset
         self.last_sync_job = None
         extra_conditions = ''
-        sync_job_qset = SyncJob.objects.all()
+        sync_job_qset = models.SyncJob.objects.all()
 
         if sync_job_qset.exists() and not self.reset:
             self.last_sync_job = sync_job_qset.last()
@@ -357,15 +355,18 @@ class ServiceTicketSynchronizer:
         # we need to remove the underscores to ensure an accurate
         # lookup of the normalized api fieldnames
         self.local_service_ticket_fields = self._create_field_lookup(
-            ServiceTicket)
-        self.local_company_fields = self._create_field_lookup(Company)
+            models.ServiceTicket)
+        self.local_company_fields = self._create_field_lookup(models.Company)
 
         self.ticket_status_map = {
-            ticket.status_name: ticket for ticket in TicketStatus.objects.all()
+            ticket.status_name:
+            ticket for ticket in models.TicketStatus.objects.all()
         }
 
-        self.members_map = {m.identifier: m for m in Member.objects.all()}
-        self.project_map = {p.name: p for p in Project.objects.all()}
+        self.members_map = {
+            m.identifier: m for m in models.Member.objects.all()
+        }
+        self.project_map = {p.name: p for p in models.Project.objects.all()}
         self.ticket_assignments = {}
         self.updated_members = []
 
@@ -387,18 +388,19 @@ class ServiceTicketSynchronizer:
             usernames = [u.strip()
                          for u in service_ticket.resources.split(',')]
             # clear existing assignments
-            ServiceTicketAssignment.objects.filter(
+            models.ServiceTicketAssignment.objects.filter(
                 service_ticket=service_ticket).delete()
             for username in usernames:
                 member = self.members_map.get(username)
+
                 if member:
-                    assignment = ServiceTicketAssignment()
+                    assignment = models.ServiceTicketAssignment()
                     assignment.member = member
                     assignment.service_ticket = service_ticket
                     self.ticket_assignments[
                         (username, service_ticket.id,)] = assignment
-                    logger.info('Member ServiceTicket Assignment: %s - %s' %
-                                (username, service_ticket.id))
+                    msg = 'Member ServiceTicket Assignment: {} - {}'
+                    logger.info(msg.format(username, service_ticket.id))
                 else:
                     logger.error(
                         'Failed to locate member with username {} for ticket '
@@ -410,7 +412,7 @@ class ServiceTicketSynchronizer:
         if api_project:
             project = self.project_map.get(api_project['name'])
             if not project:
-                project = Project()
+                project = models.Project()
                 project.name = api_project['name']
                 project.project_href = api_project['_info']['project_href']
                 project.project_id = api_project['id']
@@ -427,6 +429,7 @@ class ServiceTicketSynchronizer:
         api_status = api_ticket['status']
         status_name = api_status['name'].strip()
         ticket_status = self.ticket_status_map.get(status_name)
+        created = False
 
         if not ticket_status:
             kwargs = dict(
@@ -434,12 +437,12 @@ class ServiceTicketSynchronizer:
                 status_name=status_name
             )
 
-            if TicketStatus.objects.filter(**kwargs).exists():
-                ticket_status = TicketStatus.objects.get(**kwargs)
+            if models.TicketStatus.objects.filter(**kwargs).exists():
+                ticket_status = models.TicketStatus.objects.get(**kwargs)
             else:
                 logger.info('TicketStatus Created - %s' % status_name)
-                ticket_status, created = TicketStatus.objects.get_or_create(
-                    **kwargs)
+                ticket_status, created = models.TicketStatus.objects \
+                    .get_or_create(**kwargs)
 
             self.ticket_status_map[status_name] = ticket_status
 
@@ -448,7 +451,7 @@ class ServiceTicketSynchronizer:
                 ticket_status.status_id = api_status['id']
                 ticket_status.save()
 
-        return ticket_status
+        return ticket_status, created
 
     def sync_ticket(self, api_ticket):
         """
@@ -456,12 +459,12 @@ class ServiceTicketSynchronizer:
         ServiceTicket instance.
         """
         api_ticket_id = api_ticket['id']
-        service_ticket, created = ServiceTicket.objects \
-                                               .get_or_create(pk=api_ticket_id)
+        service_ticket, created = models.ServiceTicket.objects \
+            .get_or_create(pk=api_ticket_id)
 
         # if the status results in a move to a different column
         original_status = not created and service_ticket.status or None
-        new_ticket_status = self.get_or_create_ticket_status(api_ticket)
+        new_ticket_status, _ = self.get_or_create_ticket_status(api_ticket)
 
         service_ticket.closed_flag = api_ticket['closedFlag']
         service_ticket.type = api_ticket['type']
@@ -484,12 +487,12 @@ class ServiceTicketSynchronizer:
         service_ticket.board_id = api_ticket['board']['id']
         service_ticket.board_status_id = api_ticket['status']['id']
 
-        company_id = api_ticket['company']['id']
-        service_ticket.company = self.company_synchronizer \
-                                     .get_or_create_company(company_id)
+        service_ticket.company, _ = self.company_synchronizer \
+            .get_or_create_instance(api_ticket['company'])
 
         priority, _ = self.priority_synchronizer \
-            .get_or_create_ticket_priority(api_ticket['priority'])
+            .get_or_create_instance(api_ticket['priority'])
+
         service_ticket.priority = priority
 
         service_ticket.status = new_ticket_status
@@ -509,13 +512,67 @@ class ServiceTicketSynchronizer:
         self._manage_member_assignments(service_ticket)
         return service_ticket, created
 
+    def update_api_ticket(self, service_ticket):
+        """"
+        Updates the state of a generic ticket and determines which api
+        to send the updated ticket data to.
+        """
+        api_service_ticket = self.service_client.get_ticket(service_ticket.id)
+
+        if service_ticket.closed_flag:
+            api_service_ticket['closedFlag'] = service_ticket.closed_flag
+            ticket_status, created = models.TicketStatus.objects.get_or_create(
+                status_name__iexact='Closed')
+        else:
+            ticket_status = service_ticket.status
+
+        if not service_ticket.closed_flag:
+            try:
+                board_status = models.ConnectWiseBoardStatus.objects.get(
+                    board_id=service_ticket.board_id,
+                    status_name=ticket_status.status_name
+                )
+            except models.ConnectWiseBoardStatus.DoesNotExist as e:
+                raise InvalidStatusError(e)
+
+            api_service_ticket['status']['id'] = board_status.status_id
+
+        # no need for a callback update when updating via api
+        api_service_ticket['skipCallback'] = True
+        logger.info(
+            'Update API Ticket Status: {} - {}'.format(
+                service_ticket.id, api_service_ticket['status']['name']
+            )
+        )
+
+        return self.service_client.update_ticket(api_service_ticket)
+
+    def close_ticket(self, service_ticket):
+        """
+        Closes the specified service ticket returns True if the close
+        operation was successful on the connectwise server.
+        Note: It appears that the connectwise server does not return a
+        permissions error if user does not have access to this operation.
+        """
+        service_ticket.closed_flag = True
+        service_ticket.save()
+        logger.info('Close API Ticket: %s' % service_ticket.id)
+        api_ticket = self.update_api_ticket(service_ticket)
+        ticket_is_closed = api_ticket['closedFlag']
+
+        if not ticket_is_closed:
+            service_ticket.closed_flag = ticket_is_closed
+            service_ticket.save()
+
+        return ticket_is_closed
+
     def sync(self):
         """
         Synchronizes tickets between the ConnectWise server and the
         local database. Synchronization is performed in batches
         specified in the DJCONNECTWISE_API_BATCH_LIMIT setting
         """
-        sync_job = SyncJob.objects.create()
+        sync_job = models.SyncJob.objects.create()
 
         created_count = 0
         updated_count = 0
@@ -547,12 +604,12 @@ class ServiceTicketSynchronizer:
                 break
 
         logger.info('Saving Ticket Assignments')
-        ServiceTicketAssignment.objects.bulk_create(
+        models.ServiceTicketAssignment.objects.bulk_create(
             list(self.ticket_assignments.values()))
 
         # now prune closed service tickets.
         logger.info('Deleting Closed Tickets')
-        delete_qset = ServiceTicket.objects.filter(closed_flag=True)
+        delete_qset = models.ServiceTicket.objects.filter(closed_flag=True)
         delete_count = delete_qset.count()
         delete_qset.delete()
 
@@ -573,7 +630,7 @@ class ServiceTicketUpdater(object):
 
         if service_ticket.closed_flag:
             api_service_ticket['closedFlag'] = service_ticket.closed_flag
-            ticket_status, created = TicketStatus.objects.get_or_create(
+            ticket_status, created = models.TicketStatus.objects.get_or_create(
                 status_name__iexact='Closed')
         else:
             ticket_status = service_ticket.status
@@ -581,16 +638,16 @@ class ServiceTicketUpdater(object):
         if not service_ticket.closed_flag:
             # Ensure that the new status is valid for the CW board.
             try:
-                cw_board = ConnectWiseBoard.objects.get(
+                cw_board = models.ConnectWiseBoard.objects.get(
                     id=service_ticket.board_id)
-                board_status = ConnectWiseBoardStatus.objects.get(
+                board_status = models.ConnectWiseBoardStatus.objects.get(
                     board_id=service_ticket.board_id,
                     status_name=ticket_status.status_name
                 )
                 api_service_ticket['status']['id'] = board_status.status_id
-            except ConnectWiseBoard.DoesNotExist:
+            except models.ConnectWiseBoard.DoesNotExist:
                 raise InvalidStatusError("Failed to find the ticket's board.")
-            except ConnectWiseBoardStatus.DoesNotExist:
+            except models.ConnectWiseBoardStatus.DoesNotExist:
                 raise InvalidStatusError(
                     "{} is not a valid status for the ticket's "
                     "ConnectWise board ({}).".
