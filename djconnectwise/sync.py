@@ -516,10 +516,14 @@ class ServiceTicketSynchronizer:
         priority, _ = self.priority_synchronizer \
             .get_or_create_instance(api_ticket['priority'])
 
-        service_ticket.location, _ = self.location_synchronizer \
-            .get_or_create_instance(api_ticket['serviceLocation'])
-
         service_ticket.priority = priority
+
+        try:
+            location = models.Location.objects.get(
+                location_id=api_ticket['locationId'])
+            service_ticket.location = location
+        except:
+            pass
 
         service_ticket.status = new_ticket_status
         service_ticket.project = self.get_or_create_project(api_ticket)
