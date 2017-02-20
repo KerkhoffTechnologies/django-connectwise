@@ -180,8 +180,8 @@ class PrioritySynchronizer:
     def _assign_field_data(self, ticket_priority, api_priority):
         ticket_priority.name = api_priority['name']
         ticket_priority.priority_id = api_priority['id']
-        ticket_priority.color = api_priority['color']
-        ticket_priority.sort = api_priority['sortOrder']
+        ticket_priority.color = api_priority.get('color')
+        ticket_priority.sort = api_priority.get('sortOrder')
         return ticket_priority
 
     def get_or_create_ticket_priority(self, api_priority):

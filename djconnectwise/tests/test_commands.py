@@ -17,7 +17,7 @@ class BaseSyncTest(TestCase):
     STATUS_SYNC_SUMMARY = 'Board Status Sync Summary - Created: 2 , Updated: 0'
     MEMBER_SYNC_SUMMARY = 'Member Sync Summary - Created: 1 , Updated: 0'
     TICKET_SYNC_SUMMARY = 'Ticket Sync Summary - Created: 1 , Updated: 0'
-    PRIORITY_SYNC_SUMMARY = 'Priority Sync Summary - Created: 1 , Updated: 0'
+    PRIORITY_SYNC_SUMMARY = 'Priority Sync Summary - Created: 2 , Updated: 0'
 
     def _test_sync(self, mock_call, return_value, cw_object, msg):
         mock_call(return_value)
@@ -29,7 +29,7 @@ class BaseSyncTest(TestCase):
 class TestSyncCompaniesCommand(BaseSyncTest):
 
     def test_sync(self):
-        "Test sync companies command."
+        """Test sync companies command."""
         self._test_sync(mocks.company_api_get_call,
                         fixtures.API_COMPANY_LIST,
                         'company',
@@ -40,7 +40,7 @@ class TestSyncCompaniesCommand(BaseSyncTest):
 class TestSyncBoardsCommand(BaseSyncTest):
 
     def test_sync(self):
-        "Test sync boards command."
+        """Test sync boards command."""
         self._test_sync(mocks.service_api_get_boards_call,
                         fixtures.API_BOARD_LIST,
                         'board',
@@ -50,7 +50,7 @@ class TestSyncBoardsCommand(BaseSyncTest):
 class TestSyncPrioritiesCommand(BaseSyncTest):
 
     def test_sync(self):
-        "Test sync priorities command."
+        """Test sync priorities command."""
         self._test_sync(mocks.service_api_get_priorities_call,
                         fixtures.API_SERVICE_PRIORITY_LIST,
                         'priority',
@@ -67,7 +67,7 @@ class TestSyncBoardsStatusesCommand(BaseSyncTest):
         _patch.stop()
 
     def test_sync(self):
-        "Test sync_board_statuses command."
+        """Test sync_board_statuses command."""
         self._test_sync(mocks.service_api_get_statuses_call,
                         fixtures.API_BOARD_STATUS_LIST,
                         'board_status',
@@ -77,7 +77,7 @@ class TestSyncBoardsStatusesCommand(BaseSyncTest):
 
 class TestSyncAllCommand(BaseSyncTest):
     def test_sync(self):
-        "Test sync all objects command."
+        """Test sync all objects command."""
         mocks.company_api_get_call(fixtures.API_COMPANY_LIST)
         mocks.service_api_get_boards_call(fixtures.API_BOARD_LIST)
         mocks.service_api_get_statuses_call(fixtures.API_BOARD_STATUS_LIST)

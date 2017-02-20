@@ -60,12 +60,21 @@ class TestPrioritySynchronizer(TestCase):
 
     def setUp(self):
         self.synchronizer = sync.PrioritySynchronizer()
+        self.valid_prio_colors = \
+            list(TicketPriority.DEFAULT_COLORS.values()) + \
+            [TicketPriority.DEFAULT_COLOR]
 
     def _assert_fields(self, priority, api_priority):
         assert priority.name == api_priority['name']
         assert priority.priority_id == api_priority['id']
-        assert priority.color == api_priority['color']
-        assert priority.sort == api_priority['sortOrder']
+        if 'color' in api_priority.keys():
+            assert priority.color == api_priority['color']
+        else:
+            assert priority.color in self.valid_prio_colors
+        if 'sortOrder' in api_priority.keys():
+            assert priority.sort == api_priority['sortOrder']
+        else:
+            assert priority.sort is None
 
     def test_sync(self):
         _, get_patch = mocks.service_api_get_priorities_call(

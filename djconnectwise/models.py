@@ -1,4 +1,5 @@
 import os
+import re
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -10,6 +11,9 @@ from django.conf import settings
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from django_extensions.db.models import TimeStampedModel
+
+
+PRIORITY_RE = re.compile('^Priority ([\d]+)')
 
 
 class SyncJob(models.Model):
@@ -159,8 +163,22 @@ class TicketStatus(TimeStampedModel):
 class TicketPriority(TimeStampedModel):
     name = models.CharField(max_length=50, blank=False)
     priority_id = models.PositiveSmallIntegerField()
-    sort = models.PositiveSmallIntegerField()
-    color = models.CharField(max_length=50, blank=False)
+    # ConnectWise doesn't always return sort and color- not sure why.
+    # Sort will be None in this circumstance- dependent code should handle it.
+    sort = models.PositiveSmallIntegerField(null=True)
+    # Color will be a property that tries to guess at a sensible value.
+    _color = models.CharField(
+        max_length=50, null=True, blank=True, db_column='color'
+    )
+
+    DEFAULT_COLORS = {
+        '1': 'red',
+        '2': 'orange',
+        '3': 'yellow',
+        '4': 'white',
+        '5': 'darkmagenta',
+    }
+    DEFAULT_COLOR = 'darkgray'
 
     class Meta:
         verbose_name_plural = 'ticket priorities'
@@ -168,6 +186,29 @@ class TicketPriority(TimeStampedModel):
 
     def __str__(self):
         return self.name
+
+    @property
+    def color(self):
+        """
+        If a color has been set, then return it. Otherwise if the name
+        matches the common format ("Priority X - ..."), then return
+        something sensible based on values seen in the wild.
+        """
+        if self._color:
+            return self._color
+        else:
+            prio_number = None
+            prio_match = PRIORITY_RE.match(self.name)
+            if prio_match:
+                prio_number = prio_match.group(1)
+            return TicketPriority.DEFAULT_COLORS.get(
+                prio_number,
+                TicketPriority.DEFAULT_COLOR
+            )
+
+    @color.setter
+    def color(self, color):
+        self._color = color
 
 
 class ServiceTicketAssignment(TimeStampedModel):
