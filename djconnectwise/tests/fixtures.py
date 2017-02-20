@@ -147,8 +147,14 @@ API_SERVICE_PRIORITY = {
             'apis/3.0/service/priorities/4/image?lm=2005-05-27T14:58:21Z'
     }
 }
+# Under unknown circumstances, a CW instance might just give id and name
+# fields.
+API_SERVICE_PRIORITY_LIMITED = {
+    'id': 5,
+    'name': 'Priority 2 - Quick Response',
+}
 
-API_SERVICE_PRIORITY_LIST = [API_SERVICE_PRIORITY]
+API_SERVICE_PRIORITY_LIST = [API_SERVICE_PRIORITY_LIMITED, API_SERVICE_PRIORITY]
 
 API_SERVICE_TICKET = {
     'id': 69,
