@@ -64,6 +64,14 @@ class TestServiceAPIClient(TestCase):
         result = self.client.get_teams(board_id)
         self.assertEqual(result, fixtures.API_SERVICE_TEAM_LIST)
 
+    @responses.activate
+    def test_get_locations(self):
+        endpoint_url = self.client._endpoint(self.client.ENDPOINT_LOCATIONS)
+        mk.get(endpoint_url, fixtures.API_SERVICE_LOCATION_LIST)
+
+        result = self.client.get_locations()
+        self.assertEqual(result, fixtures.API_SERVICE_LOCATION_LIST)
+
 
 class TestSystemAPIClient(TestCase):
 

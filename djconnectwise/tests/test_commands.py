@@ -61,6 +61,16 @@ class TestSyncPrioritiesCommand(BaseSyncTest):
 
     def test_sync(self):
         "Test sync priorities command."
+        self._test_sync(mocks.service_api_get_locations_call,
+                        fixtures.API_SERVICE_LOCATION_LIST,
+                        'location',
+                        sync_summary('Location'))
+
+
+class TestSyncLocationsCommand(BaseSyncTest):
+
+    def test_sync(self):
+        "Test sync priorities command."
         self._test_sync(mocks.service_api_get_priorities_call,
                         fixtures.API_SERVICE_PRIORITY_LIST,
                         'priority',
@@ -97,6 +107,8 @@ class TestSyncAllCommand(BaseSyncTest):
             (mocks.CW_MEMBER_IMAGE_FILENAME, mocks.get_member_avatar()))
         mocks.company_api_by_id_call(fixtures.API_COMPANY)
         mocks.service_api_tickets_call()
+        mocks.service_api_get_locations_call(
+            fixtures.API_SERVICE_LOCATION_LIST)
         mocks.service_api_get_priorities_call(
             fixtures.API_SERVICE_PRIORITY_LIST)
 

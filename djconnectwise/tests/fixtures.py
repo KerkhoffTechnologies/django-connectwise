@@ -136,6 +136,17 @@ API_COMPANY = {
 
 API_COMPANY_LIST = [API_COMPANY]
 
+API_SERVICE_LOCATION = {
+    'id': 1, 
+    'name': 'On-Site', 
+    'where': None, 
+    'defaultFlag': True, 
+    '_info': {'lastUpdated': '2001-06-05T16:53:55Z', 'updatedBy': 'SumGuy'}
+}
+
+API_SERVICE_LOCATION_LIST = [API_SERVICE_LOCATION]
+
+
 API_SERVICE_PRIORITY = {
     'id': 4,
     'name': 'Priority 3 - Normal Response',
@@ -245,13 +256,7 @@ API_SERVICE_TICKET = {
                 'apis/3.0/service/priorities/4/image?lm=2005-05-27T14:58:21Z'
         }
     },
-    'serviceLocation': {
-        'id': 1,
-        'name': 'On-Site',
-        '_info': {
-            'location_href': 'https://some-host.com/v4_6_release/apis/3.0/service/locations/1'
-        }
-    },
+    'serviceLocation': API_SERVICE_LOCATION,
     'source': {
         'id': 2,
         'name': 'Phone',

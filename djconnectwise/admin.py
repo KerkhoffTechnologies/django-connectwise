@@ -52,5 +52,9 @@ class TicketPriorityAdmin(admin.ModelAdmin):
 
 @admin.register(models.Team)
 class TeamAdmin(admin.ModelAdmin):
-    model = models.Team
     list_display = ('team_id', 'name', 'board')
+
+
+@admin.register(models.Location)
+class LocationAdmin(admin.ModelAdmin):
+    list_display = ('location_id', 'name', 'where')

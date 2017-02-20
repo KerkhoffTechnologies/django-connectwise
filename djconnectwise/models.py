@@ -65,6 +65,18 @@ class ConnectWiseBoardStatus(TimeStampedModel):
         return self.status_name
 
 
+class Location(TimeStampedModel):
+    location_id = models.PositiveSmallIntegerField()
+    name = models.CharField(max_length=30)
+    where = models.CharField(max_length=100, blank=True, null=True)
+
+    class Meta:
+        ordering = ('name',)
+
+    def __str__(self):
+        return self.name
+
+
 class Member(TimeStampedModel):
     member_id = models.PositiveSmallIntegerField()
     identifier = models.CharField(
@@ -209,7 +221,6 @@ class ServiceTicket(TimeStampedModel):
     sub_type = models.CharField(blank=True, null=True, max_length=250)
     sub_type_item = models.CharField(blank=True, null=True, max_length=250)
     priority_text = models.CharField(blank=True, null=True, max_length=250)
-    location = models.CharField(blank=True, null=True, max_length=250)
     source = models.CharField(blank=True, null=True, max_length=250)
     summary = models.CharField(blank=True, null=True, max_length=250)
     entered_date_utc = models.DateTimeField(blank=True, null=True)
@@ -247,6 +258,8 @@ class ServiceTicket(TimeStampedModel):
         'TicketStatus', blank=True, null=True, related_name='status_tickets')
     company = models.ForeignKey(
         'Company', blank=True, null=True, related_name='company_tickets')
+    location = models.ForeignKey(
+        'Location', blank=True, null=True, related_name='location_tickets')
     team = models.ForeignKey(
         'Team', blank=True, null=True, related_name='team_tickets')
     project = models.ForeignKey(
