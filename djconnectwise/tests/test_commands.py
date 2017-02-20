@@ -110,12 +110,12 @@ class TestSyncAllCommand(BaseSyncTest):
         actual_output = out.getvalue().strip()
 
         summaries = [
+            sync_summary('Priority'),
             sync_summary('Board'),
-            sync_summary('Company'),
             sync_summary('Board Status'),
+            sync_summary('Company'),
             sync_summary('Member'),
             sync_summary('Team'),
-            sync_summary('Priority'),
             sync_summary('Ticket')]
 
         for summary in summaries:
