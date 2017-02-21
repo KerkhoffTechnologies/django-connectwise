@@ -80,10 +80,10 @@ class Migration(migrations.Migration):
                 ('modified', django_extensions.db.fields.ModificationDateTimeField(verbose_name='modified', auto_now=True)),
                 ('board_id', models.PositiveSmallIntegerField()),
                 ('status_id', models.PositiveSmallIntegerField()),
-                ('status_name', models.CharField(max_length=250, blank=True, null=True)),
+                ('name', models.CharField(max_length=250, blank=True, null=True)),
             ],
             options={
-                'ordering': ('status_name',),
+                'ordering': ('name',),
             },
         ),
         migrations.CreateModel(
@@ -212,7 +212,7 @@ class Migration(migrations.Migration):
                 ('created', django_extensions.db.fields.CreationDateTimeField(verbose_name='created', auto_now_add=True)),
                 ('modified', django_extensions.db.fields.ModificationDateTimeField(verbose_name='modified', auto_now=True)),
                 ('member', models.ForeignKey(to='djconnectwise.Member')),
-                ('service_ticket', models.ForeignKey(to='djconnectwise.Ticket')),
+                ('ticket', models.ForeignKey(to='djconnectwise.Ticket')),
             ],
             options={
                 'ordering': ('-modified', '-created'),
@@ -244,7 +244,7 @@ class Migration(migrations.Migration):
                 ('modified', django_extensions.db.fields.ModificationDateTimeField(verbose_name='modified', auto_now=True)),
                 ('status_id', models.IntegerField(unique=True, blank=True, null=True)),
                 ('ticket_status', models.CharField(max_length=250, blank=True, null=True)),
-                ('status_name', models.CharField(max_length=250, blank=True, null=True)),
+                ('name', models.CharField(max_length=250, blank=True, null=True)),
             ],
             options={
                 'verbose_name_plural': 'ticket statuses',

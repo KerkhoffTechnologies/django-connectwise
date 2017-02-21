@@ -12,8 +12,8 @@ class ConnectWiseBoardAdmin(admin.ModelAdmin):
 
 @admin.register(models.TicketStatus)
 class TicketStatusAdmin(admin.ModelAdmin):
-    list_display = ('status_id', 'status_name')
-    search_fields = ['status_name']
+    list_display = ('status_id', 'name')
+    search_fields = ['name']
 
 
 @admin.register(models.Member)

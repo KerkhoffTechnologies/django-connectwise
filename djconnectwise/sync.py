@@ -141,7 +141,7 @@ class BoardStatusSynchronizer:
                         status_id=status['id'],
                         defaults={
                             'board_id': board_id,
-                            'status_name': status['name'],
+                            'name': status['name'],
                         }
                     )
 
@@ -384,12 +384,12 @@ class TicketSynchronizer:
 
         # we need to remove the underscores to ensure an accurate
         # lookup of the normalized api fieldnames
-        self.local_service_ticket_fields = self._create_field_lookup(
+        self.local_ticket_fields = self._create_field_lookup(
             models.Ticket)
         self.local_company_fields = self._create_field_lookup(models.Company)
 
         self.ticket_status_map = {
-            ticket.status_name:
+            ticket.name:
             ticket for ticket in models.TicketStatus.objects.all()
         }
 
@@ -410,31 +410,31 @@ class TicketSynchronizer:
         ]
         return dict(field_map)
 
-    def _manage_member_assignments(self, service_ticket):
+    def _manage_member_assignments(self, ticket):
         # reset board/ticket assignment in case the assigned resources have
         # changed since last sync
         member = None
-        if service_ticket.resources:
+        if ticket.resources:
             usernames = [u.strip()
-                         for u in service_ticket.resources.split(',')]
+                         for u in ticket.resources.split(',')]
             # clear existing assignments
             models.TicketAssignment.objects.filter(
-                service_ticket=service_ticket).delete()
+                ticket=ticket).delete()
             for username in usernames:
                 member = self.members_map.get(username)
 
                 if member:
                     assignment = models.TicketAssignment()
                     assignment.member = member
-                    assignment.service_ticket = service_ticket
+                    assignment.ticket = ticket
                     self.ticket_assignments[
-                        (username, service_ticket.id,)] = assignment
+                        (username, ticket.id,)] = assignment
                     msg = 'Member Ticket Assignment: {} - {}'
-                    logger.info(msg.format(username, service_ticket.id))
+                    logger.info(msg.format(username, ticket.id))
                 else:
                     logger.error(
                         'Failed to locate member with username {} for ticket '
-                        '{} assignment.'.format(username, service_ticket.id)
+                        '{} assignment.'.format(username, ticket.id)
                     )
 
     def get_or_create_project(self, api_ticket):
@@ -457,24 +457,24 @@ class TicketSynchronizer:
         it does not already exist
         """
         api_status = api_ticket['status']
-        status_name = api_status['name'].strip()
-        ticket_status = self.ticket_status_map.get(status_name)
+        name = api_status['name'].strip()
+        ticket_status = self.ticket_status_map.get(name)
         created = False
 
         if not ticket_status:
             kwargs = dict(
                 status_id=api_status['id'],
-                status_name=status_name
+                name=name
             )
 
             if models.TicketStatus.objects.filter(**kwargs).exists():
                 ticket_status = models.TicketStatus.objects.get(**kwargs)
             else:
-                logger.info('TicketStatus Created - %s' % status_name)
+                logger.info('TicketStatus Created - %s' % name)
                 ticket_status, created = models.TicketStatus.objects \
                     .get_or_create(**kwargs)
 
-            self.ticket_status_map[status_name] = ticket_status
+            self.ticket_status_map[name] = ticket_status
 
         else:
             if ticket_status.status_id != api_status['id']:
@@ -489,51 +489,51 @@ class TicketSynchronizer:
         Ticket instance.
         """
         api_ticket_id = api_ticket['id']
-        service_ticket, created = models.Ticket.objects \
+        ticket, created = models.Ticket.objects \
             .get_or_create(pk=api_ticket_id)
 
         # if the status results in a move to a different column
-        original_status = not created and service_ticket.status or None
+        original_status = not created and ticket.status or None
         new_ticket_status, _ = self.get_or_create_ticket_status(api_ticket)
 
-        service_ticket.closed_flag = api_ticket['closedFlag']
-        service_ticket.type = api_ticket['type']
-        service_ticket.priority_text = api_ticket['priority']['name']
-        service_ticket.summary = api_ticket['summary']
-        service_ticket.entered_date_utc = api_ticket['dateEntered']
-        service_ticket.last_updated_utc = api_ticket['_info']['lastUpdated']
-        service_ticket.resources = api_ticket['resources']
-        service_ticket.budget_hours = api_ticket['budgetHours']
-        service_ticket.actual_hours = api_ticket['actualHours']
-        service_ticket.record_type = api_ticket['recordType']
+        ticket.closed_flag = api_ticket['closedFlag']
+        ticket.type = api_ticket['type']
+        ticket.priority_text = api_ticket['priority']['name']
+        ticket.summary = api_ticket['summary']
+        ticket.entered_date_utc = api_ticket['dateEntered']
+        ticket.last_updated_utc = api_ticket['_info']['lastUpdated']
+        ticket.resources = api_ticket['resources']
+        ticket.budget_hours = api_ticket['budgetHours']
+        ticket.actual_hours = api_ticket['actualHours']
+        ticket.record_type = api_ticket['recordType']
 
         team = api_ticket['team']
         if team:
-            service_ticket.team_id = api_ticket['team']['id']
+            ticket.team_id = api_ticket['team']['id']
 
-        service_ticket.api_text = str(api_ticket)
-        service_ticket.board_name = api_ticket['board']['name']
-        service_ticket.board_id = api_ticket['board']['id']
-        service_ticket.board_status_id = api_ticket['status']['id']
+        ticket.api_text = str(api_ticket)
+        ticket.board_name = api_ticket['board']['name']
+        ticket.board_id = api_ticket['board']['id']
+        ticket.board_status_id = api_ticket['status']['id']
 
-        service_ticket.company, _ = self.company_synchronizer \
+        ticket.company, _ = self.company_synchronizer \
             .get_or_create_instance(api_ticket['company'])
 
         priority, _ = self.priority_synchronizer \
             .get_or_create_instance(api_ticket['priority'])
 
-        service_ticket.priority = priority
+        ticket.priority = priority
 
         try:
             location = models.Location.objects.get(
                 location_id=api_ticket['locationId'])
-            service_ticket.location = location
+            ticket.location = location
         except:
             pass
 
-        service_ticket.status = new_ticket_status
-        service_ticket.project = self.get_or_create_project(api_ticket)
-        service_ticket.save()
+        ticket.status = new_ticket_status
+        ticket.project = self.get_or_create_project(api_ticket)
+        ticket.save()
         action = created and 'Created' or 'Updated'
 
         status_changed = ''
@@ -543,62 +543,62 @@ class TicketSynchronizer:
                                                new_ticket_status)
 
         log_info = '{} Ticket #: {} {}'
-        logger.info(log_info.format(action, service_ticket.id, status_changed))
+        logger.info(log_info.format(action, ticket.id, status_changed))
 
-        self._manage_member_assignments(service_ticket)
-        return service_ticket, created
+        self._manage_member_assignments(ticket)
+        return ticket, created
 
-    def update_api_ticket(self, service_ticket):
+    def update_api_ticket(self, ticket):
         """"
         Updates the state of a generic ticket and determines which api
         to send the updated ticket data to.
         """
-        api_service_ticket = self.service_client.get_ticket(service_ticket.id)
+        api_ticket = self.service_client.get_ticket(ticket.id)
 
-        if service_ticket.closed_flag:
-            api_service_ticket['closedFlag'] = service_ticket.closed_flag
+        if ticket.closed_flag:
+            api_ticket['closedFlag'] = ticket.closed_flag
             ticket_status, created = models.TicketStatus.objects.get_or_create(
-                status_name__iexact='Closed')
+                name__iexact='Closed')
         else:
-            ticket_status = service_ticket.status
+            ticket_status = ticket.status
 
-        if not service_ticket.closed_flag:
+        if not ticket.closed_flag:
             try:
                 board_status = models.ConnectWiseBoardStatus.objects.get(
-                    board_id=service_ticket.board_id,
-                    status_name=ticket_status.status_name
+                    board_id=ticket.board_id,
+                    name=ticket_status.name
                 )
             except models.ConnectWiseBoardStatus.DoesNotExist as e:
                 raise InvalidStatusError(e)
 
-            api_service_ticket['status']['id'] = board_status.status_id
+            api_ticket['status']['id'] = board_status.status_id
 
         # no need for a callback update when updating via api
-        api_service_ticket['skipCallback'] = True
+        api_ticket['skipCallback'] = True
         logger.info(
             'Update API Ticket Status: {} - {}'.format(
-                service_ticket.id, api_service_ticket['status']['name']
+                ticket.id, api_ticket['status']['name']
             )
         )
 
-        return self.service_client.update_ticket(api_service_ticket)
+        return self.service_client.update_ticket(api_ticket)
 
-    def close_ticket(self, service_ticket):
+    def close_ticket(self, ticket):
         """
         Closes the specified service ticket returns True if the close
         operation was successful on the connectwise server.
         Note: It appears that the connectwise server does not return a
         permissions error if user does not have access to this operation.
         """
-        service_ticket.closed_flag = True
-        service_ticket.save()
-        logger.info('Close API Ticket: %s' % service_ticket.id)
-        api_ticket = self.update_api_ticket(service_ticket)
+        ticket.closed_flag = True
+        ticket.save()
+        logger.info('Close API Ticket: %s' % ticket.id)
+        api_ticket = self.update_api_ticket(ticket)
         ticket_is_closed = api_ticket['closedFlag']
 
         if not ticket_is_closed:
-            service_ticket.closed_flag = ticket_is_closed
-            service_ticket.save()
+            ticket.closed_flag = ticket_is_closed
+            ticket.save()
 
         return ticket_is_closed
 
@@ -661,26 +661,26 @@ class TicketUpdater(object):
     def __init__(self):
         self.service_client = ServiceAPIClient()
 
-    def update_api_ticket(self, service_ticket):
-        api_service_ticket = self.service_client.get_ticket(service_ticket.id)
+    def update_api_ticket(self, ticket):
+        api_ticket = self.service_client.get_ticket(ticket.id)
 
-        if service_ticket.closed_flag:
-            api_service_ticket['closedFlag'] = service_ticket.closed_flag
+        if ticket.closed_flag:
+            api_ticket['closedFlag'] = ticket.closed_flag
             ticket_status, created = models.TicketStatus.objects.get_or_create(
-                status_name__iexact='Closed')
+                name__iexact='Closed')
         else:
-            ticket_status = service_ticket.status
+            ticket_status = ticket.status
 
-        if not service_ticket.closed_flag:
+        if not ticket.closed_flag:
             # Ensure that the new status is valid for the CW board.
             try:
                 cw_board = models.ConnectWiseBoard.objects.get(
-                    id=service_ticket.board_id)
+                    id=ticket.board_id)
                 board_status = models.ConnectWiseBoardStatus.objects.get(
-                    board_id=service_ticket.board_id,
-                    status_name=ticket_status.status_name
+                    board_id=ticket.board_id,
+                    name=ticket_status.name
                 )
-                api_service_ticket['status']['id'] = board_status.status_id
+                api_ticket['status']['id'] = board_status.status_id
             except models.ConnectWiseBoard.DoesNotExist:
                 raise InvalidStatusError("Failed to find the ticket's board.")
             except models.ConnectWiseBoardStatus.DoesNotExist:
@@ -688,36 +688,36 @@ class TicketUpdater(object):
                     "{} is not a valid status for the ticket's "
                     "ConnectWise board ({}).".
                     format(
-                        ticket_status.status_name,
+                        ticket_status.name,
                         cw_board.name
                     )
                 )
 
         # No need for a callback update when updating via api
-        api_service_ticket['skipCallback'] = True
+        api_ticket['skipCallback'] = True
         logger.info(
             'Update API Ticket Status: {} - {}'.format(
-                service_ticket.id, api_service_ticket['status']['name']
+                ticket.id, api_ticket['status']['name']
             )
         )
 
-        return self.service_client.update_ticket(api_service_ticket)
+        return self.service_client.update_ticket(api_ticket)
 
-    def close_ticket(self, service_ticket):
+    def close_ticket(self, ticket):
         """
         Closes the specified service ticket returns True if the close
         operation was successful on the connectwise server.
         Note: It appears that the connectwise server does not return a
         permissions error if user does not have access to this operation.
         """
-        service_ticket.closed_flag = True
-        service_ticket.save()
-        logger.info('Close API Ticket: %s' % service_ticket.id)
-        api_ticket = self.update_api_ticket(service_ticket)
+        ticket.closed_flag = True
+        ticket.save()
+        logger.info('Close API Ticket: %s' % ticket.id)
+        api_ticket = self.update_api_ticket(ticket)
         ticket_is_closed = api_ticket['closedFlag']
 
         if not ticket_is_closed:
-            service_ticket.closed_flag = ticket_is_closed
-            service_ticket.save()
+            ticket.closed_flag = ticket_is_closed
+            ticket.save()
 
         return ticket_is_closed

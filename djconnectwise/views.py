@@ -50,13 +50,13 @@ class TicketCallBackView(ConnectWiseCallBackView):
             Ticket.objects.filter(id=ticket_id).delete()
         else:
             logger.info('Ticket Pre-Update: {}'.format(ticket_id))
-            service_ticket = self.synchronizer \
+            ticket = self.synchronizer \
                 .service_client \
                 .get_ticket(ticket_id)
 
-            if service_ticket:
+            if ticket:
                 logger.info('Ticket Updated CallBack: {}'.format(ticket_id))
-                self.synchronizer.sync_ticket(service_ticket)
+                self.synchronizer.sync_ticket(ticket)
 
         # we need not return anything to connectwise
         return HttpResponse(status=204)

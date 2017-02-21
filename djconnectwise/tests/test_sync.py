@@ -293,7 +293,7 @@ class TestBoardStatusSynchronizer(TestCase):
 
     def _assert_sync(self, board_status_list):
         status_qs = ConnectWiseBoardStatus.objects.all()
-        local_statuses = set(status_qs.values_list('status_id', 'status_name'))
+        local_statuses = set(status_qs.values_list('status_id', 'name'))
         api_statuses = set([(s['id'], s['name'])
                             for s in board_status_list])
         num_local_statuses = len(local_statuses)
@@ -360,10 +360,10 @@ class TestTicketUpdater(TestCase):
         self._sync()
 
         board_name = 'Some Board Name'
-        api_service_ticket = deepcopy(fixtures.API_SERVICE_TICKET)
-        api_service_ticket['board']['name'] = board_name
+        api_ticket = deepcopy(fixtures.API_SERVICE_TICKET)
+        api_ticket['board']['name'] = board_name
 
-        mocks.service_api_update_ticket_call(api_service_ticket)
+        mocks.service_api_update_ticket_call(api_ticket)
         mocks.service_api_get_ticket_call()
 
         local_ticket = Ticket.objects.first()

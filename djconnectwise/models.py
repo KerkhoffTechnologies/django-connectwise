@@ -58,15 +58,15 @@ class ConnectWiseBoardStatus(TimeStampedModel):
     """
     Used for looking up the status/board id combination
     """
-    board_id = models.PositiveSmallIntegerField()
     status_id = models.PositiveSmallIntegerField()
-    status_name = models.CharField(blank=True, null=True, max_length=250)
+    name = models.CharField(blank=True, null=True, max_length=250)
+    board = models.ForeignKey('ConnectWiseBoard')
 
     class Meta:
-        ordering = ('status_name',)
+        ordering = ('name',)
 
     def __str__(self):
-        return self.status_name
+        return self.name
 
 
 class Location(TimeStampedModel):
@@ -170,16 +170,16 @@ class TicketStatus(TimeStampedModel):
 
     status_id = models.IntegerField(blank=True, null=True, unique=True)
     # might ditch this field, it seems to always contain same value as
-    # status_name
+    # name
     ticket_status = models.CharField(blank=True, null=True, max_length=250)
-    status_name = models.CharField(blank=True, null=True, max_length=250)
+    name = models.CharField(blank=True, null=True, max_length=250)
 
     class Meta:
         verbose_name_plural = 'ticket statuses'
         ordering = ('ticket_status',)
 
     def __str__(self):
-        return self.status_name
+        return self.name
 
 
 class TicketPriority(TimeStampedModel):
@@ -234,7 +234,7 @@ class TicketPriority(TimeStampedModel):
 
 
 class TicketAssignment(TimeStampedModel):
-    service_ticket = models.ForeignKey('Ticket')
+    ticket = models.ForeignKey('Ticket')
     member = models.ForeignKey('Member')
 
 
