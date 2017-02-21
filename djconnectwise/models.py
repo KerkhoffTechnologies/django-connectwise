@@ -233,8 +233,8 @@ class TicketPriority(TimeStampedModel):
         self._color = color
 
 
-class ServiceTicketAssignment(TimeStampedModel):
-    service_ticket = models.ForeignKey('ServiceTicket')
+class TicketAssignment(TimeStampedModel):
+    service_ticket = models.ForeignKey('Ticket')
     member = models.ForeignKey('Member')
 
 
@@ -250,9 +250,9 @@ class Project(TimeStampedModel):
         return self.name or ''
 
 
-class ServiceTicket(TimeStampedModel):
+class Ticket(TimeStampedModel):
     RECORD_TYPES = (
-        ('ServiceTicket', "Service Ticket"),
+        ('Ticket', "Service Ticket"),
         ('ProjectTicket', "Project Ticket"),
         ('ProjectIssue', "Project Issue"),
     )
@@ -306,15 +306,15 @@ class ServiceTicket(TimeStampedModel):
     project = models.ForeignKey(
         'Project', blank=True, null=True, related_name='project_tickets')
     members = models.ManyToManyField(
-        'Member', through='ServiceTicketAssignment',
+        'Member', through='TicketAssignment',
         related_name='member_tickets')
 
     # TODO: add FK to ConnectWiseBoard
 
     class Meta:
         # ordering = ['priority_text','entered_date_utc','id']
-        verbose_name = 'Service Ticket'
-        verbose_name_plural = 'Service Tickets'
+        verbose_name = 'Ticket'
+        verbose_name_plural = 'Tickets'
         ordering = ('summary', )
 
     def __str__(self):

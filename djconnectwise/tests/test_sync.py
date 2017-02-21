@@ -8,7 +8,7 @@ from djconnectwise.models import Location
 from djconnectwise.models import Team
 from djconnectwise.models import TicketPriority
 from djconnectwise.models import Member
-from djconnectwise.models import ServiceTicket
+from djconnectwise.models import Ticket
 
 from . import fixtures
 from . import fixture_utils
@@ -322,10 +322,10 @@ class TestBoardStatusSynchronizer(TestCase):
         self._assert_sync(fixtures.API_BOARD_STATUS_LIST)
 
 
-class TestServiceTicketSynchronizer(TestCase):
+class TestTicketSynchronizer(TestCase):
 
     def setUp(self):
-        self.synchronizer = sync.ServiceTicketSynchronizer()
+        self.synchronizer = sync.TicketSynchronizer()
 
     def _get_local_and_api_ticket(self):
         api_ticket = self.synchronizer.service_client.get_tickets()[0]
@@ -344,10 +344,10 @@ class TestServiceTicketSynchronizer(TestCase):
         self.assertEqual(created_count, 1)
 
 
-class TestServiceTicketUpdater(TestCase):
+class TestTicketUpdater(TestCase):
     def setUp(self):
-        self.updater = sync.ServiceTicketUpdater()
-        self.synchronizer = sync.ServiceTicketSynchronizer()
+        self.updater = sync.TicketUpdater()
+        self.synchronizer = sync.TicketSynchronizer()
 
     def _sync(self):
         mocks.company_api_by_id_call(fixtures.API_COMPANY)
@@ -356,7 +356,7 @@ class TestServiceTicketUpdater(TestCase):
         return self.synchronizer.sync()
 
     def test_update_api_ticket(self):
-        ServiceTicket.objects.all().delete()
+        Ticket.objects.all().delete()
         self._sync()
 
         board_name = 'Some Board Name'
@@ -366,7 +366,7 @@ class TestServiceTicketUpdater(TestCase):
         mocks.service_api_update_ticket_call(api_service_ticket)
         mocks.service_api_get_ticket_call()
 
-        local_ticket = ServiceTicket.objects.first()
+        local_ticket = Ticket.objects.first()
         local_ticket.board_name = board_name
         local_ticket.closed_flag = True
         local_ticket.save()

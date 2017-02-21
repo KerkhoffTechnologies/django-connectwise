@@ -22,7 +22,7 @@ class Command(BaseCommand):
             location=(sync.LocationSynchronizer, _('Location')),
             member=(sync.MemberSynchronizer, _('Member')),
             team=(sync.TeamSynchronizer, _('Team')),
-            ticket=(sync.ServiceTicketSynchronizer, _('Ticket')),
+            ticket=(sync.TicketSynchronizer, _('Ticket')),
         )
 
     def add_arguments(self, parser):
@@ -33,7 +33,7 @@ class Command(BaseCommand):
                             default=False)
 
     def sync_by_class(self, sync_class, obj_name, reset=False):
-        if reset and sync_class == sync.ServiceTicketSynchronizer:
+        if reset and sync_class == sync.TicketSynchronizer:
             synchronizer = sync_class(reset=reset)
         else:
             synchronizer = sync_class()

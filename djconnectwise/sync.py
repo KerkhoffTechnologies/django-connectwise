@@ -346,7 +346,7 @@ class MemberSynchronizer:
         return created_count, updated_count, deleted_count
 
 
-class ServiceTicketSynchronizer:
+class TicketSynchronizer:
     """
     Coordinates retrieval and demarshalling of ConnectWise JSON
     objects to the local counterparts.
@@ -370,7 +370,7 @@ class ServiceTicketSynchronizer:
             log_msg = 'Preparing sync job for objects updated since {}.'
             logger.info(log_msg.format(last_sync_job_time))
             logger.info(
-                'ServiceTicket Extra Conditions: {0}'.format(extra_conditions))
+                'Ticket Extra Conditions: {0}'.format(extra_conditions))
         else:
             logger.info('Preparing full ticket sync job.')
             # absence of a sync job indicates that this is an initial/full
@@ -385,7 +385,7 @@ class ServiceTicketSynchronizer:
         # we need to remove the underscores to ensure an accurate
         # lookup of the normalized api fieldnames
         self.local_service_ticket_fields = self._create_field_lookup(
-            models.ServiceTicket)
+            models.Ticket)
         self.local_company_fields = self._create_field_lookup(models.Company)
 
         self.ticket_status_map = {
@@ -418,18 +418,18 @@ class ServiceTicketSynchronizer:
             usernames = [u.strip()
                          for u in service_ticket.resources.split(',')]
             # clear existing assignments
-            models.ServiceTicketAssignment.objects.filter(
+            models.TicketAssignment.objects.filter(
                 service_ticket=service_ticket).delete()
             for username in usernames:
                 member = self.members_map.get(username)
 
                 if member:
-                    assignment = models.ServiceTicketAssignment()
+                    assignment = models.TicketAssignment()
                     assignment.member = member
                     assignment.service_ticket = service_ticket
                     self.ticket_assignments[
                         (username, service_ticket.id,)] = assignment
-                    msg = 'Member ServiceTicket Assignment: {} - {}'
+                    msg = 'Member Ticket Assignment: {} - {}'
                     logger.info(msg.format(username, service_ticket.id))
                 else:
                     logger.error(
@@ -486,10 +486,10 @@ class ServiceTicketSynchronizer:
     def sync_ticket(self, api_ticket):
         """
         Creates a new local instance of the supplied ConnectWise
-        ServiceTicket instance.
+        Ticket instance.
         """
         api_ticket_id = api_ticket['id']
-        service_ticket, created = models.ServiceTicket.objects \
+        service_ticket, created = models.Ticket.objects \
             .get_or_create(pk=api_ticket_id)
 
         # if the status results in a move to a different column
@@ -640,12 +640,12 @@ class ServiceTicketSynchronizer:
                 break
 
         logger.info('Saving Ticket Assignments')
-        models.ServiceTicketAssignment.objects.bulk_create(
+        models.TicketAssignment.objects.bulk_create(
             list(self.ticket_assignments.values()))
 
         # now prune closed service tickets.
         logger.info('Deleting Closed Tickets')
-        delete_qset = models.ServiceTicket.objects.filter(closed_flag=True)
+        delete_qset = models.Ticket.objects.filter(closed_flag=True)
         delete_count = delete_qset.count()
         delete_qset.delete()
 
@@ -655,7 +655,7 @@ class ServiceTicketSynchronizer:
         return created_count, updated_count, delete_count
 
 
-class ServiceTicketUpdater(object):
+class TicketUpdater(object):
     """Send ticket updates to ConnectWise."""
 
     def __init__(self):

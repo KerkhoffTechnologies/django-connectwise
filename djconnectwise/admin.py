@@ -33,8 +33,8 @@ class CompanyAdmin(admin.ModelAdmin):
     search_fields = ['company_name', 'company_identifier']
 
 
-@admin.register(models.ServiceTicket)
-class ServiceTicketAdmin(admin.ModelAdmin):
+@admin.register(models.Ticket)
+class TicketAdmin(admin.ModelAdmin):
     list_display = ('summary', 'status', 'resources', 'record_type',)
 
     list_filter = ('status', 'record_type',)

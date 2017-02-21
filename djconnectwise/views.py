@@ -3,13 +3,13 @@ import json
 import logging
 
 from braces import views
-from djconnectwise.sync import ServiceTicketSynchronizer
+from djconnectwise.sync import TicketSynchronizer
 
 from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
 from django.views.generic import View
 
-from .models import ServiceTicket
+from .models import Ticket
 
 
 logger = logging.getLogger(__name__)
@@ -19,10 +19,10 @@ class ConnectWiseCallBackView(views.CsrfExemptMixin,
                               views.JsonRequestResponseMixin, View):
     def __init__(self, *args, **kwargs):
         super(ConnectWiseCallBackView, self).__init__(*args, **kwargs)
-        self.synchronizer = ServiceTicketSynchronizer()
+        self.synchronizer = TicketSynchronizer()
 
 
-class ServiceTicketCallBackView(ConnectWiseCallBackView):
+class TicketCallBackView(ConnectWiseCallBackView):
 
     def post(self, request, *args, **kwargs):
         body = json.loads(request.body.decode(encoding='utf-8'))
@@ -47,7 +47,7 @@ class ServiceTicketCallBackView(ConnectWiseCallBackView):
 
         if action == 'deleted':
             logger.info('Ticket Deleted CallBack: {}'.format(ticket_id))
-            ServiceTicket.objects.filter(id=ticket_id).delete()
+            Ticket.objects.filter(id=ticket_id).delete()
         else:
             logger.info('Ticket Pre-Update: {}'.format(ticket_id))
             service_ticket = self.synchronizer \
