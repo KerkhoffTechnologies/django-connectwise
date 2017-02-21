@@ -224,7 +224,11 @@ class PrioritySynchronizer(Synchronizer):
     def _assign_field_data(self, ticket_priority, api_priority):
         ticket_priority.name = api_priority['name']
         ticket_priority.priority_id = api_priority['id']
-        ticket_priority.color = api_priority['color']
+
+        color_key = 'color'
+
+        if color_key in api_priority:
+            ticket_priority.color = api_priority[color_key]
 
         # work around due to api data inconsistencies
         sort_value = api_priority.get('sort') or api_priority.get('sortOrder')
