@@ -152,6 +152,9 @@ class Team(TimeStampedModel):
     board = models.ForeignKey('ConnectWiseBoard')
     members = models.ManyToManyField('Member')
 
+    def __str__(self):
+        return self.name
+
 
 class TicketStatus(TimeStampedModel):
     CLOSED = 'Closed'
