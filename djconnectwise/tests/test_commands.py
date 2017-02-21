@@ -27,7 +27,7 @@ class BaseSyncTest(TestCase):
 class TestSyncCompaniesCommand(BaseSyncTest):
 
     def test_sync(self):
-        "Test sync companies command."
+        """Test sync companies command."""
         self._test_sync(mocks.company_api_get_call,
                         fixtures.API_COMPANY_LIST,
                         'company',
@@ -50,29 +50,29 @@ class TestSyncTeamsCommand(BaseSyncTest):
 class TestSyncBoardsCommand(BaseSyncTest):
 
     def test_sync(self):
-        "Test sync boards command."
+        """Test sync boards command."""
         self._test_sync(mocks.service_api_get_boards_call,
                         fixtures.API_BOARD_LIST,
                         'board',
                         sync_summary('Board'))
 
 
-class TestSyncPrioritiesCommand(BaseSyncTest):
+class TestSyncLocationsCommand(BaseSyncTest):
 
     def test_sync(self):
-        "Test sync priorities command."
+        """Test sync locations command."""
         self._test_sync(mocks.service_api_get_locations_call,
                         fixtures.API_SERVICE_LOCATION_LIST,
                         'location',
                         sync_summary('Location'))
 
 
-class TestSyncLocationsCommand(BaseSyncTest):
+class TestSyncPrioritiesCommand(BaseSyncTest):
 
     def test_sync(self):
-        "Test sync priorities command."
+        """Test sync priorities command."""
         self._test_sync(mocks.service_api_get_priorities_call,
-                        fixtures.API_SERVICE_PRIORITY_LIST,
+                        [fixtures.API_SERVICE_PRIORITY_LIST[0]],
                         'priority',
                         sync_summary('Priority'))
 
@@ -87,7 +87,7 @@ class TestSyncBoardsStatusesCommand(BaseSyncTest):
         _patch.stop()
 
     def test_sync(self):
-        "Test sync_board_statuses command."
+        """Test sync_board_statuses command."""
         self._test_sync(mocks.service_api_get_statuses_call,
                         [fixtures.API_BOARD_STATUS_LIST[0]],
                         'board_status',
@@ -97,7 +97,7 @@ class TestSyncBoardsStatusesCommand(BaseSyncTest):
 
 class TestSyncAllCommand(BaseSyncTest):
     def test_sync(self):
-        "Test sync all objects command."
+        """Test sync all objects command."""
         mocks.company_api_get_call(fixtures.API_COMPANY_LIST)
         mocks.service_api_get_boards_call(fixtures.API_BOARD_LIST)
         mocks.service_api_get_statuses_call(

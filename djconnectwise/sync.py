@@ -26,10 +26,16 @@ class Synchronizer:
         self.instance_map = {}
         self.client = self.client_class()
 
+        self.load_instance_map()
+
     def load_instance_map(self):
+        qset = self.get_queryset()
         self.instance_map = {
-            i[self.lookup_key]: i for i in self.client_class.objects.all()
+            getattr(i, self.lookup_key): i for i in qset
         }
+
+    def get_queryset(self):
+        return self.model_class.objects.all()
 
     def get_json(self):
         raise NotImplementedError
@@ -199,16 +205,16 @@ class CompanySynchronizer(Synchronizer):
         Assigns field data from an company_json instance
         to a local Company model instance
         """
+        print('company_json:', company_json)
         company.company_id = company_json['id']
         company.company_name = company_json['name']
         company.company_identifier = company_json['identifier']
-        company.phone_number = company_json['phoneNumber']
-        company.fax_number = company_json['faxNumber']
-        company.address_line1 = company_json['addressLine1']
-        company.address_line2 = company_json['addressLine1']
-        company.city = company_json['city']
-        company.state_identifier = company_json['state']
-        company.zip = company_json['zip']
+        company.phone_number = company_json.get('phoneNumber')
+        company.fax_number = company_json.get('faxNumber')
+        company.address_line1 = company_json.get('addressLine1')
+        company.city = company_json.get('city')
+        company.state_identifier = company_json.get('state')
+        company.zip = company_json.get('zip')
         company.created = timezone.now()
         return company
 
@@ -247,7 +253,7 @@ class PrioritySynchronizer(Synchronizer):
     def _assign_field_data(self, ticket_priority, api_priority):
         ticket_priority.name = api_priority['name']
         ticket_priority.priority_id = api_priority['id']
-        ticket_priority.color = api_priority['color']
+        ticket_priority.color = api_priority.get('color')
 
         # work around due to api data inconsistencies
         sort_value = api_priority.get('sort') or api_priority.get('sortOrder')

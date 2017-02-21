@@ -88,9 +88,9 @@ class TestTeamSynchronizer(TestCase):
 
     def _assert_fields(self, team, team_json):
         member_ids = set([t.member_id for t in team.members.all()])
-        self.assertEquals(team.team_id, team_json['id'])
-        self.assertEquals(team.name, team_json['name'])
-        self.assertEquals(team.board.board_id, team_json['boardId'])
+        self.assertEqual(team.team_id, team_json['id'])
+        self.assertEqual(team.name, team_json['name'])
+        self.assertEqual(team.board.board_id, team_json['boardId'])
         self.assertTrue(member_ids < set(team_json['members']))
 
     def test_sync(self):
@@ -98,7 +98,7 @@ class TestTeamSynchronizer(TestCase):
         self._sync(fixtures.API_SERVICE_TEAM_LIST)
 
         teams = list(Team.objects.all())
-        self.assertEquals(len(teams), len(team_dict))
+        self.assertEqual(len(teams), len(team_dict))
         for team in Team.objects.all():
             team_json = team_dict[team.team_id]
             self._assert_fields(team, team_json)
@@ -130,12 +130,21 @@ class TestPrioritySynchronizer(TestCase):
 
     def setUp(self):
         self.synchronizer = sync.PrioritySynchronizer()
+        self.valid_prio_colors = \
+            list(TicketPriority.DEFAULT_COLORS.values()) + \
+            [TicketPriority.DEFAULT_COLOR]
 
     def _assert_fields(self, priority, api_priority):
         assert priority.name == api_priority['name']
         assert priority.priority_id == api_priority['id']
-        assert priority.color == api_priority['color']
-        assert priority.sort == api_priority['sortOrder']
+        if 'color' in api_priority.keys():
+            assert priority.color == api_priority['color']
+        else:
+            assert priority.color in self.valid_prio_colors
+        if 'sortOrder' in api_priority.keys():
+            assert priority.sort == api_priority['sortOrder']
+        else:
+            assert priority.sort is None
 
     def _clean(self):
         TicketPriority.objects.all().delete()
