@@ -205,7 +205,6 @@ class CompanySynchronizer(Synchronizer):
         Assigns field data from an company_json instance
         to a local Company model instance
         """
-        print('company_json:', company_json)
         company.company_id = company_json['id']
         company.company_name = company_json['name']
         company.company_identifier = company_json['identifier']

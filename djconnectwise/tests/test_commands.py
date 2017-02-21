@@ -65,7 +65,7 @@ class TestSyncPrioritiesCommand(BaseSyncTest):
     def test_sync(self):
         """Test sync priorities command."""
         self._test_sync(mocks.service_api_get_priorities_call,
-                        [fixtures.API_SERVICE_PRIORITY_LIST[0]],
+                        fixtures.API_SERVICE_PRIORITY_LIST,
                         'priority',
                         sync_summary('Priority'))
 
