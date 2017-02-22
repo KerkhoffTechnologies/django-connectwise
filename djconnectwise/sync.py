@@ -167,7 +167,7 @@ class TeamSynchronizer(Synchronizer):
     lookup_key = 'id'
 
     def _assign_field_data(self, team, team_json):
-        team.team_id = team_json['id']
+        team.id = team_json['id']
         team.name = team_json['name']
         team.board = models.ConnectWiseBoard.objects.get(
             board_id=team_json['boardId'])
