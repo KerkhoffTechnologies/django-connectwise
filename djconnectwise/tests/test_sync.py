@@ -88,7 +88,7 @@ class TestTeamSynchronizer(TestCase):
 
     def _assert_fields(self, team, team_json):
         member_ids = set([t.member_id for t in team.members.all()])
-        self.assertEqual(team.team_id, team_json['id'])
+        self.assertEqual(team.id, team_json['id'])
         self.assertEqual(team.name, team_json['name'])
         self.assertEqual(team.board.board_id, team_json['boardId'])
         self.assertTrue(member_ids < set(team_json['members']))
@@ -100,7 +100,7 @@ class TestTeamSynchronizer(TestCase):
         teams = list(Team.objects.all())
         self.assertEqual(len(teams), len(team_dict))
         for team in Team.objects.all():
-            team_json = team_dict[team.team_id]
+            team_json = team_dict[team.id]
             self._assert_fields(team, team_json)
 
     def test_sync_update(self):
@@ -108,9 +108,9 @@ class TestTeamSynchronizer(TestCase):
         self._sync(fixtures.API_SERVICE_TEAM_LIST)
 
         api_team = fixtures.API_SERVICE_TEAM_LIST[0]
-        team_id = api_team['id']
+        id = api_team['id']
         team_pre_update = Team.objects \
-            .get(team_id=team_id)
+            .get(id=id)
 
         name = 'Some New Name'
         api_team = deepcopy(api_team)
@@ -119,7 +119,7 @@ class TestTeamSynchronizer(TestCase):
         self._sync(api_team_list)
 
         team_post_update = Team.objects \
-            .get(team_id=team_id)
+            .get(id=id)
 
         self.assertNotEqual(team_pre_update.name,
                             name)

@@ -167,7 +167,7 @@ class TeamSynchronizer(Synchronizer):
     lookup_key = 'id'
 
     def _assign_field_data(self, team, team_json):
-        team.team_id = team_json['id']
+        team.id = team_json['id']
         team.name = team_json['name']
         team.board = models.ConnectWiseBoard.objects.get(
             board_id=team_json['boardId'])
@@ -509,7 +509,7 @@ class ServiceTicketSynchronizer:
 
         team = api_ticket['team']
         if team:
-            service_ticket.team_id = api_ticket['team']['id']
+            service_ticket.id = api_ticket['team']['id']
 
         service_ticket.api_text = str(api_ticket)
         service_ticket.board_name = api_ticket['board']['name']
