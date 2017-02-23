@@ -46,7 +46,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', primary_key=True, serialize=False, auto_created=True)),
                 ('created', django_extensions.db.fields.CreationDateTimeField(verbose_name='created', auto_now_add=True)),
                 ('modified', django_extensions.db.fields.ModificationDateTimeField(verbose_name='modified', auto_now=True)),
-                ('company_name', models.CharField(max_length=250, blank=True, null=True)),
+                ('name', models.CharField(max_length=250, blank=True, null=True)),
                 ('company_alias', models.CharField(max_length=250, blank=True, null=True)),
                 ('identifier', models.CharField(max_length=250, blank=True, null=True)),
                 ('phone_number', models.CharField(max_length=250, blank=True, null=True)),

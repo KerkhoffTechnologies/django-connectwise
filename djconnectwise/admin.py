@@ -27,10 +27,10 @@ class MemberAdmin(admin.ModelAdmin):
 
 @admin.register(models.Company)
 class CompanyAdmin(admin.ModelAdmin):
-    list_display = ('id', 'company_name',
+    list_display = ('id', 'name',
                     'identifier', 'type', 'status')
     list_filter = ('status',)
-    search_fields = ['company_name', 'identifier']
+    search_fields = ['name', 'identifier']
 
 
 @admin.register(models.Ticket)

@@ -32,7 +32,7 @@ class TestCompanySynchronizer(TestCase):
         return _, get_patch
 
     def _assert_fields(self, company, api_company):
-        assert company.company_name == api_company['name']
+        assert company.name == api_company['name']
         assert company.identifier == api_company['identifier']
         assert company.phone_number == api_company['phoneNumber']
         assert company.fax_number == api_company['faxNumber']
@@ -67,7 +67,7 @@ class TestCompanySynchronizer(TestCase):
         company_post_update = Company.objects \
                                      .get(id=id)
 
-        self.assertNotEqual(company_pre_update.company_name,
+        self.assertNotEqual(company_pre_update.name,
                             name)
         self._assert_fields(company_post_update, api_company)
 

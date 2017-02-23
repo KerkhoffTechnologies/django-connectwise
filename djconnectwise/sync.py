@@ -196,7 +196,7 @@ class CompanySynchronizer(Synchronizer):
         to a local Company model instance
         """
         company.id = company_json['id']
-        company.company_name = company_json['name']
+        company.name = company_json['name']
         company.identifier = company_json['identifier']
         company.phone_number = company_json.get('phoneNumber')
         company.fax_number = company_json.get('faxNumber')

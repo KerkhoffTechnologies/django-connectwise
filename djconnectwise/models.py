@@ -124,7 +124,7 @@ class Member(TimeStampedModel):
 
 
 class Company(TimeStampedModel):
-    company_name = models.CharField(blank=True, null=True, max_length=250)
+    name = models.CharField(blank=True, null=True, max_length=250)
     company_alias = models.CharField(blank=True, null=True, max_length=250)
     identifier = models.CharField(
         blank=True, null=True, max_length=250)
