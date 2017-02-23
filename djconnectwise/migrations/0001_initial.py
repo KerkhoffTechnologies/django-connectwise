@@ -25,7 +25,7 @@ class Migration(migrations.Migration):
                 ('closed_status', models.BooleanField()),
             ],
             options={
-                'ordering': ('name',),
+                'ordering': ('sort_order',),
             },
         ),
         migrations.CreateModel(
@@ -37,7 +37,6 @@ class Migration(migrations.Migration):
                 ('level', models.CharField(max_length=255)),
                 ('object_id', models.IntegerField()),
                 ('entry_id', models.IntegerField()),
-                ('member_id', models.IntegerField()),
                 ('enabled', models.BooleanField(default=False)),
             ],
         ),
@@ -93,7 +92,6 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', primary_key=True, serialize=False, auto_created=True)),
                 ('created', django_extensions.db.fields.CreationDateTimeField(verbose_name='created', auto_now_add=True)),
                 ('modified', django_extensions.db.fields.ModificationDateTimeField(verbose_name='modified', auto_now=True)),
-                ('location_id', models.PositiveSmallIntegerField()),
                 ('name', models.CharField(max_length=30)),
                 ('where', models.CharField(max_length=100, blank=True, null=True)),
             ],
@@ -107,7 +105,6 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', primary_key=True, serialize=False, auto_created=True)),
                 ('created', django_extensions.db.fields.CreationDateTimeField(verbose_name='created', auto_now_add=True)),
                 ('modified', django_extensions.db.fields.ModificationDateTimeField(verbose_name='modified', auto_now=True)),
-                ('member_id', models.PositiveSmallIntegerField()),
                 ('identifier', models.CharField(max_length=15, unique=True)),
                 ('first_name', models.CharField(max_length=30)),
                 ('last_name', models.CharField(max_length=30)),
@@ -257,6 +254,11 @@ class Migration(migrations.Migration):
             model_name='ticket',
             name='team',
             field=models.ForeignKey(blank=True, null=True, related_name='team_tickets', to='djconnectwise.Team'),
+        ),
+        migrations.AddField(
+            model_name='callbackentry',
+            name='member',
+            field=models.ForeignKey(to='djconnectwise.Member'),
         ),
         migrations.AddField(
             model_name='boardstatus',

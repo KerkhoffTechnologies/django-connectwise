@@ -170,7 +170,7 @@ class TeamSynchronizer(BoardChildSynchronizer):
             instance, json_data)
 
         members = list(models.Member.objects.filter(
-            member_id__in=json_data['members']))
+            id__in=json_data['members']))
 
         instance.save()
 
@@ -224,7 +224,7 @@ class LocationSynchronizer(Synchronizer):
         Assigns field data from an company_json instance
         to a local Company model instance
         """
-        location.location_id = location_json['id']
+        location.id = location_json['id']
         location.name = location_json['name']
         location.where = location_json['where']
         return location
@@ -511,7 +511,7 @@ class TicketSynchronizer:
 
         try:
             location = models.Location.objects.get(
-                location_id=api_ticket['locationId'])
+                id=api_ticket['locationId'])
             ticket.location = location
         except:
             pass

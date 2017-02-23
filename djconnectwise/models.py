@@ -31,7 +31,7 @@ class CallBackEntry(models.Model):
     level = models.CharField(max_length=255)
     object_id = models.IntegerField()
     entry_id = models.IntegerField()
-    member_id = models.IntegerField()
+    member = models.ForeignKey('Member')
     enabled = models.BooleanField(default=False)
 
     def __str__(self):
@@ -75,7 +75,6 @@ class BoardStatus(TimeStampedModel):
 
 
 class Location(TimeStampedModel):
-    location_id = models.PositiveSmallIntegerField()
     name = models.CharField(max_length=30)
     where = models.CharField(max_length=100, blank=True, null=True)
 
@@ -87,7 +86,6 @@ class Location(TimeStampedModel):
 
 
 class Member(TimeStampedModel):
-    member_id = models.PositiveSmallIntegerField()
     identifier = models.CharField(
         max_length=15, blank=False, unique=True)  # This is the CW username
     first_name = models.CharField(max_length=30, blank=False)
@@ -115,7 +113,7 @@ class Member(TimeStampedModel):
     @staticmethod
     def create_member(api_member):
         member = Member()
-        member.member_id = api_member['id']
+        member.id = api_member['id']
         member.first_name = api_member['firstName']
         member.last_name = api_member['lastName']
         member.identifier = api_member['identifier']

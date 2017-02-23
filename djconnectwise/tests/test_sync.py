@@ -88,11 +88,11 @@ class TestTeamSynchronizer(TestCase):
         return _, get_patch
 
     def _assert_fields(self, team, team_json):
-        member_ids = set([t.member_id for t in team.members.all()])
+        ids = set([t.id for t in team.members.all()])
         self.assertEqual(team.id, team_json['id'])
         self.assertEqual(team.name, team_json['name'])
         self.assertEqual(team.board.id, team_json['boardId'])
-        self.assertTrue(member_ids < set(team_json['members']))
+        self.assertTrue(ids < set(team_json['members']))
 
     def test_sync(self):
         team_dict = {t['id']: t for t in fixtures.API_SERVICE_TEAM_LIST}
@@ -194,7 +194,7 @@ class TestLocationSynchronizer(TestCase):
 
     def _assert_fields(self, location, api_location):
         assert location.name == api_location['name']
-        assert location.location_id == api_location['id']
+        assert location.id == api_location['id']
         assert location.where == api_location['where']
 
     def _clean(self):
@@ -213,15 +213,15 @@ class TestLocationSynchronizer(TestCase):
         instance_dict = {i['id']: i for i in instances}
 
         for instance in Location.objects.all():
-            json_data = instance_dict[instance.location_id]
+            json_data = instance_dict[instance.id]
             self._assert_fields(instance, json_data)
 
     def test_sync_update(self):
         self._clean()
         self._sync(fixtures.API_SERVICE_LOCATION_LIST)
-        location_id = fixtures.API_SERVICE_LOCATION['id']
+        id = fixtures.API_SERVICE_LOCATION['id']
         original_instance = Location.objects \
-            .get(location_id=location_id)
+            .get(id=id)
 
         where = 'some-where'
         json_data = deepcopy(fixtures.API_SERVICE_LOCATION)
@@ -230,7 +230,7 @@ class TestLocationSynchronizer(TestCase):
         self._sync([json_data])
 
         updated_instance = Location.objects \
-            .get(location_id=json_data['id'])
+            .get(id=json_data['id'])
 
         self.assertNotEqual(original_instance.where,
                             where)
@@ -387,7 +387,7 @@ class TestTicketUpdater(TestCase):
 class TestMemberSynchronization(TestCase):
 
     def setUp(self):
-        self.member_identifier = 'User1'
+        self.identifier = 'User1'
         self.synchronizer = sync.MemberSynchronizer()
         mocks.system_api_get_members_call([fixtures.API_MEMBER])
         mocks.system_api_get_member_image_by_identifier_call(
@@ -404,15 +404,15 @@ class TestMemberSynchronization(TestCase):
     def test_sync_member_update(self):
         self._clear_members()
         member = Member()
-        member.member_id = 176
-        member.identifier = self.member_identifier
+        member.id = 176
+        member.identifier = self.identifier
         member.first_name = 'some stale first name'
         member.last_name = 'some stale last name'
         member.office_email = 'some@stale.com'
         member.save()
 
         self.synchronizer.sync()
-        local_member = Member.objects.get(identifier=self.member_identifier)
+        local_member = Member.objects.get(identifier=self.identifier)
         api_member = fixtures.API_MEMBER
         self._assert_member_fields(local_member, api_member)
 
