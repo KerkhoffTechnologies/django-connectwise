@@ -6,7 +6,7 @@ from . import models
 
 @admin.register(models.ConnectWiseBoard)
 class ConnectWiseBoardAdmin(admin.ModelAdmin):
-    list_display = ('name', 'board_id', 'inactive')
+    list_display = ('id', 'name', 'inactive')
     search_fields = ['name']
 
 

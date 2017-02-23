@@ -6,6 +6,7 @@ from djconnectwise.models import ConnectWiseBoard
 from djconnectwise.models import BoardStatus
 from djconnectwise.models import Location
 from djconnectwise.models import Team
+from djconnectwise.models import Ticket
 from djconnectwise.models import TicketPriority
 from djconnectwise.models import Member
 # from djconnectwise.models import Ticket
@@ -90,7 +91,7 @@ class TestTeamSynchronizer(TestCase):
         member_ids = set([t.member_id for t in team.members.all()])
         self.assertEqual(team.id, team_json['id'])
         self.assertEqual(team.name, team_json['name'])
-        self.assertEqual(team.board.board_id, team_json['boardId'])
+        self.assertEqual(team.board.id, team_json['boardId'])
         self.assertTrue(member_ids < set(team_json['members']))
 
     def test_sync(self):
@@ -248,7 +249,7 @@ class TestBoardSynchronizer(TestCase):
 
     def _local_board_set(self):
         board_qs = ConnectWiseBoard.objects.all()
-        return set(board_qs.values_list('board_id', 'name'))
+        return set(board_qs.values_list('id', 'name'))
 
     def _api_board_set(self, board_data):
         return set([(s['id'], s['name']) for s in board_data])
@@ -323,61 +324,64 @@ class TestBoardStatusSynchronizer(TestCase):
         self._assert_sync(fixtures.API_BOARD_STATUS_LIST)
 
 
-# class TestTicketSynchronizer(TestCase):
+class TestTicketSynchronizer(TestCase):
 
-#     def setUp(self):
-#         self.synchronizer = sync.TicketSynchronizer()
+    def setUp(self):
+        self.synchronizer = sync.TicketSynchronizer()
+        fixture_utils.init_board_statuses()
 
-#     def _get_local_and_api_ticket(self):
-#         api_ticket = self.synchronizer.service_client.get_tickets()[0]
+    def _get_local_and_api_ticket(self):
+        api_ticket = self.synchronizer.service_client.get_tickets()[0]
 
-#         local_ticket, created = self.synchronizer.sync_ticket(api_ticket)
-#         return local_ticket, api_ticket
+        local_ticket, created = self.synchronizer.sync_ticket(api_ticket)
+        return local_ticket, api_ticket
 
-#     def _sync(self):
-#         mocks.company_api_by_id_call(fixtures.API_COMPANY)
-#         mocks.service_api_tickets_call()
+    def _sync(self):
+        mocks.company_api_by_id_call(fixtures.API_COMPANY)
+        mocks.service_api_tickets_call()
 
-#         return self.synchronizer.sync()
+        return self.synchronizer.sync()
 
-#     def test_sync(self):
-#         created_count, _, _ = self._sync()
-#         self.assertEqual(created_count, 1)
+    def test_sync(self):
+        created_count, _, _ = self._sync()
+        self.assertEqual(created_count, 1)
 
 
-# class TestTicketUpdater(TestCase):
-#     def setUp(self):
-#         self.updater = sync.TicketUpdater()
-#         self.synchronizer = sync.TicketSynchronizer()
+class TestTicketUpdater(TestCase):
+    def setUp(self):
+        self.updater = sync.TicketUpdater()
+        self.synchronizer = sync.TicketSynchronizer()
 
-#     def _sync(self):
-#         mocks.company_api_by_id_call(fixtures.API_COMPANY)
-#         mocks.service_api_tickets_call()
+        fixture_utils.init_board_statuses()
 
-#         return self.synchronizer.sync()
+    def _sync(self):
+        mocks.company_api_by_id_call(fixtures.API_COMPANY)
+        mocks.service_api_tickets_call()
 
-#     def test_update_api_ticket(self):
-#         Ticket.objects.all().delete()
-#         self._sync()
+        return self.synchronizer.sync()
 
-#         board_name = 'Some Board Name'
-#         api_ticket = deepcopy(fixtures.API_SERVICE_TICKET)
-#         api_ticket['board']['name'] = board_name
+    def test_update_api_ticket(self):
+        Ticket.objects.all().delete()
+        self._sync()
 
-#         mocks.service_api_update_ticket_call(api_ticket)
-#         mocks.service_api_get_ticket_call()
+        board_name = 'Some Board Name'
+        api_ticket = deepcopy(fixtures.API_SERVICE_TICKET)
+        api_ticket['board']['name'] = board_name
 
-#         local_ticket = Ticket.objects.first()
-#         local_ticket.board_name = board_name
-#         local_ticket.closed_flag = True
-#         local_ticket.save()
+        mocks.service_api_update_ticket_call(api_ticket)
+        mocks.service_api_get_ticket_call()
 
-#         updated_api_ticket = self.updater.update_api_ticket(local_ticket)
+        local_ticket = Ticket.objects.first()
+        local_ticket.board_name = board_name
+        local_ticket.closed_flag = True
+        local_ticket.save()
 
-#         self.assertEqual(
-#             updated_api_ticket['board']['name'],
-#             local_ticket.board_name
-#         )
+        updated_api_ticket = self.updater.update_api_ticket(local_ticket)
+
+        self.assertEqual(
+            updated_api_ticket['board']['name'],
+            local_ticket.board_name
+        )
 
 
 class TestMemberSynchronization(TestCase):

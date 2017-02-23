@@ -105,7 +105,7 @@ class BoardSynchronizer:
 
         for board in self.client.get_boards():
             _, created = models.ConnectWiseBoard.objects.update_or_create(
-                board_id=board['id'],
+                id=board['id'],
                 defaults={
                     'name': board['name'],
                     'inactive': board['inactive'],
@@ -126,7 +126,7 @@ class BoardChildSynchronizer(Synchronizer):
         instance.id = json_data['id']
         instance.name = json_data['name']
         instance.board = models.ConnectWiseBoard.objects.get(
-            board_id=json_data['boardId'])
+            id=json_data['boardId'])
         return instance
 
     def client_call(self, board_id):
@@ -136,7 +136,7 @@ class BoardChildSynchronizer(Synchronizer):
         results_json = []
         board_qs = models.ConnectWiseBoard.objects.all()
 
-        for board_id in board_qs.values_list('board_id', flat=True):
+        for board_id in board_qs.values_list('id', flat=True):
             results_json += self.client_call(board_id)
 
         return results_json
@@ -145,6 +145,17 @@ class BoardChildSynchronizer(Synchronizer):
 class BoardStatusSynchronizer(BoardChildSynchronizer):
     client_class = ServiceAPIClient
     model_class = models.BoardStatus
+
+    def _assign_field_data(self, instance, json_data):
+        instance = super(BoardStatusSynchronizer, self)._assign_field_data(
+            instance, json_data)
+
+        instance.sort_order = json_data['sortOrder']
+        instance.display_on_board = json_data['displayOnBoard']
+        instance.inactive = json_data['inactive']
+        instance.closed_status = json_data['closedStatus']
+
+        return instance
 
     def client_call(self, board_id):
         return self.client.get_statuses(board_id)
@@ -184,7 +195,6 @@ class CompanySynchronizer(Synchronizer):
         Assigns field data from an company_json instance
         to a local Company model instance
         """
-        print('company_json:', company_json)
         company.company_id = company_json['id']
         company.company_name = company_json['name']
         company.company_identifier = company_json['identifier']
@@ -470,7 +480,6 @@ class TicketSynchronizer:
 
         # if the status results in a move to a different column
         original_status = not created and ticket.status or None
-        new_ticket_status, _ = self.get_or_create_ticket_status(api_ticket)
 
         ticket.closed_flag = api_ticket['closedFlag']
         ticket.type = api_ticket['type']
@@ -488,9 +497,9 @@ class TicketSynchronizer:
             ticket.team_id = api_ticket['team']['id']
 
         ticket.api_text = str(api_ticket)
-        ticket.board_name = api_ticket['board']['name']
-        ticket.board_id = api_ticket['board']['id']
-        ticket.board_id = api_ticket['status']['id']
+
+        ticket.board = models.ConnectWiseBoard.objects.get(
+            pk=api_ticket['board']['id'])
 
         ticket.company, _ = self.company_synchronizer \
             .get_or_create_instance(api_ticket['company'])
@@ -507,7 +516,13 @@ class TicketSynchronizer:
         except:
             pass
 
+        # TODO - Discuss - Do we assume that the status exists
+        # or do we want to do a roundtrip and retrieve from the server?
+        new_ticket_status = models.BoardStatus.objects.get(
+            pk=api_ticket['status']['id'])
+
         ticket.status = new_ticket_status
+
         ticket.project = self.get_or_create_project(api_ticket)
         ticket.save()
         action = created and 'Created' or 'Updated'
@@ -533,8 +548,8 @@ class TicketSynchronizer:
 
         if ticket.closed_flag:
             api_ticket['closedFlag'] = ticket.closed_flag
-            ticket_status, created = models.BoardStatus.objects.get_or_create(
-                name__iexact='Closed')
+            ticket_status = models.BoardStatus.objects.get(
+                closed_status=True)
         else:
             ticket_status = ticket.status
 
@@ -642,8 +657,8 @@ class TicketUpdater(object):
 
         if ticket.closed_flag:
             api_ticket['closedFlag'] = ticket.closed_flag
-            ticket_status, created = models.BoardStatus.objects.get_or_create(
-                name__iexact='Closed')
+            ticket_status = models.BoardStatus.objects.get(
+                closed_status=True)
         else:
             ticket_status = ticket.status
 

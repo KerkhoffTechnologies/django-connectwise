@@ -39,7 +39,6 @@ class CallBackEntry(models.Model):
 
 
 class ConnectWiseBoard(TimeStampedModel):
-    board_id = models.PositiveSmallIntegerField()
     name = models.CharField(max_length=255)
     inactive = models.BooleanField()
 
@@ -51,7 +50,7 @@ class ConnectWiseBoard(TimeStampedModel):
 
     @property
     def board_statuses(self):
-        return BoardStatus.objects.filter(board_id=self.board_id)
+        return BoardStatus.objects.filter(board=self)
 
 
 class BoardStatus(TimeStampedModel):
@@ -61,10 +60,15 @@ class BoardStatus(TimeStampedModel):
     CLOSED = 'Closed'
 
     name = models.CharField(blank=True, null=True, max_length=250)
+    sort_order = models.PositiveSmallIntegerField()
+    display_on_board = models.BooleanField()
+    inactive = models.BooleanField()
+    closed_status = models.BooleanField()
+
     board = models.ForeignKey('ConnectWiseBoard')
 
     class Meta:
-        ordering = ('name',)
+        ordering = ('sort_order',)
 
     def __str__(self):
         return self.name
@@ -244,7 +248,6 @@ class Ticket(TimeStampedModel):
     type = models.CharField(blank=True, null=True, max_length=250)
     sub_type = models.CharField(blank=True, null=True, max_length=250)
     sub_type_item = models.CharField(blank=True, null=True, max_length=250)
-    priority_text = models.CharField(blank=True, null=True, max_length=250)
     source = models.CharField(blank=True, null=True, max_length=250)
     summary = models.CharField(blank=True, null=True, max_length=250)
     entered_date_utc = models.DateTimeField(blank=True, null=True)
@@ -274,9 +277,8 @@ class Ticket(TimeStampedModel):
     date_responded_utc = models.DateTimeField(blank=True, null=True)
     is_in_sla = models.NullBooleanField(blank=True, null=True)
     api_text = models.TextField(blank=True, null=True)
-    board_name = models.CharField(blank=True, null=True, max_length=250)
-    board_id = models.IntegerField(blank=True, null=True, db_index=True)
-    board_id = models.IntegerField(blank=True, null=True)
+
+    board = models.ForeignKey('ConnectwiseBoard', blank=True, null=True)
     priority = models.ForeignKey('TicketPriority', blank=True, null=True)
     status = models.ForeignKey(
         'BoardStatus', blank=True, null=True, related_name='status_tickets')
