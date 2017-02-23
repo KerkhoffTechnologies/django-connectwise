@@ -215,6 +215,9 @@ class ServiceTicketAssignment(TimeStampedModel):
     service_ticket = models.ForeignKey('ServiceTicket')
     member = models.ForeignKey('Member')
 
+    def __str__(self):
+        return '{}: {}'.format(self.service_ticket, self.member)
+
 
 class Project(TimeStampedModel):
     name = models.CharField(max_length=200)
