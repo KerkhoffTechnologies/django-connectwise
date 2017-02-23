@@ -165,6 +165,9 @@ class Team(TimeStampedModel):
     board = models.ForeignKey('ConnectWiseBoard')
     members = models.ManyToManyField('Member')
 
+    def __str__(self):
+        return self.name
+
 
 class TicketPriority(TimeStampedModel):
     name = models.CharField(max_length=50, blank=False)

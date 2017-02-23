@@ -72,8 +72,8 @@ class Synchronizer:
 
         self.instance_map[self.lookup_key] = instance
 
-        msg = ' {}: {}'
-        logger.info(msg.format(action, self.model_class.__name__))
+        msg = ' {}: {} {}'
+        logger.info(msg.format(action, self.model_class.__name__, instance))
 
         return instance, created
 
@@ -182,12 +182,19 @@ class CompanySynchronizer(Synchronizer):
         Assigns field data from an company_json instance
         to a local Company model instance
         """
+
         company.id = company_json['id']
         company.name = company_json['name']
         company.identifier = company_json['identifier']
+
+        # Fields below aren't included when the company is created as a
+        # side-effect of creating/updating a ticket or other type of object,
+        # so use .get().
+
         company.phone_number = company_json.get('phoneNumber')
         company.fax_number = company_json.get('faxNumber')
         company.address_line1 = company_json.get('addressLine1')
+        company.address_line2 = company_json.get('addressLine2')
         company.city = company_json.get('city')
         company.state_identifier = company_json.get('state')
         company.zip = company_json.get('zip')

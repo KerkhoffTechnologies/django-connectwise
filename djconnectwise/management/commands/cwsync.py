@@ -14,16 +14,23 @@ class Command(BaseCommand):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.synchronizer_map = OrderedDict(
-            priority=(sync.PrioritySynchronizer, _('Priority')),
-            board=(sync.BoardSynchronizer, _('Board')),
-            board_status=(sync.BoardStatusSynchronizer, _('Board Status')),
-            company=(sync.CompanySynchronizer, _('Company')),
-            location=(sync.LocationSynchronizer, _('Location')),
-            member=(sync.MemberSynchronizer, _('Member')),
-            team=(sync.TeamSynchronizer, _('Team')),
-            ticket=(sync.TicketSynchronizer, _('Ticket')),
+        # This can be replaced with a single instantiation of an OrderedDict
+        # using kwargs in Python 3.6. But we need Python 3.5 compatibility for
+        # now.
+        # See https://www.python.org/dev/peps/pep-0468/.
+        synchronizers = (
+            ('priority', sync.PrioritySynchronizer, _('Priority')),
+            ('board', sync.BoardSynchronizer, _('Board')),
+            ('board_status', sync.BoardStatusSynchronizer, _('Board Status')),
+            ('company', sync.CompanySynchronizer, _('Company')),
+            ('location', sync.LocationSynchronizer, _('Location')),
+            ('member', sync.MemberSynchronizer, _('Member')),
+            ('team', sync.TeamSynchronizer, _('Team')),
+            ('ticket', sync.ServiceTicketSynchronizer, _('Ticket')),
         )
+        self.synchronizer_map = OrderedDict()
+        for name, syncronizer, obj_name in synchronizers:
+            self.synchronizer_map[name] = (syncronizer, obj_name)
 
     def add_arguments(self, parser):
         parser.add_argument(OPTION_NAME, nargs='?', type=str)

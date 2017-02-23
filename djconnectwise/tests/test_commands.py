@@ -12,7 +12,10 @@ from .. import sync
 
 
 def sync_summary(class_name):
-    return '{} Sync Summary - Created: 1 , Updated: 0'.format(class_name)
+    created_count = 2 if class_name == 'Priority' else 1
+    return '{} Sync Summary - Created: {} , Updated: 0'.format(
+        class_name, created_count
+    )
 
 
 class BaseSyncTest(TestCase):
@@ -38,7 +41,7 @@ class TestSyncCompaniesCommand(BaseSyncTest):
 class TestSyncTeamsCommand(BaseSyncTest):
 
     def test_sync(self):
-        "Test sync teams command."
+        """Test sync teams command."""
         fixture_utils.init_boards()
         self._test_sync(mocks.service_api_get_teams_call,
                         [fixtures.API_SERVICE_TEAM_LIST[0]],
@@ -72,7 +75,7 @@ class TestSyncPrioritiesCommand(BaseSyncTest):
     def test_sync(self):
         """Test sync priorities command."""
         self._test_sync(mocks.service_api_get_priorities_call,
-                        [fixtures.API_SERVICE_PRIORITY_LIST[0]],
+                        fixtures.API_SERVICE_PRIORITY_LIST,
                         'priority',
                         sync_summary('Priority'))
 
@@ -119,9 +122,10 @@ class TestSyncAllCommand(BaseSyncTest):
         actual_output = out.getvalue().strip()
 
         summaries = [
+            sync_summary('Priority'),
             sync_summary('Board'),
-            sync_summary('Company'),
             sync_summary('Board Status'),
+            sync_summary('Company'),
             sync_summary('Member'),
             sync_summary('Team'),
             sync_summary('Ticket')]
