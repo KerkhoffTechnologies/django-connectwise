@@ -70,6 +70,7 @@ class ConnectWiseBoardStatus(TimeStampedModel):
 
 
 class Member(TimeStampedModel):
+    member_id = models.PositiveSmallIntegerField()
     identifier = models.CharField(
         max_length=15, blank=False, unique=True)  # This is the CW username
     first_name = models.CharField(max_length=30, blank=False)
@@ -97,6 +98,7 @@ class Member(TimeStampedModel):
     @staticmethod
     def create_member(api_member):
         member = Member()
+        member.member_id = api_member['id']
         member.first_name = api_member['firstName']
         member.last_name = api_member['lastName']
         member.identifier = api_member['identifier']
@@ -107,6 +109,7 @@ class Member(TimeStampedModel):
 
 
 class Company(TimeStampedModel):
+    company_id = models.PositiveSmallIntegerField()
     company_name = models.CharField(blank=True, null=True, max_length=250)
     company_alias = models.CharField(blank=True, null=True, max_length=250)
     company_identifier = models.CharField(
@@ -141,6 +144,15 @@ class Company(TimeStampedModel):
         if settings.DJCONNECTWISE_COMPANY_ALIAS:
             identifier = self.company_alias or self.company_identifier
         return identifier
+
+
+class Team(TimeStampedModel):
+    name = models.CharField(max_length=30)
+    board = models.ForeignKey('ConnectWiseBoard')
+    members = models.ManyToManyField('Member')
+
+    def __str__(self):
+        return self.name
 
 
 class TicketStatus(TimeStampedModel):
@@ -265,7 +277,6 @@ class ServiceTicket(TimeStampedModel):
     record_type = models.CharField(blank=True, null=True,
                                    max_length=250, choices=RECORD_TYPES,
                                    db_index=True)
-    team_id = models.IntegerField(blank=True, null=True)
     agreement_id = models.IntegerField(blank=True, null=True)
     severity = models.CharField(blank=True, null=True, max_length=250)
     impact = models.CharField(blank=True, null=True, max_length=250)
@@ -282,11 +293,14 @@ class ServiceTicket(TimeStampedModel):
         'TicketStatus', blank=True, null=True, related_name='status_tickets')
     company = models.ForeignKey(
         'Company', blank=True, null=True, related_name='company_tickets')
+    team = models.ForeignKey(
+        'Team', blank=True, null=True, related_name='team_tickets')
     project = models.ForeignKey(
         'Project', blank=True, null=True, related_name='project_tickets')
     members = models.ManyToManyField(
         'Member', through='ServiceTicketAssignment',
         related_name='member_tickets')
+
     # TODO: add FK to ConnectWiseBoard
 
     class Meta:

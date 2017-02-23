@@ -329,3 +329,7 @@ class ServiceAPIClient(ConnectWiseAPIClient):
 
     def get_priorities(self):
         return self.fetch_resource(self.ENDPOINT_PRIORITIES)
+
+    def get_teams(self, board_id):
+        endpoint = '{}/{}/teams/'.format(self.ENDPOINT_BOARDS, board_id)
+        return self.fetch_resource(endpoint)

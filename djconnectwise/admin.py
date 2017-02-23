@@ -1,24 +1,23 @@
 # -*- coding: utf-8 -*-
 from django.contrib import admin
 
-from .models import Company, ConnectWiseBoard, Member
-from .models import ServiceTicket, TicketStatus, TicketPriority
+from . import models
 
 
+@admin.register(models.ConnectWiseBoard)
 class ConnectWiseBoardAdmin(admin.ModelAdmin):
-    model = ConnectWiseBoard
     list_display = ('name', 'board_id', 'inactive')
     search_fields = ['name']
 
 
+@admin.register(models.TicketStatus)
 class TicketStatusAdmin(admin.ModelAdmin):
-    model = TicketStatus
     list_display = ('status_id', 'status_name')
     search_fields = ['status_name']
 
 
+@admin.register(models.Member)
 class MemberAdmin(admin.ModelAdmin):
-    model = Member
     list_display = ('identifier', 'full_name', 'office_email')
     search_fields = ('identifier', 'first_name', 'last_name', 'office_email')
 
@@ -26,16 +25,16 @@ class MemberAdmin(admin.ModelAdmin):
         return str(obj)
 
 
+@admin.register(models.Company)
 class CompanyAdmin(admin.ModelAdmin):
-    model = Company
     list_display = ('id', 'company_name',
                     'company_identifier', 'type', 'status')
     list_filter = ('status',)
     search_fields = ['company_name', 'company_identifier']
 
 
+@admin.register(models.ServiceTicket)
 class ServiceTicketAdmin(admin.ModelAdmin):
-    model = ServiceTicket
     list_display = ('summary', 'status', 'resources', 'record_type',)
 
     list_filter = ('status', 'record_type',)
@@ -45,14 +44,13 @@ class ServiceTicketAdmin(admin.ModelAdmin):
         return ', '.join([str(m) for m in obj.members.all()])
 
 
+@admin.register(models.TicketPriority)
 class TicketPriorityAdmin(admin.ModelAdmin):
-    model = TicketPriority
+    model = models.TicketPriority
     list_display = ('priority_id', 'name', 'sort', 'color')
 
 
-admin.site.register(ConnectWiseBoard, ConnectWiseBoardAdmin)
-admin.site.register(TicketStatus, TicketStatusAdmin)
-admin.site.register(Member, MemberAdmin)
-admin.site.register(ServiceTicket, ServiceTicketAdmin)
-admin.site.register(Company, CompanyAdmin)
-admin.site.register(TicketPriority, TicketPriorityAdmin)
+@admin.register(models.Team)
+class TeamAdmin(admin.ModelAdmin):
+    model = models.Team
+    list_display = ('id', 'name', 'board')

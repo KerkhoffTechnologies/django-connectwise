@@ -193,6 +193,19 @@ API_SERVICE_TICKET = {
         'id': 24,
         'identifier': 'WildEagleInc',
         'name': 'Wild Eagle, Inc.',
+        "phoneNumber": "1450994900",
+        "addressLine1": None,
+        "addressLine2": None,
+        "city": None,
+        "state": None,
+        "zip": None,
+        "country": None,
+        "phoneNumber": "1450994900",
+        "faxNumber": "",
+        "website": "www.YourCompany.com",
+        "territoryId": 38,
+        "marketId": 23,
+        "accountNumber": "",
         '_info': {
             'company_href': 'https://some-host.com/v4_6_release/apis/3.0/company/companies/24'
         }
@@ -328,6 +341,48 @@ API_SERVICE_TICKET_MAP = {
     t['id']: t
     for t in API_SERVICE_TICKET_LIST
 }
+
+API_SERVICE_TEAM_LIST = [   
+    {   '_info': {'lastUpdated': '2017-02-14T18:21:15Z', 'updatedBy': 'User1'},
+        'boardId': 1,
+        'businessUnitId': 10,
+        'defaultFlag': True,
+        'id': 25,
+        'locationId': 2,
+        'members': [179, 176, 181, 183, 185],
+        'name': 'Windows Team',
+        'notifyOnTicketDelete': False,
+        'teamLeader': {   '_info': {   'member_href': 'https://connectwise.kerkhofftech.ca/v4_6_release/apis/3.0/system/members/186'},
+                          'id': 186,
+                          'identifier': 'User10',
+                          'name': 'Training User10'}},
+    {   '_info': {'lastUpdated': '2017-02-14T18:20:31Z', 'updatedBy': 'User1'},
+        'boardId': 1,
+        'businessUnitId': 10,
+        'defaultFlag': False,
+        'id': 26,
+        'locationId': 2,
+        'members': [202, 191, 189, 193, 195],
+        'name': 'Network Team',
+        'notifyOnTicketDelete': False,
+        'teamLeader': {   '_info': {   'member_href': 'https://connectwise.kerkhofftech.ca/v4_6_release/apis/3.0/system/members/186'},
+                          'id': 186,
+                          'identifier': 'User10',
+                          'name': 'Training User10'}},
+    {   '_info': {'lastUpdated': '2017-02-14T18:20:13Z', 'updatedBy': 'User1'},
+        'boardId': 1,
+        'businessUnitId': 10,
+        'defaultFlag': False,
+        'id': 27,
+        'locationId': 2,
+        'members': [180, 178, 187, 186, 182, 184],
+        'name': 'Linux Team',
+        'notifyOnTicketDelete': False,
+        'teamLeader': {   '_info': {   'member_href': 'https://connectwise.kerkhofftech.ca/v4_6_release/apis/3.0/system/members/189'},
+                          'id': 189,
+                          'identifier': 'User13',
+                          'name': 'Training User13'}}]
+
 
 API_CW_VERSION = {
     'version': 'v2.0'
