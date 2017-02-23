@@ -93,31 +93,18 @@ class Synchronizer:
         return created_count, updated_count, deleted_count
 
 
-class BoardSynchronizer:
+class BoardSynchronizer(Synchronizer):
+    client_class = ServiceAPIClient
+    model_class = models.ConnectWiseBoard
 
-    def __init__(self, *args, **kwargs):
-        self.client = ServiceAPIClient()
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data['id']
+        instance.name = json_data['name']
+        instance.inactive = json_data['inactive']
+        return instance
 
-    def sync(self):
-        updated_count = 0
-        created_count = 0
-        deleted_count = 0
-
-        for board in self.client.get_boards():
-            _, created = models.ConnectWiseBoard.objects.update_or_create(
-                id=board['id'],
-                defaults={
-                    'name': board['name'],
-                    'inactive': board['inactive'],
-                }
-            )
-
-            if created:
-                created_count += 1
-            else:
-                updated_count += 1
-
-        return created_count, updated_count, deleted_count
+    def get_json(self):
+        return self.client.get_boards()
 
 
 class BoardChildSynchronizer(Synchronizer):

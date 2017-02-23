@@ -243,9 +243,7 @@ class TestBoardSynchronizer(TestCase):
         self.synchronizer = sync.BoardSynchronizer()
 
     def _sync(self):
-        ConnectWiseBoard.objects.all().delete()
-        mocks.service_api_get_boards_call(fixtures.API_BOARD_LIST)
-        return self.synchronizer.sync()
+        return fixture_utils.init_boards()
 
     def _local_board_set(self):
         board_qs = ConnectWiseBoard.objects.all()
