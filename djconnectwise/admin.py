@@ -38,7 +38,7 @@ class ServiceTicketAdmin(admin.ModelAdmin):
     list_display = ('summary', 'status', 'resources', 'record_type',)
 
     list_filter = ('status', 'record_type',)
-    search_fields = ['id', 'summary', 'members__user__username', ]
+    search_fields = ['id', 'summary', ]
 
     def resources(self, obj):
         return ', '.join([str(m) for m in obj.members.all()])
@@ -52,5 +52,9 @@ class TicketPriorityAdmin(admin.ModelAdmin):
 
 @admin.register(models.Team)
 class TeamAdmin(admin.ModelAdmin):
-    model = models.Team
     list_display = ('id', 'name', 'board')
+
+
+@admin.register(models.Location)
+class LocationAdmin(admin.ModelAdmin):
+    list_display = ('location_id', 'name', 'where')

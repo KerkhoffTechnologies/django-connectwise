@@ -19,11 +19,13 @@ class Command(BaseCommand):
         # now.
         # See https://www.python.org/dev/peps/pep-0468/.
         synchronizers = (
+            ('member', sync.MemberSynchronizer, _('Member')),
             ('priority', sync.PrioritySynchronizer, _('Priority')),
             ('board', sync.BoardSynchronizer, _('Board')),
             ('board_status', sync.BoardStatusSynchronizer, _('Board Status')),
             ('company', sync.CompanySynchronizer, _('Company')),
-            ('member', sync.MemberSynchronizer, _('Member')),
+            ('location', sync.LocationSynchronizer, _('Location')),
+            ('location', sync.MemberSynchronizer, _('Location')),
             ('team', sync.TeamSynchronizer, _('Team')),
             ('ticket', sync.ServiceTicketSynchronizer, _('Ticket')),
         )
