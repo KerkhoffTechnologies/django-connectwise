@@ -1,5 +1,5 @@
 from django.test import TestCase
-from djconnectwise.models import ServiceTicket, TicketPriority
+from djconnectwise.models import Ticket, TicketPriority
 
 
 class TestTicketPriority(TestCase):
@@ -28,10 +28,10 @@ class TestTicketPriority(TestCase):
         self.assertEqual(p.color, 'darkgray')
 
 
-class TestServiceTicket(TestCase):
+class TestTicket(TestCase):
 
     def test_str(self):
-        t = ServiceTicket(id=1, summary='Únicôde wôrks!')
+        t = Ticket(id=1, summary='Únicôde wôrks!')
         self.assertEqual(
             '{}'.format(t),
             '1-Únicôde wôrks!'

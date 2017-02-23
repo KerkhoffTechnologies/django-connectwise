@@ -5,13 +5,13 @@ from . import views
 urlpatterns = [
     url(
         regex=r'^ticket/$',
-        view=views.ServiceTicketCallBackView.as_view(),
+        view=views.TicketCallBackView.as_view(),
         name='service-ticket-callback'
     ),
 
     url(
         regex=r'^project/$',
-        view=views.ServiceTicketCallBackView.as_view(),
+        view=views.TicketCallBackView.as_view(),
         name='project-callback'
     ),
 ]

@@ -25,9 +25,8 @@ class Command(BaseCommand):
             ('board_status', sync.BoardStatusSynchronizer, _('Board Status')),
             ('company', sync.CompanySynchronizer, _('Company')),
             ('location', sync.LocationSynchronizer, _('Location')),
-            ('location', sync.MemberSynchronizer, _('Location')),
             ('team', sync.TeamSynchronizer, _('Team')),
-            ('ticket', sync.ServiceTicketSynchronizer, _('Ticket')),
+            ('ticket', sync.TicketSynchronizer, _('Ticket')),
         )
         self.synchronizer_map = OrderedDict()
         for name, syncronizer, obj_name in synchronizers:
@@ -41,7 +40,7 @@ class Command(BaseCommand):
                             default=False)
 
     def sync_by_class(self, sync_class, obj_name, reset=False):
-        if reset and sync_class == sync.ServiceTicketSynchronizer:
+        if reset and sync_class == sync.TicketSynchronizer:
             synchronizer = sync_class(reset=reset)
         else:
             synchronizer = sync_class()

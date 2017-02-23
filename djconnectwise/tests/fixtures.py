@@ -14,11 +14,19 @@ API_BOARD_STATUS_LIST = [
         'id': 1,
         'name': 'New',
         'boardId': 1,
+        'sortOrder': 0,
+        'displayOnBoard': True,
+        'inactive': False,
+        'closedStatus': False
     },
     {
         'id': 2,
         'name': 'In Progress',
-        'boardId': 1
+        'boardId': 1,
+        'sortOrder': 1,
+        'displayOnBoard': True,
+        'inactive': False,
+        'closedStatus': True
     },
 ]
 

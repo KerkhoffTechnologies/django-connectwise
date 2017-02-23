@@ -6,14 +6,14 @@ from . import models
 
 @admin.register(models.ConnectWiseBoard)
 class ConnectWiseBoardAdmin(admin.ModelAdmin):
-    list_display = ('name', 'board_id', 'inactive')
+    list_display = ('id', 'name', 'inactive')
     search_fields = ['name']
 
 
-@admin.register(models.TicketStatus)
-class TicketStatusAdmin(admin.ModelAdmin):
-    list_display = ('status_id', 'status_name')
-    search_fields = ['status_name']
+@admin.register(models.BoardStatus)
+class BoardStatusAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name')
+    search_fields = ['name']
 
 
 @admin.register(models.Member)
@@ -27,14 +27,14 @@ class MemberAdmin(admin.ModelAdmin):
 
 @admin.register(models.Company)
 class CompanyAdmin(admin.ModelAdmin):
-    list_display = ('id', 'company_name',
-                    'company_identifier', 'type', 'status')
+    list_display = ('id', 'name',
+                    'identifier', 'type', 'status')
     list_filter = ('status',)
-    search_fields = ['company_name', 'company_identifier']
+    search_fields = ['name', 'identifier']
 
 
-@admin.register(models.ServiceTicket)
-class ServiceTicketAdmin(admin.ModelAdmin):
+@admin.register(models.Ticket)
+class TicketAdmin(admin.ModelAdmin):
     list_display = ('summary', 'status', 'resources', 'record_type',)
 
     list_filter = ('status', 'record_type',)
@@ -47,7 +47,7 @@ class ServiceTicketAdmin(admin.ModelAdmin):
 @admin.register(models.TicketPriority)
 class TicketPriorityAdmin(admin.ModelAdmin):
     model = models.TicketPriority
-    list_display = ('priority_id', 'name', 'sort', 'color')
+    list_display = ('id', 'name', 'sort', 'color')
 
 
 @admin.register(models.Team)
@@ -57,4 +57,4 @@ class TeamAdmin(admin.ModelAdmin):
 
 @admin.register(models.Location)
 class LocationAdmin(admin.ModelAdmin):
-    list_display = ('location_id', 'name', 'where')
+    list_display = ('id', 'name', 'where')
