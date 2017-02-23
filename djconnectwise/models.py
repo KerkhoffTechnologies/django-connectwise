@@ -51,14 +51,15 @@ class ConnectWiseBoard(TimeStampedModel):
 
     @property
     def board_statuses(self):
-        return ConnectWiseBoardStatus.objects.filter(board_id=self.board_id)
+        return BoardStatus.objects.filter(board_id=self.board_id)
 
 
-class ConnectWiseBoardStatus(TimeStampedModel):
+class BoardStatus(TimeStampedModel):
     """
     Used for looking up the status/board id combination
     """
-    status_id = models.PositiveSmallIntegerField()
+    CLOSED = 'Closed'
+
     name = models.CharField(blank=True, null=True, max_length=250)
     board = models.ForeignKey('ConnectWiseBoard')
 
@@ -162,23 +163,6 @@ class Team(TimeStampedModel):
     name = models.CharField(max_length=30)
     board = models.ForeignKey('ConnectWiseBoard')
     members = models.ManyToManyField('Member')
-
-
-class TicketStatus(TimeStampedModel):
-    CLOSED = 'Closed'
-
-    status_id = models.IntegerField(blank=True, null=True, unique=True)
-    # might ditch this field, it seems to always contain same value as
-    # name
-    ticket_status = models.CharField(blank=True, null=True, max_length=250)
-    name = models.CharField(blank=True, null=True, max_length=250)
-
-    class Meta:
-        verbose_name_plural = 'ticket statuses'
-        ordering = ('ticket_status',)
-
-    def __str__(self):
-        return self.name
 
 
 class TicketPriority(TimeStampedModel):
@@ -292,10 +276,10 @@ class Ticket(TimeStampedModel):
     api_text = models.TextField(blank=True, null=True)
     board_name = models.CharField(blank=True, null=True, max_length=250)
     board_id = models.IntegerField(blank=True, null=True, db_index=True)
-    board_status_id = models.IntegerField(blank=True, null=True)
+    board_id = models.IntegerField(blank=True, null=True)
     priority = models.ForeignKey('TicketPriority', blank=True, null=True)
     status = models.ForeignKey(
-        'TicketStatus', blank=True, null=True, related_name='status_tickets')
+        'BoardStatus', blank=True, null=True, related_name='status_tickets')
     company = models.ForeignKey(
         'Company', blank=True, null=True, related_name='company_tickets')
     location = models.ForeignKey(

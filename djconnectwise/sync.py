@@ -21,6 +21,7 @@ class InvalidStatusError(Exception):
 
 
 class Synchronizer:
+    lookup_key = 'id'
 
     def __init__(self, *args, **kwargs):
         self.instance_map = {}
@@ -82,7 +83,6 @@ class Synchronizer:
         deleted_count = 0
 
         for json_data in self.get_json():
-
             _, created = self.update_or_create_instance(json_data)
 
             if created:
@@ -120,75 +120,55 @@ class BoardSynchronizer:
         return created_count, updated_count, deleted_count
 
 
-class BoardStatusSynchronizer:
+class BoardChildSynchronizer(Synchronizer):
 
-    def __init__(self, *args, **kwargs):
-        self.client = ServiceAPIClient()
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data['id']
+        instance.name = json_data['name']
+        instance.board = models.ConnectWiseBoard.objects.get(
+            board_id=json_data['boardId'])
+        return instance
 
-    def _sync(self, board_ids):
-
-        updated_count = 0
-        created_count = 0
-        deleted_count = 0
-
-        for board_id in board_ids:
-            # TODO - Django doesn't provide an efficient
-            # way to bulk get or create. May need to
-            # invest time in a more efficient approach
-            for status in self.client.get_statuses(board_id):
-                _, created = models.ConnectWiseBoardStatus.objects \
-                    .update_or_create(
-                        status_id=status['id'],
-                        defaults={
-                            'board_id': board_id,
-                            'name': status['name'],
-                        }
-                    )
-
-                if created:
-                    created_count += 1
-                else:
-                    updated_count += 1
-
-        return created_count, updated_count, deleted_count
-
-    def sync(self, board_ids=None):
-
-        if not board_ids:
-            board_qs = models.ConnectWiseBoard.objects.all()
-            board_ids = board_qs.values_list('board_id', flat=True)
-
-        return self._sync(board_ids)
-
-
-class TeamSynchronizer(Synchronizer):
-    client_class = ServiceAPIClient
-    model_class = models.Team
-    lookup_key = 'id'
-
-    def _assign_field_data(self, team, team_json):
-        team.id = team_json['id']
-        team.name = team_json['name']
-        team.board = models.ConnectWiseBoard.objects.get(
-            board_id=team_json['boardId'])
-
-        members = list(models.Member.objects.filter(
-            member_id__in=team_json['members']))
-
-        team.save()
-
-        team.members.clear()
-        team.members.add(*members)
-        return team
+    def client_call(self, board_id):
+        raise NotImplementedError
 
     def get_json(self):
         results_json = []
         board_qs = models.ConnectWiseBoard.objects.all()
 
         for board_id in board_qs.values_list('board_id', flat=True):
-            results_json += self.client.get_teams(board_id)
+            results_json += self.client_call(board_id)
 
         return results_json
+
+
+class BoardStatusSynchronizer(BoardChildSynchronizer):
+    client_class = ServiceAPIClient
+    model_class = models.BoardStatus
+
+    def client_call(self, board_id):
+        return self.client.get_statuses(board_id)
+
+
+class TeamSynchronizer(BoardChildSynchronizer):
+    client_class = ServiceAPIClient
+    model_class = models.Team
+
+    def _assign_field_data(self, instance, json_data):
+        instance = super(TeamSynchronizer, self)._assign_field_data(
+            instance, json_data)
+
+        members = list(models.Member.objects.filter(
+            member_id__in=json_data['members']))
+
+        instance.save()
+
+        instance.members.clear()
+        instance.members.add(*members)
+        return instance
+
+    def client_call(self, board_id):
+        return self.client.get_teams(board_id)
 
 
 class CompanySynchronizer(Synchronizer):
@@ -198,7 +178,6 @@ class CompanySynchronizer(Synchronizer):
     """
     client_class = CompanyAPIClient
     model_class = models.Company
-    lookup_key = 'id'
 
     def _assign_field_data(self, company, company_json):
         """
@@ -229,7 +208,6 @@ class LocationSynchronizer(Synchronizer):
     """
     client_class = ServiceAPIClient
     model_class = models.Location
-    lookup_key = 'id'
 
     def _assign_field_data(self, location, location_json):
         """
@@ -351,6 +329,7 @@ class TicketSynchronizer:
     Coordinates retrieval and demarshalling of ConnectWise JSON
     objects to the local counterparts.
     """
+
     def __init__(self, reset=False):
         self.company_synchronizer = CompanySynchronizer()
         self.status_synchronizer = BoardStatusSynchronizer()
@@ -388,10 +367,7 @@ class TicketSynchronizer:
             models.Ticket)
         self.local_company_fields = self._create_field_lookup(models.Company)
 
-        self.ticket_status_map = {
-            ticket.name:
-            ticket for ticket in models.TicketStatus.objects.all()
-        }
+        self.status_map = {s.name: s for s in models.BoardStatus.objects.all()}
 
         self.members_map = {
             m.identifier: m for m in models.Member.objects.all()
@@ -453,32 +429,32 @@ class TicketSynchronizer:
 
     def get_or_create_ticket_status(self, api_ticket):
         """
-        Creates and returns a TicketStatus instance if
+        Creates and returns a BoardStatus instance if
         it does not already exist
         """
         api_status = api_ticket['status']
         name = api_status['name'].strip()
-        ticket_status = self.ticket_status_map.get(name)
+        ticket_status = self.status_map.get(name)
         created = False
 
         if not ticket_status:
             kwargs = dict(
-                status_id=api_status['id'],
+                id=api_status['id'],
                 name=name
             )
 
-            if models.TicketStatus.objects.filter(**kwargs).exists():
-                ticket_status = models.TicketStatus.objects.get(**kwargs)
+            if models.BoardStatus.objects.filter(**kwargs).exists():
+                ticket_status = models.BoardStatus.objects.get(**kwargs)
             else:
-                logger.info('TicketStatus Created - %s' % name)
-                ticket_status, created = models.TicketStatus.objects \
+                logger.info('BoardStatus Created - %s' % name)
+                ticket_status, created = models.BoardStatus.objects \
                     .get_or_create(**kwargs)
 
-            self.ticket_status_map[name] = ticket_status
+            self.status_map[name] = ticket_status
 
         else:
-            if ticket_status.status_id != api_status['id']:
-                ticket_status.status_id = api_status['id']
+            if ticket_status.id != api_status['id']:
+                ticket_status.id = api_status['id']
                 ticket_status.save()
 
         return ticket_status, created
@@ -514,7 +490,7 @@ class TicketSynchronizer:
         ticket.api_text = str(api_ticket)
         ticket.board_name = api_ticket['board']['name']
         ticket.board_id = api_ticket['board']['id']
-        ticket.board_status_id = api_ticket['status']['id']
+        ticket.board_id = api_ticket['status']['id']
 
         ticket.company, _ = self.company_synchronizer \
             .get_or_create_instance(api_ticket['company'])
@@ -557,21 +533,21 @@ class TicketSynchronizer:
 
         if ticket.closed_flag:
             api_ticket['closedFlag'] = ticket.closed_flag
-            ticket_status, created = models.TicketStatus.objects.get_or_create(
+            ticket_status, created = models.BoardStatus.objects.get_or_create(
                 name__iexact='Closed')
         else:
             ticket_status = ticket.status
 
         if not ticket.closed_flag:
             try:
-                board_status = models.ConnectWiseBoardStatus.objects.get(
+                board_status = models.BoardStatus.objects.get(
                     board_id=ticket.board_id,
                     name=ticket_status.name
                 )
-            except models.ConnectWiseBoardStatus.DoesNotExist as e:
+            except models.BoardStatus.DoesNotExist as e:
                 raise InvalidStatusError(e)
 
-            api_ticket['status']['id'] = board_status.status_id
+            api_ticket['status']['id'] = board_status.id
 
         # no need for a callback update when updating via api
         api_ticket['skipCallback'] = True
@@ -666,7 +642,7 @@ class TicketUpdater(object):
 
         if ticket.closed_flag:
             api_ticket['closedFlag'] = ticket.closed_flag
-            ticket_status, created = models.TicketStatus.objects.get_or_create(
+            ticket_status, created = models.BoardStatus.objects.get_or_create(
                 name__iexact='Closed')
         else:
             ticket_status = ticket.status
@@ -676,14 +652,14 @@ class TicketUpdater(object):
             try:
                 cw_board = models.ConnectWiseBoard.objects.get(
                     id=ticket.board_id)
-                board_status = models.ConnectWiseBoardStatus.objects.get(
+                board_status = models.BoardStatus.objects.get(
                     board_id=ticket.board_id,
                     name=ticket_status.name
                 )
-                api_ticket['status']['id'] = board_status.status_id
+                api_ticket['status']['id'] = board_status.id
             except models.ConnectWiseBoard.DoesNotExist:
                 raise InvalidStatusError("Failed to find the ticket's board.")
-            except models.ConnectWiseBoardStatus.DoesNotExist:
+            except models.BoardStatus.DoesNotExist:
                 raise InvalidStatusError(
                     "{} is not a valid status for the ticket's "
                     "ConnectWise board ({}).".

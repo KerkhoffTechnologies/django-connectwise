@@ -10,9 +10,9 @@ class ConnectWiseBoardAdmin(admin.ModelAdmin):
     search_fields = ['name']
 
 
-@admin.register(models.TicketStatus)
-class TicketStatusAdmin(admin.ModelAdmin):
-    list_display = ('status_id', 'name')
+@admin.register(models.BoardStatus)
+class BoardStatusAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name')
     search_fields = ['name']
 
 
