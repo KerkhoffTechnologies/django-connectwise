@@ -31,7 +31,7 @@ class CallBackEntry(models.Model):
     level = models.CharField(max_length=255)
     object_id = models.IntegerField()
     entry_id = models.IntegerField()
-    member_id = models.IntegerField()
+    member = models.ForeignKey('Member')
     enabled = models.BooleanField(default=False)
 
     def __str__(self):
@@ -39,7 +39,6 @@ class CallBackEntry(models.Model):
 
 
 class ConnectWiseBoard(TimeStampedModel):
-    board_id = models.PositiveSmallIntegerField()
     name = models.CharField(max_length=255)
     inactive = models.BooleanField()
 
@@ -51,26 +50,31 @@ class ConnectWiseBoard(TimeStampedModel):
 
     @property
     def board_statuses(self):
-        return ConnectWiseBoardStatus.objects.filter(board_id=self.board_id)
+        return BoardStatus.objects.filter(board=self)
 
 
-class ConnectWiseBoardStatus(TimeStampedModel):
+class BoardStatus(TimeStampedModel):
     """
     Used for looking up the status/board id combination
     """
-    board_id = models.PositiveSmallIntegerField()
-    status_id = models.PositiveSmallIntegerField()
-    status_name = models.CharField(blank=True, null=True, max_length=250)
+    CLOSED = 'Closed'
+
+    name = models.CharField(blank=True, null=True, max_length=250)
+    sort_order = models.PositiveSmallIntegerField()
+    display_on_board = models.BooleanField()
+    inactive = models.BooleanField()
+    closed_status = models.BooleanField()
+
+    board = models.ForeignKey('ConnectWiseBoard')
 
     class Meta:
-        ordering = ('status_name',)
+        ordering = ('sort_order',)
 
     def __str__(self):
-        return self.status_name
+        return self.name
 
 
 class Location(TimeStampedModel):
-    location_id = models.PositiveSmallIntegerField()
     name = models.CharField(max_length=30)
     where = models.CharField(max_length=100, blank=True, null=True)
 
@@ -82,7 +86,6 @@ class Location(TimeStampedModel):
 
 
 class Member(TimeStampedModel):
-    member_id = models.PositiveSmallIntegerField()
     identifier = models.CharField(
         max_length=15, blank=False, unique=True)  # This is the CW username
     first_name = models.CharField(max_length=30, blank=False)
@@ -110,7 +113,7 @@ class Member(TimeStampedModel):
     @staticmethod
     def create_member(api_member):
         member = Member()
-        member.member_id = api_member['id']
+        member.id = api_member['id']
         member.first_name = api_member['firstName']
         member.last_name = api_member['lastName']
         member.identifier = api_member['identifier']
@@ -121,10 +124,9 @@ class Member(TimeStampedModel):
 
 
 class Company(TimeStampedModel):
-    company_id = models.PositiveSmallIntegerField()
-    company_name = models.CharField(blank=True, null=True, max_length=250)
+    name = models.CharField(blank=True, null=True, max_length=250)
     company_alias = models.CharField(blank=True, null=True, max_length=250)
-    company_identifier = models.CharField(
+    identifier = models.CharField(
         blank=True, null=True, max_length=250)
     phone_number = models.CharField(blank=True, null=True, max_length=250)
     fax_number = models.CharField(blank=True, null=True, max_length=250)
@@ -146,15 +148,15 @@ class Company(TimeStampedModel):
 
     class Meta:
         verbose_name_plural = 'companies'
-        ordering = ('company_identifier', )
+        ordering = ('identifier', )
 
     def __str__(self):
-        return self.get_company_identifier() or ''
+        return self.get_identifier() or ''
 
-    def get_company_identifier(self):
-        identifier = self.company_identifier
+    def get_identifier(self):
+        identifier = self.identifier
         if settings.DJCONNECTWISE_COMPANY_ALIAS:
-            identifier = self.company_alias or self.company_identifier
+            identifier = self.company_alias or self.identifier
         return identifier
 
 
@@ -167,26 +169,8 @@ class Team(TimeStampedModel):
         return self.name
 
 
-class TicketStatus(TimeStampedModel):
-    CLOSED = 'Closed'
-
-    status_id = models.IntegerField(blank=True, null=True, unique=True)
-    # might ditch this field, it seems to always contain same value as
-    # status_name
-    ticket_status = models.CharField(blank=True, null=True, max_length=250)
-    status_name = models.CharField(blank=True, null=True, max_length=250)
-
-    class Meta:
-        verbose_name_plural = 'ticket statuses'
-        ordering = ('ticket_status',)
-
-    def __str__(self):
-        return self.status_name
-
-
 class TicketPriority(TimeStampedModel):
     name = models.CharField(max_length=50, blank=False)
-    priority_id = models.PositiveSmallIntegerField()
     # ConnectWise doesn't always return sort and color- not sure why.
     # Sort will be None in this circumstance- dependent code should handle it.
     sort = models.PositiveSmallIntegerField(null=True)
@@ -235,8 +219,8 @@ class TicketPriority(TimeStampedModel):
         self._color = color
 
 
-class ServiceTicketAssignment(TimeStampedModel):
-    service_ticket = models.ForeignKey('ServiceTicket')
+class TicketAssignment(TimeStampedModel):
+    ticket = models.ForeignKey('Ticket')
     member = models.ForeignKey('Member')
 
     def __str__(self):
@@ -245,7 +229,6 @@ class ServiceTicketAssignment(TimeStampedModel):
 
 class Project(TimeStampedModel):
     name = models.CharField(max_length=200)
-    project_id = models.PositiveSmallIntegerField()
     project_href = models.CharField(max_length=200)
 
     class Meta:
@@ -255,9 +238,9 @@ class Project(TimeStampedModel):
         return self.name or ''
 
 
-class ServiceTicket(TimeStampedModel):
+class Ticket(TimeStampedModel):
     RECORD_TYPES = (
-        ('ServiceTicket', "Service Ticket"),
+        ('Ticket', "Service Ticket"),
         ('ProjectTicket', "Project Ticket"),
         ('ProjectIssue', "Project Issue"),
     )
@@ -266,7 +249,6 @@ class ServiceTicket(TimeStampedModel):
     type = models.CharField(blank=True, null=True, max_length=250)
     sub_type = models.CharField(blank=True, null=True, max_length=250)
     sub_type_item = models.CharField(blank=True, null=True, max_length=250)
-    priority_text = models.CharField(blank=True, null=True, max_length=250)
     source = models.CharField(blank=True, null=True, max_length=250)
     summary = models.CharField(blank=True, null=True, max_length=250)
     entered_date_utc = models.DateTimeField(blank=True, null=True)
@@ -296,12 +278,11 @@ class ServiceTicket(TimeStampedModel):
     date_responded_utc = models.DateTimeField(blank=True, null=True)
     is_in_sla = models.NullBooleanField(blank=True, null=True)
     api_text = models.TextField(blank=True, null=True)
-    board_name = models.CharField(blank=True, null=True, max_length=250)
-    board_id = models.IntegerField(blank=True, null=True, db_index=True)
-    board_status_id = models.IntegerField(blank=True, null=True)
+
+    board = models.ForeignKey('ConnectwiseBoard', blank=True, null=True)
     priority = models.ForeignKey('TicketPriority', blank=True, null=True)
     status = models.ForeignKey(
-        'TicketStatus', blank=True, null=True, related_name='status_tickets')
+        'BoardStatus', blank=True, null=True, related_name='status_tickets')
     company = models.ForeignKey(
         'Company', blank=True, null=True, related_name='company_tickets')
     location = models.ForeignKey(
@@ -311,15 +292,12 @@ class ServiceTicket(TimeStampedModel):
     project = models.ForeignKey(
         'Project', blank=True, null=True, related_name='project_tickets')
     members = models.ManyToManyField(
-        'Member', through='ServiceTicketAssignment',
+        'Member', through='TicketAssignment',
         related_name='member_tickets')
 
-    # TODO: add FK to ConnectWiseBoard
-
     class Meta:
-        # ordering = ['priority_text','entered_date_utc','id']
-        verbose_name = 'Service Ticket'
-        verbose_name_plural = 'Service Tickets'
+        verbose_name = 'Ticket'
+        verbose_name_plural = 'Tickets'
         ordering = ('summary', )
 
     def __str__(self):

@@ -22,7 +22,7 @@ class ConnectWiseAPIClient(object):
 
     def __init__(
         self,
-        company_id=settings.CONNECTWISE_CREDENTIALS['company_id'],
+        id=settings.CONNECTWISE_CREDENTIALS['company_id'],
         integrator_login_id=settings.CONNECTWISE_CREDENTIALS[
             'integrator_login_id'],
         integrator_password=settings.CONNECTWISE_CREDENTIALS[
@@ -36,7 +36,7 @@ class ConnectWiseAPIClient(object):
         if not self.API:
             raise ValueError('API not specified')
 
-        self.company_id = company_id
+        self.id = id
         self.integrator_login_id = integrator_login_id
         self.integrator_password = integrator_password
         self.api_public_key = api_public_key
@@ -49,7 +49,7 @@ class ConnectWiseAPIClient(object):
             self.API,
         )
 
-        self.auth = ('{0}+{1}'.format(self.company_id, self.api_public_key),
+        self.auth = ('{0}+{1}'.format(self.id, self.api_public_key),
                      '{0}'.format(self.api_private_key),)
 
     def _endpoint(self, path):
@@ -242,9 +242,9 @@ class CompanyAPIClient(ConnectWiseAPIClient):
     API = 'company'
     ENDPOINT_COMPANIES = 'companies'
 
-    def by_id(self, company_id):
+    def by_id(self, id):
         endpoint_url = '{}/{}'.format(self.ENDPOINT_COMPANIES,
-                                      company_id)
+                                      id)
         return self.fetch_resource(endpoint_url)
 
     def get(self):

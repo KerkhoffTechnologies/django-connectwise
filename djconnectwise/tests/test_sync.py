@@ -3,12 +3,13 @@ from unittest import TestCase
 
 from djconnectwise.models import Company
 from djconnectwise.models import ConnectWiseBoard
-from djconnectwise.models import ConnectWiseBoardStatus
+from djconnectwise.models import BoardStatus
 from djconnectwise.models import Location
 from djconnectwise.models import Team
+from djconnectwise.models import Ticket
 from djconnectwise.models import TicketPriority
 from djconnectwise.models import Member
-from djconnectwise.models import ServiceTicket
+# from djconnectwise.models import Ticket
 
 from . import fixtures
 from . import fixture_utils
@@ -31,8 +32,8 @@ class TestCompanySynchronizer(TestCase):
         return _, get_patch
 
     def _assert_fields(self, company, api_company):
-        assert company.company_name == api_company['name']
-        assert company.company_identifier == api_company['identifier']
+        assert company.name == api_company['name']
+        assert company.identifier == api_company['identifier']
         assert company.phone_number == api_company['phoneNumber']
         assert company.fax_number == api_company['faxNumber']
         assert company.address_line1 == api_company['addressLine1']
@@ -45,7 +46,7 @@ class TestCompanySynchronizer(TestCase):
         company_dict = {c['id']: c for c in fixtures.API_COMPANY_LIST}
 
         for company in Company.objects.all():
-            api_company = company_dict[company.company_id]
+            api_company = company_dict[company.id]
             self._assert_fields(company, api_company)
 
     def test_sync_update(self):
@@ -53,9 +54,9 @@ class TestCompanySynchronizer(TestCase):
         self._sync(fixtures.API_COMPANY_LIST)
 
         api_company = fixtures.API_COMPANY
-        company_id = api_company['id']
+        id = api_company['id']
         company_pre_update = Company.objects \
-            .get(company_id=company_id)
+            .get(id=id)
 
         name = 'Some New Company Name'
         api_company = deepcopy(fixtures.API_COMPANY)
@@ -64,9 +65,9 @@ class TestCompanySynchronizer(TestCase):
         self._sync(api_company_list)
 
         company_post_update = Company.objects \
-                                     .get(company_id=company_id)
+                                     .get(id=id)
 
-        self.assertNotEqual(company_pre_update.company_name,
+        self.assertNotEqual(company_pre_update.name,
                             name)
         self._assert_fields(company_post_update, api_company)
 
@@ -87,11 +88,11 @@ class TestTeamSynchronizer(TestCase):
         return _, get_patch
 
     def _assert_fields(self, team, team_json):
-        member_ids = set([t.member_id for t in team.members.all()])
+        ids = set([t.id for t in team.members.all()])
         self.assertEqual(team.id, team_json['id'])
         self.assertEqual(team.name, team_json['name'])
-        self.assertEqual(team.board.board_id, team_json['boardId'])
-        self.assertTrue(member_ids < set(team_json['members']))
+        self.assertEqual(team.board.id, team_json['boardId'])
+        self.assertTrue(ids < set(team_json['members']))
 
     def test_sync(self):
         team_dict = {t['id']: t for t in fixtures.API_SERVICE_TEAM_LIST}
@@ -136,7 +137,7 @@ class TestPrioritySynchronizer(TestCase):
 
     def _assert_fields(self, priority, api_priority):
         assert priority.name == api_priority['name']
-        assert priority.priority_id == api_priority['id']
+        assert priority.id == api_priority['id']
         if 'color' in api_priority.keys():
             assert priority.color == api_priority['color']
         else:
@@ -162,15 +163,15 @@ class TestPrioritySynchronizer(TestCase):
         priority_dict = {p['id']: p for p in priorities}
 
         for priority in TicketPriority.objects.all():
-            api_priority = priority_dict[priority.priority_id]
+            api_priority = priority_dict[priority.id]
             self._assert_fields(priority, api_priority)
 
     def test_sync_update(self):
         self._clean()
         self._sync(fixtures.API_SERVICE_PRIORITY_LIST)
-        priority_id = fixtures.API_SERVICE_PRIORITY['id']
+        id = fixtures.API_SERVICE_PRIORITY['id']
         priority_pre_update = TicketPriority.objects \
-            .get(priority_id=priority_id)
+            .get(id=id)
 
         color = 'green'
         updated_api_priority = deepcopy(fixtures.API_SERVICE_PRIORITY)
@@ -179,7 +180,7 @@ class TestPrioritySynchronizer(TestCase):
         self._sync([updated_api_priority])
 
         priority_post_update = TicketPriority.objects \
-            .get(priority_id=updated_api_priority['id'])
+            .get(id=updated_api_priority['id'])
 
         self.assertNotEqual(priority_pre_update.color,
                             color)
@@ -193,7 +194,7 @@ class TestLocationSynchronizer(TestCase):
 
     def _assert_fields(self, location, api_location):
         assert location.name == api_location['name']
-        assert location.location_id == api_location['id']
+        assert location.id == api_location['id']
         assert location.where == api_location['where']
 
     def _clean(self):
@@ -212,15 +213,15 @@ class TestLocationSynchronizer(TestCase):
         instance_dict = {i['id']: i for i in instances}
 
         for instance in Location.objects.all():
-            json_data = instance_dict[instance.location_id]
+            json_data = instance_dict[instance.id]
             self._assert_fields(instance, json_data)
 
     def test_sync_update(self):
         self._clean()
         self._sync(fixtures.API_SERVICE_LOCATION_LIST)
-        location_id = fixtures.API_SERVICE_LOCATION['id']
+        id = fixtures.API_SERVICE_LOCATION['id']
         original_instance = Location.objects \
-            .get(location_id=location_id)
+            .get(id=id)
 
         where = 'some-where'
         json_data = deepcopy(fixtures.API_SERVICE_LOCATION)
@@ -229,7 +230,7 @@ class TestLocationSynchronizer(TestCase):
         self._sync([json_data])
 
         updated_instance = Location.objects \
-            .get(location_id=json_data['id'])
+            .get(id=json_data['id'])
 
         self.assertNotEqual(original_instance.where,
                             where)
@@ -242,13 +243,11 @@ class TestBoardSynchronizer(TestCase):
         self.synchronizer = sync.BoardSynchronizer()
 
     def _sync(self):
-        ConnectWiseBoard.objects.all().delete()
-        mocks.service_api_get_boards_call(fixtures.API_BOARD_LIST)
-        return self.synchronizer.sync()
+        return fixture_utils.init_boards()
 
     def _local_board_set(self):
         board_qs = ConnectWiseBoard.objects.all()
-        return set(board_qs.values_list('board_id', 'name'))
+        return set(board_qs.values_list('id', 'name'))
 
     def _api_board_set(self, board_data):
         return set([(s['id'], s['name']) for s in board_data])
@@ -281,19 +280,23 @@ class TestBoardStatusSynchronizer(TestCase):
 
     def setUp(self):
         self.synchronizer = sync.BoardStatusSynchronizer()
+        self._clean()
+        fixture_utils.init_boards()
 
     def _board_ids(self, board_status_list):
         return [b['id'] for b in board_status_list]
 
+    def _clean(self):
+        BoardStatus.objects.all().delete()
+
     def _sync(self):
-        ConnectWiseBoardStatus.objects.all().delete()
+        self._clean()
         mocks.service_api_get_statuses_call(fixtures.API_BOARD_STATUS_LIST)
-        board_ids = self._board_ids(fixtures.API_BOARD_LIST)
-        return self.synchronizer.sync(board_ids)
+        return self.synchronizer.sync()
 
     def _assert_sync(self, board_status_list):
-        status_qs = ConnectWiseBoardStatus.objects.all()
-        local_statuses = set(status_qs.values_list('status_id', 'status_name'))
+        status_qs = BoardStatus.objects.all()
+        local_statuses = set(status_qs.values_list('id', 'name'))
         api_statuses = set([(s['id'], s['name'])
                             for s in board_status_list])
         num_local_statuses = len(local_statuses)
@@ -306,10 +309,7 @@ class TestBoardStatusSynchronizer(TestCase):
         updated_statuses = deepcopy(fixtures.API_BOARD_STATUS_LIST)
         updated_statuses[0]['name'] = 'New Status Name'
         mocks.service_api_get_statuses_call(updated_statuses)
-
-        board_ids = self._board_ids(fixtures.API_BOARD_LIST)
-
-        created_count, updated_count, _ = self.synchronizer.sync(board_ids)
+        created_count, updated_count, _ = self.synchronizer.sync()
 
         self.assertEqual(created_count, 0)
         self.assertEqual(updated_count, len(fixtures.API_BOARD_STATUS_LIST))
@@ -322,10 +322,11 @@ class TestBoardStatusSynchronizer(TestCase):
         self._assert_sync(fixtures.API_BOARD_STATUS_LIST)
 
 
-class TestServiceTicketSynchronizer(TestCase):
+class TestTicketSynchronizer(TestCase):
 
     def setUp(self):
-        self.synchronizer = sync.ServiceTicketSynchronizer()
+        self.synchronizer = sync.TicketSynchronizer()
+        fixture_utils.init_board_statuses()
 
     def _get_local_and_api_ticket(self):
         api_ticket = self.synchronizer.service_client.get_tickets()[0]
@@ -344,10 +345,12 @@ class TestServiceTicketSynchronizer(TestCase):
         self.assertEqual(created_count, 1)
 
 
-class TestServiceTicketUpdater(TestCase):
+class TestTicketUpdater(TestCase):
     def setUp(self):
-        self.updater = sync.ServiceTicketUpdater()
-        self.synchronizer = sync.ServiceTicketSynchronizer()
+        self.updater = sync.TicketUpdater()
+        self.synchronizer = sync.TicketSynchronizer()
+
+        fixture_utils.init_board_statuses()
 
     def _sync(self):
         mocks.company_api_by_id_call(fixtures.API_COMPANY)
@@ -356,17 +359,17 @@ class TestServiceTicketUpdater(TestCase):
         return self.synchronizer.sync()
 
     def test_update_api_ticket(self):
-        ServiceTicket.objects.all().delete()
+        Ticket.objects.all().delete()
         self._sync()
 
         board_name = 'Some Board Name'
-        api_service_ticket = deepcopy(fixtures.API_SERVICE_TICKET)
-        api_service_ticket['board']['name'] = board_name
+        api_ticket = deepcopy(fixtures.API_SERVICE_TICKET)
+        api_ticket['board']['name'] = board_name
 
-        mocks.service_api_update_ticket_call(api_service_ticket)
+        mocks.service_api_update_ticket_call(api_ticket)
         mocks.service_api_get_ticket_call()
 
-        local_ticket = ServiceTicket.objects.first()
+        local_ticket = Ticket.objects.first()
         local_ticket.board_name = board_name
         local_ticket.closed_flag = True
         local_ticket.save()
@@ -382,7 +385,7 @@ class TestServiceTicketUpdater(TestCase):
 class TestMemberSynchronization(TestCase):
 
     def setUp(self):
-        self.member_identifier = 'User1'
+        self.identifier = 'User1'
         self.synchronizer = sync.MemberSynchronizer()
         mocks.system_api_get_members_call([fixtures.API_MEMBER])
         mocks.system_api_get_member_image_by_identifier_call(
@@ -399,15 +402,15 @@ class TestMemberSynchronization(TestCase):
     def test_sync_member_update(self):
         self._clear_members()
         member = Member()
-        member.member_id = 176
-        member.identifier = self.member_identifier
+        member.id = 176
+        member.identifier = self.identifier
         member.first_name = 'some stale first name'
         member.last_name = 'some stale last name'
         member.office_email = 'some@stale.com'
         member.save()
 
         self.synchronizer.sync()
-        local_member = Member.objects.get(identifier=self.member_identifier)
+        local_member = Member.objects.get(identifier=self.identifier)
         api_member = fixtures.API_MEMBER
         self._assert_member_fields(local_member, api_member)
 
