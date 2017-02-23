@@ -87,6 +87,20 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.CreateModel(
+            name='Location',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', primary_key=True, serialize=False, auto_created=True)),
+                ('created', django_extensions.db.fields.CreationDateTimeField(verbose_name='created', auto_now_add=True)),
+                ('modified', django_extensions.db.fields.ModificationDateTimeField(verbose_name='modified', auto_now=True)),
+                ('location_id', models.PositiveSmallIntegerField()),
+                ('name', models.CharField(max_length=30)),
+                ('where', models.CharField(max_length=100, blank=True, null=True)),
+            ],
+            options={
+                'ordering': ('name',),
+            },
+        ),
+        migrations.CreateModel(
             name='Member',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', primary_key=True, serialize=False, auto_created=True)),
@@ -129,7 +143,6 @@ class Migration(migrations.Migration):
                 ('sub_type', models.CharField(max_length=250, blank=True, null=True)),
                 ('sub_type_item', models.CharField(max_length=250, blank=True, null=True)),
                 ('priority_text', models.CharField(max_length=250, blank=True, null=True)),
-                ('location', models.CharField(max_length=250, blank=True, null=True)),
                 ('source', models.CharField(max_length=250, blank=True, null=True)),
                 ('summary', models.CharField(max_length=250, blank=True, null=True)),
                 ('entered_date_utc', models.DateTimeField(blank=True, null=True)),
@@ -159,6 +172,7 @@ class Migration(migrations.Migration):
                 ('board_id', models.IntegerField(blank=True, null=True, db_index=True)),
                 ('board_status_id', models.IntegerField(blank=True, null=True)),
                 ('company', models.ForeignKey(blank=True, null=True, related_name='company_tickets', to='djconnectwise.Company')),
+                ('location', models.ForeignKey(blank=True, null=True, related_name='location_tickets', to='djconnectwise.Location')),
             ],
             options={
                 'verbose_name': 'Service Ticket',
