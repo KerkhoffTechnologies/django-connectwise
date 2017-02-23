@@ -58,5 +58,3 @@ class TeamAdmin(admin.ModelAdmin):
 @admin.register(models.Location)
 class LocationAdmin(admin.ModelAdmin):
     list_display = ('location_id', 'name', 'where')
-    model = models.Team
-    list_display = ('id', 'name', 'board')

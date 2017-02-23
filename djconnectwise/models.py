@@ -163,6 +163,9 @@ class Team(TimeStampedModel):
     board = models.ForeignKey('ConnectWiseBoard')
     members = models.ManyToManyField('Member')
 
+    def __str__(self):
+        return self.name
+
 
 class TicketStatus(TimeStampedModel):
     CLOSED = 'Closed'
@@ -235,6 +238,9 @@ class TicketPriority(TimeStampedModel):
 class ServiceTicketAssignment(TimeStampedModel):
     service_ticket = models.ForeignKey('ServiceTicket')
     member = models.ForeignKey('Member')
+
+    def __str__(self):
+        return '{}: {}'.format(self.service_ticket, self.member)
 
 
 class Project(TimeStampedModel):
