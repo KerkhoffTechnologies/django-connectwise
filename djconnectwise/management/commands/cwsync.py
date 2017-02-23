@@ -26,7 +26,7 @@ class Command(BaseCommand):
             ('location', sync.LocationSynchronizer, _('Location')),
             ('member', sync.MemberSynchronizer, _('Member')),
             ('team', sync.TeamSynchronizer, _('Team')),
-            ('ticket', sync.ServiceTicketSynchronizer, _('Ticket')),
+            ('ticket', sync.TicketSynchronizer, _('Ticket')),
         )
         self.synchronizer_map = OrderedDict()
         for name, syncronizer, obj_name in synchronizers:
