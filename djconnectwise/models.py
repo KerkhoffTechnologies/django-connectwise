@@ -147,7 +147,6 @@ class Company(TimeStampedModel):
 
 
 class Team(TimeStampedModel):
-    team_id = models.PositiveSmallIntegerField()
     name = models.CharField(max_length=30)
     board = models.ForeignKey('ConnectWiseBoard')
     members = models.ManyToManyField('Member')
