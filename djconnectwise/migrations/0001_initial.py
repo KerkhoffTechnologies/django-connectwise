@@ -220,7 +220,6 @@ class Migration(migrations.Migration):
                 ('created', django_extensions.db.fields.CreationDateTimeField(verbose_name='created', auto_now_add=True)),
                 ('modified', django_extensions.db.fields.ModificationDateTimeField(verbose_name='modified', auto_now=True)),
                 ('name', models.CharField(max_length=50)),
-                ('priority_id', models.PositiveSmallIntegerField()),
                 ('sort', models.PositiveSmallIntegerField(null=True)),
                 ('_color', models.CharField(max_length=50, blank=True, null=True, db_column='color')),
             ],

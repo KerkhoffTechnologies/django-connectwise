@@ -240,7 +240,7 @@ class PrioritySynchronizer(Synchronizer):
 
     def _assign_field_data(self, ticket_priority, api_priority):
         ticket_priority.name = api_priority['name']
-        ticket_priority.priority_id = api_priority['id']
+        ticket_priority.id = api_priority['id']
         ticket_priority.color = api_priority.get('color')
 
         # work around due to api data inconsistencies

@@ -169,7 +169,6 @@ class Team(TimeStampedModel):
 
 class TicketPriority(TimeStampedModel):
     name = models.CharField(max_length=50, blank=False)
-    priority_id = models.PositiveSmallIntegerField()
     # ConnectWise doesn't always return sort and color- not sure why.
     # Sort will be None in this circumstance- dependent code should handle it.
     sort = models.PositiveSmallIntegerField(null=True)

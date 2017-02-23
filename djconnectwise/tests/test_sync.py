@@ -137,7 +137,7 @@ class TestPrioritySynchronizer(TestCase):
 
     def _assert_fields(self, priority, api_priority):
         assert priority.name == api_priority['name']
-        assert priority.priority_id == api_priority['id']
+        assert priority.id == api_priority['id']
         if 'color' in api_priority.keys():
             assert priority.color == api_priority['color']
         else:
@@ -163,15 +163,15 @@ class TestPrioritySynchronizer(TestCase):
         priority_dict = {p['id']: p for p in priorities}
 
         for priority in TicketPriority.objects.all():
-            api_priority = priority_dict[priority.priority_id]
+            api_priority = priority_dict[priority.id]
             self._assert_fields(priority, api_priority)
 
     def test_sync_update(self):
         self._clean()
         self._sync(fixtures.API_SERVICE_PRIORITY_LIST)
-        priority_id = fixtures.API_SERVICE_PRIORITY['id']
+        id = fixtures.API_SERVICE_PRIORITY['id']
         priority_pre_update = TicketPriority.objects \
-            .get(priority_id=priority_id)
+            .get(id=id)
 
         color = 'green'
         updated_api_priority = deepcopy(fixtures.API_SERVICE_PRIORITY)
@@ -180,7 +180,7 @@ class TestPrioritySynchronizer(TestCase):
         self._sync([updated_api_priority])
 
         priority_post_update = TicketPriority.objects \
-            .get(priority_id=updated_api_priority['id'])
+            .get(id=updated_api_priority['id'])
 
         self.assertNotEqual(priority_pre_update.color,
                             color)

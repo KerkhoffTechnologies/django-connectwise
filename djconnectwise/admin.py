@@ -47,7 +47,7 @@ class TicketAdmin(admin.ModelAdmin):
 @admin.register(models.TicketPriority)
 class TicketPriorityAdmin(admin.ModelAdmin):
     model = models.TicketPriority
-    list_display = ('priority_id', 'name', 'sort', 'color')
+    list_display = ('id', 'name', 'sort', 'color')
 
 
 @admin.register(models.Team)
