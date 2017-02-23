@@ -124,10 +124,9 @@ class Member(TimeStampedModel):
 
 
 class Company(TimeStampedModel):
-    company_id = models.PositiveSmallIntegerField()
     company_name = models.CharField(blank=True, null=True, max_length=250)
     company_alias = models.CharField(blank=True, null=True, max_length=250)
-    company_identifier = models.CharField(
+    identifier = models.CharField(
         blank=True, null=True, max_length=250)
     phone_number = models.CharField(blank=True, null=True, max_length=250)
     fax_number = models.CharField(blank=True, null=True, max_length=250)
@@ -149,15 +148,15 @@ class Company(TimeStampedModel):
 
     class Meta:
         verbose_name_plural = 'companies'
-        ordering = ('company_identifier', )
+        ordering = ('identifier', )
 
     def __str__(self):
-        return self.get_company_identifier() or ''
+        return self.get_identifier() or ''
 
-    def get_company_identifier(self):
-        identifier = self.company_identifier
+    def get_identifier(self):
+        identifier = self.identifier
         if settings.DJCONNECTWISE_COMPANY_ALIAS:
-            identifier = self.company_alias or self.company_identifier
+            identifier = self.company_alias or self.identifier
         return identifier
 
 

@@ -28,9 +28,9 @@ class MemberAdmin(admin.ModelAdmin):
 @admin.register(models.Company)
 class CompanyAdmin(admin.ModelAdmin):
     list_display = ('id', 'company_name',
-                    'company_identifier', 'type', 'status')
+                    'identifier', 'type', 'status')
     list_filter = ('status',)
-    search_fields = ['company_name', 'company_identifier']
+    search_fields = ['company_name', 'identifier']
 
 
 @admin.register(models.Ticket)

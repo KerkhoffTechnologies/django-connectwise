@@ -33,7 +33,7 @@ class TestCompanySynchronizer(TestCase):
 
     def _assert_fields(self, company, api_company):
         assert company.company_name == api_company['name']
-        assert company.company_identifier == api_company['identifier']
+        assert company.identifier == api_company['identifier']
         assert company.phone_number == api_company['phoneNumber']
         assert company.fax_number == api_company['faxNumber']
         assert company.address_line1 == api_company['addressLine1']
@@ -46,7 +46,7 @@ class TestCompanySynchronizer(TestCase):
         company_dict = {c['id']: c for c in fixtures.API_COMPANY_LIST}
 
         for company in Company.objects.all():
-            api_company = company_dict[company.company_id]
+            api_company = company_dict[company.id]
             self._assert_fields(company, api_company)
 
     def test_sync_update(self):
@@ -54,9 +54,9 @@ class TestCompanySynchronizer(TestCase):
         self._sync(fixtures.API_COMPANY_LIST)
 
         api_company = fixtures.API_COMPANY
-        company_id = api_company['id']
+        id = api_company['id']
         company_pre_update = Company.objects \
-            .get(company_id=company_id)
+            .get(id=id)
 
         name = 'Some New Company Name'
         api_company = deepcopy(fixtures.API_COMPANY)
@@ -65,7 +65,7 @@ class TestCompanySynchronizer(TestCase):
         self._sync(api_company_list)
 
         company_post_update = Company.objects \
-                                     .get(company_id=company_id)
+                                     .get(id=id)
 
         self.assertNotEqual(company_pre_update.company_name,
                             name)
