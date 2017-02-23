@@ -228,7 +228,6 @@ class TicketAssignment(TimeStampedModel):
 
 class Project(TimeStampedModel):
     name = models.CharField(max_length=200)
-    project_id = models.PositiveSmallIntegerField()
     project_href = models.CharField(max_length=200)
 
     class Meta:

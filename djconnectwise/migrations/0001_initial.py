@@ -123,7 +123,6 @@ class Migration(migrations.Migration):
                 ('created', django_extensions.db.fields.CreationDateTimeField(verbose_name='created', auto_now_add=True)),
                 ('modified', django_extensions.db.fields.ModificationDateTimeField(verbose_name='modified', auto_now=True)),
                 ('name', models.CharField(max_length=200)),
-                ('project_id', models.PositiveSmallIntegerField()),
                 ('project_href', models.CharField(max_length=200)),
             ],
             options={
