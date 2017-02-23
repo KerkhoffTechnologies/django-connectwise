@@ -225,6 +225,29 @@ class CompanySynchronizer(Synchronizer):
         return self.client.get()
 
 
+class LocationSynchronizer(Synchronizer):
+    """
+    Coordinates retrieval and demarshalling of ConnectWise JSON
+    Company instances.
+    """
+    client_class = ServiceAPIClient
+    model_class = models.Location
+    lookup_key = 'id'
+
+    def _assign_field_data(self, location, location_json):
+        """
+        Assigns field data from an company_json instance
+        to a local Company model instance
+        """
+        location.location_id = location_json['id']
+        location.name = location_json['name']
+        location.where = location_json['where']
+        return location
+
+    def get_json(self):
+        return self.client.get_locations()
+
+
 class PrioritySynchronizer(Synchronizer):
     client_class = ServiceAPIClient
     model_class = models.TicketPriority
@@ -335,6 +358,7 @@ class ServiceTicketSynchronizer:
         self.company_synchronizer = CompanySynchronizer()
         self.status_synchronizer = BoardStatusSynchronizer()
         self.priority_synchronizer = PrioritySynchronizer()
+        self.location_synchronizer = LocationSynchronizer()
 
         self.reset = reset
         self.last_sync_job = None
@@ -478,7 +502,6 @@ class ServiceTicketSynchronizer:
         service_ticket.closed_flag = api_ticket['closedFlag']
         service_ticket.type = api_ticket['type']
         service_ticket.priority_text = api_ticket['priority']['name']
-        service_ticket.location = api_ticket['serviceLocation']
         service_ticket.summary = api_ticket['summary']
         service_ticket.entered_date_utc = api_ticket['dateEntered']
         service_ticket.last_updated_utc = api_ticket['_info']['lastUpdated']
@@ -503,6 +526,13 @@ class ServiceTicketSynchronizer:
             .get_or_create_instance(api_ticket['priority'])
 
         service_ticket.priority = priority
+
+        try:
+            location = models.Location.objects.get(
+                location_id=api_ticket['locationId'])
+            service_ticket.location = location
+        except:
+            pass
 
         service_ticket.status = new_ticket_status
         service_ticket.project = self.get_or_create_project(api_ticket)

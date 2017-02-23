@@ -4,6 +4,7 @@ from unittest import TestCase
 from djconnectwise.models import Company
 from djconnectwise.models import ConnectWiseBoard
 from djconnectwise.models import ConnectWiseBoardStatus
+from djconnectwise.models import Location
 from djconnectwise.models import Team
 from djconnectwise.models import TicketPriority
 from djconnectwise.models import Member
@@ -183,6 +184,56 @@ class TestPrioritySynchronizer(TestCase):
         self.assertNotEqual(priority_pre_update.color,
                             color)
         self._assert_fields(priority_post_update, updated_api_priority)
+
+
+class TestLocationSynchronizer(TestCase):
+
+    def setUp(self):
+        self.synchronizer = sync.LocationSynchronizer()
+
+    def _assert_fields(self, location, api_location):
+        assert location.name == api_location['name']
+        assert location.location_id == api_location['id']
+        assert location.where == api_location['where']
+
+    def _clean(self):
+        Location.objects.all().delete()
+
+    def _sync(self, return_value):
+        _, get_patch = mocks.service_api_get_locations_call(
+            return_value)
+
+        self.synchronizer.sync()
+
+    def test_sync(self):
+        self._clean()
+        self._sync(fixtures.API_SERVICE_LOCATION_LIST)
+        instances = fixtures.API_SERVICE_LOCATION_LIST
+        instance_dict = {i['id']: i for i in instances}
+
+        for instance in Location.objects.all():
+            json_data = instance_dict[instance.location_id]
+            self._assert_fields(instance, json_data)
+
+    def test_sync_update(self):
+        self._clean()
+        self._sync(fixtures.API_SERVICE_LOCATION_LIST)
+        location_id = fixtures.API_SERVICE_LOCATION['id']
+        original_instance = Location.objects \
+            .get(location_id=location_id)
+
+        where = 'some-where'
+        json_data = deepcopy(fixtures.API_SERVICE_LOCATION)
+        json_data['where'] = where
+
+        self._sync([json_data])
+
+        updated_instance = Location.objects \
+            .get(location_id=json_data['id'])
+
+        self.assertNotEqual(original_instance.where,
+                            where)
+        self._assert_fields(updated_instance, json_data)
 
 
 class TestBoardSynchronizer(TestCase):

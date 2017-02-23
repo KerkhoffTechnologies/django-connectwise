@@ -255,6 +255,7 @@ class ServiceAPIClient(ConnectWiseAPIClient):
     API = 'service'
     ENDPOINT_BOARDS = 'boards'
     ENDPOINT_PRIORITIES = 'priorities'
+    ENDPOINT_LOCATIONS = 'locations'
 
     def __init__(self, *args, **kwargs):
         self.extra_conditions = None
@@ -333,3 +334,6 @@ class ServiceAPIClient(ConnectWiseAPIClient):
     def get_teams(self, board_id):
         endpoint = '{}/{}/teams/'.format(self.ENDPOINT_BOARDS, board_id)
         return self.fetch_resource(endpoint)
+
+    def get_locations(self):
+        return self.fetch_resource(self.ENDPOINT_LOCATIONS)

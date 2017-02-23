@@ -23,6 +23,7 @@ class Command(BaseCommand):
             ('board', sync.BoardSynchronizer, _('Board')),
             ('board_status', sync.BoardStatusSynchronizer, _('Board Status')),
             ('company', sync.CompanySynchronizer, _('Company')),
+            ('location', sync.LocationSynchronizer, _('Location')),
             ('member', sync.MemberSynchronizer, _('Member')),
             ('team', sync.TeamSynchronizer, _('Team')),
             ('ticket', sync.ServiceTicketSynchronizer, _('Ticket')),
