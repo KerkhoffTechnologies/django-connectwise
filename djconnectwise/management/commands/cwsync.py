@@ -1,6 +1,6 @@
 from collections import OrderedDict
 
-from djconnectwise import sync
+from djconnectwise import sync, api
 
 from django.core.management.base import BaseCommand, CommandError
 from django.utils.translation import ugettext_lazy as _
@@ -70,5 +70,22 @@ class Command(BaseCommand):
         else:
             sync_classes = self.synchronizer_map.values()
 
+        failed_classes = 0
+        error_messages = ''
         for sync_class, obj_name in sync_classes:
-            self.sync_by_class(sync_class, obj_name, reset=reset_option)
+            try:
+                self.sync_by_class(sync_class, obj_name, reset=reset_option)
+            except api.ConnectWiseAPIError as e:
+                msg = 'Failed to sync {}: {}'.format(obj_name, e)
+                self.stderr.write(msg)
+                error_messages += '{}\n'.format(msg)
+                failed_classes += 1
+
+        if failed_classes > 0:
+            msg = '{} class{} failed to sync.\n'.format(
+                    failed_classes,
+                    '' if failed_classes == 1 else 'es',
+                )
+            msg += 'Errors:\n'
+            msg += error_messages
+            raise CommandError(msg)
