@@ -488,9 +488,17 @@ class TicketSynchronizer:
         ticket.actual_hours = api_ticket['actualHours']
         ticket.record_type = api_ticket['recordType']
 
-        team = api_ticket['team']
-        if team:
-            ticket.team_id = api_ticket['team']['id']
+        try:
+            if api_ticket['team']:
+                ticket.team = models.Team.objects.get(
+                    pk=api_ticket['team']['id'])
+        except models.Team.DoesNotExist:
+            logger.warning(
+                'Failed to find team {} for ticket {}.'.format(
+                    api_ticket['team']['id'],
+                    api_ticket_id
+                )
+            )
 
         ticket.api_text = str(api_ticket)
 
@@ -525,6 +533,7 @@ class TicketSynchronizer:
                 )
             )
 
+        new_ticket_status = None
         try:
             # TODO - Discuss - Do we assume that the status exists
             # or do we want to do a roundtrip and retrieve from the server?
