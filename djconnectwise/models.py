@@ -40,7 +40,7 @@ class CallBackEntry(models.Model):
 
 class ConnectWiseBoard(TimeStampedModel):
     name = models.CharField(max_length=255)
-    inactive = models.BooleanField()
+    inactive = models.BooleanField(default=False)
 
     class Meta:
         ordering = ('name',)
@@ -68,10 +68,10 @@ class BoardStatus(TimeStampedModel):
     board = models.ForeignKey('ConnectWiseBoard')
 
     class Meta:
-        ordering = ('sort_order',)
+        ordering = ('board__name', 'sort_order', 'name')
 
     def __str__(self):
-        return self.name
+        return '{}/{}'.format(self.board, self.name)
 
 
 class Location(TimeStampedModel):
