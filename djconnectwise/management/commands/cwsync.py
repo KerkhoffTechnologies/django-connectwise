@@ -21,6 +21,7 @@ class Command(BaseCommand):
         synchronizers = (
             ('member', sync.MemberSynchronizer, _('Member')),
             ('priority', sync.PrioritySynchronizer, _('Priority')),
+            ('project', sync.ProjectSynchronizer, _('Project')),
             ('board', sync.BoardSynchronizer, _('Board')),
             ('board_status', sync.BoardStatusSynchronizer, _('Board Status')),
             ('company', sync.CompanySynchronizer, _('Company')),

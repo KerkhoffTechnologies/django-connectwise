@@ -144,6 +144,16 @@ API_COMPANY = {
 
 API_COMPANY_LIST = [API_COMPANY]
 
+API_PROJECT = {
+    'id': 5,
+    'name': 'Financial System Implementation',
+    '_info': {
+        'project_href': 'https://some-host.com/v4_6_release/apis/3.0/project/projects/5'
+    }
+}
+
+API_PROJECT_LIST = [API_PROJECT]
+
 API_SERVICE_LOCATION = {
     'id': 1, 
     'name': 'On-Site', 
@@ -193,13 +203,7 @@ API_SERVICE_TICKET = {
             'status_href': 'https://some-host.com/v4_6_release/apis/3.0/service/boards/1/statuses/1'
         }
     },
-    'project': {
-        'id': 5,
-        'name': 'Financial System Implementation',
-        '_info': {
-            'project_href': 'https://some-host.com/v4_6_release/apis/3.0/project/projects/5'
-        }
-    },
+    'project': API_PROJECT,
     'phase': {
         'id': 8,
         'name': 'Solution Implementation',
@@ -536,5 +540,3 @@ API_MEMBER_LIST = [API_MEMBER]
 API_MEMBER_COUNT = {
     'count': len(API_MEMBER_LIST)
 }
-
-API_PROJECTS = {}

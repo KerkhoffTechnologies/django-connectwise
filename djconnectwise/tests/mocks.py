@@ -30,6 +30,11 @@ def company_api_get_call(return_value):
     return create_mock_call(method_name, return_value)
 
 
+def project_api_get_projects_call(return_value):
+    method_name = 'djconnectwise.api.ProjectAPIClient.get_projects'
+    return create_mock_call(method_name, return_value)
+
+
 def _service_api_tickets_call(page=0, page_size=25):
     return_value = []
     if page == 0:
