@@ -494,8 +494,16 @@ class TicketSynchronizer:
 
         ticket.api_text = str(api_ticket)
 
-        ticket.board = models.ConnectWiseBoard.objects.get(
-            pk=api_ticket['board']['id'])
+        try:
+            ticket.board = models.ConnectWiseBoard.objects.get(
+                pk=api_ticket['board']['id'])
+        except models.ConnectWiseBoard.DoesNotExist:
+            logger.warning(
+                'Failed to find board {} for ticket {}.'.format(
+                    api_ticket['board']['id'],
+                    api_ticket_id
+                )
+            )
 
         ticket.company, _ = self.company_synchronizer \
             .get_or_create_instance(api_ticket['company'])
@@ -509,13 +517,26 @@ class TicketSynchronizer:
             location = models.Location.objects.get(
                 id=api_ticket['locationId'])
             ticket.location = location
-        except:
-            pass
+        except models.Location.DoesNotExist:
+            logger.warning(
+                'Failed to find location {} for ticket {}.'.format(
+                    api_ticket['locationId'],
+                    api_ticket_id
+                )
+            )
 
-        # TODO - Discuss - Do we assume that the status exists
-        # or do we want to do a roundtrip and retrieve from the server?
-        new_ticket_status = models.BoardStatus.objects.get(
-            pk=api_ticket['status']['id'])
+        try:
+            # TODO - Discuss - Do we assume that the status exists
+            # or do we want to do a roundtrip and retrieve from the server?
+            new_ticket_status = models.BoardStatus.objects.get(
+                pk=api_ticket['status']['id'])
+        except models.BoardStatus.DoesNotExist:
+            logger.warning(
+                'Failed to find board status {} for ticket {}.'.format(
+                    api_ticket['status']['id'],
+                    api_ticket_id
+                )
+            )
 
         ticket.status = new_ticket_status
 
