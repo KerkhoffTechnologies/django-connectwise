@@ -156,8 +156,10 @@ class TeamSynchronizer(BoardChildSynchronizer):
         instance = super(TeamSynchronizer, self)._assign_field_data(
             instance, json_data)
 
-        members = list(models.Member.objects.filter(
-            id__in=json_data['members']))
+        members = []
+        if json_data['members']:
+            members = list(models.Member.objects.filter(
+                id__in=json_data['members']))
 
         instance.save()
 
