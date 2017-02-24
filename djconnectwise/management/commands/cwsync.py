@@ -71,22 +71,21 @@ class Command(BaseCommand):
             sync_classes = self.synchronizer_map.values()
 
         failed_classes = 0
-        error_message = ''
+        error_messages = ''
         for sync_class, obj_name in sync_classes:
             try:
                 self.sync_by_class(sync_class, obj_name, reset=reset_option)
             except api.ConnectWiseAPIError as e:
                 msg = 'Failed to sync {}: {}'.format(obj_name, e)
                 self.stderr.write(msg)
-                error_message += '{}\n'.format(msg)
+                error_messages += '{}\n'.format(msg)
                 failed_classes += 1
 
         if failed_classes > 0:
-            self.stderr.write(
-                '{} class{} failed to sync.'.format(
+            msg = '{} class{} failed to sync.\n'.format(
                     failed_classes,
                     '' if failed_classes == 1 else 'es',
                 )
-            )
-            self.stderr.write('Errors:')
-            self.stderr.write(error_message)
+            msg += 'Errors:\n'
+            msg += error_messages
+            raise CommandError(msg)
