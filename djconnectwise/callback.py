@@ -11,14 +11,17 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-class CallBackHandler(object):
+class CallBackHandler:
+    TICKET_CALLBACK_ID = 1
+    COMPANY_CALLBACK_ID = 2
+    PROJECT_CALLBACK_ID = 3
 
     def __init__(self, *args, **kwargs):
         self.system_client = SystemAPIClient()
 
-    def create_ticket_callback(self):
+    def _create_callback(self, callback_id, callback_type):
         """
-        Registers the ticket callback with the target connectwise system.
+        Registers a callback with the target connectwise system.
         Creates and returns a local CallBackEntry instance.
         """
         url = '{}://{}{}{}'.format(
@@ -30,8 +33,8 @@ class CallBackHandler(object):
 
         params = {
             'url': url,
-            'objectId': 1,
-            'type': CallBackEntry.CALLBACK_TYPES.ticket,
+            'objectId': callback_id,
+            'type': callback_type,
             'level': 'owner'
         }
 
@@ -49,6 +52,22 @@ class CallBackHandler(object):
             )
 
             return entry
+
+    def create_ticket_callback(self):
+        """
+        Registers the ticket callback with the target connectwise system.
+        Creates and returns a local CallBackEntry instance.
+        """
+        self._create_callback(self.TICKET_CALLBACK_ID,
+                              CallBackEntry.CALLBACK_TYPES.ticket)
+
+    def create_project_callback(self):
+        """
+        Registers the ticket callback with the target connectwise system.
+        Creates and returns a local CallBackEntry instance.
+        """
+        self._create_callback(self.PROJECT_CALLBACK_ID,
+                              CallBackEntry.CALLBACK_TYPES.project)
 
     def list_callbacks(self):
         """

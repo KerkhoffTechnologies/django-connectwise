@@ -23,6 +23,8 @@ class SyncJob(models.Model):
 
 class CallBackEntry(models.Model):
     CALLBACK_TYPES = Choices(
+        ('company', "Company"),
+        ('project', "Project"),
         ('ticket', "Ticket"),
     )
 

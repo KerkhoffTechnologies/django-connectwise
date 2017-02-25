@@ -8,5 +8,5 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         handler = CallBackHandler()
 
-        print('Created task callback for url: {0}'.format(
+        self.stdout.write('Created task callback for url: {0}'.format(
             handler.create_ticket_callback()))

@@ -7,8 +7,8 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         handler = CallBackHandler()
-        print('Callback List')
-        print('-----------------------------------------')
+        self.stdout.write('Callback List')
+        self.stdout.write('-----------------------------------------')
 
         for c in handler.list_callbacks():
-            print('{0} - {1}'.format(c['id'], c['url']))
+            self.stdout.write('{0} - {1}'.format(c['id'], c['url']))
