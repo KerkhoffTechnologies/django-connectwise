@@ -229,7 +229,7 @@ class TicketAssignment(TimeStampedModel):
 
 class Project(TimeStampedModel):
     name = models.CharField(max_length=200)
-    project_href = models.CharField(max_length=200)
+    project_href = models.CharField(max_length=200, blank=True, null=True)
 
     class Meta:
         ordering = ('name', )

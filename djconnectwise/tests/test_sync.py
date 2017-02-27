@@ -6,10 +6,10 @@ from djconnectwise.models import ConnectWiseBoard
 from djconnectwise.models import BoardStatus
 from djconnectwise.models import Location
 from djconnectwise.models import Team
+from djconnectwise.models import Project
 from djconnectwise.models import Ticket
 from djconnectwise.models import TicketPriority
 from djconnectwise.models import Member
-# from djconnectwise.models import Ticket
 
 from . import fixtures
 from . import fixture_utils
@@ -17,19 +17,63 @@ from . import mocks
 from .. import sync
 
 
-class TestCompanySynchronizer(TestCase):
+class SynchronizerTestMixin:
+    synchronizer_class = None
+    model_class = None
+    fixture = None
 
-    def setUp(self):
-        self.synchronizer = sync.CompanySynchronizer()
-        self._clean()
+    def call_api(self, return_data):
+        raise NotImplementedError
+
+    def _assert_fields(self, instance, json_data):
+        raise NotImplementedError
 
     def _clean(self):
-        Company.objects.all().delete()
+        self.model_class.objects.all().delete()
 
     def _sync(self, return_data):
-        _, get_patch = mocks.company_api_get_call(return_data)
+        _, get_patch = self.call_api(return_data)
+        self.synchronizer = sync.ProjectSynchronizer()
+        self._clean()
         self.synchronizer.sync()
         return _, get_patch
+
+    def test_sync(self):
+        instance_dict = {c['id']: c for c in self.fixture}
+
+        for instance in self.model_class.objects.all():
+            json_data = instance_dict[instance.id]
+            self._assert_fields(instance, json_data)
+
+    def test_sync_update(self):
+        self._clean()
+        self._sync(self.fixture)
+
+        json_data = self.fixture[0]
+        id = json_data['id']
+        original = self.model_class.objects \
+            .get(id=id)
+
+        name = 'Some New Name'
+        json_data = deepcopy(self.fixture[0])
+        json_data['name'] = name
+        json_data_list = [json_data]
+        self._sync(json_data_list)
+
+        changed = self.model_class.objects.get(id=id)
+
+        self.assertNotEqual(original.name,
+                            name)
+        self._assert_fields(changed, json_data)
+
+
+class TestCompanySynchronizer(SynchronizerTestMixin):
+    synchronizer_class = sync.CompanySynchronizer
+    model_class = Company
+    fixture = fixtures.API_COMPANY_LIST
+
+    def call_api(self, return_data):
+        return mocks.project_api_get_projects_call(return_data)
 
     def _assert_fields(self, company, api_company):
         assert company.name == api_company['name']
@@ -42,34 +86,19 @@ class TestCompanySynchronizer(TestCase):
         assert company.state_identifier == api_company['state']
         assert company.zip == api_company['zip']
 
-    def test_sync(self):
-        company_dict = {c['id']: c for c in fixtures.API_COMPANY_LIST}
 
-        for company in Company.objects.all():
-            api_company = company_dict[company.id]
-            self._assert_fields(company, api_company)
+class TestProjectSynchronizer(TestCase, SynchronizerTestMixin):
+    synchronizer_class = sync.ProjectSynchronizer
+    model_class = Project
+    fixture = fixtures.API_PROJECT_LIST
 
-    def test_sync_update(self):
-        self._clean()
-        self._sync(fixtures.API_COMPANY_LIST)
+    def call_api(self, return_data):
+        return mocks.project_api_get_projects_call(return_data)
 
-        api_company = fixtures.API_COMPANY
-        id = api_company['id']
-        company_pre_update = Company.objects \
-            .get(id=id)
-
-        name = 'Some New Company Name'
-        api_company = deepcopy(fixtures.API_COMPANY)
-        api_company['name'] = name
-        api_company_list = [api_company]
-        self._sync(api_company_list)
-
-        company_post_update = Company.objects \
-                                     .get(id=id)
-
-        self.assertNotEqual(company_pre_update.name,
-                            name)
-        self._assert_fields(company_post_update, api_company)
+    def _assert_fields(self, instance, json_data):
+        assert instance.name == json_data['name']
+        assert instance.id == json_data['id']
+        assert instance.project_href == json_data['_info']['project_href']
 
 
 class TestTeamSynchronizer(TestCase):
