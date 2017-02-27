@@ -2,9 +2,7 @@ import logging
 
 from dateutil.parser import parse
 
-from djconnectwise.api import CompanyAPIClient
-from djconnectwise.api import ServiceAPIClient
-from djconnectwise.api import SystemAPIClient
+from djconnectwise import api
 from djconnectwise import models
 from djconnectwise.utils import get_hash, get_filename_extension
 
@@ -94,7 +92,7 @@ class Synchronizer:
 
 
 class BoardSynchronizer(Synchronizer):
-    client_class = ServiceAPIClient
+    client_class = api.ServiceAPIClient
     model_class = models.ConnectWiseBoard
 
     def _assign_field_data(self, instance, json_data):
@@ -130,7 +128,7 @@ class BoardChildSynchronizer(Synchronizer):
 
 
 class BoardStatusSynchronizer(BoardChildSynchronizer):
-    client_class = ServiceAPIClient
+    client_class = api.ServiceAPIClient
     model_class = models.BoardStatus
 
     def _assign_field_data(self, instance, json_data):
@@ -149,7 +147,7 @@ class BoardStatusSynchronizer(BoardChildSynchronizer):
 
 
 class TeamSynchronizer(BoardChildSynchronizer):
-    client_class = ServiceAPIClient
+    client_class = api.ServiceAPIClient
     model_class = models.Team
 
     def _assign_field_data(self, instance, json_data):
@@ -176,7 +174,7 @@ class CompanySynchronizer(Synchronizer):
     Coordinates retrieval and demarshalling of ConnectWise JSON
     Company instances.
     """
-    client_class = CompanyAPIClient
+    client_class = api.CompanyAPIClient
     model_class = models.Company
 
     def _assign_field_data(self, company, company_json):
@@ -212,7 +210,7 @@ class LocationSynchronizer(Synchronizer):
     Coordinates retrieval and demarshalling of ConnectWise JSON
     Company instances.
     """
-    client_class = ServiceAPIClient
+    client_class = api.ServiceAPIClient
     model_class = models.Location
 
     def _assign_field_data(self, location, location_json):
@@ -230,7 +228,7 @@ class LocationSynchronizer(Synchronizer):
 
 
 class PrioritySynchronizer(Synchronizer):
-    client_class = ServiceAPIClient
+    client_class = api.ServiceAPIClient
     model_class = models.TicketPriority
     lookup_key = 'name'
 
@@ -250,10 +248,24 @@ class PrioritySynchronizer(Synchronizer):
         return self.client.get_priorities()
 
 
+class ProjectSynchronizer(Synchronizer):
+    client_class = api.ProjectAPIClient
+    model_class = models.Project
+
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data['id']
+        instance.name = json_data['name']
+        instance.project_href = json_data['_info'].get('project_href')
+        return instance
+
+    def get_json(self):
+        return self.client.get_projects()
+
+
 class MemberSynchronizer:
 
     def __init__(self, *args, **kwargs):
-        self.client = SystemAPIClient()
+        self.client = api.SystemAPIClient()
         self.last_sync_job = None
 
         sync_job_qset = models.SyncJob.objects.all()
@@ -362,10 +374,10 @@ class TicketSynchronizer:
             # sync, in which case we do not want to retrieve closed tickets
             extra_conditions = 'ClosedFlag = False'
 
-        self.service_client = ServiceAPIClient(
+        self.service_client = api.ServiceAPIClient(
             extra_conditions=extra_conditions)
 
-        self.system_client = SystemAPIClient()
+        self.system_client = api.SystemAPIClient()
 
         # we need to remove the underscores to ensure an accurate
         # lookup of the normalized api fieldnames
@@ -676,7 +688,7 @@ class TicketUpdater(object):
     """Send ticket updates to ConnectWise."""
 
     def __init__(self):
-        self.service_client = ServiceAPIClient()
+        self.service_client = api.ServiceAPIClient()
 
     def update_api_ticket(self, ticket):
         api_ticket = self.service_client.get_ticket(ticket.id)

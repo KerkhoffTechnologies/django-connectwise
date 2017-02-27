@@ -164,7 +164,7 @@ class TestProjectAPIClient(TestCase):
     def test_get_projects(self):
         endpoint = self.client._endpoint(self.client.ENDPOINT_PROJECT)
         mk.get(endpoint,
-               fixtures.API_PROJECTS)
+               fixtures.API_PROJECT_LIST)
 
         result = self.client.get_projects()
 

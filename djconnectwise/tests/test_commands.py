@@ -80,6 +80,16 @@ class TestSyncPrioritiesCommand(BaseSyncTest):
                         sync_summary('Priority'))
 
 
+class TestSyncProjectsCommand(BaseSyncTest):
+
+    def test_sync(self):
+        """Test sync projects command."""
+        self._test_sync(mocks.project_api_get_projects_call,
+                        fixtures.API_PROJECT_LIST,
+                        'project',
+                        sync_summary('Project'))
+
+
 class TestSyncBoardsStatusesCommand(BaseSyncTest):
 
     def setUp(self):
@@ -114,6 +124,8 @@ class TestSyncAllCommand(BaseSyncTest):
             fixtures.API_SERVICE_LOCATION_LIST)
         mocks.service_api_get_priorities_call(
             fixtures.API_SERVICE_PRIORITY_LIST)
+        mocks.project_api_get_projects_call(
+            fixtures.API_PROJECT_LIST)
 
         mocks.service_api_get_teams_call([fixtures.API_SERVICE_TEAM_LIST[0]])
 
@@ -123,6 +135,7 @@ class TestSyncAllCommand(BaseSyncTest):
 
         summaries = [
             sync_summary('Priority'),
+            sync_summary('Project'),
             sync_summary('Board'),
             sync_summary('Board Status'),
             sync_summary('Company'),
