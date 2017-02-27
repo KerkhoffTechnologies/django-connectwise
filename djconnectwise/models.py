@@ -28,13 +28,13 @@ class CallBackEntry(models.Model):
         ('ticket', "Ticket"),
     )
 
+    description = models.CharField(max_length=100)
     callback_type = models.CharField(max_length=25)
     url = models.CharField(max_length=255)
     level = models.CharField(max_length=255)
     object_id = models.IntegerField()
-    entry_id = models.IntegerField()
     member = models.ForeignKey('Member')
-    enabled = models.BooleanField(default=False)
+    inactive_flag = models.BooleanField(default=False)
 
     def __str__(self):
         return self.url

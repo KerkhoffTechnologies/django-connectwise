@@ -3,13 +3,13 @@ import json
 import logging
 
 from braces import views
-from djconnectwise.sync import TicketSynchronizer
+from djconnectwise import sync
 
 from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
 from django.views.generic import View
 
-from .models import Ticket
+from . import models
 
 
 logger = logging.getLogger(__name__)
@@ -17,46 +17,63 @@ logger = logging.getLogger(__name__)
 
 class ConnectWiseCallBackView(views.CsrfExemptMixin,
                               views.JsonRequestResponseMixin, View):
+    sync_class = None
+
     def __init__(self, *args, **kwargs):
         super(ConnectWiseCallBackView, self).__init__(*args, **kwargs)
-        self.synchronizer = TicketSynchronizer()
-
-
-class TicketCallBackView(ConnectWiseCallBackView):
+        self.synchronizer = self.sync_class()
 
     def post(self, request, *args, **kwargs):
         body = json.loads(request.body.decode(encoding='utf-8'))
         action = request.GET.get('action')
 
         if action is None:
-            msg = 'Received ticket callback with no action parameter.'
+            msg = 'Received callback with no action parameter.'
             logger.warning(msg)
 
             err = "The 'action' parameter is required."
             return HttpResponseBadRequest(err)
-        ticket_id = request.GET.get('id')
+        object_id = request.GET.get('id')
 
-        if ticket_id is None:
-            msg = 'Received ticket callback with no ticket_id parameter.'
-            logger.warning(msg)
+        if object_id is None:
+            msg = 'Received {} callback with no object_id parameter.'
+            logger.warning(msg.format(action))
 
-            err = "The 'ticket_id' parameter is required."
+            err = "The 'object_id' parameter is required."
             return HttpResponseBadRequest(err)
 
-        logger.debug('{} {}: {}'.format(action.upper(), ticket_id, body))
+        logger.debug('{} {}: {}'.format(action.upper(), object_id, body))
 
         if action == 'deleted':
-            logger.info('Ticket Deleted CallBack: {}'.format(ticket_id))
-            Ticket.objects.filter(id=ticket_id).delete()
+            self.delete(object_id)
         else:
-            logger.info('Ticket Pre-Update: {}'.format(ticket_id))
-            ticket = self.synchronizer \
-                .service_client \
-                .get_ticket(ticket_id)
-
-            if ticket:
-                logger.info('Ticket Updated CallBack: {}'.format(ticket_id))
-                self.synchronizer.sync_ticket(ticket)
+            self.update(object_id)
 
         # we need not return anything to connectwise
         return HttpResponse(status=204)
+
+    def update(self, object_id):
+        self.model_class.objects.filter(id=object_id)
+        logger.info('{} Deleted CallBack: {}'.format(object_id))
+
+    def delete(self, object_id):
+        self.model_class.objects.filter(id=object_id).delete()
+        logger.info('{} Deleted CallBack: {}'.format(object_id))
+
+
+class TicketCallBackView(ConnectWiseCallBackView):
+    sync_class = sync.TicketSynchronizer
+    model_class = sync_class
+
+    def update(self, object_id):
+        model_name = self.model_class.__name__
+        logger.info('{} Pre-Update: {}'.format(model_name, object_id))
+
+        ticket = self.synchronizer \
+            .service_client \
+            .get_ticket(object_id)
+
+        if ticket:
+            msg = '{} Updated CallBack: {}'
+            logger.info(msg.format(model_name, object_id))
+            self.synchronizer.sync_ticket(ticket)

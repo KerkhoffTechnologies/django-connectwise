@@ -540,3 +540,16 @@ API_MEMBER_LIST = [API_MEMBER]
 API_MEMBER_COUNT = {
     'count': len(API_MEMBER_LIST)
 }
+
+API_SYSTEM_CALLBACK_ENTRY = {
+    "id": 0,
+    "description": "maxLength = 100",
+    "url": "Sample string",
+    "objectId": 0,
+    "type": "Sample string",
+    "level": "Sample string",
+    "memberId": API_MEMBER['id'],
+    "inactiveFlag": "false",
+    "_info ": { "lastUpdated": "", "updatedBy": "" }
+}
+

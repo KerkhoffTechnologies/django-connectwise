@@ -1,3 +1,5 @@
+import pprint
+
 from django.core.management.base import BaseCommand
 from djconnectwise.callback import CallBackHandler
 
@@ -10,5 +12,6 @@ class Command(BaseCommand):
         self.stdout.write('Callback List')
         self.stdout.write('-----------------------------------------')
 
-        for c in handler.list_callbacks():
-            self.stdout.write('{0} - {1}'.format(c['id'], c['url']))
+        for c in handler.list():
+            pprint.pprint(c)
+            self.stdout.write('-----------------------------------------')

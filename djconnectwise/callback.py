@@ -12,9 +12,6 @@ logger = logging.getLogger(__name__)
 
 
 class CallBackHandler:
-    TICKET_CALLBACK_ID = 1
-    COMPANY_CALLBACK_ID = 2
-    PROJECT_CALLBACK_ID = 3
 
     def __init__(self, *args, **kwargs):
         self.system_client = SystemAPIClient()
@@ -24,12 +21,14 @@ class CallBackHandler:
         Registers a callback with the target connectwise system.
         Creates and returns a local CallBackEntry instance.
         """
-        url = '{}://{}{}{}'.format(
-            settings.DJCONNECTWISE_CALLBACK_PROTOCOL,
-            Site.objects.get_current().domain,
-            reverse('djconnectwise:service-ticket-callback'),
-            '?id='
-        )
+        # url = '{}://{}{}{}'.format(
+        #     settings.DJCONNECTWISE_CALLBACK_PROTOCOL,
+        #     Site.objects.get_current().domain,
+        #     'http://mockbin.org/bin/134fc34e-0450-4f70-94a7-8debc60b7919',#reverse('djconnectwise:service-ticket-callback'),
+        #     '?id='
+        # )
+
+        url = 'http://mockbin.org/bin/134fc34e-0450-4f70-94a7-8debc60b7919?id='
 
         params = {
             'url': url,
@@ -41,60 +40,76 @@ class CallBackHandler:
         entry_json = self.system_client.create_callback(params)
 
         if entry_json:
-            entry = CallBackEntry.objects.create(
-                url=entry_json['url'],
-                object_id=entry_json['objectId'],
-                level=entry_json['level'],
-                entry_id=entry_json['id'],
-                member_id=entry_json['memberId'],
-                callback_type=entry_json['type'],
-                enabled=True
-            )
+            entry = None
+            try:
+                entry = CallBackEntry.objects.create(
+                    id=entry_json['id'],
+                    url=entry_json['url'],
+                    object_id=entry_json['objectId'],
+                    level=entry_json['level'],
+                    member_id=entry_json['memberId'],
+                    callback_type=entry_json['type'],
+                    inactive_flag=False
+                )
+            except:
+                self.system_client.delete_callback(entry_json['id'])
 
             return entry
 
-    def create_ticket_callback(self):
+    def create(self):
         """
-        Registers the ticket callback with the target connectwise system.
+        Registers the callback with the target connectwise system.
         Creates and returns a local CallBackEntry instance.
         """
-        self._create_callback(self.TICKET_CALLBACK_ID,
-                              CallBackEntry.CALLBACK_TYPES.ticket)
+        return self._create_callback(self.CALLBACK_ID,
+                                     self.CALLBACK_TYPE)
 
-    def create_project_callback(self):
-        """
-        Registers the ticket callback with the target connectwise system.
-        Creates and returns a local CallBackEntry instance.
-        """
-        self._create_callback(self.PROJECT_CALLBACK_ID,
-                              CallBackEntry.CALLBACK_TYPES.project)
-
-    def list_callbacks(self):
+    def list(self):
         """
         Returns a list of dict callback entries that
         are registered with the target system.
         """
         return self.system_client.get_callbacks()
 
-    def remove_ticket_callback(self):
+    def delete(self):
         """
-        Removes the ticket callback from connectwise and
+        Removes the callback from connectwise and
         removes the local record.
         """
         entry_qset = CallBackEntry.objects.filter(
-            callback_type=CallBackEntry.CALLBACK_TYPES.ticket
-        )
-        if entry_qset.count() == 0:
-            logger.info('No callbacks to delete.')
-            return
+            callback_type=self.CALLBACK_TYPE)
 
-        for entry in entry_qset:
+        entries = {e.id: e for e in entry_qset}
+
+        api_entries = [
+            e for e in self.list() if e['type'] == self.CALLBACK_TYPE
+        ]
+
+        for entry in api_entries:
+            entry_id = entry['id']
             try:
                 # Only delete the DB entry once CW has
                 # accepted our delete request.
-                self.system_client.delete_callback(entry.entry_id)
-                logger.info('Deleted ticket callback {}.'.format(entry.id))
-                entry.delete()
+                self.system_client.delete_callback(entry_id)
+                if entry_id in entries:
+                    entries[entry_id].delete()
+
+                logger.info('Deleted callback {}.'.format(entry_id))
             except RequestException as e:
-                msg = 'Failed to remove ticket callback for callback {}: {}'
-                logger.warning(msg.format(entry.id, e))
+                msg = 'Failed to remove callback: {}: {}'
+                logger.warning(msg.format(entry_id, e))
+
+
+class TicketCallBackHandler(CallBackHandler):
+    CALLBACK_ID = 1
+    CALLBACK_TYPE = CallBackEntry.CALLBACK_TYPES.ticket
+
+
+class ProjectCallBackHandler(CallBackHandler):
+    CALLBACK_ID = 2
+    CALLBACK_TYPE = CallBackEntry.CALLBACK_TYPES.project
+
+
+class CompanyCallBackHandler(CallBackHandler):
+    CALLBACK_ID = 3
+    CALLBACK_TYPE = CallBackEntry.CALLBACK_TYPES.company

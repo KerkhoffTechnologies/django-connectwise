@@ -475,49 +475,49 @@ class TicketSynchronizer:
 
         return ticket_status, created
 
-    def sync_ticket(self, api_ticket):
+    def sync_ticket(self, json_data):
         """
         Creates a new local instance of the supplied ConnectWise
         Ticket instance.
         """
-        api_ticket_id = api_ticket['id']
+        json_data_id = json_data['id']
         ticket, created = models.Ticket.objects \
-            .get_or_create(pk=api_ticket_id)
+            .get_or_create(pk=json_data_id)
 
         # if the status results in a move to a different column
         original_status = not created and ticket.status or None
 
-        ticket.closed_flag = api_ticket['closedFlag']
-        ticket.type = api_ticket['type']
-        ticket.priority_text = api_ticket['priority']['name']
-        ticket.summary = api_ticket['summary']
-        ticket.entered_date_utc = api_ticket['dateEntered']
-        ticket.last_updated_utc = api_ticket['_info']['lastUpdated']
-        ticket.resources = api_ticket['resources']
-        ticket.budget_hours = api_ticket['budgetHours']
-        ticket.actual_hours = api_ticket['actualHours']
-        ticket.record_type = api_ticket['recordType']
+        ticket.closed_flag = json_data['closedFlag']
+        ticket.type = json_data['type']
+        ticket.priority_text = json_data['priority']['name']
+        ticket.summary = json_data['summary']
+        ticket.entered_date_utc = json_data['dateEntered']
+        ticket.last_updated_utc = json_data['_info']['lastUpdated']
+        ticket.resources = json_data['resources']
+        ticket.budget_hours = json_data['budgetHours']
+        ticket.actual_hours = json_data['actualHours']
+        ticket.record_type = json_data['recordType']
 
-        team = api_ticket['team']
+        team = json_data['team']
         if team:
-            ticket.team_id = api_ticket['team']['id']
+            ticket.team_id = json_data['team']['id']
 
-        ticket.api_text = str(api_ticket)
+        ticket.api_text = str(json_data)
 
         ticket.board = models.ConnectWiseBoard.objects.get(
-            pk=api_ticket['board']['id'])
+            pk=json_data['board']['id'])
 
         ticket.company, _ = self.company_synchronizer \
-            .get_or_create_instance(api_ticket['company'])
+            .get_or_create_instance(json_data['company'])
 
         priority, _ = self.priority_synchronizer \
-            .get_or_create_instance(api_ticket['priority'])
+            .get_or_create_instance(json_data['priority'])
 
         ticket.priority = priority
 
         try:
             location = models.Location.objects.get(
-                id=api_ticket['locationId'])
+                id=json_data['locationId'])
             ticket.location = location
         except:
             pass
@@ -525,11 +525,11 @@ class TicketSynchronizer:
         # TODO - Discuss - Do we assume that the status exists
         # or do we want to do a roundtrip and retrieve from the server?
         new_ticket_status = models.BoardStatus.objects.get(
-            pk=api_ticket['status']['id'])
+            pk=json_data['status']['id'])
 
         ticket.status = new_ticket_status
 
-        ticket.project = self.get_or_create_project(api_ticket)
+        ticket.project = self.get_or_create_project(json_data)
         ticket.save()
         action = created and 'Created' or 'Updated'
 
@@ -545,15 +545,15 @@ class TicketSynchronizer:
         self._manage_member_assignments(ticket)
         return ticket, created
 
-    def update_api_ticket(self, ticket):
+    def update_json_data(self, ticket):
         """"
         Updates the state of a generic ticket and determines which api
         to send the updated ticket data to.
         """
-        api_ticket = self.service_client.get_ticket(ticket.id)
+        json_data = self.service_client.get_ticket(ticket.id)
 
         if ticket.closed_flag:
-            api_ticket['closedFlag'] = ticket.closed_flag
+            json_data['closedFlag'] = ticket.closed_flag
             ticket_status = models.BoardStatus.objects.get(
                 closed_status=True)
         else:
@@ -568,17 +568,17 @@ class TicketSynchronizer:
             except models.BoardStatus.DoesNotExist as e:
                 raise InvalidStatusError(e)
 
-            api_ticket['status']['id'] = board_status.id
+            json_data['status']['id'] = board_status.id
 
         # no need for a callback update when updating via api
-        api_ticket['skipCallback'] = True
+        json_data['skipCallback'] = True
         logger.info(
             'Update API Ticket Status: {} - {}'.format(
-                ticket.id, api_ticket['status']['name']
+                ticket.id, json_data['status']['name']
             )
         )
 
-        return self.service_client.update_ticket(api_ticket)
+        return self.service_client.update_ticket(json_data)
 
     def close_ticket(self, ticket):
         """

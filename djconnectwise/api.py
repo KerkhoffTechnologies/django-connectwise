@@ -136,8 +136,9 @@ class SystemAPIClient(ConnectWiseAPIClient):
     def delete_callback(self, entry_id):
         try:
             endpoint = self._endpoint(
-                '{}/{}'.format(self.ENDPOINT_CALLBACKS, entry_id)
+                '{}{}'.format(self.ENDPOINT_CALLBACKS, entry_id)
             )
+
             response = requests.request(
                 'delete',
                 endpoint,
