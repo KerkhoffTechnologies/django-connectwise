@@ -1,17 +1,14 @@
 # -*- coding: utf-8 -*-
-from django.conf.urls import url
+from django.conf.urls import url, patterns, include
 from . import views
 
 urlpatterns = [
     url(
-        regex=r'^ticket/$',
-        view=views.TicketCallBackView.as_view(),
-        name='service-ticket-callback'
-    ),
-
-    url(
-        regex=r'^project/$',
-        view=views.TicketCallBackView.as_view(),
-        name='project-callback'
+        regex=r'^callback/$',
+        view=views.CallBackView.as_view(),
+        name='callback'
     ),
 ]
+
+included = include(urlpatterns, namespace="djconnectwise")
+urlpatterns = patterns('', url(r'^/', included),)

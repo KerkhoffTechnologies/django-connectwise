@@ -68,6 +68,3 @@ class TestCallBackHandler(TestCase):
         for handler in self.handlers:
             self.handler = handler()
             self._test_delete_callback()
-
-
-

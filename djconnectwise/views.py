@@ -87,9 +87,9 @@ class CallBackView(views.CsrfExemptMixin,
         else:
             self.synchronizer.update_or_create_instance(entity)
 
-    def delete(self, object_id):
-        self.model_class.objects.filter(id=object_id).delete()
-        logger.info('{} Deleted CallBack: {}'.format(object_id))
+    def delete(self, entity):
+        self.model_class.objects.filter(id=entity['id']).delete()
+        logger.info('Deleted CallBack: {}'.format(entity['id']))
 
 
 class CallBackForm(forms.Form):

@@ -8,7 +8,7 @@ from django.test.utils import get_runner
 import django
 import tempfile
 
-
+DEBUG = True
 tmp_media = tempfile.TemporaryDirectory()
 
 settings.configure(
@@ -40,6 +40,9 @@ settings.configure(
     DJCONNECTWISE_COMPANY_ALIAS=False,
     DJCONNECTWISE_API_BATCH_LIMIT=25,
     DJCONNECTWISE_API_TIMEOUT=10.0,
+    ROOT_URLCONF='djconnectwise.urls',
+    DJCONNECTWISE_CALLBACK_PROTOCOL='http' if DEBUG else 'https',
+    DJCONNECTWISE_TEST_DOMAIN='localhost'
 )
 
 

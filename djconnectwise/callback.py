@@ -29,12 +29,19 @@ class CallBackHandler:
         Registers a callback with the target connectwise system.
         Creates and returns a local CallBackEntry instance.
         """
-        url = '{}://{}{}{}'.format(
-            settings.DJCONNECTWISE_CALLBACK_PROTOCOL,
-            Site.objects.get_current().domain,
-            reverse('djconnectwise:ticket-callback'),
-            '?id='
-        )
+        if hasattr(settings, 'DJCONNECTWISE_TEST_DOMAIN'):
+            # bypass Sites framework for tests
+            url = '{}/{}'.format(
+                settings.DJCONNECTWISE_TEST_DOMAIN,
+                '?id='
+            )
+        else:
+            url = '{}://{}{}{}'.format(
+                settings.DJCONNECTWISE_CALLBACK_PROTOCOL,
+                Site.objects.get_current().domain,
+                reverse('djconnectwise:callback'),
+                '?id='
+            )
 
         params = {
             'url': url,
@@ -68,7 +75,6 @@ class CallBackHandler:
         Registers the callback with the target connectwise system.
         Creates and returns a local CallBackEntry instance.
         """
-        print(type(self))
         return self._create_callback(self.CALLBACK_ID,
                                      self.CALLBACK_TYPE)
 
