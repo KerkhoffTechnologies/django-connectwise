@@ -33,12 +33,12 @@ class Command(BaseCommand):
         if handler_class:
 
             if self.ACTION == 'create':
-                result = handler_class().create()
+                handler_class().create()
             else:
-                result = handler_class().delete()
+                handler_class().delete()
 
-            self.stdout.write('{} {} callback for url: {}'.format(
-                self.ACTION, result, obj_name))
+            self.stdout.write('{} {} callback'.format(
+                self.ACTION, obj_name))
         else:
             msg = _('Invalid Callback, choose one of the following: \n{}')
             options_txt = ', '.join(self.handler_map.keys())
