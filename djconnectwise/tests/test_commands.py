@@ -149,7 +149,7 @@ class TestSyncAllCommand(BaseSyncTest):
             self.assertIn(summary, actual_output)
 
 
-class TestCreateCallBackCommand(TestCase):
+class TestCallBackCommand(TestCase):
     handlers = [
         callback.TicketCallBackHandler,
         callback.ProjectCallBackHandler,
