@@ -12,9 +12,17 @@ logger = logging.getLogger(__name__)
 
 
 class CallBackHandler:
+    CALLBACK_ID = None
+    CALLBACK_TYPE = None
 
     def __init__(self, *args, **kwargs):
         self.system_client = SystemAPIClient()
+
+        if not self.CALLBACK_ID:
+            raise NotImplementedError('CALLBACK_ID must be assigned a value')
+
+        if not self.CALLBACK_TYPE:
+            raise NotImplementedError('CALLBACK_TYPE must be assigned a value')
 
     def _create_callback(self, callback_id, callback_type):
         """
@@ -48,6 +56,7 @@ class CallBackHandler:
                     object_id=entry_json['objectId'],
                     level=entry_json['level'],
                     member_id=entry_json['memberId'],
+                    description=entry_json['description'],
                     callback_type=entry_json['type'],
                     inactive_flag=False
                 )
@@ -61,6 +70,7 @@ class CallBackHandler:
         Registers the callback with the target connectwise system.
         Creates and returns a local CallBackEntry instance.
         """
+        print(type(self))
         return self._create_callback(self.CALLBACK_ID,
                                      self.CALLBACK_TYPE)
 
@@ -80,7 +90,6 @@ class CallBackHandler:
             callback_type=self.CALLBACK_TYPE)
 
         entries = {e.id: e for e in entry_qset}
-
         api_entries = [
             e for e in self.list() if e['type'] == self.CALLBACK_TYPE
         ]

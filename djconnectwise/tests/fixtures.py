@@ -549,7 +549,7 @@ API_SYSTEM_CALLBACK_ENTRY = {
     "type": "Sample string",
     "level": "Sample string",
     "memberId": API_MEMBER['id'],
-    "inactiveFlag": "false",
+    "inactiveFlag": False,
     "_info ": { "lastUpdated": "", "updatedBy": "" }
 }
 

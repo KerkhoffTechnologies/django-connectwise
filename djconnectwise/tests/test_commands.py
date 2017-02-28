@@ -145,5 +145,3 @@ class TestSyncAllCommand(BaseSyncTest):
 
         for summary in summaries:
             self.assertIn(summary, actual_output)
-
-
