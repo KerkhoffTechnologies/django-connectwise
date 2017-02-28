@@ -486,7 +486,6 @@ class TicketSynchronizer:
 
         # if the status results in a move to a different column
         original_status = not created and ticket.status or None
-
         ticket.closed_flag = json_data['closedFlag']
         ticket.type = json_data['type']
         ticket.priority_text = json_data['priority']['name']

@@ -22,10 +22,14 @@ class SyncJob(models.Model):
 
 
 class CallBackEntry(models.Model):
+    TICKET = 'ticket'
+    PROJECT = 'project'
+    COMPANY = 'company'
+
     CALLBACK_TYPES = Choices(
-        ('company', "Company"),
-        ('project', "Project"),
-        ('ticket', "Ticket"),
+        (COMPANY, "Company"),
+        (PROJECT, "Project"),
+        (TICKET, "Ticket"),
     )
 
     description = models.CharField(max_length=100)

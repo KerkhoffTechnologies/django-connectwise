@@ -29,14 +29,12 @@ class CallBackHandler:
         Registers a callback with the target connectwise system.
         Creates and returns a local CallBackEntry instance.
         """
-        # url = '{}://{}{}{}'.format(
-        #     settings.DJCONNECTWISE_CALLBACK_PROTOCOL,
-        #     Site.objects.get_current().domain,
-        #     'http://mockbin.org/bin/134fc34e-0450-4f70-94a7-8debc60b7919',#reverse('djconnectwise:service-ticket-callback'),
-        #     '?id='
-        # )
-
-        url = 'http://mockbin.org/bin/134fc34e-0450-4f70-94a7-8debc60b7919?id='
+        url = '{}://{}{}{}'.format(
+            settings.DJCONNECTWISE_CALLBACK_PROTOCOL,
+            Site.objects.get_current().domain,
+            reverse('djconnectwise:ticket-callback'),
+            '?id='
+        )
 
         params = {
             'url': url,
