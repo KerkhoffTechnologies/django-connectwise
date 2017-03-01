@@ -172,7 +172,7 @@ class Team(TimeStampedModel):
     members = models.ManyToManyField('Member')
 
     def __str__(self):
-        return self.name
+        return '{}/{}'.format(self.board, self.name)
 
 
 class TicketPriority(TimeStampedModel):

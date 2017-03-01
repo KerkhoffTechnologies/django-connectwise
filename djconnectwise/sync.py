@@ -154,8 +154,10 @@ class TeamSynchronizer(BoardChildSynchronizer):
         instance = super(TeamSynchronizer, self)._assign_field_data(
             instance, json_data)
 
-        members = list(models.Member.objects.filter(
-            id__in=json_data['members']))
+        members = []
+        if json_data['members']:
+            members = list(models.Member.objects.filter(
+                id__in=json_data['members']))
 
         instance.save()
 
@@ -486,9 +488,9 @@ class TicketSynchronizer:
 
         # if the status results in a move to a different column
         original_status = not created and ticket.status or None
+
         ticket.closed_flag = json_data['closedFlag']
         ticket.type = json_data['type']
-        ticket.priority_text = json_data['priority']['name']
         ticket.summary = json_data['summary']
         ticket.entered_date_utc = json_data['dateEntered']
         ticket.last_updated_utc = json_data['_info']['lastUpdated']
@@ -498,13 +500,30 @@ class TicketSynchronizer:
         ticket.record_type = json_data['recordType']
 
         team = json_data['team']
-        if team:
-            ticket.team_id = json_data['team']['id']
+        try:
+            if team:
+                ticket.team = models.Team.objects.get(
+                    pk=team['id'])
+        except models.Team.DoesNotExist:
+            logger.warning(
+                'Failed to find team {} for ticket {}.'.format(
+                    team['id'],
+                    json_data_id
+                )
+            )
 
         ticket.api_text = str(json_data)
 
-        ticket.board = models.ConnectWiseBoard.objects.get(
-            pk=json_data['board']['id'])
+        try:
+            ticket.board = models.ConnectWiseBoard.objects.get(
+                pk=json_data['board']['id'])
+        except models.ConnectWiseBoard.DoesNotExist:
+            logger.warning(
+                'Failed to find board {} for ticket {}.'.format(
+                    json_data['board']['id'],
+                    json_data_id
+                )
+            )
 
         ticket.company, _ = self.company_synchronizer \
             .get_or_create_instance(json_data['company'])
@@ -518,13 +537,27 @@ class TicketSynchronizer:
             location = models.Location.objects.get(
                 id=json_data['locationId'])
             ticket.location = location
-        except:
-            pass
+        except models.Location.DoesNotExist:
+            logger.warning(
+                'Failed to find location {} for ticket {}.'.format(
+                    json_data['locationId'],
+                    json_data_id
+                )
+            )
 
-        # TODO - Discuss - Do we assume that the status exists
-        # or do we want to do a roundtrip and retrieve from the server?
-        new_ticket_status = models.BoardStatus.objects.get(
-            pk=json_data['status']['id'])
+        new_ticket_status = None
+        try:
+            # TODO - Discuss - Do we assume that the status exists
+            # or do we want to do a roundtrip and retrieve from the server?
+            new_ticket_status = models.BoardStatus.objects.get(
+                pk=json_data['status']['id'])
+        except models.BoardStatus.DoesNotExist:
+            logger.warning(
+                'Failed to find board status {} for ticket {}.'.format(
+                    json_data['status']['id'],
+                    json_data_id
+                )
+            )
 
         ticket.status = new_ticket_status
 

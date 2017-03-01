@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-from django.conf.urls import url, patterns, include
+from django.conf.urls import url
 from . import views
 
 urlpatterns = [
@@ -9,6 +8,3 @@ urlpatterns = [
         name='callback'
     ),
 ]
-
-included = include(urlpatterns, namespace="djconnectwise")
-urlpatterns = patterns('', url(r'^/', included),)

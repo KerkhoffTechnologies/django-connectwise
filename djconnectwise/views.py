@@ -10,8 +10,9 @@ from django import forms
 from django.views.generic import View
 
 from . import models
-from .models import CallBackEntry
 from djconnectwise import sync
+from .api import ConnectWiseAPIError
+
 
 logger = logging.getLogger(__name__)
 
@@ -29,9 +30,15 @@ class CallBackView(views.CsrfExemptMixin,
                    views.JsonRequestResponseMixin, View):
 
     CALLBACK_TYPES = {
-        CallBackEntry.TICKET: (sync.TicketSynchronizer, models.Ticket),
-        CallBackEntry.PROJECT: (sync.ProjectSynchronizer, models.Project),
-        CallBackEntry.COMPANY: (sync.CompanySynchronizer, models.Company),
+        models.CallBackEntry.TICKET: (
+            sync.TicketSynchronizer, models.Ticket
+        ),
+        models.CallBackEntry.PROJECT: (
+            sync.ProjectSynchronizer, models.Project
+        ),
+        models.CallBackEntry.COMPANY: (
+            sync.CompanySynchronizer, models.Company
+        ),
     }
 
     def validate(self, request_body):
@@ -80,16 +87,25 @@ class CallBackView(views.CsrfExemptMixin,
 
     def update(self, entity):
         self.model_class.objects.filter(id=entity['id'])
-        logger.info('Update CallBack: {}'.format(entity))
+        logger.info('Updated via CallBack: {}'.format(entity))
 
-        if self.callback_type == 'ticket':
-            self.synchronizer.sync_ticket(entity)
-        else:
-            self.synchronizer.update_or_create_instance(entity)
+        try:
+            if self.callback_type == 'ticket':
+                self.synchronizer.sync_ticket(entity)
+            else:
+                self.synchronizer.update_or_create_instance(entity)
+        except ConnectWiseAPIError as e:
+            # Something bad happened when talking to the API. There's not
+            # much we can do, so just log it. We should get synced back up
+            # when the next periodic sync job runs.
+            logger.error(
+                'API call failed in model {} ID {} callback: '
+                '{}'.format(self.model_class, entity['id'], e)
+            )
 
     def delete(self, entity):
         self.model_class.objects.filter(id=entity['id']).delete()
-        logger.info('Deleted CallBack: {}'.format(entity['id']))
+        logger.info('Deleted via CallBack: {}'.format(entity['id']))
 
 
 class CallBackForm(forms.Form):
