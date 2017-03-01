@@ -3,14 +3,13 @@ import json
 import logging
 
 from braces import views
-from djconnectwise.sync import TicketSynchronizer
-
 from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
 from django.views.generic import View
 
 from .models import Ticket
-
+from .sync import TicketSynchronizer
+from .api import ConnectWiseAPIError
 
 logger = logging.getLogger(__name__)
 
@@ -45,18 +44,29 @@ class TicketCallBackView(ConnectWiseCallBackView):
 
         logger.debug('{} {}: {}'.format(action.upper(), ticket_id, body))
 
-        if action == 'deleted':
-            logger.info('Ticket Deleted CallBack: {}'.format(ticket_id))
-            Ticket.objects.filter(id=ticket_id).delete()
-        else:
-            logger.info('Ticket Pre-Update: {}'.format(ticket_id))
-            ticket = self.synchronizer \
-                .service_client \
-                .get_ticket(ticket_id)
+        try:
+            if action == 'deleted':
+                logger.info('Ticket Deleted CallBack: {}'.format(ticket_id))
+                Ticket.objects.filter(id=ticket_id).delete()
+            else:
+                logger.info('Ticket Pre-Update: {}'.format(ticket_id))
+                ticket = self.synchronizer \
+                    .service_client \
+                    .get_ticket(ticket_id)
 
-            if ticket:
-                logger.info('Ticket Updated CallBack: {}'.format(ticket_id))
-                self.synchronizer.sync_ticket(ticket)
+                if ticket:
+                    logger.info(
+                        'Ticket Updated CallBack: {}'.format(ticket_id)
+                    )
+                    self.synchronizer.sync_ticket(ticket)
+        except ConnectWiseAPIError as e:
+            # Something bad happened when talking to the API. There's not
+            # much we can do, so just log it. We should get synced back up
+            # when the next periodic sync job runs.
+            logger.error(
+                'API call failed in ticket {} action {} callback: '
+                '{}'.format(ticket_id, action, e)
+            )
 
-        # we need not return anything to connectwise
+        # We need not return anything to ConnectWise
         return HttpResponse(status=204)
