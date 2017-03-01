@@ -333,7 +333,6 @@ API_SERVICE_TICKET = {
     'lagNonworkingDaysFlag': None,
     'estimatedStartDate': None,
     'duration': None,
-    'locationId': 2,
     'businessUnitId': 10,
     'mobileGuid': 'c5882071-79ac-4149-9088-3af3196a22f7',
     'sla': None,

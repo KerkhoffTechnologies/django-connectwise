@@ -30,9 +30,15 @@ class CallBackView(views.CsrfExemptMixin,
                    views.JsonRequestResponseMixin, View):
 
     CALLBACK_TYPES = {
-        models.CallBackEntry.TICKET: (sync.TicketSynchronizer, models.Ticket),
-        models.CallBackEntry.PROJECT: (sync.ProjectSynchronizer, models.Project),
-        models.CallBackEntry.COMPANY: (sync.CompanySynchronizer, models.Company),
+        models.CallBackEntry.TICKET: (
+            sync.TicketSynchronizer, models.Ticket
+        ),
+        models.CallBackEntry.PROJECT: (
+            sync.ProjectSynchronizer, models.Project
+        ),
+        models.CallBackEntry.COMPANY: (
+            sync.CompanySynchronizer, models.Company
+        ),
     }
 
     def validate(self, request_body):
