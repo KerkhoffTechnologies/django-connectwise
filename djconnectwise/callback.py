@@ -1,11 +1,12 @@
-from djconnectwise.api import SystemAPIClient
-from djconnectwise.models import CallBackEntry
+import logging
+
+from requests.exceptions import RequestException
 
 from django.conf import settings
 from django.contrib.sites.models import Site
 from django.core.urlresolvers import reverse
-from requests.exceptions import RequestException
-import logging
+from djconnectwise.api import SystemAPIClient
+from djconnectwise.models import CallBackEntry
 
 
 logger = logging.getLogger(__name__)
@@ -78,7 +79,7 @@ class CallBackHandler:
         return self._create_callback(self.CALLBACK_ID,
                                      self.CALLBACK_TYPE)
 
-    def list(self):
+    def get_callbacks(self):
         """
         Returns a list of dict callback entries that
         are registered with the target system.
@@ -95,7 +96,7 @@ class CallBackHandler:
 
         entries = {e.id: e for e in entry_qset}
         api_entries = [
-            e for e in self.list() if e['type'] == self.CALLBACK_TYPE
+            e for e in self.get_callbacks() if e['type'] == self.CALLBACK_TYPE
         ]
 
         for entry in api_entries:

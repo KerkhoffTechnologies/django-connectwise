@@ -149,6 +149,27 @@ class TestSyncAllCommand(BaseSyncTest):
             self.assertIn(summary, actual_output)
 
 
+class TestListCallBacksCommand(TestCase):
+
+    def test_command(self):
+        fixture = [fixtures.API_SYSTEM_CALLBACK_ENTRY]
+        method = 'djconnectwise.callback.TicketCallBackHandler.get_callbacks'
+        mocks.create_mock_call(method, fixture)
+
+        out = io.StringIO()
+        call_command('list_callbacks', stdout=out)
+
+        fixtures.API_SYSTEM_CALLBACK_ENTRY
+        output_str = out.getvalue().strip()
+        self.assertIn(
+            str(fixtures.API_SYSTEM_CALLBACK_ENTRY['id']),
+            output_str)
+
+        self.assertIn(
+            str(fixtures.API_SYSTEM_CALLBACK_ENTRY['description']),
+            output_str)
+
+
 class TestCallBackCommand(TestCase):
     handlers = [
         callback.TicketCallBackHandler,

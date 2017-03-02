@@ -68,3 +68,11 @@ class TestCallBackHandler(TestCase):
         for handler in self.handlers:
             self.handler = handler()
             self._test_delete_callback()
+
+    def test_get_callbacks(self):
+        self.handler = self.handlers[0]()
+        fixture = [fixtures.API_SYSTEM_CALLBACK_ENTRY]
+        mocks.system_api_get_callbacks_call(fixture)
+
+        callbacks = self.handler.get_callbacks()
+        self.assertEqual(callbacks, fixture)
