@@ -5,6 +5,8 @@ from requests.exceptions import RequestException
 from django.conf import settings
 from django.contrib.sites.models import Site
 from django.core.urlresolvers import reverse
+import django
+
 from djconnectwise.api import SystemAPIClient
 from djconnectwise.models import CallBackEntry
 
@@ -66,7 +68,9 @@ class CallBackHandler:
                     callback_type=entry_json['type'],
                     inactive_flag=False
                 )
-            except:
+
+            except django.db.utils.Error as e:
+                logger.error('CallBackEntry Creation Failed: {}'.format(e))
                 self.system_client.delete_callback(entry_json['id'])
 
             return entry

@@ -41,17 +41,6 @@ class CallBackView(views.CsrfExemptMixin,
         ),
     }
 
-    def validate(self, request_body):
-        params = ['Action', 'Type', 'Entity']
-
-        errors = {}
-        for param in params:
-            msg = 'The {} parameter is required.'.format(param)
-            if param not in request_body:
-                errors['param'] = msg
-
-        return errors
-
     def post(self, request, *args, **kwargs):
         body = json.loads(request.body.decode(encoding='utf-8'))
         required_fields = {

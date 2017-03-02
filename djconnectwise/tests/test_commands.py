@@ -190,7 +190,7 @@ class TestCallBackCommand(TestCase):
         call_command(cmd, arg, stdout=out)
         return out.getvalue().strip()
 
-    def _test_command(self, action, command):
+    def _test_command(self, action, command, no_output=False):
         for handler in self.handlers:
             self.clean()
             self.handler = handler()
@@ -201,11 +201,15 @@ class TestCallBackCommand(TestCase):
 
             callback_type = handler.CALLBACK_TYPE
             output = self.call(command, callback_type)
-            expected = '{} {} callback'.format(action, callback_type)
-            self.assertEqual(expected, output)
+
+            if no_output:
+                self.assertEqual('', output)
+            else:
+                expected = '{} {} callback'.format(action, callback_type)
+                self.assertEqual(expected, output)
 
     def test_create_command(self):
-        self._test_command('create', 'create_callback')
+        self._test_command('', 'create_callback', no_output=True)
 
     def test_delete_command(self):
         self._test_command('delete', 'delete_callback')

@@ -36,9 +36,8 @@ class Command(BaseCommand):
                 handler_class().create()
             else:
                 handler_class().delete()
-
-            self.stdout.write('{} {} callback'.format(
-                self.ACTION, obj_name))
+                self.stdout.write('{} {} callback'.format(
+                    self.ACTION, obj_name))
         else:
             msg = _('Invalid Callback, choose one of the following: \n{}')
             options_txt = ', '.join(self.handler_map.keys())
