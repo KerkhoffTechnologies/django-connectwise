@@ -379,18 +379,15 @@ class TestTicketUpdater(TestCase):
         self.updater = sync.TicketUpdater()
         self.synchronizer = sync.TicketSynchronizer()
 
+        fixture_utils.init_boards()
         fixture_utils.init_board_statuses()
 
-    def _sync(self):
         mocks.company_api_by_id_call(fixtures.API_COMPANY)
         mocks.service_api_tickets_call()
 
-        return self.synchronizer.sync()
+        self.synchronizer.sync()
 
     def test_update_api_ticket(self):
-        Ticket.objects.all().delete()
-        self._sync()
-
         board_name = 'Some Board Name'
         api_ticket = deepcopy(fixtures.API_SERVICE_TICKET)
         api_ticket['board']['name'] = board_name
@@ -409,6 +406,23 @@ class TestTicketUpdater(TestCase):
             updated_api_ticket['board']['name'],
             local_ticket.board_name
         )
+
+    def test_update_api_ticket_invalid_status(self):
+        # Raises an exception if the ticket status isn't valid for the
+        # ticket's board.
+        print()
+        print(Ticket.objects.first())
+        print(ConnectWiseBoard.objects.all())
+        print(BoardStatus.objects.all())
+        print()
+
+    def test_close_ticket(self):
+        self.assertTrue(False)
+
+    def test_close_ticket_no_closed_statuses(self):
+        # Raises an exception if there are no available closed statuses for
+        # the ticket's board.
+        self.assertTrue(False)
 
 
 class TestMemberSynchronization(TestCase):

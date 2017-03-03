@@ -3,7 +3,7 @@ import io
 from django.core.management import call_command
 from django.test import TestCase
 
-from djconnectwise.models import ConnectWiseBoard
+from djconnectwise.models import ConnectWiseBoard, BoardStatus
 
 from . import mocks
 from . import fixtures
@@ -12,7 +12,7 @@ from .. import sync
 
 
 def sync_summary(class_name):
-    created_count = 2 if class_name == 'Priority' else 1
+    created_count = 2 if class_name in ['Priority', 'Board'] else 1
     return '{} Sync Summary - Created: {} , Updated: 0'.format(
         class_name, created_count
     )
@@ -31,11 +31,12 @@ class TestSyncCompaniesCommand(BaseSyncTest):
 
     def test_sync(self):
         """Test sync companies command."""
-        self._test_sync(mocks.company_api_get_call,
-                        fixtures.API_COMPANY_LIST,
-                        'company',
-                        sync_summary('Company')
-                        )
+        self._test_sync(
+            mocks.company_api_get_call,
+            fixtures.API_COMPANY_LIST,
+            'company',
+            sync_summary('Company')
+        )
 
 
 class TestSyncTeamsCommand(BaseSyncTest):
@@ -97,15 +98,19 @@ class TestSyncBoardsStatusesCommand(BaseSyncTest):
         ConnectWiseBoard.objects.all().delete()
         _, _patch = mocks.service_api_get_boards_call(fixtures.API_BOARD_LIST)
         board_synchronizer.sync()
+        print('----------')
+        print(ConnectWiseBoard.objects.all())
+        print(BoardStatus.objects.all())
         _patch.stop()
 
     def test_sync(self):
         """Test sync_board_statuses command."""
-        self._test_sync(mocks.service_api_get_statuses_call,
-                        [fixtures.API_BOARD_STATUS_LIST[0]],
-                        'board_status',
-                        sync_summary('Board Status')
-                        )
+        self._test_sync(
+            mocks.service_api_get_statuses_call,
+            fixtures.API_BOARD_STATUS_LIST,
+            'board_status',
+            sync_summary('Board Status')
+        )
 
 
 class TestSyncAllCommand(BaseSyncTest):

@@ -686,41 +686,37 @@ class TicketSynchronizer:
 
 class TicketUpdater(object):
     """Send ticket updates to ConnectWise."""
-
     def __init__(self):
         self.service_client = api.ServiceAPIClient()
 
     def update_api_ticket(self, ticket):
         api_ticket = self.service_client.get_ticket(ticket.id)
 
-        if ticket.closed_flag:
-            api_ticket['closedFlag'] = ticket.closed_flag
-            ticket_status = models.BoardStatus.objects.get(
-                closed_status=True)
-        else:
-            ticket_status = ticket.status
+        # Ensure that the new status is valid for the CW board.
+        if ticket.board is None:
+            raise InvalidStatusError(
+                "The ticket is not assigned to a ConnectWise board. "
+                "There may have been a sync failure."
+            )
+        if ticket.status is None:
+            raise InvalidStatusError(
+                "The ticket is not assigned to a status. "
+                "There may have been a sync failure."
+            )
+        if ticket.status.board != ticket.board:
+            raise InvalidStatusError(
+                "{} is not a valid status for the ticket's "
+                "ConnectWise board ({}).".
+                format(
+                    ticket.status.name,
+                    ticket.board
+                )
+            )
 
-        if not ticket.closed_flag:
-            # Ensure that the new status is valid for the CW board.
-            try:
-                cw_board = models.ConnectWiseBoard.objects.get(
-                    id=ticket.board_id)
-                board_status = models.BoardStatus.objects.get(
-                    board_id=ticket.board_id,
-                    name=ticket_status.name
-                )
-                api_ticket['status']['id'] = board_status.id
-            except models.ConnectWiseBoard.DoesNotExist:
-                raise InvalidStatusError("Failed to find the ticket's board.")
-            except models.BoardStatus.DoesNotExist:
-                raise InvalidStatusError(
-                    "{} is not a valid status for the ticket's "
-                    "ConnectWise board ({}).".
-                    format(
-                        ticket_status.name,
-                        cw_board.name
-                    )
-                )
+        if ticket.status.closed_status:
+            # The ticket is closed, but this could be due to a recent local
+            # change, so make sure to tell CW about it.
+            api_ticket['closedFlag'] = True
 
         # No need for a callback update when updating via api
         api_ticket['skipCallback'] = True
@@ -734,19 +730,36 @@ class TicketUpdater(object):
 
     def close_ticket(self, ticket):
         """
-        Closes the specified service ticket returns True if the close
-        operation was successful on the connectwise server.
-        Note: It appears that the connectwise server does not return a
-        permissions error if user does not have access to this operation.
+        Set the ticket to a closed status for the board.
         """
+        logger.info('Closing ticket %s' % ticket.id)
         ticket.closed_flag = True
+
+        # Find a closed status on the ticket's board. Prefer the ticket
+        # called "Closed", if such a one exists.
+        try:
+            status = models.BoardStatus.objects.get(
+                name='Closed',
+                board=ticket.board,
+                closed_status=True,
+            )
+        except models.BoardStatus.DoesNotExist:
+            # There's nothing called "Closed".
+            # filter...first returns None if nothing is found.
+            status = models.BoardStatus.objects.filter(
+                board=ticket.board,
+                closed_status=True,
+            ).first()
+
+        if status is None:
+            raise InvalidStatusError(
+                "There are no closed statuses on this ticket's ConnectWise "
+                "board ({}). Its status has not been changed.".format(
+                    ticket.board
+                )
+            )
+
+        ticket.status = status
         ticket.save()
-        logger.info('Close API Ticket: %s' % ticket.id)
-        api_ticket = self.update_api_ticket(ticket)
-        ticket_is_closed = api_ticket['closedFlag']
 
-        if not ticket_is_closed:
-            ticket.closed_flag = ticket_is_closed
-            ticket.save()
-
-        return ticket_is_closed
+        return self.update_api_ticket(ticket)
