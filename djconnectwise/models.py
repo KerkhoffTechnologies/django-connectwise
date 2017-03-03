@@ -32,7 +32,7 @@ class CallBackEntry(models.Model):
         (TICKET, "Ticket"),
     )
 
-    description = models.CharField(max_length=100)
+    description = models.CharField(max_length=100, null=True, blank=True)
     callback_type = models.CharField(max_length=25)
     url = models.CharField(max_length=255)
     level = models.CharField(max_length=255)

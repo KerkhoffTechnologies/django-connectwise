@@ -27,30 +27,49 @@ class CallBackHandler:
         if not self.CALLBACK_TYPE:
             raise NotImplementedError('CALLBACK_TYPE must be assigned a value')
 
+    def _get_host(self):
+        """Return the protocol & hostname."""
+        if hasattr(settings, 'DJCONNECTWISE_TEST_DOMAIN'):
+            # bypass Sites framework for tests
+            host = '{}'.format(
+                settings.DJCONNECTWISE_TEST_DOMAIN,
+            )
+        else:
+            host = '{}://{}'.format(
+                settings.DJCONNECTWISE_CALLBACK_PROTOCOL,
+                Site.objects.get_current().domain,
+            )
+        return host
+
+    def _get_callback_url(self):
+        """Return the full callback URL."""
+        if hasattr(settings, 'DJCONNECTWISE_TEST_DOMAIN'):
+            # bypass Sites framework for tests
+            url = '{}/{}'.format(
+                self._get_host(),
+                '?id='
+            )
+        else:
+            url = '{}{}{}'.format(
+                self._get_host(),
+                reverse('djconnectwise:callback'),
+                '?id='
+            )
+        return url
+
     def _create_callback(self, callback_id, callback_type):
         """
         Registers a callback with the target connectwise system.
         Creates and returns a local CallBackEntry instance.
         """
-        if hasattr(settings, 'DJCONNECTWISE_TEST_DOMAIN'):
-            # bypass Sites framework for tests
-            url = '{}/{}'.format(
-                settings.DJCONNECTWISE_TEST_DOMAIN,
-                '?id='
-            )
-        else:
-            url = '{}://{}{}{}'.format(
-                settings.DJCONNECTWISE_CALLBACK_PROTOCOL,
-                Site.objects.get_current().domain,
-                reverse('djconnectwise:callback'),
-                '?id='
-            )
-
         params = {
-            'url': url,
+            'url': self._get_callback_url(),
             'objectId': callback_id,
             'type': callback_type,
-            'level': 'owner'
+            'level': 'owner',
+            'description': 'Kanban application {} callback'.format(
+                callback_type
+            )
         }
 
         entry_json = self.system_client.create_callback(params)
@@ -99,8 +118,12 @@ class CallBackHandler:
             callback_type=self.CALLBACK_TYPE)
 
         entries = {e.id: e for e in entry_qset}
+        host = self._get_host()
+        # Only delete a callback that starts with our expected hostname, so
+        # we don't explode an other integration's callbacks.
         api_entries = [
             e for e in self.get_callbacks() if e['type'] == self.CALLBACK_TYPE
+            and e['url'].startswith(host)
         ]
 
         for entry in api_entries:
