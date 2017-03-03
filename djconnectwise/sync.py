@@ -56,8 +56,7 @@ class Synchronizer:
 
     def update_or_create_instance(self, api_instance):
         """
-        Creates and returns an instance if
-        it does not already exist
+        Creates and returns an instance if it does not already exist.
         """
         instance, created = self.get_or_create_instance(
             api_instance)

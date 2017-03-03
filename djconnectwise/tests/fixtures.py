@@ -6,16 +6,8 @@ API_BOARD = {
     'inactive': False,
     'projectFlag': False
 }
-API_BOARD_2 = {
-    'id': 2,
-    'name': 'Service B',
-    'locationId': 1,
-    'businessUnitId': 10,
-    'inactive': False,
-    'projectFlag': False
-}
 
-API_BOARD_LIST = [API_BOARD, API_BOARD_2]
+API_BOARD_LIST = [API_BOARD]
 
 API_BOARD_STATUS_LIST = [
     {
@@ -32,15 +24,6 @@ API_BOARD_STATUS_LIST = [
         'name': 'In Progress',
         'boardId': 1,
         'sortOrder': 1,
-        'displayOnBoard': True,
-        'inactive': False,
-        'closedStatus': False
-    },
-    {
-        'id': 3,
-        'name': 'Closed',
-        'boardId': 1,
-        'sortOrder': 2,
         'displayOnBoard': True,
         'inactive': False,
         'closedStatus': True
