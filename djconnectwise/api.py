@@ -96,6 +96,21 @@ class ProjectAPIClient(ConnectWiseAPIClient):
     def get_projects(self):
         return self.fetch_resource(self.ENDPOINT_PROJECT)
 
+    def update_project(self, json_data):
+        try:
+            endpoint = self._endpoint('projects/{}'.format(json_data['id']))
+            response = requests.put(
+                endpoint,
+                params=dict(id=json_data['id'], body=json_data),
+                json=json_data,
+                auth=self.auth,
+                timeout=settings.DJCONNECTWISE_API_TIMEOUT,
+            )
+            return response
+        except requests.RequestException as e:
+            logger.error('Request failed: PUT {}: {}'.format(endpoint, e))
+            raise ConnectWiseAPIError('{}'.format(e))
+
 
 class SystemAPIClient(ConnectWiseAPIClient):
     API = 'system'
@@ -136,8 +151,9 @@ class SystemAPIClient(ConnectWiseAPIClient):
     def delete_callback(self, entry_id):
         try:
             endpoint = self._endpoint(
-                '{}/{}'.format(self.ENDPOINT_CALLBACKS, entry_id)
+                '{}{}'.format(self.ENDPOINT_CALLBACKS, entry_id)
             )
+
             response = requests.request(
                 'delete',
                 endpoint,
