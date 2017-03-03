@@ -8,14 +8,18 @@ from django.test.utils import get_runner
 import django
 import tempfile
 
-
+DEBUG = True
 tmp_media = tempfile.TemporaryDirectory()
 
 settings.configure(
     DEBUG=True,
-    INSTALLED_APPS=(
+    INSTALLED_APPS=(  # Including django.contrib apps prevents warnings during
+        # tests.
         'djconnectwise',
         'easy_thumbnails',
+        'django.contrib.contenttypes',
+        'django.contrib.auth',
+        'django.contrib.sites',
     ),
     CONNECTWISE_SERVER_URL='https://localhost',
     CONNECTWISE_CREDENTIALS={
@@ -40,6 +44,9 @@ settings.configure(
     DJCONNECTWISE_COMPANY_ALIAS=False,
     DJCONNECTWISE_API_BATCH_LIMIT=25,
     DJCONNECTWISE_API_TIMEOUT=10.0,
+    ROOT_URLCONF='djconnectwise.tests.urls',
+    DJCONNECTWISE_CALLBACK_PROTOCOL='http' if DEBUG else 'https',
+    DJCONNECTWISE_TEST_DOMAIN='localhost'
 )
 
 

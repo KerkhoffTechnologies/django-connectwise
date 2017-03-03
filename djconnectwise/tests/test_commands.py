@@ -3,7 +3,9 @@ import io
 from django.core.management import call_command
 from django.test import TestCase
 
+from djconnectwise.models import CallBackEntry
 from djconnectwise.models import ConnectWiseBoard
+from djconnectwise import callback
 
 from . import mocks
 from . import fixtures
@@ -145,3 +147,69 @@ class TestSyncAllCommand(BaseSyncTest):
 
         for summary in summaries:
             self.assertIn(summary, actual_output)
+
+
+class TestListCallBacksCommand(TestCase):
+
+    def test_command(self):
+        fixture = [fixtures.API_SYSTEM_CALLBACK_ENTRY]
+        method = 'djconnectwise.callback.TicketCallBackHandler.get_callbacks'
+        mocks.create_mock_call(method, fixture)
+
+        out = io.StringIO()
+        call_command('list_callbacks', stdout=out)
+
+        fixtures.API_SYSTEM_CALLBACK_ENTRY
+        output_str = out.getvalue().strip()
+        self.assertIn(
+            str(fixtures.API_SYSTEM_CALLBACK_ENTRY['id']),
+            output_str)
+
+        self.assertIn(
+            str(fixtures.API_SYSTEM_CALLBACK_ENTRY['description']),
+            output_str)
+
+
+class TestCallBackCommand(TestCase):
+    handlers = [
+        callback.TicketCallBackHandler,
+        callback.ProjectCallBackHandler,
+        callback.CompanyCallBackHandler
+    ]
+
+    def get_fixture(self):
+        fixture = fixtures.API_SYSTEM_CALLBACK_ENTRY
+        fixture['type'] = self.handler.CALLBACK_TYPE
+        return fixture
+
+    def clean(self):
+        CallBackEntry.objects.all().delete()
+
+    def call(self, cmd, arg):
+        out = io.StringIO()
+        call_command(cmd, arg, stdout=out)
+        return out.getvalue().strip()
+
+    def _test_command(self, action, command, no_output=False):
+        for handler in self.handlers:
+            self.clean()
+            self.handler = handler()
+            fixture = self.get_fixture()
+            mocks.system_api_delete_callback_call({})
+            mocks.system_api_create_callback_call(fixture)
+            mocks.system_api_get_callbacks_call([fixture])
+
+            callback_type = handler.CALLBACK_TYPE
+            output = self.call(command, callback_type)
+
+            if no_output:
+                self.assertEqual('', output)
+            else:
+                expected = '{} {} callback'.format(action, callback_type)
+                self.assertEqual(expected, output)
+
+    def test_create_command(self):
+        self._test_command('', 'create_callback', no_output=True)
+
+    def test_delete_command(self):
+        self._test_command('delete', 'delete_callback')

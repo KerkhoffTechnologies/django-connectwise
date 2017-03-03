@@ -11,12 +11,19 @@ def init_boards():
 
     models.ConnectWiseBoard.objects.all().delete()
     mocks.service_api_get_boards_call(fixtures.API_BOARD_LIST)
-    board_synchronizer = sync.BoardSynchronizer()
-    return board_synchronizer.sync()
+    synchronizer = sync.BoardSynchronizer()
+    return synchronizer.sync()
 
 
 def init_board_statuses():
     init_boards()
     mocks.service_api_get_statuses_call(fixtures.API_BOARD_STATUS_LIST)
-    status_synchronizer = sync.BoardStatusSynchronizer()
-    return status_synchronizer.sync()
+    synchronizer = sync.BoardStatusSynchronizer()
+    return synchronizer.sync()
+
+
+def init_members():
+    models.Member.objects.all().delete()
+    mocks.system_api_get_members_call(fixtures.API_MEMBER_LIST)
+    synchronizer = sync.BoardStatusSynchronizer()
+    return synchronizer.sync()

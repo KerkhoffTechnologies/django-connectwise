@@ -1,14 +1,18 @@
 from django.core.management.base import BaseCommand
-from djconnectwise.callback import CallBackHandler
+from djconnectwise.callback import TicketCallBackHandler
 
 
 class Command(BaseCommand):
     help = 'Lists existing callbacks on target connectwise system.'
 
     def handle(self, *args, **options):
-        handler = CallBackHandler()
-        print('Callback List')
-        print('-----------------------------------------')
+        handler = TicketCallBackHandler()
+        self.stdout.write('Callback List')
+        self.stdout.write('-----------------------------------------')
 
-        for c in handler.list_callbacks():
-            print('{0} - {1}'.format(c['id'], c['url']))
+        for c in handler.get_callbacks():
+            self.stdout.write('ID: {}'.format(c['id']))
+            self.stdout.write('URL: {}'.format(c['url']))
+            self.stdout.write('DESCRIPTION: {}'.format(c['description']))
+            self.stdout.write('TYPE: {}'.format(c['type']))
+            self.stdout.write('-----------------------------------------')
