@@ -212,4 +212,4 @@ class TestCallBackCommand(TestCase):
         self._test_command('', 'create_callback', no_output=True)
 
     def test_delete_command(self):
-        self._test_command('delete', 'delete_callback')
+        self._test_command('delete', 'delete_callback', no_output=True)

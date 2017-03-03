@@ -1,3 +1,5 @@
+from django.conf import settings
+
 API_BOARD = {
     'id': 1,
     'name': 'Projects-2-10',
@@ -543,7 +545,7 @@ API_MEMBER_COUNT = {
 API_SYSTEM_CALLBACK_ENTRY = {
     "id": 0,
     "description": "maxLength = 100",
-    "url": "Sample string",
+    "url": settings.DJCONNECTWISE_TEST_DOMAIN,
     "objectId": 0,
     "type": "Sample string",
     "level": "Sample string",

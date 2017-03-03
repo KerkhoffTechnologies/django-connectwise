@@ -122,8 +122,8 @@ class CallBackHandler:
         # Only delete a callback that starts with our expected hostname, so
         # we don't explode an other integration's callbacks.
         api_entries = [
-            e for e in self.get_callbacks() if e['type'] == self.CALLBACK_TYPE
-            and e['url'].startswith(host)
+            e for e in self.get_callbacks() if
+            e['type'] == self.CALLBACK_TYPE and e['url'].startswith(host)
         ]
 
         for entry in api_entries:
