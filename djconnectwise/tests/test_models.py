@@ -3,7 +3,7 @@ from djconnectwise.models import TicketPriority, BoardStatus
 
 from model_mommy import mommy
 from test_plus.test import TestCase
-from djconnectwise.models import Ticket
+from djconnectwise.models import Ticket, InvalidStatusError
 
 
 class ModelTestCase(TestCase):
@@ -109,7 +109,15 @@ class TestTicket(ModelTestCase):
     def test_save_checks_status(self):
         # Raises an exception if the ticket status isn't valid for the
         # ticket's board.
-        self.assertTrue(False)
+        ticket = Ticket.objects.create(
+            summary='test',
+            status=self.connectwise_boards[0].board_statuses.first(),
+            board=self.connectwise_boards[0]
+        )
+        ticket.save()  # Should work
+        with self.assertRaises(InvalidStatusError):
+            ticket.board = self.connectwise_boards[1]
+            ticket.save()
 
     def test_update_cw(self):
         self.assertTrue(False)
