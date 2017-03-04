@@ -41,6 +41,7 @@ ticket_statuses_names = [
 ticket_status = Recipe(BoardStatus,
     name=cycle(ticket_statuses_names),
     sort_order=seq(''),
+    closed_status=False,
 )
 
 ticket = Recipe(
