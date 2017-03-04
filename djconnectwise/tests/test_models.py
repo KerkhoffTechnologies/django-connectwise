@@ -33,6 +33,7 @@ class ModelTestCase(TestCase):
             'djconnectwise.tests.ticket_status',
             _quantity=7,
         )
+        # TODO: remove prints
         print()
         for s in BoardStatus.objects.all():
             print(s.board.name, s.name, s.closed_status)
@@ -131,26 +132,27 @@ class TestTicket(ModelTestCase):
             ticket.save()
 
     def test_save_calls_update_cw(self):
+        # TODO
         self.assertTrue(False)
 
     def test_update_cw(self):
         # Verify update_cw calls the API client
+        # TODO
         self.assertTrue(False)
 
     def test_close_ticket(self):
         # Verify close calls save.
+        # TODO
         board = self.connectwise_boards[0]
-        board
-        patch
-        # ticket = Ticket.objects.create(
-        #     summary='test',
-        #     status=board.board_statuses.first(),
-        #     board=board
-        # )
-        # with patch.object(ticket, 'save') as mock_save:
-        #    ticket.close()
-        #    print(mock_save)
-        #    mock_save.assert_called_once()
+        ticket = Ticket.objects.create(
+            summary='test',
+            status=board.board_statuses.first(),
+            board=board
+        )
+        with patch.object(ticket, 'save') as mock_save:
+           ticket.close()
+           print(mock_save)
+           mock_save.assert_called_once()
 
     def test_close_ticket_no_closed_statuses(self):
         # Raises an exception if there are no available closed statuses for
