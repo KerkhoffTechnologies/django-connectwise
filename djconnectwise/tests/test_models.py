@@ -5,6 +5,16 @@ from test_plus.test import TestCase
 from djconnectwise.models import Ticket, InvalidStatusError
 from unittest.mock import patch
 
+ticket_statuses_names = [
+    'New',
+    'In Progress',
+    'Scheduled',
+    'Blocked',
+    'Completed',
+    'Waiting For Client',
+    'Closed',
+]
+
 
 class ModelTestCase(TestCase):
 
@@ -29,26 +39,16 @@ class ModelTestCase(TestCase):
             'djconnectwise.tests.connectwise_board',
             _quantity=3,
         )
-        self.board_statuses = mommy.make_recipe(
-            'djconnectwise.tests.ticket_status',
-            _quantity=7,
-        )
-        # TODO: remove prints
-        print()
-        for s in BoardStatus.objects.all():
-            print(s.board.name, s.name, s.closed_status)
-        BoardStatus.objects.filter(
-            name__in=['Completed', 'Closed']
-        ).update(closed_status=True)
-        for s in BoardStatus.objects.all():
-            print(s.board, s.name, s.closed_status)
-        # All the statuses belong to the first board.
-        for status in self.board_statuses:
-            status.board = self.connectwise_boards[0]
-            status.save()
-        for s in BoardStatus.objects.all():
-            print(s.board.name, s.name, s.closed_status)
-        print()
+        for i, s in enumerate(ticket_statuses_names):
+            # All the statuses belong to the first board.
+            BoardStatus.objects.create(
+                name=s,
+                sort_order=i,
+                board=self.connectwise_boards[0],
+                closed_status=True if s in ['Completed', 'Closed'] else False,
+                display_on_board=True,
+                inactive=False,
+            )
 
 
 class TestTicketPriority(TestCase):
@@ -81,9 +81,6 @@ class TestBoard(ModelTestCase):
     def test_get_closed_status_prefers_closed(self):
         board = self.connectwise_boards[0]
         closed_status = board.get_closed_status()
-        print()
-        print(closed_status.closed_status)
-        print()
         self.assertEqual(
             board.get_closed_status().name,
             'Closed'
@@ -142,7 +139,6 @@ class TestTicket(ModelTestCase):
 
     def test_close_ticket(self):
         # Verify close calls save.
-        # TODO
         board = self.connectwise_boards[0]
         ticket = Ticket.objects.create(
             summary='test',
@@ -150,9 +146,8 @@ class TestTicket(ModelTestCase):
             board=board
         )
         with patch.object(ticket, 'save') as mock_save:
-           ticket.close()
-           print(mock_save)
-           mock_save.assert_called_once()
+            ticket.close()
+            self.assertTrue(mock_save.called)
 
     def test_close_ticket_no_closed_statuses(self):
         # Raises an exception if there are no available closed statuses for

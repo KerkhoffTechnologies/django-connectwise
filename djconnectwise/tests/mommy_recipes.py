@@ -29,21 +29,6 @@ ticket_priority = Recipe(TicketPriority,
     name=seq('Priority #'),
 )
 
-ticket_statuses_names = [
-    'New',
-    'In Progress',
-    'Scheduled',
-    'Blocked',
-    'Completed',
-    'Waiting For Client',
-    'Closed',
-]
-ticket_status = Recipe(BoardStatus,
-    name=cycle(ticket_statuses_names),
-    sort_order=seq(''),
-    closed_status=False,
-)
-
 ticket = Recipe(
     Ticket,
     summary=seq('Summary #'),
