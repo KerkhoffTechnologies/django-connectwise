@@ -20,6 +20,7 @@ settings.configure(
         'django.contrib.contenttypes',
         'django.contrib.auth',
         'django.contrib.sites',
+        'django.contrib.sessions',
     ),
     CONNECTWISE_SERVER_URL='https://localhost',
     CONNECTWISE_CREDENTIALS={

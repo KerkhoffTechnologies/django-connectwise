@@ -31,6 +31,9 @@ setup(
     test_suite='runtests.suite',
     tests_require=[
         'responses',
+        'model-mommy',
+        'django-coverage',
+        'names'
     ],
     # Django likes to inspect apps for /migrations directories, and can't if
     # package is installed as a egg. zip_safe=False disables installation as
