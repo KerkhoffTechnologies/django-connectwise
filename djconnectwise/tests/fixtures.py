@@ -2,7 +2,7 @@ from django.conf import settings
 
 API_BOARD = {
     'id': 1,
-    'name': 'Projects-2-10',
+    'name': 'Service A',
     'locationId': 1,
     'businessUnitId': 10,
     'inactive': False,
@@ -193,7 +193,7 @@ API_SERVICE_TICKET = {
     'recordType': 'ProjectTicket',
     'board': {
         'id': 1,
-        'name': 'Projects-2-10',
+        'name': 'Service A',
         '_info': {
             'board_href': 'https://some-host.com/v4_6_release/apis/3.0/service/boards/1'
         }

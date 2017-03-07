@@ -7,7 +7,6 @@ from djconnectwise.models import BoardStatus
 from djconnectwise.models import Location
 from djconnectwise.models import Team
 from djconnectwise.models import Project
-from djconnectwise.models import Ticket
 from djconnectwise.models import TicketPriority
 from djconnectwise.models import Member
 
@@ -372,43 +371,6 @@ class TestTicketSynchronizer(TestCase):
     def test_sync(self):
         created_count, _, _ = self._sync()
         self.assertEqual(created_count, 1)
-
-
-class TestTicketUpdater(TestCase):
-    def setUp(self):
-        self.updater = sync.TicketUpdater()
-        self.synchronizer = sync.TicketSynchronizer()
-
-        fixture_utils.init_board_statuses()
-
-    def _sync(self):
-        mocks.company_api_by_id_call(fixtures.API_COMPANY)
-        mocks.service_api_tickets_call()
-
-        return self.synchronizer.sync()
-
-    def test_update_api_ticket(self):
-        Ticket.objects.all().delete()
-        self._sync()
-
-        board_name = 'Some Board Name'
-        api_ticket = deepcopy(fixtures.API_SERVICE_TICKET)
-        api_ticket['board']['name'] = board_name
-
-        mocks.service_api_update_ticket_call(api_ticket)
-        mocks.service_api_get_ticket_call()
-
-        local_ticket = Ticket.objects.first()
-        local_ticket.board_name = board_name
-        local_ticket.closed_flag = True
-        local_ticket.save()
-
-        updated_api_ticket = self.updater.update_api_ticket(local_ticket)
-
-        self.assertEqual(
-            updated_api_ticket['board']['name'],
-            local_ticket.board_name
-        )
 
 
 class TestMemberSynchronization(TestCase):

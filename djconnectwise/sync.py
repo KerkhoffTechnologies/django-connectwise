@@ -14,10 +14,6 @@ DEFAULT_AVATAR_EXTENSION = 'jpg'
 logger = logging.getLogger(__name__)
 
 
-class InvalidStatusError(Exception):
-    pass
-
-
 class Synchronizer:
     lookup_key = 'id'
 
@@ -56,8 +52,7 @@ class Synchronizer:
 
     def update_or_create_instance(self, api_instance):
         """
-        Creates and returns an instance if
-        it does not already exist
+        Creates and returns an instance if it does not already exist.
         """
         instance, created = self.get_or_create_instance(
             api_instance)
@@ -483,6 +478,7 @@ class TicketSynchronizer:
         Ticket instance.
         """
         json_data_id = json_data['id']
+        logger.info('Syncing ticket {}'.format(json_data_id))
         ticket, created = models.Ticket.objects \
             .get_or_create(pk=json_data_id)
 
@@ -577,60 +573,6 @@ class TicketSynchronizer:
         self._manage_member_assignments(ticket)
         return ticket, created
 
-    def update_json_data(self, ticket):
-        """"
-        Updates the state of a generic ticket and determines which api
-        to send the updated ticket data to.
-        """
-        json_data = self.service_client.get_ticket(ticket.id)
-
-        if ticket.closed_flag:
-            json_data['closedFlag'] = ticket.closed_flag
-            ticket_status = models.BoardStatus.objects.get(
-                closed_status=True)
-        else:
-            ticket_status = ticket.status
-
-        if not ticket.closed_flag:
-            try:
-                board_status = models.BoardStatus.objects.get(
-                    board_id=ticket.board_id,
-                    name=ticket_status.name
-                )
-            except models.BoardStatus.DoesNotExist as e:
-                raise InvalidStatusError(e)
-
-            json_data['status']['id'] = board_status.id
-
-        # no need for a callback update when updating via api
-        json_data['skipCallback'] = True
-        logger.info(
-            'Update API Ticket Status: {} - {}'.format(
-                ticket.id, json_data['status']['name']
-            )
-        )
-
-        return self.service_client.update_ticket(json_data)
-
-    def close_ticket(self, ticket):
-        """
-        Closes the specified service ticket returns True if the close
-        operation was successful on the connectwise server.
-        Note: It appears that the connectwise server does not return a
-        permissions error if user does not have access to this operation.
-        """
-        ticket.closed_flag = True
-        ticket.save()
-        logger.info('Close API Ticket: %s' % ticket.id)
-        api_ticket = self.update_api_ticket(ticket)
-        ticket_is_closed = api_ticket['closedFlag']
-
-        if not ticket_is_closed:
-            ticket.closed_flag = ticket_is_closed
-            ticket.save()
-
-        return ticket_is_closed
-
     def sync(self):
         """
         Synchronizes tickets between the ConnectWise server and the
@@ -682,71 +624,3 @@ class TicketSynchronizer:
         sync_job.save()
 
         return created_count, updated_count, delete_count
-
-
-class TicketUpdater(object):
-    """Send ticket updates to ConnectWise."""
-
-    def __init__(self):
-        self.service_client = api.ServiceAPIClient()
-
-    def update_api_ticket(self, ticket):
-        api_ticket = self.service_client.get_ticket(ticket.id)
-
-        if ticket.closed_flag:
-            api_ticket['closedFlag'] = ticket.closed_flag
-            ticket_status = models.BoardStatus.objects.get(
-                closed_status=True)
-        else:
-            ticket_status = ticket.status
-
-        if not ticket.closed_flag:
-            # Ensure that the new status is valid for the CW board.
-            try:
-                cw_board = models.ConnectWiseBoard.objects.get(
-                    id=ticket.board_id)
-                board_status = models.BoardStatus.objects.get(
-                    board_id=ticket.board_id,
-                    name=ticket_status.name
-                )
-                api_ticket['status']['id'] = board_status.id
-            except models.ConnectWiseBoard.DoesNotExist:
-                raise InvalidStatusError("Failed to find the ticket's board.")
-            except models.BoardStatus.DoesNotExist:
-                raise InvalidStatusError(
-                    "{} is not a valid status for the ticket's "
-                    "ConnectWise board ({}).".
-                    format(
-                        ticket_status.name,
-                        cw_board.name
-                    )
-                )
-
-        # No need for a callback update when updating via api
-        api_ticket['skipCallback'] = True
-        logger.info(
-            'Update API Ticket Status: {} - {}'.format(
-                ticket.id, api_ticket['status']['name']
-            )
-        )
-
-        return self.service_client.update_ticket(api_ticket)
-
-    def close_ticket(self, ticket):
-        """
-        Closes the specified service ticket returns True if the close
-        operation was successful on the connectwise server.
-        Note: It appears that the connectwise server does not return a
-        permissions error if user does not have access to this operation.
-        """
-        ticket.closed_flag = True
-        ticket.save()
-        logger.info('Close API Ticket: %s' % ticket.id)
-        api_ticket = self.update_api_ticket(ticket)
-        ticket_is_closed = api_ticket['closedFlag']
-
-        if not ticket_is_closed:
-            ticket.closed_flag = ticket_is_closed
-            ticket.save()
-
-        return ticket_is_closed

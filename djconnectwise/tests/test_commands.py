@@ -14,7 +14,7 @@ from .. import sync
 
 
 def sync_summary(class_name):
-    created_count = 2 if class_name == 'Priority' else 1
+    created_count = 2 if class_name in ['Priority', 'Board Status'] else 1
     return '{} Sync Summary - Created: {} , Updated: 0'.format(
         class_name, created_count
     )
@@ -33,11 +33,12 @@ class TestSyncCompaniesCommand(BaseSyncTest):
 
     def test_sync(self):
         """Test sync companies command."""
-        self._test_sync(mocks.company_api_get_call,
-                        fixtures.API_COMPANY_LIST,
-                        'company',
-                        sync_summary('Company')
-                        )
+        self._test_sync(
+            mocks.company_api_get_call,
+            fixtures.API_COMPANY_LIST,
+            'company',
+            sync_summary('Company')
+        )
 
 
 class TestSyncTeamsCommand(BaseSyncTest):
@@ -45,51 +46,60 @@ class TestSyncTeamsCommand(BaseSyncTest):
     def test_sync(self):
         """Test sync teams command."""
         fixture_utils.init_boards()
-        self._test_sync(mocks.service_api_get_teams_call,
-                        [fixtures.API_SERVICE_TEAM_LIST[0]],
-                        'team',
-                        sync_summary('Team')
-                        )
+        self._test_sync(
+            mocks.service_api_get_teams_call,
+            [fixtures.API_SERVICE_TEAM_LIST[0]],
+            'team',
+            sync_summary('Team')
+        )
 
 
 class TestSyncBoardsCommand(BaseSyncTest):
 
     def test_sync(self):
         """Test sync boards command."""
-        self._test_sync(mocks.service_api_get_boards_call,
-                        fixtures.API_BOARD_LIST,
-                        'board',
-                        sync_summary('Board'))
+        self._test_sync(
+            mocks.service_api_get_boards_call,
+            fixtures.API_BOARD_LIST,
+            'board',
+            sync_summary('Board')
+        )
 
 
 class TestSyncLocationsCommand(BaseSyncTest):
 
     def test_sync(self):
         """Test sync locations command."""
-        self._test_sync(mocks.service_api_get_locations_call,
-                        fixtures.API_SERVICE_LOCATION_LIST,
-                        'location',
-                        sync_summary('Location'))
+        self._test_sync(
+            mocks.service_api_get_locations_call,
+            fixtures.API_SERVICE_LOCATION_LIST,
+            'location',
+            sync_summary('Location')
+        )
 
 
 class TestSyncPrioritiesCommand(BaseSyncTest):
 
     def test_sync(self):
         """Test sync priorities command."""
-        self._test_sync(mocks.service_api_get_priorities_call,
-                        fixtures.API_SERVICE_PRIORITY_LIST,
-                        'priority',
-                        sync_summary('Priority'))
+        self._test_sync(
+            mocks.service_api_get_priorities_call,
+            fixtures.API_SERVICE_PRIORITY_LIST,
+            'priority',
+            sync_summary('Priority')
+        )
 
 
 class TestSyncProjectsCommand(BaseSyncTest):
 
     def test_sync(self):
         """Test sync projects command."""
-        self._test_sync(mocks.project_api_get_projects_call,
-                        fixtures.API_PROJECT_LIST,
-                        'project',
-                        sync_summary('Project'))
+        self._test_sync(
+            mocks.project_api_get_projects_call,
+            fixtures.API_PROJECT_LIST,
+            'project',
+            sync_summary('Project')
+        )
 
 
 class TestSyncBoardsStatusesCommand(BaseSyncTest):
@@ -103,11 +113,12 @@ class TestSyncBoardsStatusesCommand(BaseSyncTest):
 
     def test_sync(self):
         """Test sync_board_statuses command."""
-        self._test_sync(mocks.service_api_get_statuses_call,
-                        [fixtures.API_BOARD_STATUS_LIST[0]],
-                        'board_status',
-                        sync_summary('Board Status')
-                        )
+        self._test_sync(
+            mocks.service_api_get_statuses_call,
+            fixtures.API_BOARD_STATUS_LIST,
+            'board_status',
+            sync_summary('Board Status')
+        )
 
 
 class TestSyncAllCommand(BaseSyncTest):
@@ -116,7 +127,7 @@ class TestSyncAllCommand(BaseSyncTest):
         mocks.company_api_get_call(fixtures.API_COMPANY_LIST)
         mocks.service_api_get_boards_call(fixtures.API_BOARD_LIST)
         mocks.service_api_get_statuses_call(
-            [fixtures.API_BOARD_STATUS_LIST[0]])
+            fixtures.API_BOARD_STATUS_LIST)
         mocks.system_api_get_members_call([fixtures.API_MEMBER])
         mocks.system_api_get_member_image_by_identifier_call(
             (mocks.CW_MEMBER_IMAGE_FILENAME, mocks.get_member_avatar()))

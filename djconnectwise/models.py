@@ -1,8 +1,5 @@
-import os
 import re
-import urllib.error
-import urllib.parse
-import urllib.request
+import logging
 
 from easy_thumbnails.fields import ThumbnailerImageField
 from model_utils import Choices
@@ -12,6 +9,13 @@ from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from django_extensions.db.models import TimeStampedModel
 
+from . import api
+
+logger = logging.getLogger(__name__)
+
+
+class InvalidStatusError(Exception):
+    pass
 
 PRIORITY_RE = re.compile('^Priority ([\d]+)')
 
@@ -57,6 +61,24 @@ class ConnectWiseBoard(TimeStampedModel):
     @property
     def board_statuses(self):
         return BoardStatus.objects.filter(board=self)
+
+    def get_closed_status(self):
+        """
+        Find a closed status on the board. Prefer the status
+        called "Closed", if such a one exists.
+        """
+        try:
+            closed_status = self.board_statuses.get(
+                name='Closed',
+                closed_status=True,
+            )
+        except BoardStatus.DoesNotExist:
+            # There's nothing called "Closed".
+            # filter...first returns None if nothing is found.
+            closed_status = self.board_statuses.filter(
+                closed_status=True,
+            ).first()
+        return closed_status
 
 
 class BoardStatus(TimeStampedModel):
@@ -309,24 +331,77 @@ class Ticket(TimeStampedModel):
     def __str__(self):
         return '{}-{}'.format(self.id, self.summary)
 
-    def get_connectwise_url(self):
-        params = dict(
-            locale='en_US',
-            recordType='ServiceFv',
-            recid=self.id,
-            companyName=settings.CONNECTWISE_CREDENTIALS['company_id']
-        )
-
-        ticket_url = os.path.join(
-            settings.CONNECTWISE_SERVER_URL,
-            settings.CONNECTWISE_TICKET_PATH,
-            '?{0}'.format(urllib.parse.urlencode(params))
-        )
-
-        return ticket_url
-
     def time_remaining(self):
         time_remaining = self.budget_hours
         if self.budget_hours and self.actual_hours:
             time_remaining = self.budget_hours - self.actual_hours
         return time_remaining
+
+    def save(self, *args, **kwargs):
+        """
+        Save the ticket.
+
+        If update_cw as a kwarg is True, then update ConnectWise with changes.
+        """
+        self._check_valid_status()
+
+        update_cw = kwargs.pop('update_cw', False)
+        super().save(*args, **kwargs)
+        if update_cw:
+            self.update_cw()
+
+    def _check_valid_status(self):
+        """
+        Raise InvalidStatusError if the status doesn't belong to the board.
+
+        If status or board are None, then don't bother, since this can happen
+        during sync jobs and it would be a lot of work to enforce at all the
+        right times.
+        """
+        if self.status and self.board and self.status.board != self.board:
+            raise InvalidStatusError(
+                "{} is not a valid status for the ticket's "
+                "ConnectWise board ({}).".
+                format(
+                    self.status.name,
+                    self.board
+                )
+            )
+
+    def update_cw(self):
+        """
+        Send ticket updates to ConnectWise.
+
+        TODO: this only actually sends updates for the status and closedFlag
+        fields.
+        """
+        service_client = api.ServiceAPIClient()
+        api_ticket = service_client.get_ticket(self.id)
+
+        api_ticket['closedFlag'] = self.closed_flag
+        api_ticket['status'] = {
+            'id': self.status.id,
+            'name': self.status.name,
+        }
+
+        # No need for a callback update when updating via API
+        api_ticket['skipCallback'] = True
+        return service_client.update_ticket(api_ticket)
+
+    def close(self, *args, **kwargs):
+        """
+        Set the ticket to a closed status for the board.
+        """
+        logger.info('Closing ticket %s' % self.id)
+        closed_status = self.board.get_closed_status()
+        if closed_status is None:
+            raise InvalidStatusError(
+                "There are no closed statuses on this ticket's ConnectWise "
+                "board ({}). Its status has not been changed.".format(
+                    self.board
+                )
+            )
+
+        self.status = closed_status
+        self.closed_flag = True
+        return self.save(*args, **kwargs)
