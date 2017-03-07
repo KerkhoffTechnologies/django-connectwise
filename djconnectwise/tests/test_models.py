@@ -80,7 +80,6 @@ class TestTicketPriority(TestCase):
 class TestBoard(ModelTestCase):
     def test_get_closed_status_prefers_closed(self):
         board = self.connectwise_boards[0]
-        closed_status = board.get_closed_status()
         self.assertEqual(
             board.get_closed_status().name,
             'Closed'
@@ -128,14 +127,37 @@ class TestTicket(ModelTestCase):
             ticket.board = self.connectwise_boards[1]
             ticket.save()
 
-    def test_save_calls_update_cw(self):
-        # TODO
-        self.assertTrue(False)
+    def test_save_calls_update_cw_when_kwarg_passed(self):
+        board = self.connectwise_boards[0]
+        ticket = Ticket.objects.create(
+            summary='test',
+            status=board.board_statuses.first(),
+            board=board
+        )
+        with patch('djconnectwise.api.'
+                   'ServiceAPIClient') as mock_serviceapiclient:
+            instance = mock_serviceapiclient.return_value
+            # Call save with no 'update_cw' kwarg- our mock should NOT
+            # be called
+            ticket.save()
+            self.assertFalse(instance.update_ticket.called)
+            # Now call it with 'update_cw'
+            ticket.save(update_cw=True)
+            self.assertTrue(instance.update_ticket.called)
 
     def test_update_cw(self):
         # Verify update_cw calls the API client
-        # TODO
-        self.assertTrue(False)
+        board = self.connectwise_boards[0]
+        ticket = Ticket.objects.create(
+            summary='test',
+            status=board.board_statuses.first(),
+            board=board
+        )
+        with patch('djconnectwise.api.'
+                   'ServiceAPIClient') as mock_serviceapiclient:
+            instance = mock_serviceapiclient.return_value
+            ticket.update_cw()
+            self.assertTrue(instance.update_ticket.called)
 
     def test_close_ticket(self):
         # Verify close calls save.
