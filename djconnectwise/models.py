@@ -1,5 +1,6 @@
 import re
 import logging
+import urllib
 
 from easy_thumbnails.fields import ThumbnailerImageField
 from model_utils import Choices
@@ -336,6 +337,22 @@ class Ticket(TimeStampedModel):
         if self.budget_hours and self.actual_hours:
             time_remaining = self.budget_hours - self.actual_hours
         return time_remaining
+
+    def get_connectwise_url(self):
+        params = dict(
+            locale='en_US',
+            recordType='ServiceFv',
+            recid=self.id,
+            companyName=settings.CONNECTWISE_CREDENTIALS['company_id']
+        )
+
+        ticket_url = '{}/{}?{}'.format(
+            settings.CONNECTWISE_SERVER_URL,
+            settings.CONNECTWISE_TICKET_PATH,
+            urllib.parse.urlencode(params)
+        )
+
+        return ticket_url
 
     def save(self, *args, **kwargs):
         """
