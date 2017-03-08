@@ -360,11 +360,13 @@ class Ticket(TimeStampedModel):
         """
         if self.status and self.board and self.status.board != self.board:
             raise InvalidStatusError(
-                "{} is not a valid status for the ticket's "
-                "ConnectWise board ({}).".
+                "{} (ID {}) is not a valid status for the ticket's "
+                "ConnectWise board ({}, ID {}).".
                 format(
                     self.status.name,
-                    self.board
+                    self.status.id,
+                    self.board,
+                    self.board.id,
                 )
             )
 
