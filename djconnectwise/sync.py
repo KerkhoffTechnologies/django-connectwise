@@ -380,12 +380,10 @@ class TicketSynchronizer:
             models.Ticket)
         self.local_company_fields = self._create_field_lookup(models.Company)
 
-        self.status_map = {s.name: s for s in models.BoardStatus.objects.all()}
-
         self.members_map = {
             m.identifier: m for m in models.Member.objects.all()
         }
-        self.project_map = {p.name: p for p in models.Project.objects.all()}
+        self.project_map = {p.id: p for p in models.Project.objects.all()}
         self.ticket_assignments = {}
         self.updated_members = []
 
@@ -426,51 +424,19 @@ class TicketSynchronizer:
                         '{} assignment.'.format(username, ticket.id)
                     )
 
-    def get_or_create_project(self, api_ticket):
-        api_project = api_ticket['project']
+    def get_or_create_project(self, api_project):
         if api_project:
-            project = self.project_map.get(api_project['name'])
+            project = self.project_map.get(api_project['id'])
             if not project:
                 project = models.Project()
+                project.id = api_project['id']
                 project.name = api_project['name']
                 project.project_href = api_project['_info']['project_href']
                 project.project_id = api_project['id']
                 project.save()
-                self.project_map[project.name] = project
+                self.project_map[project.id] = project
                 logger.info('Project Created: %s' % project.name)
             return project
-
-    def get_or_create_ticket_status(self, api_ticket):
-        """
-        Creates and returns a BoardStatus instance if
-        it does not already exist
-        """
-        api_status = api_ticket['status']
-        name = api_status['name'].strip()
-        ticket_status = self.status_map.get(name)
-        created = False
-
-        if not ticket_status:
-            kwargs = dict(
-                id=api_status['id'],
-                name=name
-            )
-
-            if models.BoardStatus.objects.filter(**kwargs).exists():
-                ticket_status = models.BoardStatus.objects.get(**kwargs)
-            else:
-                logger.info('BoardStatus Created - %s' % name)
-                ticket_status, created = models.BoardStatus.objects \
-                    .get_or_create(**kwargs)
-
-            self.status_map[name] = ticket_status
-
-        else:
-            if ticket_status.id != api_status['id']:
-                ticket_status.id = api_status['id']
-                ticket_status.save()
-
-        return ticket_status, created
 
     def sync_ticket(self, json_data):
         """
@@ -557,7 +523,7 @@ class TicketSynchronizer:
 
         ticket.status = new_ticket_status
 
-        ticket.project = self.get_or_create_project(json_data)
+        ticket.project = self.get_or_create_project(json_data['project'])
         ticket.save()
         action = created and 'Created' or 'Updated'
 
