@@ -55,6 +55,7 @@ class ConnectWiseBoard(TimeStampedModel):
 
     class Meta:
         ordering = ('name',)
+        verbose_name = 'ConnectWise board'
 
     def __str__(self):
         return self.name
@@ -98,6 +99,7 @@ class BoardStatus(TimeStampedModel):
 
     class Meta:
         ordering = ('board__name', 'sort_order', 'name')
+        verbose_name_plural = 'Board statuses'
 
     def __str__(self):
         return '{}/{}'.format(self.board, self.name)

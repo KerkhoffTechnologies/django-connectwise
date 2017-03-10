@@ -12,8 +12,8 @@ class ConnectWiseBoardAdmin(admin.ModelAdmin):
 
 @admin.register(models.BoardStatus)
 class BoardStatusAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name')
-    search_fields = ['name']
+    list_display = ('id', 'board', 'name')
+    search_fields = ['name', 'board__name']
 
 
 @admin.register(models.Member)
@@ -31,6 +31,13 @@ class CompanyAdmin(admin.ModelAdmin):
                     'identifier', 'type', 'status')
     list_filter = ('status',)
     search_fields = ['name', 'identifier']
+
+
+@admin.register(models.Project)
+class ProjectAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name')
+    list_filter = ('name',)
+    search_fields = ['name']
 
 
 @admin.register(models.Ticket)
