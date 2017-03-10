@@ -68,6 +68,10 @@ class ConnectWiseAPIClient(object):
         if not params:
             params = {}
 
+        if 'pageSize' not in params:
+            # Default to max record count.
+            params['pageSize'] = 1000
+
         try:
             endpoint = self._endpoint(endpoint_url)
             response = requests.get(
@@ -139,22 +143,16 @@ class SystemAPIClient(ConnectWiseAPIClient):
             'pageSize': per_page,
         }
 
-        return self.fetch_resource(self.ENDPOINT_MEMBERS,
-                                   params=params)
+        return self.fetch_resource(
+            self.ENDPOINT_MEMBERS,
+            params=params
+        )
 
     def get_member_count(self):
         return self.fetch_resource(self.ENDPOINT_MEMBERS_COUNT)
 
     def get_callbacks(self):
-        """
-        Return all the callbacks. Unless you have more than 1000 callbacks.
-        """
-        return self.fetch_resource(
-            self.ENDPOINT_CALLBACKS,
-            params={
-                'pageSize': 1000,
-            }
-        )
+        return self.fetch_resource(self.ENDPOINT_CALLBACKS)
 
     def delete_callback(self, entry_id):
         try:
