@@ -456,6 +456,7 @@ class TicketSynchronizer:
         ticket.summary = json_data['summary']
         ticket.entered_date_utc = json_data['dateEntered']
         ticket.last_updated_utc = json_data['_info']['lastUpdated']
+        ticket.required_date_utc = json_data['requiredDate']
         ticket.resources = json_data['resources']
         ticket.budget_hours = json_data['budgetHours']
         ticket.actual_hours = json_data['actualHours']

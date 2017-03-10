@@ -284,7 +284,7 @@ API_SERVICE_TICKET = {
             'source_href': 'https://some-host.com/v4_6_release/apis/3.0/service/sources/2'
         }
     },
-    'requiredDate': None,
+    'requiredDate': "2017-03-03T00:00:00Z",
     'budgetHours': None,
     'opportunity': None,
     'agreement': None,
