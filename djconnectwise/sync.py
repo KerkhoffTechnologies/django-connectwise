@@ -99,6 +99,9 @@ class BoardSynchronizer(Synchronizer):
     def get_json(self):
         return self.client.get_boards()
 
+    def get_queryset(self):
+        return self.model_class.all_objects.all()
+
 
 class BoardChildSynchronizer(Synchronizer):
 
@@ -251,6 +254,7 @@ class ProjectSynchronizer(Synchronizer):
         instance.id = json_data['id']
         instance.name = json_data['name']
         instance.project_href = json_data['_info'].get('project_href')
+        instance.status_name = json_data['status']['name']
         return instance
 
     def get_json(self):

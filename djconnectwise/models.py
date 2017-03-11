@@ -49,9 +49,24 @@ class CallBackEntry(models.Model):
         return self.url
 
 
+class ActiveConnectWiseBoardManager(models.Manager):
+    """Return only active ConnectWise boards."""
+    def get_queryset(self):
+        return super().get_queryset().filter(inactive=False)
+
+
+class AllConnectWiseBoardManager(models.Manager):
+    """Return all ConnectWise boards."""
+    def get_queryset(self):
+        return super().get_queryset().all()
+
+
 class ConnectWiseBoard(TimeStampedModel):
     name = models.CharField(max_length=255)
     inactive = models.BooleanField(default=False)
+
+    objects = ActiveConnectWiseBoardManager()
+    all_objects = AllConnectWiseBoardManager()
 
     class Meta:
         ordering = ('name',)
@@ -258,9 +273,27 @@ class TicketAssignment(TimeStampedModel):
         return '{}: {}'.format(self.service_ticket, self.member)
 
 
+class NotClosedProjectManager(models.Manager):
+    """Return only projects whose status isn't "Closed"."""
+    def get_queryset(self):
+        return super().get_queryset().filter(status__ne='Closed')
+
+
+class AllProjectManager(models.Manager):
+    """Return all projects."""
+    def get_queryset(self):
+        return super().get_queryset().all()
+
+
 class Project(TimeStampedModel):
     name = models.CharField(max_length=200)
     project_href = models.CharField(max_length=200, blank=True, null=True)
+    # Project statuses aren't available as a first-class object in the API, so
+    # just keep the name here for simplicity.
+    status_name = models.CharField(max_length=200, blank=True, null=True)
+
+    objects = NotClosedProjectManager()
+    all_objects = AllProjectManager()
 
     class Meta:
         ordering = ('name', )

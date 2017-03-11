@@ -151,7 +151,11 @@ API_PROJECT = {
     'name': 'Financial System Implementation',
     '_info': {
         'project_href': 'https://some-host.com/v4_6_release/apis/3.0/project/projects/5'
-    }
+    },
+    'status': {
+        'id': 1,
+        'name': 'Open',
+    },
 }
 
 API_PROJECT_LIST = [API_PROJECT]
