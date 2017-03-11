@@ -23,17 +23,34 @@ class ConnectWiseAPIClient(object):
 
     def __init__(
         self,
-        id=settings.CONNECTWISE_CREDENTIALS['company_id'],
-        integrator_login_id=settings.CONNECTWISE_CREDENTIALS[
-            'integrator_login_id'],
-        integrator_password=settings.CONNECTWISE_CREDENTIALS[
-            'integrator_password'],
-        url=settings.CONNECTWISE_SERVER_URL,
-        api_public_key=settings.CONNECTWISE_CREDENTIALS['api_public_key'],
-        api_private_key=settings.CONNECTWISE_CREDENTIALS['api_private_key'],
-        api_codebase=settings.CONNECTWISE_CREDENTIALS['api_codebase']
+        id=None,
+        integrator_login_id=None,
+        integrator_password=None,
+        url=None,
+        api_public_key=None,
+        api_private_key=None,
+        api_codebase=None
     ):  # TODO - kwarg should be changed to server_url
-
+        if not id:
+            id = settings.CONNECTWISE_CREDENTIALS['company_id']
+        if not integrator_login_id:
+            integrator_login_id = settings.CONNECTWISE_CREDENTIALS[
+                'integrator_login_id'
+            ]
+        if not integrator_password:
+            integrator_password = settings.CONNECTWISE_CREDENTIALS[
+                'integrator_password'
+            ]
+        if not url:
+            url = settings.CONNECTWISE_SERVER_URL
+        if not api_public_key:
+            api_public_key = settings.CONNECTWISE_CREDENTIALS['api_public_key']
+        if not api_private_key:
+            api_private_key = settings.CONNECTWISE_CREDENTIALS[
+                'api_private_key'
+            ]
+        if not api_codebase:
+            api_codebase = settings.CONNECTWISE_CREDENTIALS['api_codebase']
         if not self.API:
             raise ValueError('API not specified')
 
