@@ -276,7 +276,7 @@ class TicketAssignment(TimeStampedModel):
 class NotClosedProjectManager(models.Manager):
     """Return only projects whose status isn't "Closed"."""
     def get_queryset(self):
-        return super().get_queryset().filter(status__ne='Closed')
+        return super().get_queryset().exclude(status_name='Closed')
 
 
 class AllProjectManager(models.Manager):

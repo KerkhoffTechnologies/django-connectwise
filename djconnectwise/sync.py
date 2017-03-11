@@ -260,6 +260,9 @@ class ProjectSynchronizer(Synchronizer):
     def get_json(self):
         return self.client.get_projects()
 
+    def get_queryset(self):
+        return self.model_class.all_objects.all()
+
 
 class MemberSynchronizer:
 
@@ -387,7 +390,7 @@ class TicketSynchronizer:
         self.members_map = {
             m.identifier: m for m in models.Member.objects.all()
         }
-        self.project_map = {p.id: p for p in models.Project.objects.all()}
+        self.project_map = {p.id: p for p in models.Project.all_objects.all()}
         self.ticket_assignments = {}
         self.updated_members = []
 
