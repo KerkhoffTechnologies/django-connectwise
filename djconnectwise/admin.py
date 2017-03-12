@@ -18,7 +18,7 @@ class BoardStatusAdmin(admin.ModelAdmin):
 
 @admin.register(models.Member)
 class MemberAdmin(admin.ModelAdmin):
-    list_display = ('identifier', 'full_name', 'office_email')
+    list_display = ('identifier', 'full_name', 'office_email', 'license_class')
     search_fields = ('identifier', 'first_name', 'last_name', 'office_email')
 
     def full_name(self, obj):

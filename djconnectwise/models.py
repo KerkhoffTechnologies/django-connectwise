@@ -98,6 +98,18 @@ class ConnectWiseBoard(TimeStampedModel):
         return closed_status
 
 
+class ActiveBoardStatusManager(models.Manager):
+    """Return only statuses whose ConnectWise board is active."""
+    def get_queryset(self):
+        return super().get_queryset().filter(board__inactive=False)
+
+
+class AllBoardManager(models.Manager):
+    """Return all ConnectWise board statuses."""
+    def get_queryset(self):
+        return super().get_queryset().all()
+
+
 class BoardStatus(TimeStampedModel):
     """
     Used for looking up the status/board id combination
@@ -109,8 +121,10 @@ class BoardStatus(TimeStampedModel):
     display_on_board = models.BooleanField()
     inactive = models.BooleanField()
     closed_status = models.BooleanField()
-
     board = models.ForeignKey('ConnectWiseBoard')
+
+    objects = ActiveBoardStatusManager()
+    all_objects = AllBoardManager()
 
     class Meta:
         ordering = ('board__name', 'sort_order', 'name')
@@ -131,7 +145,24 @@ class Location(TimeStampedModel):
         return self.name
 
 
+class NotAPIMemberManager(models.Manager):
+    """Return members that aren't API members."""
+    def get_queryset(self):
+        return super().get_queryset().exclude(license_class='A')
+
+
+class AllMemberManager(models.Manager):
+    """Return all members."""
+    def get_queryset(self):
+        return super().get_queryset().all()
+
+
 class Member(TimeStampedModel):
+    LICENSE_CLASSES = (
+        ('F', 'Full license'),
+        ('A', 'API license'),
+    )
+
     identifier = models.CharField(
         max_length=15, blank=False, unique=True)  # This is the CW username
     first_name = models.CharField(max_length=30, blank=False)
@@ -140,6 +171,13 @@ class Member(TimeStampedModel):
     inactive = models.BooleanField(default=False)
     avatar = ThumbnailerImageField(null=True, blank=True, verbose_name=_(
         'Member Avatar'), help_text=_('Member Avatar'))
+    license_class = models.CharField(
+        blank=True, null=True, max_length=20,
+        choices=LICENSE_CLASSES, db_index=True
+    )
+
+    objects = NotAPIMemberManager()
+    all_objects = AllMemberManager()
 
     class Meta:
         ordering = ('first_name', 'last_name')
@@ -164,6 +202,7 @@ class Member(TimeStampedModel):
         member.last_name = api_member['lastName']
         member.identifier = api_member['identifier']
         member.office_email = api_member['officeEmail']
+        member.license_class = api_member['licenseClass']
         member.inactive = api_member['inactiveFlag']
         member.save()
         return member
