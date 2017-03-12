@@ -10,6 +10,7 @@ settings.configure(
         'djconnectwise',
         'easy_thumbnails',
     ),
+    DJCONNECTWISE_API_BATCH_LIMIT=25,
 )
 
 
