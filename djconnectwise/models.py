@@ -477,8 +477,6 @@ class Ticket(TimeStampedModel):
             'name': self.status.name,
         }
 
-        # No need for a callback update when updating via API
-        api_ticket['skipCallback'] = True
         return service_client.update_ticket(api_ticket)
 
     def close(self, *args, **kwargs):
