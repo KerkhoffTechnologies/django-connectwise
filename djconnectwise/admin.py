@@ -40,12 +40,18 @@ class ProjectAdmin(admin.ModelAdmin):
     search_fields = ['name']
 
 
+class ResourceInline(admin.TabularInline):
+    model = models.Ticket.members.through
+    extra = 0
+
+
 @admin.register(models.Ticket)
 class TicketAdmin(admin.ModelAdmin):
-    list_display = ('summary', 'status', 'resources', 'record_type',)
+    list_display = ('id', 'summary', 'status', 'resources', 'record_type',)
 
     list_filter = ('status', 'record_type',)
     search_fields = ['id', 'summary', ]
+    inlines = [ResourceInline]
 
     def resources(self, obj):
         return ', '.join([str(m) for m in obj.members.all()])

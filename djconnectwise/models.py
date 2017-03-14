@@ -309,7 +309,7 @@ class TicketAssignment(TimeStampedModel):
     member = models.ForeignKey('Member')
 
     def __str__(self):
-        return '{}: {}'.format(self.service_ticket, self.member)
+        return '{}: {}'.format(self.ticket, self.member)
 
 
 class NotClosedProjectManager(models.Manager):
