@@ -10,7 +10,9 @@ class ConnectWiseAPIError(Exception):
     """Raise this, not request exceptions."""
     pass
 
-
+CW_RESPONSE_MAX_RECORDS = 1000  # The greatest number of records ConnectWise
+# will send us in one response.
+CW_DEFAULT_PAGE = 1  # CW Pagination is 1-indexed
 CONTENT_DISPOSITION_RE = re.compile(
     '^attachment; filename=\"{0,1}(.*?)\"{0,1}$'
 )
@@ -77,18 +79,16 @@ class ConnectWiseAPIClient(object):
         logger.error('FAILED API CALL: {0} - {1} - {2}'.format(
             response.url, response.status_code, response.content))
 
-    def fetch_resource(self, endpoint_url, params=None):
+    def fetch_resource(self, endpoint_url, params=None, *args, **kwargs):
         """
         A convenience method for issuing a request to the
-        specified REST endpoint
+        specified REST endpoint.
         """
         if not params:
             params = {}
 
-        if 'pageSize' not in params:
-            # Default to max record count.
-            params['pageSize'] = 1000
-
+        params['pageSize'] = kwargs.get('page_size', CW_RESPONSE_MAX_RECORDS)
+        params['page'] = kwargs.get('page', CW_DEFAULT_PAGE)
         try:
             endpoint = self._endpoint(endpoint_url)
             response = requests.get(
@@ -112,13 +112,16 @@ class ProjectAPIClient(ConnectWiseAPIClient):
     API = 'project'
     ENDPOINT_PROJECT = 'projects/'
 
-    def get_projects(self):
-        return self.fetch_resource(self.ENDPOINT_PROJECT)
+    def get_projects(self, page=1, page_size=CW_RESPONSE_MAX_RECORDS):
+        params = dict(
+            page=page,
+            pageSize=page_size,
+        )
+        return self.fetch_resource(self.ENDPOINT_PROJECT, params=params)
 
 
 class SystemAPIClient(ConnectWiseAPIClient):
     API = 'system'
-    MAX_PER_PAGE = 1000
 
     # endpoints
     ENDPOINT_MEMBERS = 'members/'
@@ -131,28 +134,14 @@ class SystemAPIClient(ConnectWiseAPIClient):
         result = self.fetch_resource(self.ENDPOINT_INFO)
         return result.get('version', '')
 
-    def get_members(self):
-        response_json = self.get_member_count()
-
-        if len(response_json) == 1:
-            per_page = response_json['count']
-        else:
-            per_page = self.MAX_PER_PAGE
-
-        params = {
-            'pageSize': per_page,
-        }
-
-        return self.fetch_resource(
-            self.ENDPOINT_MEMBERS,
-            params=params
-        )
+    def get_members(self, *args, **kwargs):
+        return self.fetch_resource(self.ENDPOINT_MEMBERS, *args, **kwargs)
 
     def get_member_count(self):
         return self.fetch_resource(self.ENDPOINT_MEMBERS_COUNT)
 
-    def get_callbacks(self):
-        return self.fetch_resource(self.ENDPOINT_CALLBACKS)
+    def get_callbacks(self, *args, **kwargs):
+        return self.fetch_resource(self.ENDPOINT_CALLBACKS, *args, **kwargs)
 
     def delete_callback(self, entry_id):
         try:
@@ -192,8 +181,6 @@ class SystemAPIClient(ConnectWiseAPIClient):
         else:
             self._log_failed(response)
             raise ConnectWiseAPIError(response.content)
-
-        return {}
 
     def update_callback(self, callback_entry):
         try:
@@ -270,13 +257,12 @@ class CompanyAPIClient(ConnectWiseAPIClient):
     API = 'company'
     ENDPOINT_COMPANIES = 'companies'
 
-    def by_id(self, id):
-        endpoint_url = '{}/{}'.format(self.ENDPOINT_COMPANIES,
-                                      id)
+    def by_id(self, company_id):
+        endpoint_url = '{}/{}'.format(self.ENDPOINT_COMPANIES, company_id)
         return self.fetch_resource(endpoint_url)
 
-    def get(self):
-        return self.fetch_resource(self.ENDPOINT_COMPANIES)
+    def get_companies(self, *args, **kwargs):
+        return self.fetch_resource(self.ENDPOINT_COMPANIES, *args, **kwargs)
 
 
 class ServiceAPIClient(ConnectWiseAPIClient):
@@ -316,23 +302,18 @@ class ServiceAPIClient(ConnectWiseAPIClient):
         endpoint_url = 'tickets/{}'.format(ticket_id)
         return self.fetch_resource(endpoint_url)
 
-    def get_tickets(self, page=0,
-                    page_size=settings.DJCONNECTWISE_API_BATCH_LIMIT):
+    def get_tickets(self, *args, **kwargs):
         params = dict(
-            page=page,
-            pageSize=page_size,
             conditions=self.get_conditions()
         )
-
-        return self.fetch_resource('tickets', params=params)
+        return self.fetch_resource('tickets', params=params, *args, **kwargs)
 
     def update_ticket_status(self, ticket_id, closed_flag, status):
         """
         Update the ticket's closedFlag and status on the server.
-
-        CW docs at
-        https://developer.connectwise.com/Manage/Developer_Guide#Patch
         """
+        # Yeah, this schema is a bit bizarre. See CW docs at
+        # https://developer.connectwise.com/Manage/Developer_Guide#Patch
         body = [
             {
                 'op': 'replace',
@@ -366,26 +347,25 @@ class ServiceAPIClient(ConnectWiseAPIClient):
             self._log_failed(response)
             raise ConnectWiseAPIError(response.content)
 
-    def get_statuses(self, board_id):
+    def get_statuses(self, board_id, *args, **kwargs):
         """
         Returns the status types associated with the specified board.
         """
         endpoint_url = 'boards/{}/statuses'.format(board_id)
+        return self.fetch_resource(endpoint_url, *args, **kwargs)
 
-        return self.fetch_resource(endpoint_url)
-
-    def get_boards(self):
-        return self.fetch_resource(self.ENDPOINT_BOARDS)
+    def get_boards(self, *args, **kwargs):
+        return self.fetch_resource(self.ENDPOINT_BOARDS, *args, **kwargs)
 
     def get_board(self, board_id):
         return self.fetch_resource('boards/{}'.format(board_id))
 
-    def get_priorities(self):
-        return self.fetch_resource(self.ENDPOINT_PRIORITIES)
+    def get_priorities(self, *args, **kwargs):
+        return self.fetch_resource(self.ENDPOINT_PRIORITIES, *args, **kwargs)
 
-    def get_teams(self, board_id):
+    def get_teams(self, board_id, *args, **kwargs):
         endpoint = '{}/{}/teams/'.format(self.ENDPOINT_BOARDS, board_id)
-        return self.fetch_resource(endpoint)
+        return self.fetch_resource(endpoint, *args, **kwargs)
 
-    def get_locations(self):
-        return self.fetch_resource(self.ENDPOINT_LOCATIONS)
+    def get_locations(self, *args, **kwargs):
+        return self.fetch_resource(self.ENDPOINT_LOCATIONS, *args, **kwargs)

@@ -182,7 +182,7 @@ class TestCompanyAPIClient(TestCase):
     def test_get(self):
         mk.get(self.endpoint,
                fixtures.API_COMPANY_LIST)
-        result = self.client.get()
+        result = self.client.get_companies()
         self.assertEqual(len(result), len(fixtures.API_COMPANY_LIST))
 
     @responses.activate
@@ -190,5 +190,5 @@ class TestCompanyAPIClient(TestCase):
         data = {}
         mk.get(self.endpoint,
                data)
-        result = self.client.get()
+        result = self.client.get_companies()
         self.assertEqual(result, data)

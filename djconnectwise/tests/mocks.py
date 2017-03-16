@@ -26,7 +26,7 @@ def company_api_by_id_call(return_value):
 
 
 def company_api_get_call(return_value):
-    method_name = 'djconnectwise.api.CompanyAPIClient.get'
+    method_name = 'djconnectwise.api.CompanyAPIClient.get_companies'
     return create_mock_call(method_name, return_value)
 
 
@@ -35,9 +35,9 @@ def project_api_get_projects_call(return_value):
     return create_mock_call(method_name, return_value)
 
 
-def _service_api_tickets_call(page=0, page_size=25):
+def _service_api_tickets_call(page=1, page_size=25):
     return_value = []
-    if page == 0:
+    if page == 1:
         return_value = [fixtures.API_SERVICE_TICKET]
     return return_value
 
