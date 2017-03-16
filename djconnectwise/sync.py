@@ -54,6 +54,9 @@ class Synchronizer:
     def get_page(self, *args, **kwargs):
         raise NotImplementedError
 
+    def fetch_sync_by_id(self, *args, **kwargs):
+        raise NotImplementedError
+
     def get_or_create_instance(self, api_instance):
         lookup_key = api_instance[self.lookup_key]
         instance = self.instance_map.get(lookup_key)
@@ -94,8 +97,8 @@ class Synchronizer:
         updated_count = 0
         deleted_count = 0
 
-        for records in self.get():
-            _, created = self.update_or_create_instance(records)
+        for record in self.get():
+            _, created = self.update_or_create_instance(record)
 
             if created:
                 created_count += 1
@@ -223,11 +226,15 @@ class CompanySynchronizer(Synchronizer):
     def get_page(self, *args, **kwargs):
         return self.client.get_companies(*args, **kwargs)
 
+    def fetch_sync_by_id(self, company_id):
+        company = self.client.by_id(company_id)
+        self.update_or_create_instance(company)
+
 
 class LocationSynchronizer(Synchronizer):
     """
     Coordinates retrieval and demarshalling of ConnectWise JSON
-    Company instances.
+    Location instances.
     """
     client_class = api.ServiceAPIClient
     model_class = models.Location
@@ -274,7 +281,6 @@ class ProjectSynchronizer(Synchronizer):
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
         instance.name = json_data['name']
-        instance.project_href = json_data['_info'].get('project_href')
         instance.status_name = json_data['status']['name']
         return instance
 
@@ -283,6 +289,10 @@ class ProjectSynchronizer(Synchronizer):
 
     def get_queryset(self):
         return self.model_class.all_objects.all()
+
+    def fetch_sync_by_id(self, project_id):
+        project = self.client.get_project(project_id)
+        self.update_or_create_instance(project)
 
 
 class MemberSynchronizer:
@@ -433,7 +443,6 @@ class TicketSynchronizer:
         }
         self.project_map = {p.id: p for p in models.Project.all_objects.all()}
         self.ticket_assignments = {}
-        self.updated_members = []
 
         self.exclude_fields = ('priority', 'status', 'company')
 
@@ -444,34 +453,6 @@ class TicketSynchronizer:
                 include_parents=False, include_hidden=True)
         ]
         return dict(field_map)
-
-    def _manage_member_assignments(self, ticket):
-        # reset board/ticket assignment in case the assigned resources have
-        # changed since last sync
-        member = None
-        if ticket.resources:
-            usernames = [u.strip()
-                         for u in ticket.resources.split(',')]
-            # clear existing assignments
-            models.TicketAssignment.objects.filter(
-                ticket=ticket).delete()
-            for username in usernames:
-                member = self.members_map.get(username)
-
-                if member:
-                    assignment = models.TicketAssignment()
-                    assignment.member = member
-                    assignment.ticket = ticket
-                    self.ticket_assignments[(username, ticket.id,)] = \
-                        assignment
-                    msg = 'Member ticket assignment: ' \
-                          'ticket {}, member {}'.format(ticket.id, username)
-                    logger.info(msg)
-                else:
-                    logger.error(
-                        'Failed to locate member with username {} for ticket '
-                        '{} assignment.'.format(username, ticket.id)
-                    )
 
     def get_or_create_project(self, api_project):
         if api_project:
@@ -487,7 +468,7 @@ class TicketSynchronizer:
                 logger.info('Project created: %s' % project.name)
             return project
 
-    def sync_ticket(self, json_data):
+    def sync_ticket(self, json_data, commit_assignments=True):
         """
         Creates a new local instance of the supplied ConnectWise
         Ticket instance.
@@ -497,7 +478,9 @@ class TicketSynchronizer:
         ticket, created = models.Ticket.objects \
             .get_or_create(pk=json_data_id)
 
-        # if the status results in a move to a different column
+        ticket.api_text = str(json_data)
+
+        # If the status results in a move to a different column
         original_status = not created and ticket.status or None
 
         ticket.closed_flag = json_data['closedFlag']
@@ -523,8 +506,6 @@ class TicketSynchronizer:
                     json_data_id
                 )
             )
-
-        ticket.api_text = str(json_data)
 
         try:
             ticket.board = models.ConnectWiseBoard.all_objects.get(
@@ -587,8 +568,53 @@ class TicketSynchronizer:
         )
         logger.info(log_info)
 
-        self._manage_member_assignments(ticket)
+        self._manage_member_assignments(ticket, commit_assignments)
         return ticket, created
+
+    def _manage_member_assignments(self, ticket, commit_assignments=True):
+        member = None
+        if ticket.resources:
+            usernames = [
+                u.strip() for u in ticket.resources.split(',')
+            ]
+            # Reset board/ticket assignment in case the assigned resources
+            # have changed since last sync.
+            models.TicketAssignment.objects.filter(
+                ticket=ticket).delete()
+            for username in usernames:
+                member = self.members_map.get(username)
+
+                if member:
+                    assignment = models.TicketAssignment()
+                    assignment.member = member
+                    assignment.ticket = ticket
+                    self.ticket_assignments[(username, ticket.id,)] = \
+                        assignment
+                    msg = 'Member ticket assignment: ' \
+                          'ticket {}, member {}'.format(ticket.id, username)
+                    logger.info(msg)
+                else:
+                    logger.error(
+                        'Failed to locate member with username {} for ticket '
+                        '{} assignment.'.format(username, ticket.id)
+                    )
+            if commit_assignments:
+                self.commit_ticket_assignments()
+
+    def commit_ticket_assignments(self):
+        """Commit all the saved ticket assignments."""
+        logger.info(
+            'Saving {} ticket assignments'.format(
+                len(self.ticket_assignments)
+            )
+        )
+        models.TicketAssignment.objects.bulk_create(
+            list(self.ticket_assignments.values()))
+        self.ticket_assignments = {}
+
+    def fetch_sync_by_id(self, ticket_id):
+        ticket = self.service_client.get_ticket(ticket_id)
+        self.sync_ticket(ticket)
 
     def sync(self):
         """
@@ -610,7 +636,11 @@ class TicketSynchronizer:
             num_tickets = len(tickets)
 
             for ticket in tickets:
-                ticket, created = self.sync_ticket(ticket)
+                # We'll delay adding member assignments until the very end,
+                # because it's faster.
+                ticket, created = self.sync_ticket(
+                    ticket, commit_assignments=False
+                )
                 if created:
                     created_count += 1
                 else:
@@ -621,13 +651,7 @@ class TicketSynchronizer:
                 break
 
         if self.ticket_assignments:
-            logger.info(
-                'Saving {} ticket assignments'.format(
-                    len(self.ticket_assignments)
-                )
-            )
-            models.TicketAssignment.objects.bulk_create(
-                list(self.ticket_assignments.values()))
+            self.commit_ticket_assignments()
 
         # Now prune closed service tickets.
         logger.info('Deleting closed tickets')

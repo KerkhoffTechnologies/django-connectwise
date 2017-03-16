@@ -326,7 +326,6 @@ class AllProjectManager(models.Manager):
 
 class Project(TimeStampedModel):
     name = models.CharField(max_length=200)
-    project_href = models.CharField(max_length=200, blank=True, null=True)
     # Project statuses aren't available as a first-class object in the API, so
     # just keep the name here for simplicity.
     status_name = models.CharField(max_length=200, blank=True, null=True)

@@ -42,6 +42,16 @@ class CallBackView(views.CsrfExemptMixin,
     }
 
     def post(self, request, *args, **kwargs):
+        """
+        Update or delete entity by fetching it from CW again. We mostly
+        ignore the JSON that CW sends to us, because their method of
+        verifying the request requires us to make a request back to them for
+        a signing key, so we may as well just make a request for the whole
+        object.
+
+        ConnectWise docs for callback verification:
+        https://developer.connectwise.com/Manage/Developer_Guide#Verifying_the_Callback_Source
+        """
         body = json.loads(request.body.decode(encoding='utf-8'))
         required_fields = {
             'action': body['Action'],
@@ -64,35 +74,33 @@ class CallBackView(views.CsrfExemptMixin,
         self.synchronizer = sync_class()
         entity = json.loads(body.get('Entity'))
 
-        logger.debug('{} {}: {}'.format(self.action.upper(), entity, body))
+        logger.debug('Callback {} {}: {}'.format(
+            self.action.upper(), entity, body)
+        )
 
         if self.action == CALLBACK_DELETED:
             self.delete(entity)
         else:
             self.update(entity)
 
-        # we need not return anything to connectwise
+        # We need not return anything to ConnectWise
         return HttpResponse(status=204)
 
     def update(self, entity):
-        self.model_class.objects.filter(id=entity['id'])
-        logger.info('Updated via CallBack: {}'.format(entity))
-
+        entity_id = entity['id']
         try:
-            if self.callback_type == 'ticket':
-                self.synchronizer.sync_ticket(entity)
-            else:
-                self.synchronizer.update_or_create_instance(entity)
+            self.synchronizer.fetch_sync_by_id(entity_id)
         except ConnectWiseAPIError as e:
             # Something bad happened when talking to the API. There's not
             # much we can do, so just log it. We should get synced back up
             # when the next periodic sync job runs.
             logger.error(
                 'API call failed in model {} ID {} callback: '
-                '{}'.format(self.model_class, entity['id'], e)
+                '{}'.format(self.model_class, entity_id, e)
             )
 
     def delete(self, entity):
+        entity_id = entity['id']
         self.model_class.objects.filter(id=entity['id']).delete()
         logger.info('Deleted via CallBack: {}'.format(entity['id']))
 
