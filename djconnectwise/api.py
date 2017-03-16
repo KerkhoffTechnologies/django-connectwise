@@ -104,10 +104,8 @@ class ConnectWiseAPIClient(object):
         if 200 <= response.status_code < 300:
             return response.json()
         else:
-            msg = response.content
             self._log_failed(response)
-
-            raise ConnectWiseAPIError(msg)
+            raise ConnectWiseAPIError(response.content)
 
 
 class ProjectAPIClient(ConnectWiseAPIClient):
@@ -116,21 +114,6 @@ class ProjectAPIClient(ConnectWiseAPIClient):
 
     def get_projects(self):
         return self.fetch_resource(self.ENDPOINT_PROJECT)
-
-    def update_project(self, json_data):
-        try:
-            endpoint = self._endpoint('projects/{}'.format(json_data['id']))
-            response = requests.put(
-                endpoint,
-                params=dict(id=json_data['id'], body=json_data),
-                json=json_data,
-                auth=self.auth,
-                timeout=settings.DJCONNECTWISE_API_TIMEOUT,
-            )
-            return response
-        except requests.RequestException as e:
-            logger.error('Request failed: PUT {}: {}'.format(endpoint, e))
-            raise ConnectWiseAPIError('{}'.format(e))
 
 
 class SystemAPIClient(ConnectWiseAPIClient):
@@ -208,6 +191,7 @@ class SystemAPIClient(ConnectWiseAPIClient):
             return response.json()
         else:
             self._log_failed(response)
+            raise ConnectWiseAPIError(response.content)
 
         return {}
 
@@ -227,7 +211,11 @@ class SystemAPIClient(ConnectWiseAPIClient):
             logger.error('Request failed: PUT {}: {}'.format(endpoint, e))
             raise ConnectWiseAPIError('{}'.format(e))
 
-        return response
+        if 200 <= response.status_code < 300:
+            return response.json()
+        else:
+            self._log_failed(response)
+            raise ConnectWiseAPIError(response.content)
 
     def get_member_by_identifier(self, identifier):
         return self.fetch_resource('members/{0}'.format(identifier))
@@ -338,20 +326,40 @@ class ServiceAPIClient(ConnectWiseAPIClient):
 
         return self.fetch_resource('tickets', params=params)
 
-    def update_ticket(self, ticket):
+    def update_ticket_status(self, ticket_id, closed_flag, status):
+        # Whoever came up with this schema must have been on crack.
+        body = [
+            {
+                'op': 'replace',
+                'path': 'closedFlag',
+                'value': closed_flag
+            },
+            {
+                'op': 'replace',
+                'path': 'status',
+                'value': {
+                    'id': status.id,
+                    'name': status.name,
+                },
+            },
+        ]
         try:
-            endpoint = self._endpoint('tickets/{}'.format(ticket['id']))
-            response = requests.put(
+            endpoint = self._endpoint('tickets/{}'.format(ticket_id))
+            response = requests.patch(
                 endpoint,
-                params=dict(id=ticket['id'], body=ticket),
-                json=ticket,
+                json=body,
                 auth=self.auth,
                 timeout=settings.DJCONNECTWISE_API_TIMEOUT,
             )
-            return response
         except requests.RequestException as e:
-            logger.error('Request failed: PUT {}: {}'.format(endpoint, e))
+            logger.error('Request failed: PATCH {}: {}'.format(endpoint, e))
             raise ConnectWiseAPIError('{}'.format(e))
+
+        if 200 <= response.status_code < 300:
+            return response.json()
+        else:
+            self._log_failed(response)
+            raise ConnectWiseAPIError(response.content)
 
     def get_statuses(self, board_id):
         """
