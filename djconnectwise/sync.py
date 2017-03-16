@@ -565,7 +565,7 @@ class TicketSynchronizer:
         updated_count = 0
         ticket_ids = []
 
-        page = 0
+        page = 1  # Page is 1-indexed, not 0-indexed
         accumulated = 0
 
         logger.info('Synchronization started')
