@@ -327,7 +327,12 @@ class ServiceAPIClient(ConnectWiseAPIClient):
         return self.fetch_resource('tickets', params=params)
 
     def update_ticket_status(self, ticket_id, closed_flag, status):
-        # Whoever came up with this schema must have been on crack.
+        """
+        Update the ticket's closedFlag and status on the server.
+
+        CW docs at
+        https://developer.connectwise.com/Manage/Developer_Guide#Patch
+        """
         body = [
             {
                 'op': 'replace',
