@@ -8,6 +8,8 @@ from djconnectwise.utils import get_hash, get_filename_extension
 
 from django.core.files.base import ContentFile
 from django.utils import timezone
+from django.conf import settings
+
 
 DEFAULT_AVATAR_EXTENSION = 'jpg'
 
@@ -32,7 +34,24 @@ class Synchronizer:
     def get_queryset(self):
         return self.model_class.objects.all()
 
-    def get_json(self):
+    def get(self):
+        records = []
+        page = 1
+        while True:
+            logger.info(
+                'Fetching {} records, batch {}'.format(self.model_class, page)
+            )
+            page_records = self.get_page(
+                page=page, page_size=settings.DJCONNECTWISE_API_BATCH_LIMIT
+            )
+            records += page_records
+            page += 1
+            if len(page_records) < settings.DJCONNECTWISE_API_BATCH_LIMIT:
+                # No more records
+                break
+        return records
+
+    def get_page(self, *args, **kwargs):
         raise NotImplementedError
 
     def get_or_create_instance(self, api_instance):
@@ -75,8 +94,8 @@ class Synchronizer:
         updated_count = 0
         deleted_count = 0
 
-        for json_data in self.get_json():
-            _, created = self.update_or_create_instance(json_data)
+        for records in self.get():
+            _, created = self.update_or_create_instance(records)
 
             if created:
                 created_count += 1
@@ -96,8 +115,8 @@ class BoardSynchronizer(Synchronizer):
         instance.inactive = json_data['inactive']
         return instance
 
-    def get_json(self):
-        return self.client.get_boards()
+    def get_page(self, *args, **kwargs):
+        return self.client.get_boards(*args, **kwargs)
 
     def get_queryset(self):
         return self.model_class.all_objects.all()
@@ -115,12 +134,12 @@ class BoardChildSynchronizer(Synchronizer):
     def client_call(self, board_id):
         raise NotImplementedError
 
-    def get_json(self):
+    def get_page(self, *args, **kwargs):
         results_json = []
         board_qs = models.ConnectWiseBoard.all_objects.all()
 
         for board_id in board_qs.values_list('id', flat=True):
-            results_json += self.client_call(board_id)
+            results_json += self.client_call(board_id, *args, **kwargs)
 
         return results_json
 
@@ -140,8 +159,8 @@ class BoardStatusSynchronizer(BoardChildSynchronizer):
 
         return instance
 
-    def client_call(self, board_id):
-        return self.client.get_statuses(board_id)
+    def client_call(self, board_id, *args, **kwargs):
+        return self.client.get_statuses(board_id, *args, **kwargs)
 
     def get_queryset(self):
         return self.model_class.all_objects.all()
@@ -166,8 +185,8 @@ class TeamSynchronizer(BoardChildSynchronizer):
         instance.members.add(*members)
         return instance
 
-    def client_call(self, board_id):
-        return self.client.get_teams(board_id)
+    def client_call(self, board_id, *args, **kwargs):
+        return self.client.get_teams(board_id, *args, **kwargs)
 
 
 class CompanySynchronizer(Synchronizer):
@@ -202,8 +221,8 @@ class CompanySynchronizer(Synchronizer):
         company.created = timezone.now()
         return company
 
-    def get_json(self):
-        return self.client.get()
+    def get_page(self, *args, **kwargs):
+        return self.client.get_companies(*args, **kwargs)
 
 
 class LocationSynchronizer(Synchronizer):
@@ -224,8 +243,8 @@ class LocationSynchronizer(Synchronizer):
         location.where = location_json['where']
         return location
 
-    def get_json(self):
-        return self.client.get_locations()
+    def get_page(self, *args, **kwargs):
+        return self.client.get_locations(*args, **kwargs)
 
 
 class PrioritySynchronizer(Synchronizer):
@@ -245,8 +264,8 @@ class PrioritySynchronizer(Synchronizer):
 
         return ticket_priority
 
-    def get_json(self):
-        return self.client.get_priorities()
+    def get_page(self, *args, **kwargs):
+        return self.client.get_priorities(*args, **kwargs)
 
 
 class ProjectSynchronizer(Synchronizer):
@@ -260,8 +279,8 @@ class ProjectSynchronizer(Synchronizer):
         instance.status_name = json_data['status']['name']
         return instance
 
-    def get_json(self):
-        return self.client.get_projects()
+    def get_page(self, *args, **kwargs):
+        return self.client.get_projects(*args, **kwargs)
 
     def get_queryset(self):
         return self.model_class.all_objects.all()
@@ -560,24 +579,20 @@ class TicketSynchronizer:
         specified in the DJCONNECTWISE_API_BATCH_LIMIT setting
         """
         sync_job = models.SyncJob.objects.create()
+        page = 1  # Page is 1-indexed
 
         created_count = 0
         updated_count = 0
-        ticket_ids = []
-
-        page = 1  # Page is 1-indexed, not 0-indexed
-        accumulated = 0
-
-        logger.info('Synchronization started')
-
         while True:
-            logger.info('Processing batch {}'.format(page))
-            tickets = self.service_client.get_tickets(page=page)
+            logger.info('Processing ticket batch {}'.format(page))
+            tickets = self.service_client.get_tickets(
+                page=page,
+                page_size=settings.DJCONNECTWISE_API_BATCH_LIMIT
+            )
             num_tickets = len(tickets)
 
             for ticket in tickets:
                 ticket, created = self.sync_ticket(ticket)
-                ticket_ids.append(ticket.id)
 
                 if created:
                     created_count += 1
@@ -585,13 +600,17 @@ class TicketSynchronizer:
                     updated_count += 1
 
             page += 1
-            accumulated += len(tickets)
 
-            if not num_tickets:
+            if num_tickets == 0:
+                # Run until CW gives us no more tickets.
                 break
 
         if self.ticket_assignments:
-            logger.info('Saving ticket assignments')
+            logger.info(
+                'Saving {} ticket assignments'.format(
+                    len(self.ticket_assignments)
+                )
+            )
             models.TicketAssignment.objects.bulk_create(
                 list(self.ticket_assignments.values()))
 
