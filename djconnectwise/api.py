@@ -302,14 +302,11 @@ class ServiceAPIClient(ConnectWiseAPIClient):
         endpoint_url = 'tickets/{}'.format(ticket_id)
         return self.fetch_resource(endpoint_url)
 
-    def get_tickets(self, page=1, page_size=CW_RESPONSE_MAX_RECORDS):
+    def get_tickets(self, *args, **kwargs):
         params = dict(
-            page=page,
-            pageSize=page_size,
             conditions=self.get_conditions()
         )
-
-        return self.fetch_resource('tickets', params=params)
+        return self.fetch_resource('tickets', params=params, *args, **kwargs)
 
     def update_ticket_status(self, ticket_id, closed_flag, status):
         """

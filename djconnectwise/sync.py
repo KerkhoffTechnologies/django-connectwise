@@ -135,13 +135,13 @@ class BoardChildSynchronizer(Synchronizer):
         raise NotImplementedError
 
     def get_page(self, *args, **kwargs):
-        results_json = []
+        records = []
         board_qs = models.ConnectWiseBoard.all_objects.all()
 
         for board_id in board_qs.values_list('id', flat=True):
-            results_json += self.client_call(board_id, *args, **kwargs)
+            records += self.client_call(board_id, *args, **kwargs)
 
-        return results_json
+        return records
 
 
 class BoardStatusSynchronizer(BoardChildSynchronizer):
@@ -210,7 +210,6 @@ class CompanySynchronizer(Synchronizer):
         # Fields below aren't included when the company is created as a
         # side-effect of creating/updating a ticket or other type of object,
         # so use .get().
-
         company.phone_number = company_json.get('phoneNumber')
         company.fax_number = company_json.get('faxNumber')
         company.address_line1 = company_json.get('addressLine1')
@@ -324,8 +323,28 @@ class MemberSynchronizer:
         logger.info("Saved member '{}' avatar to {}.".format(
             member.identifier, member.avatar.name))
 
+    def get(self):
+        records = []
+        page = 1
+        while True:
+            logger.info(
+                'Fetching member records, batch {}'.format(page)
+            )
+            page_records = self.get_page(
+                page=page, page_size=settings.DJCONNECTWISE_API_BATCH_LIMIT
+            )
+            records += page_records
+            page += 1
+            if len(page_records) < settings.DJCONNECTWISE_API_BATCH_LIMIT:
+                # No more records
+                break
+        return records
+
+    def get_page(self, *args, **kwargs):
+        return self.client.get_members(*args, **kwargs)
+
     def sync(self):
-        members_json = self.client.get_members()
+        members_json = self.get()
 
         updated_count = 0
         created_count = 0
@@ -347,11 +366,10 @@ class MemberSynchronizer:
                 created_count += 1
                 logger.info('Create Member: {0}'.format(member.identifier))
 
-            # only update the avatar if the member profile
-            # was updated since last sync
+            # Only update the avatar if the member profile
+            # was updated since last sync.
             member_last_updated = parse(api_member['_info']['lastUpdated'])
             member_stale = False
-
             if self.last_sync_job:
                 member_stale = member_last_updated > \
                     self.last_sync_job.start_time
@@ -593,16 +611,13 @@ class TicketSynchronizer:
 
             for ticket in tickets:
                 ticket, created = self.sync_ticket(ticket)
-
                 if created:
                     created_count += 1
                 else:
                     updated_count += 1
 
             page += 1
-
-            if num_tickets == 0:
-                # Run until CW gives us no more tickets.
+            if num_tickets < settings.DJCONNECTWISE_API_BATCH_LIMIT:
                 break
 
         if self.ticket_assignments:
