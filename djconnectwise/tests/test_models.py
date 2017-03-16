@@ -143,7 +143,7 @@ class TestTicket(ModelTestCase):
             self.assertFalse(instance.update_ticket.called)
             # Now call it with 'update_cw'
             ticket.save(update_cw=True)
-            self.assertTrue(instance.update_ticket.called)
+            self.assertTrue(instance.update_ticket_status.called)
 
     def test_update_cw(self):
         # Verify update_cw calls the API client
@@ -157,7 +157,7 @@ class TestTicket(ModelTestCase):
                    'ServiceAPIClient') as mock_serviceapiclient:
             instance = mock_serviceapiclient.return_value
             ticket.update_cw()
-            self.assertTrue(instance.update_ticket.called)
+            self.assertTrue(instance.update_ticket_status.called)
 
     def test_close_ticket(self):
         # Verify close calls save.
