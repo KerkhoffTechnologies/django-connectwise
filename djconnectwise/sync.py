@@ -373,7 +373,7 @@ class TicketSynchronizer:
             log_msg = 'Preparing sync job for objects updated since {}.'
             logger.info(log_msg.format(last_sync_job_time))
             logger.info(
-                'Ticket Extra Conditions: {0}'.format(extra_conditions))
+                'Ticket extra conditions: {0}'.format(extra_conditions))
         else:
             logger.info('Preparing full ticket sync job.')
             # absence of a sync job indicates that this is an initial/full
@@ -425,10 +425,11 @@ class TicketSynchronizer:
                     assignment = models.TicketAssignment()
                     assignment.member = member
                     assignment.ticket = ticket
-                    self.ticket_assignments[
-                        (username, ticket.id,)] = assignment
-                    msg = 'Member Ticket Assignment: {} - {}'
-                    logger.info(msg.format(username, ticket.id))
+                    self.ticket_assignments[(username, ticket.id,)] = \
+                        assignment
+                    msg = 'Member ticket assignment: ' \
+                          'ticket {}, member {}'.format(ticket.id, username)
+                    logger.info(msg)
                 else:
                     logger.error(
                         'Failed to locate member with username {} for ticket '
@@ -446,7 +447,7 @@ class TicketSynchronizer:
                 project.project_id = api_project['id']
                 project.save()
                 self.project_map[project.id] = project
-                logger.info('Project Created: %s' % project.name)
+                logger.info('Project created: %s' % project.name)
             return project
 
     def sync_ticket(self, json_data):
@@ -541,12 +542,13 @@ class TicketSynchronizer:
 
         status_changed = ''
         if original_status != new_ticket_status:
-            status_txt = 'Status Changed From: {} To: {}'
-            status_changed = status_txt.format(original_status,
-                                               new_ticket_status)
+            status_changed = '; status changed from ' \
+                         '{} to {}'.format(original_status, new_ticket_status)
 
-        log_info = '{} Ticket #: {} {}'
-        logger.info(log_info.format(action, ticket.id, status_changed))
+        log_info = '{} ticket {}{}'.format(
+            action, ticket.id, status_changed
+        )
+        logger.info(log_info)
 
         self._manage_member_assignments(ticket)
         return ticket, created
@@ -566,10 +568,10 @@ class TicketSynchronizer:
         page = 0
         accumulated = 0
 
-        logger.info('Synchronization Started')
+        logger.info('Synchronization started')
 
         while True:
-            logger.info('Processing Batch #: {}'.format(page))
+            logger.info('Processing batch {}'.format(page))
             tickets = self.service_client.get_tickets(page=page)
             num_tickets = len(tickets)
 
@@ -588,12 +590,13 @@ class TicketSynchronizer:
             if not num_tickets:
                 break
 
-        logger.info('Saving Ticket Assignments')
-        models.TicketAssignment.objects.bulk_create(
-            list(self.ticket_assignments.values()))
+        if self.ticket_assignments:
+            logger.info('Saving ticket assignments')
+            models.TicketAssignment.objects.bulk_create(
+                list(self.ticket_assignments.values()))
 
-        # now prune closed service tickets.
-        logger.info('Deleting Closed Tickets')
+        # Now prune closed service tickets.
+        logger.info('Deleting closed tickets')
         delete_qset = models.Ticket.objects.filter(closed_flag=True)
         delete_count = delete_qset.count()
         delete_qset.delete()
