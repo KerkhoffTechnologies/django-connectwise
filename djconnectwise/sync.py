@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 
 class Synchronizer:
     lookup_key = 'id'
+    api_conditions = ''
 
     def __init__(self, *args, **kwargs):
         self.instance_map = {}
@@ -35,6 +36,7 @@ class Synchronizer:
         return self.model_class.objects.all()
 
     def get(self):
+        """Buffer and return all pages of results."""
         records = []
         page = 1
         while True:
@@ -47,7 +49,8 @@ class Synchronizer:
             records += page_records
             page += 1
             if len(page_records) < settings.DJCONNECTWISE_API_BATCH_LIMIT:
-                # No more records
+                # This page wasn't full, so there's no more records after
+                # this page.
                 break
         return records
 
@@ -83,7 +86,6 @@ class Synchronizer:
             api_instance)
 
         action = 'Created' if created else 'Updated'
-
         if not created:
             self._assign_field_data(instance, api_instance)
             instance.save()
@@ -102,7 +104,6 @@ class Synchronizer:
 
         for record in self.get():
             _, created = self.update_or_create_instance(record)
-
             if created:
                 created_count += 1
             else:
@@ -202,13 +203,13 @@ class CompanySynchronizer(Synchronizer):
     """
     client_class = api.CompanyAPIClient
     model_class = models.Company
+    api_conditions = 'deletedFlag=False'
 
     def _assign_field_data(self, company, company_json):
         """
         Assigns field data from an company_json instance
         to a local Company model instance
         """
-
         company.id = company_json['id']
         company.name = company_json['name']
         company.identifier = company_json['identifier']
@@ -228,7 +229,11 @@ class CompanySynchronizer(Synchronizer):
         return company
 
     def get_page(self, *args, **kwargs):
+        kwargs['conditions'] = self.api_conditions
         return self.client.get_companies(*args, **kwargs)
+
+    def get_queryset(self):
+        return self.model_class.all_objects.all()
 
     def fetch_sync_by_id(self, company_id):
         company = self.client.by_id(company_id)

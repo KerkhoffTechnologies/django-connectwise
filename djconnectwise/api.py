@@ -139,6 +139,10 @@ class CompanyAPIClient(ConnectWiseAPIClient):
         return self.fetch_resource(endpoint_url)
 
     def get_companies(self, *args, **kwargs):
+        if 'conditions' in kwargs:
+            kwargs['params'] = {
+                'conditions': kwargs['conditions']
+            }
         return self.fetch_resource(self.ENDPOINT_COMPANIES, *args, **kwargs)
 
 
