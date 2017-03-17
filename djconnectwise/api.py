@@ -10,6 +10,12 @@ class ConnectWiseAPIError(Exception):
     """Raise this, not request exceptions."""
     pass
 
+
+class ConnectWiseRecordNotFoundError(ConnectWiseAPIError):
+    """The record was not found."""
+    pass
+
+
 CW_RESPONSE_MAX_RECORDS = 1000  # The greatest number of records ConnectWise
 # will send us in one response.
 CW_DEFAULT_PAGE = 1  # CW Pagination is 1-indexed
@@ -103,6 +109,10 @@ class ConnectWiseAPIClient(object):
 
         if 200 <= response.status_code < 300:
             return response.json()
+        if response.status_code == 404:
+            msg = 'Resource {} was not found.'.format(response.url)
+            logger.warning(msg)
+            raise ConnectWiseRecordNotFoundError(msg)
         else:
             self._log_failed(response)
             raise ConnectWiseAPIError(response.content)
@@ -110,14 +120,30 @@ class ConnectWiseAPIClient(object):
 
 class ProjectAPIClient(ConnectWiseAPIClient):
     API = 'project'
-    ENDPOINT_PROJECT = 'projects/'
+    ENDPOINT_PROJECTS = 'projects/'
 
-    def get_projects(self, page=1, page_size=CW_RESPONSE_MAX_RECORDS):
-        params = dict(
-            page=page,
-            pageSize=page_size,
-        )
-        return self.fetch_resource(self.ENDPOINT_PROJECT, params=params)
+    def get_project(self, project_id):
+        endpoint_url = '{}/{}'.format(self.ENDPOINT_PROJECTS, project_id)
+        return self.fetch_resource(endpoint_url)
+
+    def get_projects(self, *args, **kwargs):
+        return self.fetch_resource(self.ENDPOINT_PROJECTS, *args, **kwargs)
+
+
+class CompanyAPIClient(ConnectWiseAPIClient):
+    API = 'company'
+    ENDPOINT_COMPANIES = 'companies'
+
+    def by_id(self, company_id):
+        endpoint_url = '{}/{}'.format(self.ENDPOINT_COMPANIES, company_id)
+        return self.fetch_resource(endpoint_url)
+
+    def get_companies(self, *args, **kwargs):
+        if 'conditions' in kwargs:
+            kwargs['params'] = {
+                'conditions': kwargs['conditions']
+            }
+        return self.fetch_resource(self.ENDPOINT_COMPANIES, *args, **kwargs)
 
 
 class SystemAPIClient(ConnectWiseAPIClient):
@@ -253,20 +279,9 @@ class SystemAPIClient(ConnectWiseAPIClient):
         return m.group(1) if m else None
 
 
-class CompanyAPIClient(ConnectWiseAPIClient):
-    API = 'company'
-    ENDPOINT_COMPANIES = 'companies'
-
-    def by_id(self, company_id):
-        endpoint_url = '{}/{}'.format(self.ENDPOINT_COMPANIES, company_id)
-        return self.fetch_resource(endpoint_url)
-
-    def get_companies(self, *args, **kwargs):
-        return self.fetch_resource(self.ENDPOINT_COMPANIES, *args, **kwargs)
-
-
 class ServiceAPIClient(ConnectWiseAPIClient):
     API = 'service'
+    ENDPOINT_TICKETS = 'tickets'
     ENDPOINT_BOARDS = 'boards'
     ENDPOINT_PRIORITIES = 'priorities'
     ENDPOINT_LOCATIONS = 'locations'
@@ -296,17 +311,21 @@ class ServiceAPIClient(ConnectWiseAPIClient):
         params = dict(
             conditions=self.get_conditions(),
         )
-        return self.fetch_resource('tickets/count', params).get('count', 0)
+        return self.fetch_resource(
+            '{}/count'.format(self.ENDPOINT_TICKETS), params
+        ).get('count', 0)
 
     def get_ticket(self, ticket_id):
-        endpoint_url = 'tickets/{}'.format(ticket_id)
+        endpoint_url = '{}/{}'.format(self.ENDPOINT_TICKETS, ticket_id)
         return self.fetch_resource(endpoint_url)
 
     def get_tickets(self, *args, **kwargs):
         params = dict(
             conditions=self.get_conditions()
         )
-        return self.fetch_resource('tickets', params=params, *args, **kwargs)
+        return self.fetch_resource(
+            self.ENDPOINT_TICKETS, params=params, *args, **kwargs
+        )
 
     def update_ticket_status(self, ticket_id, closed_flag, status):
         """
@@ -330,7 +349,9 @@ class ServiceAPIClient(ConnectWiseAPIClient):
             },
         ]
         try:
-            endpoint = self._endpoint('tickets/{}'.format(ticket_id))
+            endpoint = self._endpoint(
+                '{}/{}'.format(self.ENDPOINT_TICKETS, ticket_id)
+            )
             response = requests.patch(
                 endpoint,
                 json=body,
@@ -351,14 +372,16 @@ class ServiceAPIClient(ConnectWiseAPIClient):
         """
         Returns the status types associated with the specified board.
         """
-        endpoint_url = 'boards/{}/statuses'.format(board_id)
+        endpoint_url = '{}/{}/statuses'.format(self.ENDPOINT_BOARDS, board_id)
         return self.fetch_resource(endpoint_url, *args, **kwargs)
 
     def get_boards(self, *args, **kwargs):
         return self.fetch_resource(self.ENDPOINT_BOARDS, *args, **kwargs)
 
     def get_board(self, board_id):
-        return self.fetch_resource('boards/{}'.format(board_id))
+        return self.fetch_resource('{}/{}'.format(
+            self.ENDPOINT_BOARDS, board_id)
+        )
 
     def get_priorities(self, *args, **kwargs):
         return self.fetch_resource(self.ENDPOINT_PRIORITIES, *args, **kwargs)

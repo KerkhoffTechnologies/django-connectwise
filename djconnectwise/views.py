@@ -17,12 +17,14 @@ from .api import ConnectWiseAPIError
 logger = logging.getLogger(__name__)
 
 
-CALLBACK_DELETED = 'deleted'
+CALLBACK_ADDED = 'added'
 CALLBACK_UPDATED = 'updated'
+CALLBACK_DELETED = 'deleted'
 
 CALLBACK_ACTIONS = (
+    (CALLBACK_ADDED, CALLBACK_ADDED),
+    (CALLBACK_UPDATED, CALLBACK_UPDATED),
     (CALLBACK_DELETED, CALLBACK_DELETED),
-    (CALLBACK_UPDATED, CALLBACK_UPDATED)
 )
 
 
@@ -42,13 +44,27 @@ class CallBackView(views.CsrfExemptMixin,
     }
 
     def post(self, request, *args, **kwargs):
+        """
+        Add, update or delete entity by fetching it from CW again. We mostly
+        ignore the JSON that CW sends to us, because their method of
+        verifying the request requires us to make a request back to them for
+        a signing key, so we may as well just make a request for the whole
+        object.
+
+        ConnectWise docs for callback verification:
+        https://developer.connectwise.com/Manage/Developer_Guide#Verifying_the_Callback_Source
+        """
         body = json.loads(request.body.decode(encoding='utf-8'))
-        required_fields = {
+        logger.debug('Callback {}: {}'.format(
+            request.META['QUERY_STRING'], body)
+        )
+
+        fields = {
+            'entity_id': body['ID'],
             'action': body['Action'],
-            'entity': body['Entity'],
             'callback_type': body['Type']
         }
-        form = CallBackForm(required_fields)
+        form = CallBackForm(fields)
 
         if not form.is_valid():
             fields = ', '.join(form.errors.keys())
@@ -57,50 +73,34 @@ class CallBackView(views.CsrfExemptMixin,
             logger.warning(msg)
             return HttpResponseBadRequest(json.dumps(form.errors))
 
-        self.action = form.cleaned_data['action']
-        self.callback_type = body.get('Type')
-        sync_class, self.model_class = \
-            self.CALLBACK_TYPES[self.callback_type]
-        self.synchronizer = sync_class()
-        entity = json.loads(body.get('Entity'))
-
-        logger.debug('{} {}: {}'.format(self.action.upper(), entity, body))
-
-        if self.action == CALLBACK_DELETED:
-            self.delete(entity)
-        else:
-            self.update(entity)
-
-        # we need not return anything to connectwise
-        return HttpResponse(status=204)
-
-    def update(self, entity):
-        self.model_class.objects.filter(id=entity['id'])
-        logger.info('Updated via CallBack: {}'.format(entity))
+        entity_id = form.cleaned_data['entity_id']
+        action = form.cleaned_data['action']
+        callback_type = body.get('Type')
+        sync_class, model_class = \
+            self.CALLBACK_TYPES[callback_type]
+        synchronizer = sync_class()
 
         try:
-            if self.callback_type == 'ticket':
-                self.synchronizer.sync_ticket(entity)
+            if action == CALLBACK_DELETED:
+                synchronizer.fetch_delete_by_id(entity_id)
             else:
-                self.synchronizer.update_or_create_instance(entity)
+                synchronizer.fetch_sync_by_id(entity_id)
         except ConnectWiseAPIError as e:
             # Something bad happened when talking to the API. There's not
             # much we can do, so just log it. We should get synced back up
             # when the next periodic sync job runs.
             logger.error(
                 'API call failed in model {} ID {} callback: '
-                '{}'.format(self.model_class, entity['id'], e)
+                '{}'.format(model_class, entity_id, e)
             )
 
-    def delete(self, entity):
-        self.model_class.objects.filter(id=entity['id']).delete()
-        logger.info('Deleted via CallBack: {}'.format(entity['id']))
+        # We need not return anything to ConnectWise
+        return HttpResponse(status=204)
 
 
 class CallBackForm(forms.Form):
-    entity = forms.CharField()
+    entity_id = forms.IntegerField()
     action = forms.ChoiceField(choices=CALLBACK_ACTIONS)
-
     callback_type = forms.ChoiceField(
         choices=[(c, c) for c in CallBackView.CALLBACK_TYPES.keys()]
     )

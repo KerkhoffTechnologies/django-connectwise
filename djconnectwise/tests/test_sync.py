@@ -97,7 +97,6 @@ class TestProjectSynchronizer(TestCase, SynchronizerTestMixin):
     def _assert_fields(self, instance, json_data):
         assert instance.name == json_data['name']
         assert instance.id == json_data['id']
-        assert instance.project_href == json_data['_info']['project_href']
 
 
 class TestTeamSynchronizer(TestCase):
