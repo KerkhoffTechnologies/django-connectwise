@@ -208,6 +208,18 @@ class Member(TimeStampedModel):
         return member
 
 
+class NotDeletedCompanyManager(models.Manager):
+    """Return only companies whose deleted_flag isn't true."""
+    def get_queryset(self):
+        return super().get_queryset().filter(deleted_flag=False)
+
+
+class AllCompanyManager(models.Manager):
+    """Return all companies."""
+    def get_queryset(self):
+        return super().get_queryset().all()
+
+
 class Company(TimeStampedModel):
     name = models.CharField(blank=True, null=True, max_length=250)
     company_alias = models.CharField(blank=True, null=True, max_length=250)
@@ -230,6 +242,10 @@ class Company(TimeStampedModel):
     defaultbillingcontactid = models.IntegerField(blank=True, null=True)
     updatedby = models.CharField(blank=True, null=True, max_length=250)
     lastupdated = models.CharField(blank=True, null=True, max_length=250)
+    deleted_flag = models.BooleanField(default=False)
+
+    objects = NotDeletedCompanyManager()
+    all_objects = AllCompanyManager()
 
     class Meta:
         verbose_name_plural = 'companies'

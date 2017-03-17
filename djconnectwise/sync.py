@@ -57,6 +57,9 @@ class Synchronizer:
     def fetch_sync_by_id(self, *args, **kwargs):
         raise NotImplementedError
 
+    def fetch_delete_by_id(self, *args, **kwargs):
+        raise NotImplementedError
+
     def get_or_create_instance(self, api_instance):
         lookup_key = api_instance[self.lookup_key]
         instance = self.instance_map.get(lookup_key)
@@ -221,6 +224,7 @@ class CompanySynchronizer(Synchronizer):
         company.state_identifier = company_json.get('state')
         company.zip = company_json.get('zip')
         company.created = timezone.now()
+        company.deleted_flag = company_json['deletedFlag']
         return company
 
     def get_page(self, *args, **kwargs):
@@ -229,6 +233,11 @@ class CompanySynchronizer(Synchronizer):
     def fetch_sync_by_id(self, company_id):
         company = self.client.by_id(company_id)
         self.update_or_create_instance(company)
+
+    def fetch_delete_by_id(self, company_id):
+        # Companies are deleted by setting deleted_flag = True, so
+        # just treat this as a normal sync.
+        self.fetch_sync_by_id(company_id)
 
 
 class LocationSynchronizer(Synchronizer):
@@ -293,6 +302,18 @@ class ProjectSynchronizer(Synchronizer):
     def fetch_sync_by_id(self, project_id):
         project = self.client.get_project(project_id)
         self.update_or_create_instance(project)
+        logger.info('Updated project {}'.format(project))
+
+    def fetch_delete_by_id(self, project_id):
+        try:
+            self.client.get_project(project_id)
+        except api.ConnectWiseRecordNotFoundError:
+            # This is what we expect to happen. Since it's gone in CW, we
+            # are safe to delete it from here.
+            models.Project.all_objects.filter(id=project_id).delete()
+            logger.info(
+                'Deleted project {} (if it existed).'.format(project_id)
+            )
 
 
 class MemberSynchronizer:
@@ -425,14 +446,14 @@ class TicketSynchronizer:
             logger.info('Preparing full ticket sync job.')
             # absence of a sync job indicates that this is an initial/full
             # sync, in which case we do not want to retrieve closed tickets
-            extra_conditions = 'ClosedFlag = False'
+            extra_conditions = 'closedFlag = False'
 
         self.service_client = api.ServiceAPIClient(
             extra_conditions=extra_conditions)
 
         self.system_client = api.SystemAPIClient()
 
-        # we need to remove the underscores to ensure an accurate
+        # We need to remove the underscores to ensure an accurate
         # lookup of the normalized api fieldnames
         self.local_ticket_fields = self._create_field_lookup(
             models.Ticket)
@@ -612,9 +633,28 @@ class TicketSynchronizer:
             list(self.ticket_assignments.values()))
         self.ticket_assignments = {}
 
+    def prune_closed_tickets(self):
+        logger.info('Deleting closed tickets')
+        delete_qset = models.Ticket.objects.filter(closed_flag=True)
+        delete_count = delete_qset.count()
+        delete_qset.delete()
+        return delete_count
+
     def fetch_sync_by_id(self, ticket_id):
         ticket = self.service_client.get_ticket(ticket_id)
         self.sync_ticket(ticket)
+        logger.info('Updated ticket {}'.format(ticket_id))
+
+    def fetch_delete_by_id(self, ticket_id):
+        try:
+            self.service_client.get_ticket(ticket_id)
+        except api.ConnectWiseRecordNotFoundError:
+            # This is what we expect to happen. Since it's gone in CW, we
+            # are safe to delete it from here.
+            models.Ticket.objects.filter(id=ticket_id).delete()
+            logger.info(
+                'Deleted ticket {} (if it existed).'.format(ticket_id)
+            )
 
     def sync(self):
         """
@@ -653,11 +693,7 @@ class TicketSynchronizer:
         if self.ticket_assignments:
             self.commit_ticket_assignments()
 
-        # Now prune closed service tickets.
-        logger.info('Deleting closed tickets')
-        delete_qset = models.Ticket.objects.filter(closed_flag=True)
-        delete_count = delete_qset.count()
-        delete_qset.delete()
+        delete_count = self.prune_closed_tickets()
 
         sync_job.end_time = timezone.now()
         sync_job.save()

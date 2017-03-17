@@ -10,6 +10,12 @@ class ConnectWiseAPIError(Exception):
     """Raise this, not request exceptions."""
     pass
 
+
+class ConnectWiseRecordNotFoundError(ConnectWiseAPIError):
+    """The record was not found."""
+    pass
+
+
 CW_RESPONSE_MAX_RECORDS = 1000  # The greatest number of records ConnectWise
 # will send us in one response.
 CW_DEFAULT_PAGE = 1  # CW Pagination is 1-indexed
@@ -103,6 +109,10 @@ class ConnectWiseAPIClient(object):
 
         if 200 <= response.status_code < 300:
             return response.json()
+        if response.status_code == 404:
+            msg = 'Resource {} was not found.'.format(response.url)
+            logger.warning(msg)
+            raise ConnectWiseRecordNotFoundError(msg)
         else:
             self._log_failed(response)
             raise ConnectWiseAPIError(response.content)
@@ -336,7 +346,7 @@ class ServiceAPIClient(ConnectWiseAPIClient):
         ]
         try:
             endpoint = self._endpoint(
-                '{}/{}'.format(self.ENDPOINT_TICKETS. ticket_id)
+                '{}/{}'.format(self.ENDPOINT_TICKETS, ticket_id)
             )
             response = requests.patch(
                 endpoint,
