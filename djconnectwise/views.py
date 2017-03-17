@@ -78,8 +78,7 @@ class CallBackView(views.CsrfExemptMixin,
         callback_type = body.get('Type')
         sync_class, model_class = \
             self.CALLBACK_TYPES[callback_type]
-        synchronizer = sync_class(reset=True)  # reset=True is only meaningful
-        # for ticket synchronizer
+        synchronizer = sync_class()
 
         try:
             if action == CALLBACK_DELETED:
