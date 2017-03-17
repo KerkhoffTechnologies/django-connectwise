@@ -20,19 +20,24 @@ def create_mock_call(method_name, return_value, side_effect=None):
     return mock_get_call, _patch
 
 
-def company_api_by_id_call(return_value):
-    method_name = 'djconnectwise.api.CompanyAPIClient.by_id'
-    return create_mock_call(method_name, return_value)
-
-
 def company_api_get_call(return_value):
     method_name = 'djconnectwise.api.CompanyAPIClient.get_companies'
     return create_mock_call(method_name, return_value)
 
 
+def company_api_by_id_call(return_value, raised=None):
+    method_name = 'djconnectwise.api.CompanyAPIClient.by_id'
+    return create_mock_call(method_name, return_value, side_effect=raised)
+
+
 def project_api_get_projects_call(return_value):
     method_name = 'djconnectwise.api.ProjectAPIClient.get_projects'
     return create_mock_call(method_name, return_value)
+
+
+def project_api_get_project_call(return_value, raised=None):
+    method_name = 'djconnectwise.api.ProjectAPIClient.get_project'
+    return create_mock_call(method_name, return_value, side_effect=raised)
 
 
 def _service_api_tickets_call(page=1, page_size=25):
@@ -55,12 +60,12 @@ def _service_api_get_ticket_call(ticket_id):
     return fixtures.API_SERVICE_TICKET_MAP.get(ticket_id)
 
 
-def service_api_get_ticket_call():
+def service_api_get_ticket_call(raised=None):
     method_name = 'djconnectwise.api.ServiceAPIClient.get_ticket'
     mock_call, _patch = create_mock_call(
         method_name,
         None,
-        side_effect=_service_api_get_ticket_call)
+        side_effect=raised if raised else _service_api_get_ticket_call)
     return mock_call, _patch
 
 

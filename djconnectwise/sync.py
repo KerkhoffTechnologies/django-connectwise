@@ -225,7 +225,7 @@ class CompanySynchronizer(Synchronizer):
         company.state_identifier = company_json.get('state')
         company.zip = company_json.get('zip')
         company.created = timezone.now()
-        company.deleted_flag = company_json['deletedFlag']
+        company.deleted_flag = company_json.get('deletedFlag', False)
         return company
 
     def get_page(self, *args, **kwargs):
@@ -487,7 +487,6 @@ class TicketSynchronizer:
                 project = models.Project()
                 project.id = api_project['id']
                 project.name = api_project['name']
-                project.project_href = api_project['_info']['project_href']
                 project.project_id = api_project['id']
                 project.save()
                 self.project_map[project.id] = project
