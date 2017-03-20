@@ -31,26 +31,16 @@ class ConnectWiseAPIClient(object):
 
     def __init__(
         self,
-        id=None,
-        integrator_login_id=None,
-        integrator_password=None,
-        url=None,
+        company_id=None,
+        server_url=None,
         api_public_key=None,
         api_private_key=None,
         api_codebase=None
-    ):  # TODO - kwarg should be changed to server_url
-        if not id:
-            id = settings.CONNECTWISE_CREDENTIALS['company_id']
-        if not integrator_login_id:
-            integrator_login_id = settings.CONNECTWISE_CREDENTIALS[
-                'integrator_login_id'
-            ]
-        if not integrator_password:
-            integrator_password = settings.CONNECTWISE_CREDENTIALS[
-                'integrator_password'
-            ]
-        if not url:
-            url = settings.CONNECTWISE_SERVER_URL
+    ):
+        if not company_id:
+            company_id = settings.CONNECTWISE_CREDENTIALS['company_id']
+        if not server_url:
+            server_url = settings.CONNECTWISE_SERVER_URL
         if not api_public_key:
             api_public_key = settings.CONNECTWISE_CREDENTIALS['api_public_key']
         if not api_private_key:
@@ -62,24 +52,21 @@ class ConnectWiseAPIClient(object):
         if not self.API:
             raise ValueError('API not specified')
 
-        self.id = id
-        self.integrator_login_id = integrator_login_id
-        self.integrator_password = integrator_password
         self.api_public_key = api_public_key
         self.api_private_key = api_private_key
         self.api_codebase = api_codebase
 
-        self.url = '{0}/{1}/apis/3.0/{2}/'.format(
-            url,
+        self.server_url = '{0}/{1}/apis/3.0/{2}/'.format(
+            server_url,
             self.api_codebase,
             self.API,
         )
 
-        self.auth = ('{0}+{1}'.format(self.id, self.api_public_key),
+        self.auth = ('{0}+{1}'.format(company_id, self.api_public_key),
                      '{0}'.format(self.api_private_key),)
 
     def _endpoint(self, path):
-        return '{0}{1}'.format(self.url, path)
+        return '{0}{1}'.format(self.server_url, path)
 
     def _log_failed(self, response):
         logger.error('FAILED API CALL: {0} - {1} - {2}'.format(
@@ -97,6 +84,7 @@ class ConnectWiseAPIClient(object):
         params['page'] = kwargs.get('page', CW_DEFAULT_PAGE)
         try:
             endpoint = self._endpoint(endpoint_url)
+            logger.debug('Making GET request to {}'.format(endpoint))
             response = requests.get(
                 endpoint,
                 params=params,
@@ -174,7 +162,7 @@ class SystemAPIClient(ConnectWiseAPIClient):
             endpoint = self._endpoint(
                 '{}{}'.format(self.ENDPOINT_CALLBACKS, entry_id)
             )
-
+            logger.debug('Making DELETE request to {}'.format(endpoint))
             response = requests.request(
                 'delete',
                 endpoint,
@@ -191,6 +179,7 @@ class SystemAPIClient(ConnectWiseAPIClient):
     def create_callback(self, callback_entry):
         try:
             endpoint = self._endpoint(self.ENDPOINT_CALLBACKS)
+            logger.debug('Making POST request to {}'.format(endpoint))
             response = requests.request(
                 'post',
                 endpoint,
@@ -213,6 +202,7 @@ class SystemAPIClient(ConnectWiseAPIClient):
             endpoint = self._endpoint(
                 'callbacks/{0}'.format(callback_entry.entry_id)
             )
+            logger.debug('Making PUT request to {}'.format(endpoint))
             response = requests.request(
                 'put',
                 endpoint,
@@ -241,6 +231,7 @@ class SystemAPIClient(ConnectWiseAPIClient):
             endpoint = self._endpoint(
                 self.ENDPOINT_MEMBERS_IMAGE.format(identifier)
             )
+            logger.debug('Making GET request to {}'.format(endpoint))
             response = requests.get(
                 endpoint,
                 auth=self.auth,
@@ -352,6 +343,7 @@ class ServiceAPIClient(ConnectWiseAPIClient):
             endpoint = self._endpoint(
                 '{}/{}'.format(self.ENDPOINT_TICKETS, ticket_id)
             )
+            logger.debug('Making PATCH request to {}'.format(endpoint))
             response = requests.patch(
                 endpoint,
                 json=body,
