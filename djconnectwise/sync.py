@@ -195,6 +195,9 @@ class TeamSynchronizer(BoardChildSynchronizer):
     def client_call(self, board_id, *args, **kwargs):
         return self.client.get_teams(board_id, *args, **kwargs)
 
+    def get_queryset(self):
+        return self.model_class.all_objects.all()
+
 
 class CompanySynchronizer(Synchronizer):
     """
@@ -524,7 +527,7 @@ class TicketSynchronizer:
         team = json_data['team']
         try:
             if team:
-                ticket.team = models.Team.objects.get(
+                ticket.team = models.Team.all_objects.get(
                     pk=team['id'])
         except models.Team.DoesNotExist:
             logger.warning(
