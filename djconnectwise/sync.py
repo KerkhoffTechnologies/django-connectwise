@@ -518,6 +518,8 @@ class TicketSynchronizer:
         ticket.budget_hours = json_data['budgetHours']
         ticket.actual_hours = json_data['actualHours']
         ticket.record_type = json_data['recordType']
+        ticket.parent_ticket_id = json_data['parentTicketId']
+        ticket.has_child_ticket = json_data['hasChildTicket']
 
         team = json_data['team']
         try:
