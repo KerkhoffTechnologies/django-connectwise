@@ -104,7 +104,7 @@ class ActiveBoardStatusManager(models.Manager):
         return super().get_queryset().filter(board__inactive=False)
 
 
-class AllBoardManager(models.Manager):
+class AllBoardStatusManager(models.Manager):
     """Return all ConnectWise board statuses."""
     def get_queryset(self):
         return super().get_queryset().all()
@@ -124,7 +124,7 @@ class BoardStatus(TimeStampedModel):
     board = models.ForeignKey('ConnectWiseBoard')
 
     objects = ActiveBoardStatusManager()
-    all_objects = AllBoardManager()
+    all_objects = AllBoardStatusManager()
 
     class Meta:
         ordering = ('board__name', 'sort_order', 'name')
@@ -261,10 +261,25 @@ class Company(TimeStampedModel):
         return identifier
 
 
+class ActiveBoardTeamManager(models.Manager):
+    """Return only teams whose ConnectWise board is active."""
+    def get_queryset(self):
+        return super().get_queryset().filter(board__inactive=False)
+
+
+class AllBoardTeamManager(models.Manager):
+    """Return all ConnectWise board teams."""
+    def get_queryset(self):
+        return super().get_queryset().all()
+
+
 class Team(TimeStampedModel):
     name = models.CharField(max_length=30)
     board = models.ForeignKey('ConnectWiseBoard')
     members = models.ManyToManyField('Member')
+
+    objects = ActiveBoardTeamManager()
+    all_objects = AllBoardTeamManager()
 
     def __str__(self):
         return '{}/{}'.format(self.board, self.name)
