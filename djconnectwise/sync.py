@@ -688,7 +688,7 @@ class TicketSynchronizer:
                 # We'll delay adding member assignments until the very end,
                 # because it's faster.
                 ticket, created = self.sync_ticket(
-                    ticket, commit_assignments=False
+                    ticket, commit_assignments=True
                 )
                 if created:
                     created_count += 1
