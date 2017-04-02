@@ -32,6 +32,23 @@ API_BOARD_STATUS_LIST = [
     },
 ]
 
+
+API_COMPANY_STATUS = {
+    "id": 1,
+    "name": "Active",
+    "defaultFlag": True,
+    "inactiveFlag": False,
+    "notifyFlag": False,
+    "disallowSavingFlag": False,
+    "notificationMessage": "Some message",
+    "customNoteFlag": False,
+    "cancelOpenTracksFlag": False
+}
+
+
+API_COMPANY_STATUS_LIST = [API_COMPANY_STATUS]
+
+
 API_COMPANY = {
     "id": 2,
     "identifier": "YourCompany",

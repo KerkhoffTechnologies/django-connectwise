@@ -1,7 +1,7 @@
 from copy import deepcopy
 from unittest import TestCase
 
-from djconnectwise.models import Company
+from djconnectwise.models import Company, CompanyStatus
 from djconnectwise.models import ConnectWiseBoard
 from djconnectwise.models import BoardStatus
 from djconnectwise.models import Location
@@ -212,6 +212,67 @@ class TestPrioritySynchronizer(TestCase):
         self.assertNotEqual(priority_pre_update.color,
                             color)
         self._assert_fields(priority_post_update, updated_api_priority)
+
+
+class TestCompanyStatusSynchronizer(TestCase):
+
+    def setUp(self):
+        self.synchronizer = sync.CompanyStatusSynchronizer()
+
+    def _assert_fields(self, instance, json_data):
+        self.assertEqual(instance.name, json_data['name'])
+        self.assertEqual(instance.default_flag, json_data['defaultFlag'])
+        self.assertEqual(instance.inactive_flag, json_data['inactiveFlag'])
+        self.assertEqual(instance.notify_flag, json_data['notifyFlag'])
+        self.assertEqual(instance.dissalow_saving_flag,
+                         json_data['disallowSavingFlag'])
+        self.assertEqual(instance.notification_message,
+                         json_data['notificationMessage'])
+        self.assertEqual(instance.custom_note_flag,
+                         json_data['customNoteFlag'])
+        self.assertEqual(instance.cancel_open_tracks_flag,
+                         json_data['cancelOpenTracksFlag'])
+
+    def _clean(self):
+        CompanyStatus.objects.all().delete()
+
+    def _sync(self, return_value):
+        _, get_patch = mocks.company_api_get_company_statuses_call(
+            return_value)
+
+        self.synchronizer.sync()
+
+    def test_sync(self):
+        self._clean()
+        self._sync(fixtures.API_COMPANY_STATUS_LIST)
+        instances = fixtures.API_COMPANY_STATUS_LIST
+        instance_dict = {i['id']: i for i in instances}
+
+        status_instances = CompanyStatus.objects.all()
+        self.assertGreater(status_instances.count(), 0)
+        for instance in status_instances:
+            json_data = instance_dict[instance.id]
+            self._assert_fields(instance, json_data)
+
+    def test_sync_update(self):
+        self._clean()
+        self._sync(fixtures.API_COMPANY_STATUS_LIST)
+        id = fixtures.API_COMPANY_STATUS['id']
+        original_instance = CompanyStatus.objects \
+            .get(id=id)
+
+        name = 'some-name'
+        json_data = deepcopy(fixtures.API_COMPANY_STATUS)
+        json_data['name'] = name
+
+        self._sync([json_data])
+
+        updated_instance = CompanyStatus.objects \
+            .get(id=json_data['id'])
+
+        self.assertNotEqual(original_instance.name,
+                            name)
+        self._assert_fields(updated_instance, json_data)
 
 
 class TestLocationSynchronizer(TestCase):

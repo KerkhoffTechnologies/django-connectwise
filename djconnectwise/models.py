@@ -15,10 +15,11 @@ from . import api
 logger = logging.getLogger(__name__)
 
 
+PRIORITY_RE = re.compile('^Priority ([\d]+)')
+
+
 class InvalidStatusError(Exception):
     pass
-
-PRIORITY_RE = re.compile('^Priority ([\d]+)')
 
 
 class SyncJob(models.Model):
@@ -259,6 +260,18 @@ class Company(TimeStampedModel):
         if settings.DJCONNECTWISE_COMPANY_ALIAS:
             identifier = self.company_alias or self.identifier
         return identifier
+
+
+class CompanyStatus(models.Model):
+    name = models.CharField(max_length=50)
+    default_flag = models.BooleanField()
+    inactive_flag = models.BooleanField()
+    notify_flag = models.BooleanField()
+    dissalow_saving_flag = models.BooleanField()
+    notification_message = models.CharField(max_length=500)
+    custom_note_flag = models.BooleanField()
+    cancel_open_tracks_flag = models.BooleanField()
+    track_id = models.PositiveSmallIntegerField(blank=True, null=True)
 
 
 class ActiveBoardTeamManager(models.Manager):

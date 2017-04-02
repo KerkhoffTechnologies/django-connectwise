@@ -121,6 +121,7 @@ class ProjectAPIClient(ConnectWiseAPIClient):
 class CompanyAPIClient(ConnectWiseAPIClient):
     API = 'company'
     ENDPOINT_COMPANIES = 'companies'
+    ENDPOINT_COMPANY_STATUSES = '{}/statuses'.format(ENDPOINT_COMPANIES)
 
     def by_id(self, company_id):
         endpoint_url = '{}/{}'.format(self.ENDPOINT_COMPANIES, company_id)
@@ -132,6 +133,10 @@ class CompanyAPIClient(ConnectWiseAPIClient):
                 'conditions': kwargs['conditions']
             }
         return self.fetch_resource(self.ENDPOINT_COMPANIES, *args, **kwargs)
+
+    def get_company_statuses(self, *args, **kwargs):
+        return self.fetch_resource(self.ENDPOINT_COMPANY_STATUSES,
+                                   *args, **kwargs)
 
 
 class SystemAPIClient(ConnectWiseAPIClient):
