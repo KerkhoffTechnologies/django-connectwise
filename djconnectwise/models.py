@@ -466,26 +466,29 @@ class Ticket(TimeStampedModel):
 
         If update_cw as a kwarg is True, then update ConnectWise with changes.
         """
-        self._check_valid_status()
+        self._warn_invalid_status()
 
         update_cw = kwargs.pop('update_cw', False)
         super().save(*args, **kwargs)
         if update_cw:
             self.update_cw()
 
-    def _check_valid_status(self):
+    def _warn_invalid_status(self):
         """
-        Raise InvalidStatusError if the status doesn't belong to the board.
+        Warn if the status doesn't belong to the board. It seems that
+        ConnectWise isn't particularly strict about enforcing that a ticket's
+        status is valid for the ticket's board, so we won't enforce this.
 
         If status or board are None, then don't bother, since this can happen
         during sync jobs and it would be a lot of work to enforce at all the
         right times.
         """
         if self.status and self.board and self.status.board != self.board:
-            raise InvalidStatusError(
-                "{} (ID {}) is not a valid status for the ticket's "
-                "ConnectWise board ({}, ID {}).".
+            logger.warning(
+                "For ticket {}, {} (ID {}) is not a valid status for the "
+                "ticket's ConnectWise board ({}, ID {}).".
                 format(
+                    self.id,
                     self.status.name,
                     self.status.id,
                     self.board,
