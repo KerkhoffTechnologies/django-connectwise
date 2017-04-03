@@ -53,14 +53,7 @@ API_COMPANY = {
     "id": 2,
     "identifier": "YourCompany",
     "name": "TestCompany",
-    "status": {
-        "id": 1,
-        "name": "Active",
-        "_info": {
-            "status_href": "https: //some-host.com/v4_6_release/" +
-                           "apis/3.0/company/companies/statuses/1"
-        }
-    },
+    "status": API_COMPANY_STATUS,
     "type": {
         "id": 5,
         "name": "Partner",

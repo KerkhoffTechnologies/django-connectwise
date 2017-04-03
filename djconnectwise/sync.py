@@ -229,6 +229,16 @@ class CompanySynchronizer(Synchronizer):
         company.zip = company_json.get('zip')
         company.created = timezone.now()
         company.deleted_flag = company_json.get('deletedFlag', False)
+
+        status_json = company_json.get('status')
+        
+        if status_json:
+            try:
+                status = models.CompanyStatus.objects.get(pk=status_json['id'])
+                company.status = status
+            except:
+                pass
+        company.save() 
         return company
 
     def get_page(self, *args, **kwargs):

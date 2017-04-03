@@ -26,4 +26,8 @@ class Migration(migrations.Migration):
                 ('track_id', models.PositiveSmallIntegerField(blank=True, null=True)),
             ],
         ),
+        migrations.RemoveField(
+            model_name='company',
+            name='status',
+        ),
     ]
