@@ -1,5 +1,4 @@
 from djconnectwise.models import TicketPriority, BoardStatus
-
 from model_mommy import mommy
 from test_plus.test import TestCase
 from djconnectwise.models import Ticket, InvalidStatusError
@@ -122,10 +121,13 @@ class TestTicket(ModelTestCase):
             status=self.connectwise_boards[0].board_statuses.first(),
             board=self.connectwise_boards[0]
         )
-        ticket.save()  # Should work
-        with self.assertRaises(InvalidStatusError):
+        with patch('djconnectwise.models.logger') as mock_logging:
+            ticket.save()  # Should not log
+            self.assertFalse(mock_logging.warning.called)
+        with patch('djconnectwise.models.logger') as mock_logging:
             ticket.board = self.connectwise_boards[1]
-            ticket.save()
+            ticket.save()  # Should log
+            self.assertTrue(mock_logging.warning.called)
 
     def test_save_calls_update_cw_when_kwarg_passed(self):
         board = self.connectwise_boards[0]
