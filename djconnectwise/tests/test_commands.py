@@ -29,6 +29,18 @@ class BaseSyncTest(TestCase):
         self.assertIn(msg, out.getvalue().strip())
 
 
+class TestSyncCompanyStatusesCommand(BaseSyncTest):
+
+    def test_sync(self):
+        """Test sync companies command."""
+        self._test_sync(
+            mocks.company_api_get_company_statuses_call,
+            fixtures.API_COMPANY_STATUS_LIST,
+            'company_status',
+            sync_summary('Company Status')
+        )
+
+
 class TestSyncCompaniesCommand(BaseSyncTest):
 
     def test_sync(self):
@@ -139,6 +151,8 @@ class TestSyncAllCommand(BaseSyncTest):
             fixtures.API_SERVICE_PRIORITY_LIST)
         mocks.project_api_get_projects_call(
             fixtures.API_PROJECT_LIST)
+        mocks.company_api_get_company_statuses_call(
+            fixtures.API_COMPANY_STATUS_LIST)
 
         mocks.service_api_get_teams_call([fixtures.API_SERVICE_TEAM_LIST[0]])
 

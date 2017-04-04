@@ -24,6 +24,8 @@ class Command(BaseCommand):
             ('project', sync.ProjectSynchronizer, _('Project')),
             ('board', sync.BoardSynchronizer, _('Board')),
             ('board_status', sync.BoardStatusSynchronizer, _('Board Status')),
+            ('company_status', sync.CompanyStatusSynchronizer,
+                _('Company Status')),
             ('company', sync.CompanySynchronizer, _('Company')),
             ('location', sync.LocationSynchronizer, _('Location')),
             ('team', sync.TeamSynchronizer, _('Team')),
