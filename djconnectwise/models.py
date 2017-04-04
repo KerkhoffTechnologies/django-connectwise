@@ -267,7 +267,11 @@ class CompanyStatus(models.Model):
     inactive_flag = models.BooleanField()
     notify_flag = models.BooleanField()
     dissalow_saving_flag = models.BooleanField()
-    notification_message = models.CharField(max_length=500)
+    notification_message = models.CharField(
+        max_length=500,
+        blank=True,
+        null=True
+    )
     custom_note_flag = models.BooleanField()
     cancel_open_tracks_flag = models.BooleanField()
     track_id = models.PositiveSmallIntegerField(blank=True, null=True)
