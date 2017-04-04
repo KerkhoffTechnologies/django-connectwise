@@ -32,18 +32,28 @@ API_BOARD_STATUS_LIST = [
     },
 ]
 
+
+API_COMPANY_STATUS = {
+    "id": 1,
+    "name": "Active",
+    "defaultFlag": True,
+    "inactiveFlag": False,
+    "notifyFlag": False,
+    "disallowSavingFlag": False,
+    "notificationMessage": "Some message",
+    "customNoteFlag": False,
+    "cancelOpenTracksFlag": False
+}
+
+
+API_COMPANY_STATUS_LIST = [API_COMPANY_STATUS]
+
+
 API_COMPANY = {
     "id": 2,
     "identifier": "YourCompany",
     "name": "TestCompany",
-    "status": {
-        "id": 1,
-        "name": "Active",
-        "_info": {
-            "status_href": "https: //some-host.com/v4_6_release/" +
-                           "apis/3.0/company/companies/statuses/1"
-        }
-    },
+    "status": API_COMPANY_STATUS,
     "type": {
         "id": 5,
         "name": "Partner",

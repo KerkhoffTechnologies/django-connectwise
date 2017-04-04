@@ -229,6 +229,18 @@ class CompanySynchronizer(Synchronizer):
         company.zip = company_json.get('zip')
         company.created = timezone.now()
         company.deleted_flag = company_json.get('deletedFlag', False)
+
+        status_json = company_json.get('status')
+        if status_json:
+            try:
+                status = models.CompanyStatus.objects.get(pk=status_json['id'])
+                company.status = status
+            except models.CompanyStatus.DoesNotExist:
+                logger.warning(
+                    'Failed to find CompanyStatus: {}'.format(
+                        status_json['id']
+                    ))
+        company.save()
         return company
 
     def get_page(self, *args, **kwargs):
@@ -246,6 +258,34 @@ class CompanySynchronizer(Synchronizer):
         # Companies are deleted by setting deleted_flag = True, so
         # just treat this as a normal sync.
         self.fetch_sync_by_id(company_id)
+
+
+class CompanyStatusSynchronizer(Synchronizer):
+    """
+    Coordinates retrieval and demarshalling of ConnectWise JSON
+    CompanyStatus instances.
+    """
+    client_class = api.CompanyAPIClient
+    model_class = models.CompanyStatus
+
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data['id']
+        instance.name = json_data['name']
+        instance.default_flag = json_data['defaultFlag']
+        instance.inactive_flag = json_data['inactiveFlag']
+        instance.notify_flag = json_data['notifyFlag']
+        instance.dissalow_saving_flag = json_data['disallowSavingFlag']
+        instance.notification_message = json_data['notificationMessage']
+        instance.custom_note_flag = json_data['customNoteFlag']
+        instance.cancel_open_tracks_flag = json_data['cancelOpenTracksFlag']
+
+        if json_data.get('track'):
+            instance.track_id = json_data['track']['id']
+
+        return instance
+
+    def get_page(self, *args, **kwargs):
+        return self.client.get_company_statuses(*args, **kwargs)
 
 
 class LocationSynchronizer(Synchronizer):

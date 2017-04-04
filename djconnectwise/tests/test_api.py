@@ -191,3 +191,12 @@ class TestCompanyAPIClient(TestCase):
                data)
         result = self.client.get_companies()
         self.assertEqual(result, data)
+
+    @responses.activate
+    def test_get_company_statuses(self):
+        endpoint = self.client._endpoint(
+            self.client.ENDPOINT_COMPANY_STATUSES)
+
+        mk.get(endpoint, fixtures.API_COMPANY_STATUS_LIST)
+        result = self.client.get_company_statuses()
+        self.assertEqual(result, fixtures.API_COMPANY_STATUS_LIST)
