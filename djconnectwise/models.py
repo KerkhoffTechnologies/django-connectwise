@@ -235,7 +235,6 @@ class Company(TimeStampedModel):
     zip = models.CharField(blank=True, null=True, max_length=250)
     country = models.CharField(blank=True, null=True, max_length=250)
     type = models.CharField(blank=True, null=True, max_length=250)
-    
     territory = models.CharField(blank=True, null=True, max_length=250)
     website = models.CharField(blank=True, null=True, max_length=250)
     market = models.CharField(blank=True, null=True, max_length=250)

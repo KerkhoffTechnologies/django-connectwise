@@ -231,14 +231,16 @@ class CompanySynchronizer(Synchronizer):
         company.deleted_flag = company_json.get('deletedFlag', False)
 
         status_json = company_json.get('status')
-        
         if status_json:
             try:
                 status = models.CompanyStatus.objects.get(pk=status_json['id'])
                 company.status = status
-            except:
-                pass
-        company.save() 
+            except models.CompanyStatus.DoesNotExist:
+                logger.warning(
+                    'Failed to find CompanyStatus: {}'.format(
+                        status_json['id']
+                    ))
+        company.save()
         return company
 
     def get_page(self, *args, **kwargs):
