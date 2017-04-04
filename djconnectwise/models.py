@@ -15,10 +15,11 @@ from . import api
 logger = logging.getLogger(__name__)
 
 
+PRIORITY_RE = re.compile('^Priority ([\d]+)')
+
+
 class InvalidStatusError(Exception):
     pass
-
-PRIORITY_RE = re.compile('^Priority ([\d]+)')
 
 
 class SyncJob(models.Model):
@@ -234,7 +235,6 @@ class Company(TimeStampedModel):
     zip = models.CharField(blank=True, null=True, max_length=250)
     country = models.CharField(blank=True, null=True, max_length=250)
     type = models.CharField(blank=True, null=True, max_length=250)
-    status = models.CharField(blank=True, null=True, max_length=250)
     territory = models.CharField(blank=True, null=True, max_length=250)
     website = models.CharField(blank=True, null=True, max_length=250)
     market = models.CharField(blank=True, null=True, max_length=250)
@@ -243,7 +243,7 @@ class Company(TimeStampedModel):
     updatedby = models.CharField(blank=True, null=True, max_length=250)
     lastupdated = models.CharField(blank=True, null=True, max_length=250)
     deleted_flag = models.BooleanField(default=False)
-
+    status = models.ForeignKey('CompanyStatus', blank=True, null=True)
     objects = NotDeletedCompanyManager()
     all_objects = AllCompanyManager()
 
@@ -259,6 +259,18 @@ class Company(TimeStampedModel):
         if settings.DJCONNECTWISE_COMPANY_ALIAS:
             identifier = self.company_alias or self.identifier
         return identifier
+
+
+class CompanyStatus(models.Model):
+    name = models.CharField(max_length=50)
+    default_flag = models.BooleanField()
+    inactive_flag = models.BooleanField()
+    notify_flag = models.BooleanField()
+    dissalow_saving_flag = models.BooleanField()
+    notification_message = models.CharField(max_length=500)
+    custom_note_flag = models.BooleanField()
+    cancel_open_tracks_flag = models.BooleanField()
+    track_id = models.PositiveSmallIntegerField(blank=True, null=True)
 
 
 class ActiveBoardTeamManager(models.Manager):
