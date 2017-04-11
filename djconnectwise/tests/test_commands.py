@@ -42,7 +42,6 @@ class AbstractBaseSyncTest(object):
         return out
 
     def _title_for_cw_object(self, cw_object):
-        print('CW:', cw_object, ':', cw_object.title().replace('_', ' '))
         return cw_object.title().replace('_', ' ')
 
     def test_sync(self):
@@ -51,7 +50,6 @@ class AbstractBaseSyncTest(object):
         self.assertIn(obj_title, out.getvalue().strip())
 
     def test_sync_reset(self):
-        print('CREATE:', self._test_sync(*self.args).getvalue())
         mock_call, return_value, cw_object = self.args
         args = [
             mock_call,
@@ -185,7 +183,6 @@ class TestSyncAllCommand(TestCase):
         """Test sync all objects command."""
 
         output = self._test_sync()
-        print('SYNCED:', output)
         for apicall, fixture, cw_object in self.test_args:
             summary = sync_summary(slug_to_title(cw_object), len(fixture))
             self.assertIn(summary, output)
