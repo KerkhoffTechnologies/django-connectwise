@@ -23,7 +23,6 @@ class Synchronizer:
     def __init__(self, *args, **kwargs):
         self.instance_map = {}
         self.client = self.client_class()
-
         self.load_instance_map()
 
     def load_instance_map(self):
@@ -78,6 +77,18 @@ class Synchronizer:
 
         return instance, created
 
+    def prune_stale_records(self, synced_ids):
+        stale_ids = synced_ids ^ self.instance_map.keys()
+        deleted_count = 0
+        if stale_ids:
+            self.model_class.objects.filter(pk__in=stale_ids).delete()
+            deleted_count = len(stale_ids)
+            msg_tmpl = 'Removing #{} stale records for model: {}'
+            msg = msg_tmpl.format(len(stale_ids), self.model_class)
+            logger.info(msg)
+
+        return deleted_count
+
     def update_or_create_instance(self, api_instance):
         """
         Creates and returns an instance if it does not already exist.
@@ -90,24 +101,36 @@ class Synchronizer:
             self._assign_field_data(instance, api_instance)
             instance.save()
 
-        self.instance_map[self.lookup_key] = instance
+        self.instance_map[instance.id] = instance
 
         msg = ' {}: {} {}'
         logger.info(msg.format(action, self.model_class.__name__, instance))
 
         return instance, created
 
-    def sync(self):
+    def sync(self, reset=False):
         created_count = 0
         updated_count = 0
         deleted_count = 0
 
+        synced_ids = set()
         for record in self.get():
             _, created = self.update_or_create_instance(record)
+
             if created:
                 created_count += 1
             else:
                 updated_count += 1
+
+            synced_ids.add(record['id'])
+
+        stale_ids = synced_ids ^ self.instance_map.keys()
+        if stale_ids and reset:
+            self.model_class.objects.filter(pk__in=stale_ids).delete()
+            deleted_count = len(stale_ids)
+            msg_tmpl = 'Removing #{} stale records for model: {}'
+            msg = msg_tmpl.format(len(stale_ids), self.model_class)
+            logger.info(msg)
 
         return created_count, updated_count, deleted_count
 
@@ -194,9 +217,6 @@ class TeamSynchronizer(BoardChildSynchronizer):
 
     def client_call(self, board_id, *args, **kwargs):
         return self.client.get_teams(board_id, *args, **kwargs)
-
-    def get_queryset(self):
-        return self.model_class.all_objects.all()
 
 
 class CompanySynchronizer(Synchronizer):
@@ -313,7 +333,6 @@ class LocationSynchronizer(Synchronizer):
 class PrioritySynchronizer(Synchronizer):
     client_class = api.ServiceAPIClient
     model_class = models.TicketPriority
-    lookup_key = 'name'
 
     def _assign_field_data(self, ticket_priority, api_priority):
         ticket_priority.name = api_priority['name']
@@ -364,10 +383,13 @@ class ProjectSynchronizer(Synchronizer):
             )
 
 
-class MemberSynchronizer:
+class MemberSynchronizer(Synchronizer):
+    client_class = api.SystemAPIClient
+    model_class = models.Member
 
     def __init__(self, *args, **kwargs):
-        self.client = api.SystemAPIClient()
+        super().__init__(*args, **kwargs)
+        self.client = self.client_class()
         self.last_sync_job = None
 
         sync_job_qset = models.SyncJob.objects.all()
@@ -422,12 +444,14 @@ class MemberSynchronizer:
     def get_page(self, *args, **kwargs):
         return self.client.get_members(*args, **kwargs)
 
-    def sync(self):
+    def sync(self, reset=False):
         members_json = self.get()
 
         updated_count = 0
         created_count = 0
         deleted_count = 0
+
+        synced_ids = set()
 
         for api_member in members_json:
             username = api_member['identifier']
@@ -460,6 +484,10 @@ class MemberSynchronizer:
                     self._save_avatar(member, avatar, attachment_filename)
 
             member.save()
+            synced_ids.add(api_member['id'])
+
+        if reset:
+            deleted_count = self.prune_stale_records(synced_ids)
 
         return created_count, updated_count, deleted_count
 
@@ -705,7 +733,7 @@ class TicketSynchronizer:
                 'Deleted ticket {} (if it existed).'.format(ticket_id)
             )
 
-    def sync(self):
+    def sync(self, reset=False):
         """
         Synchronizes tickets between the ConnectWise server and the
         local database. Synchronization is performed in batches

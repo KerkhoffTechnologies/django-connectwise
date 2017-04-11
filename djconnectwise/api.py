@@ -287,7 +287,7 @@ class ServiceAPIClient(ConnectWiseAPIClient):
         if 'extra_conditions' in kwargs:
             self.extra_conditions = kwargs.pop('extra_conditions')
 
-        super(ServiceAPIClient, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def get_conditions(self):
         default_conditions = settings.DJCONNECTWISE_DEFAULT_TICKET_CONDITIONS
