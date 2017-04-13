@@ -50,6 +50,7 @@ class AbstractBaseSyncTest(object):
         self.assertIn(obj_title, out.getvalue().strip())
 
     def test_sync_reset(self):
+        self.test_sync()
         mock_call, return_value, cw_object = self.args
         args = [
             mock_call,
