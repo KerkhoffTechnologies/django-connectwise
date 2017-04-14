@@ -21,13 +21,13 @@ class Command(BaseCommand):
         synchronizers = (
             ('member', sync.MemberSynchronizer, _('Member')),
             ('board', sync.BoardSynchronizer, _('Board')),
+            ('team', sync.TeamSynchronizer, _('Team')),
+            ('board_status', sync.BoardStatusSynchronizer, _('Board Status')),
             ('priority', sync.PrioritySynchronizer, _('Priority')),
             ('project', sync.ProjectSynchronizer, _('Project')),
-            ('board_status', sync.BoardStatusSynchronizer, _('Board Status')),
             ('company_status', sync.CompanyStatusSynchronizer,
                 _('Company Status')),
             ('company', sync.CompanySynchronizer, _('Company')),
-            ('team', sync.TeamSynchronizer, _('Team')),
             ('location', sync.LocationSynchronizer, _('Location')),
             ('ticket', sync.TicketSynchronizer, _('Ticket')),
         )
@@ -79,9 +79,13 @@ class Command(BaseCommand):
         failed_classes = 0
         error_messages = ''
 
-        if reset_option:
+        num_synchronizers = len(self.synchronizer_map)
+        if reset_option and num_synchronizers and 'ticket' in self.synchronizer_map:
             sync_classes = list(sync_classes)
             sync_classes.reverse()
+
+            # need to move ticket synchronizer at the tail of the list
+            sync_classes.append(sync_classes.pop(0))
 
         for sync_class, obj_name in sync_classes:
             try:
