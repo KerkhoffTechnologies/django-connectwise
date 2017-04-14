@@ -81,8 +81,10 @@ class Synchronizer:
         stale_ids = synced_ids ^ self.instance_map.keys()
         deleted_count = 0
         if stale_ids:
-            self.model_class.objects.filter(pk__in=stale_ids).delete()
-            deleted_count = len(stale_ids)
+            delete_qset = self.model_class.objects.filter(pk__in=stale_ids)
+            deleted_count = delete_qset.count()
+            delete_qset.delete()
+            
             msg_tmpl = 'Removing #{} stale records for model: {}'
             msg = msg_tmpl.format(len(stale_ids), self.model_class)
             logger.info(msg)
@@ -450,7 +452,6 @@ class MemberSynchronizer(Synchronizer):
         updated_count = 0
         created_count = 0
         deleted_count = 0
-
         synced_ids = set()
 
         for api_member in members_json:
