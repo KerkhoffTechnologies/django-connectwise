@@ -80,10 +80,10 @@ class Command(BaseCommand):
         error_messages = ''
 
         num_synchronizers = len(self.synchronizer_map)
-        if reset_option and num_synchronizers and 'ticket' in self.synchronizer_map:
+        has_ticket_sync = 'ticket' in self.synchronizer_map
+        if reset_option and num_synchronizers and has_ticket_sync:
             sync_classes = list(sync_classes)
             sync_classes.reverse()
-
             # need to move ticket synchronizer at the tail of the list
             sync_classes.append(sync_classes.pop(0))
 
@@ -99,9 +99,9 @@ class Command(BaseCommand):
 
         if failed_classes > 0:
             msg = '{} class{} failed to sync.\n'.format(
-                    failed_classes,
-                    '' if failed_classes == 1 else 'es',
-                )
+                failed_classes,
+                '' if failed_classes == 1 else 'es',
+            )
             msg += 'Errors:\n'
             msg += error_messages
             raise CommandError(msg)

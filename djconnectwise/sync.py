@@ -84,7 +84,6 @@ class Synchronizer:
             delete_qset = self.model_class.objects.filter(pk__in=stale_ids)
             deleted_count = delete_qset.count()
             delete_qset.delete()
-            
             msg_tmpl = 'Removing #{} stale records for model: {}'
             msg = msg_tmpl.format(len(stale_ids), self.model_class)
             logger.info(msg)
