@@ -43,7 +43,11 @@ class Command(BaseCommand):
                             default=False)
 
     def sync_by_class(self, sync_class, obj_name, reset=False):
-        synchronizer = sync_class()
+        if sync_class == sync.TicketSynchronizer:
+            synchronizer = sync_class(reset=reset)
+        else:
+            synchronizer = sync_class()
+
         created_count, updated_count, deleted_count = synchronizer.sync(
             reset=reset)
 
