@@ -483,9 +483,6 @@ class TestMemberSynchronization(TestCase):
 
 class TestTicketSynchronization(TestCase):
 
-    def setUp(self):
-        self.ticket_id = fixtures.API_SERVICE_TICKET['id']
-
     def _init_tickets(self):
         Ticket.objects.all().delete()
         fixture_utils.init_boards()
@@ -495,7 +492,8 @@ class TestTicketSynchronization(TestCase):
 
     def _test_delete_ticket(self, fixture):
         """Local ticket should be deleted if omitted from sync"""
-        ticket_qset = Ticket.objects.filter(id=self.ticket_id)
+        ticket_id = fixtures.API_SERVICE_TICKET['id']
+        ticket_qset = Ticket.objects.filter(id=ticket_id)
         self._init_tickets()
         self.assertEqual(ticket_qset.count(), 1)
         method_name = 'djconnectwise.api.ServiceAPIClient.get_tickets'
@@ -513,4 +511,3 @@ class TestTicketSynchronization(TestCase):
         ticket_fixture = deepcopy(fixtures.API_SERVICE_TICKET)
         ticket_fixture['closedFlag'] = True
         self._test_delete_ticket([ticket_fixture])
-
