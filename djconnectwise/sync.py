@@ -710,12 +710,23 @@ class TicketSynchronizer:
             list(self.ticket_assignments.values()))
         self.ticket_assignments = {}
 
-    def prune_closed_tickets(self):
+    def prune_stale_records(self, synced_ids):
+        # first pass, delete closed tickets
         logger.info('Deleting closed tickets')
         delete_qset = models.Ticket.objects.filter(closed_flag=True)
-        delete_count = delete_qset.count()
+        deleted_count = delete_qset.count()
         delete_qset.delete()
-        return delete_count
+        local_ids = self.instance_map.keys()
+        stale_ids = synced_ids ^ local_ids
+        if stale_ids and local_ids:
+            delete_qset = models.Ticket.objects.filter(pk__in=stale_ids)
+            deleted_count += delete_qset.count()
+            delete_qset.delete()
+            msg_tmpl = 'Removing #{} stale records for model: Ticket'
+            msg = msg_tmpl.format(len(stale_ids))
+            logger.info(msg)
+
+        return deleted_count
 
     def fetch_sync_by_id(self, ticket_id):
         ticket = self.service_client.get_ticket(ticket_id)
@@ -739,11 +750,18 @@ class TicketSynchronizer:
         local database. Synchronization is performed in batches
         specified in the DJCONNECTWISE_API_BATCH_LIMIT setting
         """
+
+        self.instance_map = self.instance_map = {
+            i.id: i for i in models.Ticket.objects.all()
+        }
+
         sync_job = models.SyncJob.objects.create()
         page = 1  # Page is 1-indexed
 
         created_count = 0
         updated_count = 0
+        synced_ids = set()
+
         while True:
             logger.info('Processing ticket batch {}'.format(page))
             tickets = self.service_client.get_tickets(
@@ -763,6 +781,8 @@ class TicketSynchronizer:
                 else:
                     updated_count += 1
 
+                synced_ids.add(ticket.id)
+
             page += 1
             if num_tickets < settings.DJCONNECTWISE_API_BATCH_LIMIT:
                 break
@@ -770,7 +790,7 @@ class TicketSynchronizer:
         if self.ticket_assignments:
             self.commit_ticket_assignments()
 
-        delete_count = self.prune_closed_tickets()
+        delete_count = self.prune_stale_records(synced_ids)
 
         sync_job.end_time = timezone.now()
         sync_job.save()

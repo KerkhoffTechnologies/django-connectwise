@@ -7,6 +7,7 @@ from djconnectwise.models import BoardStatus
 from djconnectwise.models import Location
 from djconnectwise.models import Team
 from djconnectwise.models import Project
+from djconnectwise.models import Ticket
 from djconnectwise.models import TicketPriority
 from djconnectwise.models import Member
 
@@ -478,3 +479,38 @@ class TestMemberSynchronization(TestCase):
         local_member = Member.objects.all().first()
         api_member = fixtures.API_MEMBER
         self._assert_member_fields(local_member, api_member)
+
+
+class TestTicketSynchronization(TestCase):
+
+    def setUp(self):
+        self.ticket_id = fixtures.API_SERVICE_TICKET['id']
+
+    def _init_tickets(self):
+        Ticket.objects.all().delete()
+        fixture_utils.init_boards()
+        fixture_utils.init_board_statuses()
+        fixture_utils.init_teams()
+        fixture_utils.init_tickets()
+
+    def _test_delete_ticket(self, fixture):
+        """Local ticket should be deleted if omitted from sync"""
+        ticket_qset = Ticket.objects.filter(id=self.ticket_id)
+        self._init_tickets()
+        self.assertEqual(ticket_qset.count(), 1)
+        method_name = 'djconnectwise.api.ServiceAPIClient.get_tickets'
+        mocks.create_mock_call(method_name, fixture)
+
+        synchronizer = sync.TicketSynchronizer()
+        synchronizer.sync()
+        self.assertEqual(ticket_qset.count(), 0)
+
+    def test_delete_ticket(self):
+        self._test_delete_ticket([])
+
+    def test_delete_closed_ticket(self):
+        """Local ticket should be deleted if omitted from sync"""
+        ticket_fixture = deepcopy(fixtures.API_SERVICE_TICKET)
+        ticket_fixture['closedFlag'] = True
+        self._test_delete_ticket([ticket_fixture])
+
