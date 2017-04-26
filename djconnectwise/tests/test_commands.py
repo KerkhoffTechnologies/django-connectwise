@@ -3,8 +3,7 @@ import io
 from django.core.management import call_command
 from django.test import TestCase
 
-from djconnectwise.models import CallBackEntry
-from djconnectwise.models import ConnectWiseBoard
+from djconnectwise import models
 from djconnectwise import callback
 
 from . import mocks
@@ -13,165 +12,237 @@ from . import fixture_utils
 from .. import sync
 
 
-def sync_summary(class_name):
-    created_count = 2 if class_name in ['Priority', 'Board Status'] else 1
-    return '{} Sync Summary - Created: {} , Updated: 0'.format(
+def sync_summary(class_name, created_count):
+    return '{} Sync Summary - Created: {}, Updated: 0'.format(
         class_name, created_count
     )
 
 
-class BaseSyncTest(TestCase):
+def sync_reset_summary(class_name, deleted_count):
+    return '{} Sync Summary - Created: 0, Updated: 0, Deleted: {}'.format(
+        class_name, deleted_count
+    )
 
-    def _test_sync(self, mock_call, return_value, cw_object, msg):
+
+def slug_to_title(slug):
+    return slug.title().replace('_', ' ')
+
+
+class AbstractBaseSyncTest(object):
+
+    def _test_sync(self, mock_call, return_value, cw_object, reset=False):
         mock_call(return_value)
         out = io.StringIO()
-        call_command('cwsync', cw_object, stdout=out)
-        self.assertIn(msg, out.getvalue().strip())
 
+        args = ['cwsync', cw_object]
+        if reset:
+            args.append('--reset')
 
-class TestSyncCompanyStatusesCommand(BaseSyncTest):
+        call_command(*args, stdout=out)
+        return out
 
-    def test_sync(self):
-        """Test sync companies command."""
-        self._test_sync(
-            mocks.company_api_get_company_statuses_call,
-            fixtures.API_COMPANY_STATUS_LIST,
-            'company_status',
-            sync_summary('Company Status')
-        )
-
-
-class TestSyncCompaniesCommand(BaseSyncTest):
+    def _title_for_cw_object(self, cw_object):
+        return cw_object.title().replace('_', ' ')
 
     def test_sync(self):
-        """Test sync companies command."""
-        self._test_sync(
-            mocks.company_api_get_call,
-            fixtures.API_COMPANY_LIST,
-            'company',
-            sync_summary('Company')
-        )
+        out = self._test_sync(*self.args)
+        obj_title = self._title_for_cw_object(self.args[-1])
+        self.assertIn(obj_title, out.getvalue().strip())
+
+    def test_sync_reset(self):
+        self.test_sync()
+        mock_call, return_value, cw_object = self.args
+        args = [
+            mock_call,
+            [],
+            cw_object
+        ]
+
+        out = self._test_sync(*args, reset=True)
+        obj_label = self._title_for_cw_object(cw_object)
+        msg_tmpl = '{} Sync Summary - Created: 0, Updated: 0, Deleted: {}'
+        msg = msg_tmpl.format(obj_label, len(return_value))
+        self.assertEqual(msg, out.getvalue().strip())
 
 
-class TestSyncTeamsCommand(BaseSyncTest):
+class TestSyncCompanyStatusesCommand(AbstractBaseSyncTest, TestCase):
+    args = (
+        mocks.company_api_get_company_statuses_call,
+        fixtures.API_COMPANY_STATUS_LIST,
+        'company_status',
+    )
 
-    def test_sync(self):
-        """Test sync teams command."""
+
+class TestSyncCompaniesCommand(AbstractBaseSyncTest, TestCase):
+    args = (
+        mocks.company_api_get_call,
+        fixtures.API_COMPANY_LIST,
+        'company',
+    )
+
+
+class TestSyncTeamsCommand(AbstractBaseSyncTest, TestCase):
+    args = (
+        mocks.service_api_get_teams_call,
+        fixtures.API_SERVICE_TEAM_LIST,
+        'team',
+    )
+
+    def setUp(self):
+        super().setUp()
         fixture_utils.init_boards()
-        self._test_sync(
-            mocks.service_api_get_teams_call,
-            [fixtures.API_SERVICE_TEAM_LIST[0]],
-            'team',
-            sync_summary('Team')
-        )
 
 
-class TestSyncBoardsCommand(BaseSyncTest):
-
-    def test_sync(self):
-        """Test sync boards command."""
-        self._test_sync(
-            mocks.service_api_get_boards_call,
-            fixtures.API_BOARD_LIST,
-            'board',
-            sync_summary('Board')
-        )
+class TestSyncBoardsCommand(AbstractBaseSyncTest, TestCase):
+    args = (
+        mocks.service_api_get_boards_call,
+        fixtures.API_BOARD_LIST,
+        'board',
+    )
 
 
-class TestSyncLocationsCommand(BaseSyncTest):
-
-    def test_sync(self):
-        """Test sync locations command."""
-        self._test_sync(
-            mocks.service_api_get_locations_call,
-            fixtures.API_SERVICE_LOCATION_LIST,
-            'location',
-            sync_summary('Location')
-        )
+class TestSyncLocationsCommand(AbstractBaseSyncTest, TestCase):
+    args = (
+        mocks.service_api_get_locations_call,
+        fixtures.API_SERVICE_LOCATION_LIST,
+        'location',
+    )
 
 
-class TestSyncPrioritiesCommand(BaseSyncTest):
+class TestSyncPrioritiesCommand(AbstractBaseSyncTest, TestCase):
 
-    def test_sync(self):
-        """Test sync priorities command."""
-        self._test_sync(
-            mocks.service_api_get_priorities_call,
-            fixtures.API_SERVICE_PRIORITY_LIST,
-            'priority',
-            sync_summary('Priority')
-        )
+    args = (
+        mocks.service_api_get_priorities_call,
+        fixtures.API_SERVICE_PRIORITY_LIST,
+        'priority',
+    )
 
 
-class TestSyncProjectsCommand(BaseSyncTest):
+class TestSyncProjectsCommand(AbstractBaseSyncTest, TestCase):
 
-    def test_sync(self):
-        """Test sync projects command."""
-        self._test_sync(
-            mocks.project_api_get_projects_call,
-            fixtures.API_PROJECT_LIST,
-            'project',
-            sync_summary('Project')
-        )
+    args = (
+        mocks.project_api_get_projects_call,
+        fixtures.API_PROJECT_LIST,
+        'project',
+    )
 
 
-class TestSyncBoardsStatusesCommand(BaseSyncTest):
+class TestSyncBoardsStatusesCommand(AbstractBaseSyncTest, TestCase):
+    args = (
+        mocks.service_api_get_statuses_call,
+        fixtures.API_BOARD_STATUS_LIST,
+        'board_status',
+    )
 
     def setUp(self):
         board_synchronizer = sync.BoardSynchronizer()
-        ConnectWiseBoard.objects.all().delete()
+        models.ConnectWiseBoard.objects.all().delete()
         _, _patch = mocks.service_api_get_boards_call(fixtures.API_BOARD_LIST)
         board_synchronizer.sync()
         _patch.stop()
 
-    def test_sync(self):
-        """Test sync_board_statuses command."""
-        self._test_sync(
-            mocks.service_api_get_statuses_call,
-            fixtures.API_BOARD_STATUS_LIST,
-            'board_status',
-            sync_summary('Board Status')
-        )
 
+class TestSyncAllCommand(TestCase):
 
-class TestSyncAllCommand(BaseSyncTest):
-    def test_sync(self):
-        """Test sync all objects command."""
-        mocks.company_api_get_call(fixtures.API_COMPANY_LIST)
-        mocks.service_api_get_boards_call(fixtures.API_BOARD_LIST)
-        mocks.service_api_get_statuses_call(
-            fixtures.API_BOARD_STATUS_LIST)
+    def setUp(self):
+        super().setUp()
         mocks.system_api_get_members_call([fixtures.API_MEMBER])
         mocks.system_api_get_member_image_by_identifier_call(
             (mocks.CW_MEMBER_IMAGE_FILENAME, mocks.get_member_avatar()))
         mocks.company_api_by_id_call(fixtures.API_COMPANY)
         mocks.service_api_tickets_call()
-        mocks.service_api_get_locations_call(
-            fixtures.API_SERVICE_LOCATION_LIST)
-        mocks.service_api_get_priorities_call(
-            fixtures.API_SERVICE_PRIORITY_LIST)
-        mocks.project_api_get_projects_call(
-            fixtures.API_PROJECT_LIST)
-        mocks.company_api_get_company_statuses_call(
-            fixtures.API_COMPANY_STATUS_LIST)
+        sync_test_cases = [
+            TestSyncCompanyStatusesCommand,
+            TestSyncCompaniesCommand,
+            TestSyncLocationsCommand,
+            TestSyncPrioritiesCommand,
+            TestSyncProjectsCommand,
+            TestSyncTeamsCommand,
+            TestSyncBoardsStatusesCommand,
+            TestSyncBoardsCommand,
+        ]
 
-        mocks.service_api_get_teams_call([fixtures.API_SERVICE_TEAM_LIST[0]])
+        self.test_args = []
 
+        for test_case in sync_test_cases:
+            self.test_args.append(test_case.args)
+            apicall, fixture, cw_object = test_case.args
+            apicall(fixture)
+
+    def _test_sync(self, reset=False):
         out = io.StringIO()
-        call_command('cwsync', stdout=out)
-        actual_output = out.getvalue().strip()
+        args = ['cwsync']
 
-        summaries = [
-            sync_summary('Priority'),
-            sync_summary('Project'),
-            sync_summary('Board'),
-            sync_summary('Board Status'),
-            sync_summary('Company'),
-            sync_summary('Member'),
-            sync_summary('Team'),
-            sync_summary('Ticket')]
+        if reset:
+            args.append('--reset')
 
-        for summary in summaries:
-            self.assertIn(summary, actual_output)
+        call_command(*args, stdout=out)
+
+        return out.getvalue().strip()
+
+    def test_sync(self):
+        """Test sync all objects command."""
+
+        output = self._test_sync()
+        for apicall, fixture, cw_object in self.test_args:
+            summary = sync_summary(slug_to_title(cw_object), len(fixture))
+            self.assertIn(summary, output)
+
+        self.assertEqual(models.Team.objects.all().count(),
+                         len(fixtures.API_SERVICE_TEAM_LIST))
+        self.assertEqual(models.CompanyStatus.objects.all().count(),
+                         len(fixtures.API_COMPANY_STATUS_LIST))
+
+        self.assertEqual(models.TicketPriority.objects.all().count(),
+                         len(fixtures.API_SERVICE_PRIORITY_LIST))
+        self.assertEqual(models.ConnectWiseBoard.objects.all().count(),
+                         len(fixtures.API_BOARD_LIST))
+        self.assertEqual(models.BoardStatus.objects.all().count(),
+                         len(fixtures.API_BOARD_STATUS_LIST))
+        self.assertEqual(models.Location.objects.all().count(),
+                         1)
+
+        self.assertEqual(models.Ticket.objects.all().count(),
+                         len([fixtures.API_SERVICE_TICKET]))
+
+    def test_sync_reset(self):
+        """Test sync all objects command."""
+        cw_object_map = {
+            'member': models.Member,
+            'board': models.ConnectWiseBoard,
+            'priority': models.TicketPriority,
+            'project': models.Project,
+            'board_status': models.BoardStatus,
+            'company_status': models.CompanyStatus,
+            'team': models.Team,
+            'location': models.Location,
+            'ticket': models.Ticket,
+            'company': models.Company,
+        }
+
+        self.test_sync()
+
+        fixture_utils.init_members()
+        fixture_utils.init_board_statuses()
+        fixture_utils.init_teams()
+
+        pre_reset_counts = {}
+
+        for key, clazz in cw_object_map.items():
+            pre_reset_counts[key] = clazz.objects.all().count()
+
+        mocks.system_api_get_members_call([])
+        mocks.company_api_by_id_call([])
+
+        for apicall, _, _ in self.test_args:
+            apicall([])
+
+        output = self._test_sync(reset=True)
+
+        for apicall, fixture, cw_object in self.test_args:
+            summary = sync_reset_summary(slug_to_title(cw_object),
+                                         pre_reset_counts[cw_object])
+            self.assertIn(summary, output)
 
 
 class TestListCallBacksCommand(TestCase):
@@ -208,7 +279,7 @@ class TestCallBackCommand(TestCase):
         return fixture
 
     def clean(self):
-        CallBackEntry.objects.all().delete()
+        models.CallBackEntry.objects.all().delete()
 
     def call(self, cmd, arg):
         out = io.StringIO()

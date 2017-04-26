@@ -20,15 +20,15 @@ class Command(BaseCommand):
         # See https://www.python.org/dev/peps/pep-0468/.
         synchronizers = (
             ('member', sync.MemberSynchronizer, _('Member')),
+            ('board', sync.BoardSynchronizer, _('Board')),
+            ('team', sync.TeamSynchronizer, _('Team')),
+            ('board_status', sync.BoardStatusSynchronizer, _('Board Status')),
             ('priority', sync.PrioritySynchronizer, _('Priority')),
             ('project', sync.ProjectSynchronizer, _('Project')),
-            ('board', sync.BoardSynchronizer, _('Board')),
-            ('board_status', sync.BoardStatusSynchronizer, _('Board Status')),
             ('company_status', sync.CompanyStatusSynchronizer,
                 _('Company Status')),
             ('company', sync.CompanySynchronizer, _('Company')),
             ('location', sync.LocationSynchronizer, _('Location')),
-            ('team', sync.TeamSynchronizer, _('Team')),
             ('ticket', sync.TicketSynchronizer, _('Ticket')),
         )
         self.synchronizer_map = OrderedDict()
@@ -43,14 +43,21 @@ class Command(BaseCommand):
                             default=False)
 
     def sync_by_class(self, sync_class, obj_name, reset=False):
-        if reset and sync_class == sync.TicketSynchronizer:
+        if sync_class == sync.TicketSynchronizer:
             synchronizer = sync_class(reset=reset)
         else:
             synchronizer = sync_class()
 
-        created_count, updated_count, deleted_count = synchronizer.sync()
-        msg = _('{} Sync Summary - Created: {} , Updated: {}')
+        created_count, updated_count, deleted_count = synchronizer.sync(
+            reset=reset)
+
+        msg = _('{} Sync Summary - Created: {}, Updated: {}')
         fmt_msg = msg.format(obj_name, created_count, updated_count)
+
+        if reset:
+            msg = _('{} Sync Summary - Created: {}, Updated: {}, Deleted: {}')
+            fmt_msg = msg.format(obj_name, created_count, updated_count,
+                                 deleted_count)
 
         self.stdout.write(fmt_msg)
 
@@ -75,9 +82,19 @@ class Command(BaseCommand):
 
         failed_classes = 0
         error_messages = ''
+
+        num_synchronizers = len(self.synchronizer_map)
+        has_ticket_sync = 'ticket' in self.synchronizer_map
+        if reset_option and num_synchronizers and has_ticket_sync:
+            sync_classes = list(sync_classes)
+            sync_classes.reverse()
+            # need to move ticket synchronizer at the tail of the list
+            sync_classes.append(sync_classes.pop(0))
+
         for sync_class, obj_name in sync_classes:
             try:
                 self.sync_by_class(sync_class, obj_name, reset=reset_option)
+
             except api.ConnectWiseAPIError as e:
                 msg = 'Failed to sync {}: {}'.format(obj_name, e)
                 self.stderr.write(msg)
@@ -86,9 +103,9 @@ class Command(BaseCommand):
 
         if failed_classes > 0:
             msg = '{} class{} failed to sync.\n'.format(
-                    failed_classes,
-                    '' if failed_classes == 1 else 'es',
-                )
+                failed_classes,
+                '' if failed_classes == 1 else 'es',
+            )
             msg += 'Errors:\n'
             msg += error_messages
             raise CommandError(msg)

@@ -1,7 +1,7 @@
 from django.test import TestCase
 
 from .. import api
-from . import fixtures, fixture_utils
+from . import fixtures
 from . import mocks
 
 from djconnectwise import callback
@@ -17,7 +17,6 @@ class TestCallBackHandler(TestCase):
 
     def setUp(self):
         self.client = api.ServiceAPIClient()
-        fixture_utils.init_members()
 
     def get_fixture(self):
         fixture = fixtures.API_SYSTEM_CALLBACK_ENTRY
