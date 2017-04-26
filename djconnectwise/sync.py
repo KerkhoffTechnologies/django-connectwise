@@ -150,7 +150,7 @@ class BoardSynchronizer(Synchronizer):
         return self.client.get_boards(*args, **kwargs)
 
     def get_queryset(self):
-        return self.model_class.all_objects.all()
+        return self.model_class.objects.all()
 
 
 class BoardChildSynchronizer(Synchronizer):
@@ -158,7 +158,7 @@ class BoardChildSynchronizer(Synchronizer):
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
         instance.name = json_data['name']
-        instance.board = models.ConnectWiseBoard.all_objects.get(
+        instance.board = models.ConnectWiseBoard.objects.get(
             id=json_data['boardId'])
         return instance
 
@@ -167,7 +167,7 @@ class BoardChildSynchronizer(Synchronizer):
 
     def get_page(self, *args, **kwargs):
         records = []
-        board_qs = models.ConnectWiseBoard.all_objects.all()
+        board_qs = models.ConnectWiseBoard.objects.all()
 
         for board_id in board_qs.values_list('id', flat=True):
             records += self.client_call(board_id, *args, **kwargs)
@@ -194,7 +194,7 @@ class BoardStatusSynchronizer(BoardChildSynchronizer):
         return self.client.get_statuses(board_id, *args, **kwargs)
 
     def get_queryset(self):
-        return self.model_class.all_objects.all()
+        return self.model_class.objects.all()
 
 
 class TeamSynchronizer(BoardChildSynchronizer):
@@ -207,7 +207,7 @@ class TeamSynchronizer(BoardChildSynchronizer):
 
         members = []
         if json_data['members']:
-            members = list(models.Member.all_objects.filter(
+            members = list(models.Member.objects.filter(
                 id__in=json_data['members']))
 
         instance.save()
@@ -269,7 +269,7 @@ class CompanySynchronizer(Synchronizer):
         return self.client.get_companies(*args, **kwargs)
 
     def get_queryset(self):
-        return self.model_class.all_objects.all()
+        return self.model_class.objects.all()
 
     def fetch_sync_by_id(self, company_id):
         company = self.client.by_id(company_id)
@@ -365,7 +365,7 @@ class ProjectSynchronizer(Synchronizer):
         return self.client.get_projects(*args, **kwargs)
 
     def get_queryset(self):
-        return self.model_class.all_objects.all()
+        return self.model_class.objects.all()
 
     def fetch_sync_by_id(self, project_id):
         project = self.client.get_project(project_id)
@@ -378,7 +378,7 @@ class ProjectSynchronizer(Synchronizer):
         except api.ConnectWiseRecordNotFoundError:
             # This is what we expect to happen. Since it's gone in CW, we
             # are safe to delete it from here.
-            models.Project.all_objects.filter(id=project_id).delete()
+            models.Project.objects.filter(id=project_id).delete()
             logger.info(
                 'Deleted project {} (if it existed).'.format(project_id)
             )
@@ -455,7 +455,7 @@ class MemberSynchronizer(Synchronizer):
 
         for api_member in members_json:
             username = api_member['identifier']
-            member_qset = models.Member.all_objects.filter(identifier=username)
+            member_qset = models.Member.objects.filter(identifier=username)
             if member_qset.exists():
                 member = member_qset.first()
                 member.first_name = api_member['firstName']
@@ -536,9 +536,9 @@ class TicketSynchronizer:
         self.local_company_fields = self._create_field_lookup(models.Company)
 
         self.members_map = {
-            m.identifier: m for m in models.Member.all_objects.all()
+            m.identifier: m for m in models.Member.objects.all()
         }
-        self.project_map = {p.id: p for p in models.Project.all_objects.all()}
+        self.project_map = {p.id: p for p in models.Project.objects.all()}
         self.ticket_assignments = {}
 
         self.exclude_fields = ('priority', 'status', 'company')
@@ -595,7 +595,7 @@ class TicketSynchronizer:
         team = json_data['team']
         try:
             if team:
-                ticket.team = models.Team.all_objects.get(
+                ticket.team = models.Team.objects.get(
                     pk=team['id'])
         except models.Team.DoesNotExist:
             logger.warning(
@@ -606,7 +606,7 @@ class TicketSynchronizer:
             )
 
         try:
-            ticket.board = models.ConnectWiseBoard.all_objects.get(
+            ticket.board = models.ConnectWiseBoard.objects.get(
                 pk=json_data['board']['id'])
         except models.ConnectWiseBoard.DoesNotExist:
             logger.warning(
@@ -640,7 +640,7 @@ class TicketSynchronizer:
         try:
             # TODO - Discuss - Do we assume that the status exists
             # or do we want to do a roundtrip and retrieve from the server?
-            new_ticket_status = models.BoardStatus.all_objects.get(
+            new_ticket_status = models.BoardStatus.objects.get(
                 pk=json_data['status']['id'])
         except models.BoardStatus.DoesNotExist:
             logger.warning(
