@@ -277,6 +277,9 @@ class CompanyStatus(models.Model):
     cancel_open_tracks_flag = models.BooleanField()
     track_id = models.PositiveSmallIntegerField(blank=True, null=True)
 
+    def __str__(self):
+        return self.name
+
 
 class AvailableBoardTeamManager(models.Manager):
     """Return only teams whose ConnectWise board is active."""

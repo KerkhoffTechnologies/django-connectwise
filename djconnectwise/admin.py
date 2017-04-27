@@ -28,15 +28,15 @@ class MemberAdmin(admin.ModelAdmin):
 @admin.register(models.Company)
 class CompanyAdmin(admin.ModelAdmin):
     list_display = ('id', 'name',
-                    'identifier', 'type', 'status')
+                    'identifier', 'type', 'status', 'deleted_flag')
     list_filter = ('status',)
     search_fields = ['name', 'identifier']
 
 
 @admin.register(models.Project)
 class ProjectAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name')
-    list_filter = ('name',)
+    list_display = ('id', 'name', 'status_name')
+    list_filter = ('name', 'status_name')
     search_fields = ['name']
 
 
