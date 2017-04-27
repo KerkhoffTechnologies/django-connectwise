@@ -68,13 +68,18 @@ class BaseTestCallBackView(TestCase):
         self.assertEqual(len(instances), 1)
         self.assertEqual(response.status_code, 204)
 
-    def _test_delete(self, callback_type, entity_id):
+    def _test_delete(self, callback_type, entity_id, manager='objects'):
         response = self.post_data(
             callback_type,
             views.CALLBACK_DELETED,
             entity_id
         )
-        instances = list(self.MODEL_CLASS.objects.all())
+        # Some classes don't actually delete the object; they just make it
+        # inaccessible to a special manager that you must use if you don't
+        # want to see 'deleted' objects. Use this manager if it's been
+        # provided.
+        model_manager = getattr(self.MODEL_CLASS, manager)
+        instances = list(model_manager.all())
         self.assertEqual(response.status_code, 204)
         self.assertEqual(len(instances), 0)
 
@@ -181,5 +186,6 @@ class TestCompanyCallBackView(BaseTestCallBackView):
         mocks.company_api_by_id_call(company_fixture)
         self._test_delete(
             CallBackEntry.COMPANY,
-            company_fixture['id']
+            company_fixture['id'],
+            manager='available_objects'
         )

@@ -50,13 +50,13 @@ class CallBackEntry(models.Model):
         return self.url
 
 
-class ActiveConnectWiseBoardManager(models.Manager):
+class AvailableConnectWiseBoardManager(models.Manager):
     """Return only active ConnectWise boards."""
     def get_queryset(self):
         return super().get_queryset().filter(inactive=False)
 
 
-class AllConnectWiseBoardManager(models.Manager):
+class ConnectWiseBoardManager(models.Manager):
     """Return all ConnectWise boards."""
     def get_queryset(self):
         return super().get_queryset().all()
@@ -66,8 +66,8 @@ class ConnectWiseBoard(TimeStampedModel):
     name = models.CharField(max_length=255)
     inactive = models.BooleanField(default=False)
 
-    objects = ActiveConnectWiseBoardManager()
-    all_objects = AllConnectWiseBoardManager()
+    objects = ConnectWiseBoardManager()
+    available_objects = AvailableConnectWiseBoardManager()
 
     class Meta:
         ordering = ('name',)
@@ -99,13 +99,13 @@ class ConnectWiseBoard(TimeStampedModel):
         return closed_status
 
 
-class ActiveBoardStatusManager(models.Manager):
+class AvailableBoardStatusManager(models.Manager):
     """Return only statuses whose ConnectWise board is active."""
     def get_queryset(self):
         return super().get_queryset().filter(board__inactive=False)
 
 
-class AllBoardStatusManager(models.Manager):
+class BoardStatusManager(models.Manager):
     """Return all ConnectWise board statuses."""
     def get_queryset(self):
         return super().get_queryset().all()
@@ -124,8 +124,8 @@ class BoardStatus(TimeStampedModel):
     closed_status = models.BooleanField()
     board = models.ForeignKey('ConnectWiseBoard')
 
-    objects = ActiveBoardStatusManager()
-    all_objects = AllBoardStatusManager()
+    objects = BoardStatusManager()
+    available_objects = AvailableBoardStatusManager()
 
     class Meta:
         ordering = ('board__name', 'sort_order', 'name')
@@ -146,13 +146,13 @@ class Location(TimeStampedModel):
         return self.name
 
 
-class NotAPIMemberManager(models.Manager):
+class RegularMemberManager(models.Manager):
     """Return members that aren't API members."""
     def get_queryset(self):
         return super().get_queryset().exclude(license_class='A')
 
 
-class AllMemberManager(models.Manager):
+class MemberManager(models.Manager):
     """Return all members."""
     def get_queryset(self):
         return super().get_queryset().all()
@@ -177,8 +177,8 @@ class Member(TimeStampedModel):
         choices=LICENSE_CLASSES, db_index=True
     )
 
-    objects = NotAPIMemberManager()
-    all_objects = AllMemberManager()
+    objects = MemberManager()
+    regular_objects = RegularMemberManager()
 
     class Meta:
         ordering = ('first_name', 'last_name')
@@ -209,13 +209,13 @@ class Member(TimeStampedModel):
         return member
 
 
-class NotDeletedCompanyManager(models.Manager):
+class AvailableCompanyManager(models.Manager):
     """Return only companies whose deleted_flag isn't true."""
     def get_queryset(self):
         return super().get_queryset().filter(deleted_flag=False)
 
 
-class AllCompanyManager(models.Manager):
+class CompanyManager(models.Manager):
     """Return all companies."""
     def get_queryset(self):
         return super().get_queryset().all()
@@ -244,8 +244,9 @@ class Company(TimeStampedModel):
     lastupdated = models.CharField(blank=True, null=True, max_length=250)
     deleted_flag = models.BooleanField(default=False)
     status = models.ForeignKey('CompanyStatus', blank=True, null=True)
-    objects = NotDeletedCompanyManager()
-    all_objects = AllCompanyManager()
+
+    objects = CompanyManager()
+    available_objects = AvailableCompanyManager()
 
     class Meta:
         verbose_name_plural = 'companies'
@@ -276,14 +277,17 @@ class CompanyStatus(models.Model):
     cancel_open_tracks_flag = models.BooleanField()
     track_id = models.PositiveSmallIntegerField(blank=True, null=True)
 
+    def __str__(self):
+        return self.name
 
-class ActiveBoardTeamManager(models.Manager):
+
+class AvailableBoardTeamManager(models.Manager):
     """Return only teams whose ConnectWise board is active."""
     def get_queryset(self):
         return super().get_queryset().filter(board__inactive=False)
 
 
-class AllBoardTeamManager(models.Manager):
+class BoardTeamManager(models.Manager):
     """Return all ConnectWise board teams."""
     def get_queryset(self):
         return super().get_queryset().all()
@@ -294,8 +298,8 @@ class Team(TimeStampedModel):
     board = models.ForeignKey('ConnectWiseBoard')
     members = models.ManyToManyField('Member')
 
-    objects = ActiveBoardTeamManager()
-    all_objects = AllBoardTeamManager()
+    objects = BoardTeamManager()
+    available_objects = AvailableBoardTeamManager()
 
     def __str__(self):
         return '{}/{}'.format(self.board, self.name)
@@ -359,13 +363,13 @@ class TicketAssignment(TimeStampedModel):
         return '{}: {}'.format(self.ticket, self.member)
 
 
-class NotClosedProjectManager(models.Manager):
+class AvailableProjectManager(models.Manager):
     """Return only projects whose status isn't "Closed"."""
     def get_queryset(self):
         return super().get_queryset().exclude(status_name='Closed')
 
 
-class AllProjectManager(models.Manager):
+class ProjectManager(models.Manager):
     """Return all projects."""
     def get_queryset(self):
         return super().get_queryset().all()
@@ -377,8 +381,8 @@ class Project(TimeStampedModel):
     # just keep the name here for simplicity.
     status_name = models.CharField(max_length=200, blank=True, null=True)
 
-    objects = NotClosedProjectManager()
-    all_objects = AllProjectManager()
+    objects = ProjectManager()
+    available_objects = AvailableProjectManager()
 
     class Meta:
         ordering = ('name', )
