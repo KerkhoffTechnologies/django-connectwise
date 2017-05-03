@@ -463,21 +463,30 @@ class MemberSynchronizer(Synchronizer):
                 member.office_email = api_member['officeEmail']
                 member.license_class = api_member['licenseClass']
                 updated_count += 1
-                logger.info('Update Member: {0}'.format(member.identifier))
+                logger.info('Update member: {0}'.format(member.identifier))
             else:
                 member = models.Member.create_member(api_member)
                 created_count += 1
-                logger.info('Create Member: {0}'.format(member.identifier))
+                logger.info('Create member: {0}'.format(member.identifier))
 
             # Only update the avatar if the member profile
             # was updated since last sync.
             member_last_updated = parse(api_member['_info']['lastUpdated'])
+            logger.debug(
+                'Member {} last updated: {}'.format(
+                    member.identifier,
+                    member_last_updated
+                )
+            )
             member_stale = False
             if self.last_sync_job:
                 member_stale = member_last_updated > \
                     self.last_sync_job.start_time
 
             if not self.last_sync_job or member_stale:
+                logger.debug(
+                    'Fetching avatar for member {}.'.format(member.identifier)
+                )
                 (attachment_filename, avatar) = self.client \
                     .get_member_image_by_identifier(username)
                 if attachment_filename and avatar:
