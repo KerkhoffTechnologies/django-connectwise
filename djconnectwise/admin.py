@@ -49,8 +49,8 @@ class ResourceInline(admin.TabularInline):
 class TicketAdmin(admin.ModelAdmin):
     list_display = ('id', 'summary', 'status', 'resources', 'record_type',)
 
-    list_filter = ('status', 'record_type',)
-    search_fields = ['id', 'summary', ]
+    list_filter = ('status', 'record_type')
+    search_fields = ['id', 'summary', 'company__name']
     inlines = [ResourceInline]
 
     def resources(self, obj):
