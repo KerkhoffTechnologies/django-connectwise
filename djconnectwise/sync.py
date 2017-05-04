@@ -78,15 +78,16 @@ class Synchronizer:
         return instance, created
 
     def prune_stale_records(self, synced_ids):
-        stale_ids = synced_ids ^ self.instance_map.keys()
+        stale_ids = set(self.instance_map.keys()) - synced_ids
         deleted_count = 0
         if stale_ids:
             delete_qset = self.model_class.objects.filter(pk__in=stale_ids)
             deleted_count = delete_qset.count()
-            delete_qset.delete()
-            msg_tmpl = 'Removing #{} stale records for model: {}'
-            msg = msg_tmpl.format(len(stale_ids), self.model_class)
+            msg = 'Removing {} stale records for model: {}'.format(
+                len(stale_ids), self.model_class,
+            )
             logger.info(msg)
+            delete_qset.delete()
 
         return deleted_count
 
@@ -125,13 +126,14 @@ class Synchronizer:
 
             synced_ids.add(record['id'])
 
-        stale_ids = synced_ids ^ self.instance_map.keys()
+        stale_ids = set(self.instance_map.keys()) - synced_ids
         if stale_ids and reset:
-            self.model_class.objects.filter(pk__in=stale_ids).delete()
             deleted_count = len(stale_ids)
-            msg_tmpl = 'Removing #{} stale records for model: {}'
-            msg = msg_tmpl.format(len(stale_ids), self.model_class)
+            msg = 'Removing {} stale records for model: {}'.format(
+                len(stale_ids), self.model_class,
+            )
             logger.info(msg)
+            self.model_class.objects.filter(pk__in=stale_ids).delete()
 
         return created_count, updated_count, deleted_count
 
@@ -541,14 +543,14 @@ class TicketSynchronizer:
         # We need to remove the underscores to ensure an accurate
         # lookup of the normalized api fieldnames
         self.local_ticket_fields = self._create_field_lookup(
-            models.Ticket)
+            models.Ticket
+        )
         self.local_company_fields = self._create_field_lookup(models.Company)
 
         self.members_map = {
             m.identifier: m for m in models.Member.objects.all()
         }
         self.project_map = {p.id: p for p in models.Project.objects.all()}
-        self.ticket_assignments = {}
 
         self.exclude_fields = ('priority', 'status', 'company')
 
@@ -573,7 +575,7 @@ class TicketSynchronizer:
                 logger.info('Project created: %s' % project.name)
             return project
 
-    def sync_ticket(self, json_data, commit_assignments=True):
+    def sync_ticket(self, json_data):
         """
         Creates a new local instance of the supplied ConnectWise
         Ticket instance.
@@ -675,49 +677,48 @@ class TicketSynchronizer:
         )
         logger.info(log_info)
 
-        self._manage_member_assignments(ticket, commit_assignments)
+        self._manage_member_assignments(ticket)
         return ticket, created
 
-    def _manage_member_assignments(self, ticket, commit_assignments=True):
-        member = None
-        if ticket.resources:
-            usernames = [
-                u.strip() for u in ticket.resources.split(',')
-            ]
-            # Reset board/ticket assignment in case the assigned resources
-            # have changed since last sync.
-            models.TicketAssignment.objects.filter(
-                ticket=ticket).delete()
-            for username in usernames:
-                member = self.members_map.get(username)
+    def _manage_member_assignments(self, ticket):
+        if not ticket.resources:
+            return
 
-                if member:
-                    assignment = models.TicketAssignment()
-                    assignment.member = member
-                    assignment.ticket = ticket
-                    self.ticket_assignments[(username, ticket.id,)] = \
-                        assignment
-                    msg = 'Member ticket assignment: ' \
-                          'ticket {}, member {}'.format(ticket.id, username)
-                    logger.info(msg)
-                else:
-                    logger.error(
-                        'Failed to locate member with username {} for ticket '
-                        '{} assignment.'.format(username, ticket.id)
-                    )
-            if commit_assignments:
-                self.commit_ticket_assignments()
+        ticket_assignments = {}
+        usernames = [
+            u.strip() for u in ticket.resources.split(',')
+        ]
+        # Reset board/ticket assignment in case the assigned resources
+        # have changed since last sync.
+        models.TicketAssignment.objects.filter(
+            ticket=ticket).delete()
+        for username in usernames:
+            member = self.members_map.get(username)
 
-    def commit_ticket_assignments(self):
-        """Commit all the saved ticket assignments."""
-        logger.info(
-            'Saving {} ticket assignments'.format(
-                len(self.ticket_assignments)
+            if member:
+                assignment = models.TicketAssignment()
+                assignment.member = member
+                assignment.ticket = ticket
+                ticket_assignments[(username, ticket.id,)] = \
+                    assignment
+                msg = 'Member ticket assignment: ' \
+                      'ticket {}, member {}'.format(ticket.id, username)
+                logger.info(msg)
+            else:
+                logger.warning(
+                    'Failed to locate member with username {} for ticket '
+                    '{} assignment.'.format(username, ticket.id)
+                )
+
+        if ticket_assignments:
+            logger.info(
+                'Saving {} ticket assignments'.format(
+                    len(ticket_assignments)
+                )
             )
-        )
-        models.TicketAssignment.objects.bulk_create(
-            list(self.ticket_assignments.values()))
-        self.ticket_assignments = {}
+            models.TicketAssignment.objects.bulk_create(
+                list(ticket_assignments.values())
+            )
 
     def prune_stale_records(self, synced_ids):
         # first pass, delete closed tickets
@@ -725,15 +726,17 @@ class TicketSynchronizer:
         delete_qset = models.Ticket.objects.filter(closed_flag=True)
         deleted_count = delete_qset.count()
         delete_qset.delete()
-        local_ids = self.instance_map.keys()
-        stale_ids = synced_ids ^ local_ids
+
+        local_ids = set(self.instance_map.keys())
+        stale_ids = local_ids - synced_ids
         if stale_ids and local_ids:
             delete_qset = models.Ticket.objects.filter(pk__in=stale_ids)
             deleted_count += delete_qset.count()
-            delete_qset.delete()
-            msg_tmpl = 'Removing #{} stale records for model: Ticket'
-            msg = msg_tmpl.format(len(stale_ids))
+            msg = 'Removing {} stale records for model: Ticket'.format(
+                len(stale_ids)
+            )
             logger.info(msg)
+            delete_qset.delete()
 
         return deleted_count
 
@@ -780,11 +783,7 @@ class TicketSynchronizer:
             num_tickets = len(tickets)
 
             for ticket in tickets:
-                # We'll delay adding member assignments until the very end,
-                # because it's faster.
-                ticket, created = self.sync_ticket(
-                    ticket, commit_assignments=True
-                )
+                ticket, created = self.sync_ticket(ticket)
                 if created:
                     created_count += 1
                 else:
@@ -795,9 +794,6 @@ class TicketSynchronizer:
             page += 1
             if num_tickets < settings.DJCONNECTWISE_API_BATCH_LIMIT:
                 break
-
-        if self.ticket_assignments:
-            self.commit_ticket_assignments()
 
         delete_count = self.prune_stale_records(synced_ids)
 
