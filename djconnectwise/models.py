@@ -158,20 +158,29 @@ class MemberManager(models.Manager):
         return super().get_queryset().all()
 
 
-class Member(TimeStampedModel):
+class Member(models.Model):
     LICENSE_CLASSES = (
         ('F', 'Full license'),
         ('A', 'API license'),
     )
 
-    identifier = models.CharField(
-        max_length=15, blank=False, unique=True)  # This is the CW username
+    created = models.DateTimeField(
+        editable=False, blank=True, auto_now_add=True
+    )
+    modified = models.DateTimeField(
+        editable=False, blank=True, auto_now=True
+    )
+    identifier = models.CharField(  # This is the CW username
+        max_length=15, blank=False, unique=True
+    )
     first_name = models.CharField(max_length=30, blank=False)
     last_name = models.CharField(max_length=30, blank=False)
     office_email = models.EmailField(max_length=250)
     inactive = models.BooleanField(default=False)
-    avatar = ThumbnailerImageField(null=True, blank=True, verbose_name=_(
-        'Member Avatar'), help_text=_('Member Avatar'))
+    avatar = ThumbnailerImageField(
+        null=True, blank=True,
+        verbose_name=_('Member Avatar'), help_text=_('Member Avatar')
+    )
     license_class = models.CharField(
         blank=True, null=True, max_length=20,
         choices=LICENSE_CLASSES, db_index=True
@@ -194,19 +203,6 @@ class Member(TimeStampedModel):
             initial += seg[:1]
 
         return initial
-
-    @staticmethod
-    def create_member(api_member):
-        member = Member()
-        member.id = api_member['id']
-        member.first_name = api_member['firstName']
-        member.last_name = api_member['lastName']
-        member.identifier = api_member['identifier']
-        member.office_email = api_member['officeEmail']
-        member.license_class = api_member['licenseClass']
-        member.inactive = api_member['inactiveFlag']
-        member.save()
-        return member
 
 
 class AvailableCompanyManager(models.Manager):

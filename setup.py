@@ -27,6 +27,7 @@ setup(
         'python-dateutil',
         'django-model-utils',
         'django-braces',
+        'django-extensions',
     ],
     test_suite='runtests.suite',
     tests_require=[

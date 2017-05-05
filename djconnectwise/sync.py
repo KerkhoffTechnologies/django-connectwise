@@ -400,6 +400,16 @@ class MemberSynchronizer(Synchronizer):
         if sync_job_qset.exists():
             self.last_sync_job = sync_job_qset.last()
 
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data['id']
+        instance.first_name = json_data['firstName']
+        instance.last_name = json_data['lastName']
+        instance.identifier = json_data['identifier']
+        instance.office_email = json_data['officeEmail']
+        instance.license_class = json_data['licenseClass']
+        instance.inactive = json_data['inactiveFlag']
+        return instance
+
     def _save_avatar(self, member, avatar, attachment_filename):
         """
         The Django ImageField (and ThumbnailerImageField) field adjusts our
@@ -456,20 +466,22 @@ class MemberSynchronizer(Synchronizer):
         synced_ids = set()
 
         for api_member in members_json:
+            member_id = api_member['id']
             username = api_member['identifier']
-            member_qset = models.Member.objects.filter(identifier=username)
-            if member_qset.exists():
-                member = member_qset.first()
-                member.first_name = api_member['firstName']
-                member.last_name = api_member['lastName']
-                member.office_email = api_member['officeEmail']
-                member.license_class = api_member['licenseClass']
+
+            try:
+                member = models.Member.objects.get(id=member_id)
+                self._assign_field_data(member, api_member)
+                member.save()
                 updated_count += 1
-                logger.info('Update member: {0}'.format(member.identifier))
-            else:
-                member = models.Member.create_member(api_member)
+                logger.info('Updated member: {0}'.format(member.identifier))
+            except models.Member.DoesNotExist:
+                # Member with that ID wasn't found, so let's make one.
+                member = models.Member()
+                self._assign_field_data(member, api_member)
+                member.save()
                 created_count += 1
-                logger.info('Create member: {0}'.format(member.identifier))
+                logger.info('Created member: {0}'.format(member.identifier))
 
             # Only update the avatar if the member profile
             # was updated since last sync.
