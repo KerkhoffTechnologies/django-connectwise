@@ -158,17 +158,10 @@ class MemberManager(models.Manager):
         return super().get_queryset().all()
 
 
-class Member(models.Model):
+class Member(TimeStampedModel):
     LICENSE_CLASSES = (
         ('F', 'Full license'),
         ('A', 'API license'),
-    )
-
-    created = models.DateTimeField(
-        editable=False, blank=True, auto_now_add=True
-    )
-    modified = models.DateTimeField(
-        editable=False, blank=True, auto_now=True
     )
     identifier = models.CharField(  # This is the CW username
         max_length=15, blank=False, unique=True
