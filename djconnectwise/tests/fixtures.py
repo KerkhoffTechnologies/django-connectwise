@@ -291,7 +291,11 @@ API_SERVICE_TICKET = {
                 'apis/3.0/service/priorities/4/image?lm=2005-05-27T14:58:21Z'
         }
     },
-    'locationId': API_SERVICE_LOCATION['id'],
+    'locationId': 999,  # This is unknown, but it's *not* the service location.
+    'serviceLocation': {
+        'id': API_SERVICE_LOCATION['id'],
+        'name': API_SERVICE_LOCATION['name']
+    },
     'source': {
         'id': 2,
         'name': 'Phone',
