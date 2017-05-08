@@ -617,18 +617,19 @@ class TicketSynchronizer:
         ticket.parent_ticket_id = json_data.get('parentTicketId')
         ticket.has_child_ticket = json_data.get('hasChildTicket')
 
-        team = json_data['team']
-        try:
-            if team:
-                ticket.team = models.Team.objects.get(
-                    pk=team['id'])
-        except models.Team.DoesNotExist:
-            logger.warning(
-                'Failed to find team {} for ticket {}.'.format(
-                    team['id'],
-                    json_data_id
+        if 'team' in json_data:
+            team = json_data['team']
+            try:
+                if team:
+                    ticket.team = models.Team.objects.get(
+                        pk=team['id'])
+            except models.Team.DoesNotExist:
+                logger.warning(
+                    'Failed to find team {} for ticket {}.'.format(
+                        team['id'],
+                        json_data_id
+                    )
                 )
-            )
 
         try:
             ticket.board = models.ConnectWiseBoard.objects.get(
