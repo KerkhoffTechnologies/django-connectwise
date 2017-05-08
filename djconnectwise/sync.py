@@ -677,7 +677,9 @@ class TicketSynchronizer:
 
         ticket.status = new_ticket_status
 
-        ticket.project = self.get_or_create_project(json_data['project'])
+        if 'project' in json_data:
+            ticket.project = self.get_or_create_project(json_data['project'])
+
         ticket.save()
         action = created and 'Created' or 'Updated'
 
