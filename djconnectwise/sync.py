@@ -604,18 +604,18 @@ class TicketSynchronizer:
         # If the status results in a move to a different column
         original_status = not created and ticket.status or None
 
-        ticket.closed_flag = json_data['closedFlag']
-        ticket.type = json_data['type']
         ticket.summary = json_data['summary']
-        ticket.entered_date_utc = json_data['dateEntered']
-        ticket.last_updated_utc = json_data['_info']['lastUpdated']
-        ticket.required_date_utc = json_data['requiredDate']
-        ticket.resources = json_data['resources']
-        ticket.budget_hours = json_data['budgetHours']
-        ticket.actual_hours = json_data['actualHours']
-        ticket.record_type = json_data['recordType']
-        ticket.parent_ticket_id = json_data['parentTicketId']
-        ticket.has_child_ticket = json_data['hasChildTicket']
+        ticket.closed_flag = json_data.get('closedFlag')
+        ticket.type = json_data.get('type')
+        ticket.entered_date_utc = json_data.get('dateEntered')
+        ticket.last_updated_utc = json_data.get('_info').get('lastUpdated')
+        ticket.required_date_utc = json_data.get('requiredDate')
+        ticket.resources = json_data.get('resources')
+        ticket.budget_hours = json_data.get('budgetHours')
+        ticket.actual_hours = json_data.get('actualHours')
+        ticket.record_type = json_data.get('recordType')
+        ticket.parent_ticket_id = json_data.get('parentTicketId')
+        ticket.has_child_ticket = json_data.get('hasChildTicket')
 
         team = json_data['team']
         try:
