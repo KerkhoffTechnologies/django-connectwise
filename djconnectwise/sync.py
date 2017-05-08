@@ -294,13 +294,15 @@ class CompanyStatusSynchronizer(Synchronizer):
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
         instance.name = json_data['name']
-        instance.default_flag = json_data['defaultFlag']
-        instance.inactive_flag = json_data['inactiveFlag']
-        instance.notify_flag = json_data['notifyFlag']
-        instance.dissalow_saving_flag = json_data['disallowSavingFlag']
-        instance.notification_message = json_data['notificationMessage']
-        instance.custom_note_flag = json_data['customNoteFlag']
-        instance.cancel_open_tracks_flag = json_data['cancelOpenTracksFlag']
+        instance.default_flag = json_data.get('defaultFlag')
+        instance.inactive_flag = json_data.get('inactiveFlag')
+        instance.notify_flag = json_data.get('notifyFlag')
+        instance.dissalow_saving_flag = json_data.get('disallowSavingFlag')
+        instance.notification_message = json_data.get('notificationMessage')
+        instance.custom_note_flag = json_data.get('customNoteFlag')
+        instance.cancel_open_tracks_flag = json_data.get(
+            'cancelOpenTracksFlag'
+        )
 
         if json_data.get('track'):
             instance.track_id = json_data['track']['id']
