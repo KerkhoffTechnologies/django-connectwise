@@ -145,7 +145,7 @@ class BoardSynchronizer(Synchronizer):
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
         instance.name = json_data['name']
-        instance.inactive = json_data['inactive']
+        instance.inactive = json_data.get('inactive')
         return instance
 
     def get_page(self, *args, **kwargs):
@@ -185,10 +185,10 @@ class BoardStatusSynchronizer(BoardChildSynchronizer):
         instance = super(BoardStatusSynchronizer, self)._assign_field_data(
             instance, json_data)
 
-        instance.sort_order = json_data['sortOrder']
-        instance.display_on_board = json_data['displayOnBoard']
-        instance.inactive = json_data['inactive']
-        instance.closed_status = json_data['closedStatus']
+        instance.sort_order = json_data.get('sortOrder')
+        instance.display_on_board = json_data.get('displayOnBoard')
+        instance.inactive = json_data.get('inactive')
+        instance.closed_status = json_data.get('closedStatus')
 
         return instance
 
@@ -294,13 +294,15 @@ class CompanyStatusSynchronizer(Synchronizer):
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
         instance.name = json_data['name']
-        instance.default_flag = json_data['defaultFlag']
-        instance.inactive_flag = json_data['inactiveFlag']
-        instance.notify_flag = json_data['notifyFlag']
-        instance.dissalow_saving_flag = json_data['disallowSavingFlag']
-        instance.notification_message = json_data['notificationMessage']
-        instance.custom_note_flag = json_data['customNoteFlag']
-        instance.cancel_open_tracks_flag = json_data['cancelOpenTracksFlag']
+        instance.default_flag = json_data.get('defaultFlag')
+        instance.inactive_flag = json_data.get('inactiveFlag')
+        instance.notify_flag = json_data.get('notifyFlag')
+        instance.dissalow_saving_flag = json_data.get('disallowSavingFlag')
+        instance.notification_message = json_data.get('notificationMessage')
+        instance.custom_note_flag = json_data.get('customNoteFlag')
+        instance.cancel_open_tracks_flag = json_data.get(
+            'cancelOpenTracksFlag'
+        )
 
         if json_data.get('track'):
             instance.track_id = json_data['track']['id']
@@ -326,7 +328,7 @@ class LocationSynchronizer(Synchronizer):
         """
         location.id = location_json['id']
         location.name = location_json['name']
-        location.where = location_json['where']
+        location.where = location_json.get('where')
         return location
 
     def get_page(self, *args, **kwargs):
@@ -338,8 +340,8 @@ class PrioritySynchronizer(Synchronizer):
     model_class = models.TicketPriority
 
     def _assign_field_data(self, ticket_priority, api_priority):
-        ticket_priority.name = api_priority['name']
         ticket_priority.id = api_priority['id']
+        ticket_priority.name = api_priority['name']
         ticket_priority.color = api_priority.get('color')
 
         # work around due to api data inconsistencies
@@ -402,12 +404,12 @@ class MemberSynchronizer(Synchronizer):
 
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
-        instance.first_name = json_data['firstName']
-        instance.last_name = json_data['lastName']
-        instance.identifier = json_data['identifier']
-        instance.office_email = json_data['officeEmail']
-        instance.license_class = json_data['licenseClass']
-        instance.inactive = json_data['inactiveFlag']
+        instance.first_name = json_data.get('firstName')
+        instance.last_name = json_data.get('lastName')
+        instance.identifier = json_data.get('identifier')
+        instance.office_email = json_data.get('officeEmail')
+        instance.license_class = json_data.get('licenseClass')
+        instance.inactive = json_data.get('inactiveFlag')
         return instance
 
     def _save_avatar(self, member, avatar, attachment_filename):
