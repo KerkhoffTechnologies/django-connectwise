@@ -650,17 +650,17 @@ class TicketSynchronizer:
 
         ticket.priority = priority
 
-        try:
-            location = models.Location.objects.get(
-                id=json_data['locationId'])
-            ticket.location = location
-        except models.Location.DoesNotExist:
-            logger.warning(
-                'Failed to find location {} for ticket {}.'.format(
-                    json_data['locationId'],
-                    json_data_id
+        if 'serviceLocation' in json_data:
+            location_id = json_data['serviceLocation']['id']
+            try:
+                ticket.location = models.Location.objects.get(id=location_id)
+            except models.Location.DoesNotExist:
+                logger.warning(
+                    'Failed to find location {} for ticket {}.'.format(
+                        location_id,
+                        json_data_id
+                    )
                 )
-            )
 
         new_ticket_status = None
         try:
