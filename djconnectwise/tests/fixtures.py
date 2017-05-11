@@ -202,6 +202,136 @@ API_SERVICE_PRIORITY_LIMITED = {
 
 API_SERVICE_PRIORITY_LIST = [API_SERVICE_PRIORITY_LIMITED, API_SERVICE_PRIORITY]
 
+API_MEMBER = {
+    'adminFlag': False,
+    'allowExpensesEnteredAgainstCompaniesFlag': True,
+    'allowInCellEntryOnTimeSheet': False,
+    'billableForecast': 75.0,
+    'calendar': None,
+    'calendarSyncIntegrationFlag': False,
+    'country': None,
+    'dailyCapacity': 8.0,
+    'daysTolerance': 1,
+    'defaultDepartmentId': 10,
+    'defaultEmail': 'Office',
+    'defaultLocationId': 2,
+    'defaultPhone': 'Office',
+    'disableOnlineFlag': False,
+    'enableLdapAuthenticationFlag': False,
+    'enableMobileFlag': False,
+    'enableMobileGpsFlag': False,
+    'enterTimeAgainstCompanyFlag': True,
+    'expenseApprover': {
+        'id': 176,
+        'identifier': 'User1',
+        'name': 'Training User1',
+        '_info': {
+            'member_href': 'https://some-host.com/v4_6_release/apis/3.0/system/members/176'
+        }
+    },
+    'firstName': 'Training',
+    'hideMemberInDispatchPortalFlag': False,
+    'hireDate': '1800-01-01T08:00:00Z',
+    'homeEmail': None,
+    'homeExtension': None,
+    'homePhone': None,
+    'hourlyCost': 0.0,
+    'hourlyRate': None,
+    'id': 176,
+    'identifier': 'User1',
+    'inactiveDate': None,
+    'inactiveFlag': False,
+    'includeInUtilizationReportingFlag': False,
+    'lastLogin': '2017-02-07T07:37:47Z',
+    'lastName': 'User1',
+    'licenseClass': 'F',
+    'mapiName': None,
+    'middleInitial': None,
+    'minimumHours': 8.0,
+    'mobileEmail': None,
+    'mobileExtension': None,
+    'mobilePhone': None,
+    'notes': '',
+    'officeEmail': 'test@test.com',
+    'officeExtension': None,
+    'officePhone': '555-121-2121',
+    'projectDefaultBoard': None,
+    'projectDefaultDepartmentId': None,
+    'projectDefaultLocationId': None,
+    'reportsTo': None,
+    'requireExpenseEntryFlag': False,
+    'requireStartAndEndTimeOnTimeEntryFlag': False,
+    'requireTimeSheetEntryFlag': False,
+    'restrictDefaultSalesTerritoryFlag': False,
+    'restrictDefaultWarehouseBinFlag': False,
+    'restrictDefaultWarehouseFlag': False,
+    'restrictDepartmentFlag': False,
+    'restrictLocationFlag': False,
+    'restrictProjectDefaultDepartmentFlag': False,
+    'restrictProjectDefaultLocationFlag': False,
+    'restrictScheduleFlag': False,
+    'restrictServiceDefaultDepartmentFlag': False,
+    'restrictServiceDefaultLocationFlag': False,
+    'salesDefaultLocationId': 39,
+    'scheduleCapacity': 8.0,
+    'scheduleDefaultDepartmentId': 10,
+    'scheduleDefaultLocationId': 2,
+    'securityLevel': 'Corporate',
+    'securityLocationId': 38,
+    'securityRole': {
+        'id': 63,
+        'name': 'Admin',
+        '_info': None
+    },
+    'serviceDefaultBoard': {
+        'id': 1,
+        'name': 'Tampa Office/Services',
+        '_info': {
+            'board_href': 'https://some-host.com/v4_6_release/apis/3.0/service/boards/1'
+        }
+    },
+    'serviceDefaultDepartmentId': 10,
+    'serviceDefaultLocationId': 2,
+    'serviceLocation': None,
+    'serviceTeams': [
+        25,
+        26,
+        28
+    ],
+    'timeApprover': {
+        'id': 176,
+        'identifier': 'User1',
+        'name': 'Training User1',
+        '_info': {
+            'member_href': 'https://some-host.com/v4_6_release/apis/3.0/system/members/176'
+        }
+    },
+    'timeReminderEmailFlag': False,
+    'timeSheetStartDate': '2009-04-16T07:00:00Z',
+    'timeZone': {
+        'id': 4,
+        'name': 'US Pacific',
+        '_info': None
+    },
+    'title': None,
+    'type': None,
+    'vendorNumber': None,
+    'warehouse': None,
+    'warehouseBin': None,
+    'workRole': {
+        'id': 11,
+        'name': 'System Engineer',
+        '_info': None
+    },
+    'workType': None,
+    '_info': {
+        'lastUpdated': '2015-08-24T19:50:10Z',
+        'updatedBy': 'User1',
+        'image_href': 'https://some-host.com/v4_6_release/apis/3.0/' +
+        'system/members/176/image?lastModified=2015-08-24T19:50:10Z'
+    }
+}
+
 API_SERVICE_TICKET = {
     'id': 69,
     'summary': 'Schedule and Execute Conversion',
@@ -279,7 +409,7 @@ API_SERVICE_TICKET = {
     'subType': None,
     'item': None,
     'team': None,
-    'owner': None,
+    'owner': API_MEMBER,
     'priority': {
         'id': 4,
         'name': 'Priority 3 - Normal Response',
@@ -424,135 +554,6 @@ API_CW_VERSION = {
     'version': 'v2.0'
 }
 
-API_MEMBER = {
-    'adminFlag': False,
-    'allowExpensesEnteredAgainstCompaniesFlag': True,
-    'allowInCellEntryOnTimeSheet': False,
-    'billableForecast': 75.0,
-    'calendar': None,
-    'calendarSyncIntegrationFlag': False,
-    'country': None,
-    'dailyCapacity': 8.0,
-    'daysTolerance': 1,
-    'defaultDepartmentId': 10,
-    'defaultEmail': 'Office',
-    'defaultLocationId': 2,
-    'defaultPhone': 'Office',
-    'disableOnlineFlag': False,
-    'enableLdapAuthenticationFlag': False,
-    'enableMobileFlag': False,
-    'enableMobileGpsFlag': False,
-    'enterTimeAgainstCompanyFlag': True,
-    'expenseApprover': {
-        'id': 176,
-        'identifier': 'User1',
-        'name': 'Training User1',
-        '_info': {
-            'member_href': 'https://some-host.com/v4_6_release/apis/3.0/system/members/176'
-        }
-    },
-    'firstName': 'Training',
-    'hideMemberInDispatchPortalFlag': False,
-    'hireDate': '1800-01-01T08:00:00Z',
-    'homeEmail': None,
-    'homeExtension': None,
-    'homePhone': None,
-    'hourlyCost': 0.0,
-    'hourlyRate': None,
-    'id': 176,
-    'identifier': 'User1',
-    'inactiveDate': None,
-    'inactiveFlag': False,
-    'includeInUtilizationReportingFlag': False,
-    'lastLogin': '2017-02-07T07:37:47Z',
-    'lastName': 'User1',
-    'licenseClass': 'F',
-    'mapiName': None,
-    'middleInitial': None,
-    'minimumHours': 8.0,
-    'mobileEmail': None,
-    'mobileExtension': None,
-    'mobilePhone': None,
-    'notes': '',
-    'officeEmail': 'test@test.com',
-    'officeExtension': None,
-    'officePhone': '555-121-2121',
-    'projectDefaultBoard': None,
-    'projectDefaultDepartmentId': None,
-    'projectDefaultLocationId': None,
-    'reportsTo': None,
-    'requireExpenseEntryFlag': False,
-    'requireStartAndEndTimeOnTimeEntryFlag': False,
-    'requireTimeSheetEntryFlag': False,
-    'restrictDefaultSalesTerritoryFlag': False,
-    'restrictDefaultWarehouseBinFlag': False,
-    'restrictDefaultWarehouseFlag': False,
-    'restrictDepartmentFlag': False,
-    'restrictLocationFlag': False,
-    'restrictProjectDefaultDepartmentFlag': False,
-    'restrictProjectDefaultLocationFlag': False,
-    'restrictScheduleFlag': False,
-    'restrictServiceDefaultDepartmentFlag': False,
-    'restrictServiceDefaultLocationFlag': False,
-    'salesDefaultLocationId': 39,
-    'scheduleCapacity': 8.0,
-    'scheduleDefaultDepartmentId': 10,
-    'scheduleDefaultLocationId': 2,
-    'securityLevel': 'Corporate',
-    'securityLocationId': 38,
-    'securityRole': {
-        'id': 63,
-        'name': 'Admin',
-        '_info': None
-    },
-    'serviceDefaultBoard': {
-        'id': 1,
-        'name': 'Tampa Office/Services',
-        '_info': {
-            'board_href': 'https://some-host.com/v4_6_release/apis/3.0/service/boards/1'
-        }
-    },
-    'serviceDefaultDepartmentId': 10,
-    'serviceDefaultLocationId': 2,
-    'serviceLocation': None,
-    'serviceTeams': [
-        25,
-        26,
-        28
-    ],
-    'timeApprover': {
-        'id': 176,
-        'identifier': 'User1',
-        'name': 'Training User1',
-        '_info': {
-            'member_href': 'https://some-host.com/v4_6_release/apis/3.0/system/members/176'
-        }
-    },
-    'timeReminderEmailFlag': False,
-    'timeSheetStartDate': '2009-04-16T07:00:00Z',
-    'timeZone': {
-        'id': 4,
-        'name': 'US Pacific',
-        '_info': None
-    },
-    'title': None,
-    'type': None,
-    'vendorNumber': None,
-    'warehouse': None,
-    'warehouseBin': None,
-    'workRole': {
-        'id': 11,
-        'name': 'System Engineer',
-        '_info': None
-    },
-    'workType': None,
-    '_info': {
-        'lastUpdated': '2015-08-24T19:50:10Z',
-        'updatedBy': 'User1',
-        'image_href': 'https://some-host.com/v4_6_release/apis/3.0/' +
-        'system/members/176/image?lastModified=2015-08-24T19:50:10Z'
-    }
-}
 
 API_MEMBER_LIST = [API_MEMBER]
 
