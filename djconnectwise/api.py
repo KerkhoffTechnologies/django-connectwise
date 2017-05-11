@@ -167,7 +167,8 @@ class SystemAPIClient(ConnectWiseAPIClient):
         return self.fetch_resource(self.ENDPOINT_MEMBERS_COUNT)
 
     def get_callbacks(self, *args, **kwargs):
-        return self.fetch_resource(self.ENDPOINT_CALLBACKS, *args, **kwargs)
+        return self.fetch_resource(self.ENDPOINT_CALLBACKS,
+                                   should_page=True, *args, **kwargs)
 
     def delete_callback(self, entry_id):
         try:

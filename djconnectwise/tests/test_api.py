@@ -15,12 +15,14 @@ class BaseAPITestCase(TestCase):
 
     def assertRequestShouldPage(self, should_page):
         request_url = responses.calls[0].request.url
-        params = 'pageSize=1000&page=1'
+        params = ['pageSize=1000', 'page=1']
 
         if should_page:
-            self.assertIn(params, request_url)
+            for param in params:
+                self.assertIn(param, request_url)
         else:
-            self.assertNotIn(params, request_url)
+            for param in params:
+                self.assertNotIn(param, request_url)
 
 
 class TestServiceAPIClient(BaseAPITestCase):
