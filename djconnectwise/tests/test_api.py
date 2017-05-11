@@ -11,7 +11,19 @@ from . import mocks as mk
 API_URL = 'https://localhost/v4_6_release/apis/3.0/system/members/count'
 
 
-class TestServiceAPIClient(TestCase):
+class BaseAPITestCase(TestCase):
+
+    def assertRequestShouldPage(self, should_page):
+        request_url = responses.calls[0].request.url
+        params = 'pageSize=1000&page=1'
+
+        if should_page:
+            self.assertIn(params, request_url)
+        else:
+            self.assertNotIn(params, request_url)
+
+
+class TestServiceAPIClient(BaseAPITestCase):
 
     def setUp(self):
         self.client = api.ServiceAPIClient()
@@ -26,6 +38,7 @@ class TestServiceAPIClient(TestCase):
 
         result = self.client.get_boards()
         self.assertEqual(result, fixtures.API_BOARD_LIST)
+        self.assertRequestShouldPage(True)
 
     @responses.activate
     def test_get_boards_no_data(self):
@@ -46,6 +59,7 @@ class TestServiceAPIClient(TestCase):
 
         result = self.client.get_statuses(fixtures.API_BOARD['id'])
         self.assertEqual(result, fixtures.API_BOARD_STATUS_LIST)
+        self.assertRequestShouldPage(True)
 
     @responses.activate
     def test_get_priorities(self):
@@ -54,6 +68,7 @@ class TestServiceAPIClient(TestCase):
 
         result = self.client.get_priorities()
         self.assertEqual(result, fixtures.API_SERVICE_PRIORITY_LIST)
+        self.assertRequestShouldPage(True)
 
     @responses.activate
     def test_get_teams(self):
@@ -63,6 +78,7 @@ class TestServiceAPIClient(TestCase):
         mk.get(endpoint_url, fixtures.API_SERVICE_TEAM_LIST)
         result = self.client.get_teams(board_id)
         self.assertEqual(result, fixtures.API_SERVICE_TEAM_LIST)
+        self.assertRequestShouldPage(True)
 
     @responses.activate
     def test_get_locations(self):
@@ -71,9 +87,10 @@ class TestServiceAPIClient(TestCase):
 
         result = self.client.get_locations()
         self.assertEqual(result, fixtures.API_SERVICE_LOCATION_LIST)
+        self.assertRequestShouldPage(True)
 
 
-class TestSystemAPIClient(TestCase):
+class TestSystemAPIClient(BaseAPITestCase):
 
     def setUp(self):
         self.client = api.SystemAPIClient()
@@ -85,6 +102,7 @@ class TestSystemAPIClient(TestCase):
                fixtures.API_CW_VERSION)
         result = self.client.get_connectwise_version()
         self.assertEqual(result, fixtures.API_CW_VERSION['version'])
+        self.assertRequestShouldPage(False)
 
     @responses.activate
     def test_get_members(self):
@@ -98,6 +116,7 @@ class TestSystemAPIClient(TestCase):
 
         result = self.client.get_members()
         self.assertEqual(result, fixtures.API_MEMBER_LIST)
+        self.assertRequestShouldPage(True)
 
     @responses.activate
     def test_get_member_image_by_identifier(self):
@@ -156,7 +175,7 @@ class TestSystemAPIClient(TestCase):
         )
 
 
-class TestProjectAPIClient(TestCase):
+class TestProjectAPIClient(BaseAPITestCase):
     def setUp(self):
         self.client = api.ProjectAPIClient()
 
@@ -168,9 +187,10 @@ class TestProjectAPIClient(TestCase):
         result = self.client.get_projects()
 
         self.assertIsNotNone(result)
+        self.assertRequestShouldPage(True)
 
 
-class TestCompanyAPIClient(TestCase):
+class TestCompanyAPIClient(BaseAPITestCase):
 
     def setUp(self):
         super(TestCompanyAPIClient, self).setUp()
@@ -178,11 +198,23 @@ class TestCompanyAPIClient(TestCase):
         self.endpoint = self.client._endpoint(self.client.ENDPOINT_COMPANIES)
 
     @responses.activate
+    def test_by_id(self):
+        company_id = fixtures.API_COMPANY['id']
+        endpoint_url = '{}/{}'.format(self.endpoint, company_id)
+
+        mk.get(endpoint_url,
+               fixtures.API_COMPANY)
+        result = self.client.by_id(company_id)
+        self.assertEqual(result, fixtures.API_COMPANY)
+        self.assertRequestShouldPage(False)
+
+    @responses.activate
     def test_get(self):
         mk.get(self.endpoint,
                fixtures.API_COMPANY_LIST)
         result = self.client.get_companies()
         self.assertEqual(len(result), len(fixtures.API_COMPANY_LIST))
+        self.assertRequestShouldPage(True)
 
     @responses.activate
     def test_get_no_results(self):
@@ -190,6 +222,7 @@ class TestCompanyAPIClient(TestCase):
         mk.get(self.endpoint,
                data)
         result = self.client.get_companies()
+
         self.assertEqual(result, data)
 
     @responses.activate
@@ -200,3 +233,4 @@ class TestCompanyAPIClient(TestCase):
         mk.get(endpoint, fixtures.API_COMPANY_STATUS_LIST)
         result = self.client.get_company_statuses()
         self.assertEqual(result, fixtures.API_COMPANY_STATUS_LIST)
+        self.assertRequestShouldPage(True)
