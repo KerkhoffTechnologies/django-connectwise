@@ -642,6 +642,22 @@ class TicketSynchronizer:
                 )
             )
 
+        if 'owner' in json_data:
+            owner = json_data['owner']
+            try:
+                if owner:
+                    ticket.owner = models.Member.objects.get(
+                        pk=owner['id'])
+                    logger.info('Assigned owner: %s' % owner)
+
+            except models.Member.DoesNotExist:
+                logger.warning(
+                    'Failed to find member {} for ticket {}.'.format(
+                        owner['id'],
+                        json_data_id
+                    )
+                )
+
         ticket.company, _ = self.company_synchronizer \
             .get_or_create_instance(json_data['company'])
 

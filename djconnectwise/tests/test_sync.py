@@ -425,6 +425,8 @@ class TestTicketSynchronizer(TestCase):
         fixture_utils.init_board_statuses()
 
     def _get_local_and_api_ticket(self):
+        mocks.company_api_by_id_call(fixtures.API_COMPANY)
+        mocks.service_api_tickets_call()
         api_ticket = self.synchronizer.service_client.get_tickets()[0]
 
         local_ticket, created = self.synchronizer.sync_ticket(api_ticket)
@@ -439,6 +441,10 @@ class TestTicketSynchronizer(TestCase):
     def test_sync(self):
         created_count, _, _ = self._sync()
         self.assertEqual(created_count, 1)
+
+    def test_owner_assignment(self):
+        local_ticket, api_ticket = self._get_local_and_api_ticket()
+        local_ticket.owner.id = api_ticket['owner']['id']
 
 
 class TestMemberSynchronization(TestCase):
