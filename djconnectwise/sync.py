@@ -666,7 +666,7 @@ class TicketSynchronizer:
 
         ticket.priority = priority
 
-        if 'serviceLocation' in json_data:
+        if 'serviceLocation' in json_data and json_data['serviceLocation']:
             location_id = json_data['serviceLocation']['id']
             try:
                 ticket.location = models.Location.objects.get(id=location_id)
