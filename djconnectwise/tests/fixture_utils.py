@@ -41,6 +41,12 @@ def init_tickets():
     return synchronizer.sync()
 
 
+def init_priorities():
+    mocks.service_api_get_priorities_call([fixtures.API_SERVICE_PRIORITY])
+    synchronizer = sync.PrioritySynchronizer()
+    return synchronizer.sync()
+
+
 def init_projects():
     mocks.project_api_get_projects_call(fixtures.API_PROJECT_LIST)
     synchronizer = sync.ProjectSynchronizer()
@@ -50,4 +56,10 @@ def init_projects():
 def init_companies():
     mocks.company_api_get_call(fixtures.API_COMPANY_LIST)
     synchronizer = sync.CompanySynchronizer()
+    return synchronizer.sync()
+
+
+def init_locations():
+    mocks.service_api_get_locations_call(fixtures.API_SERVICE_LOCATION_LIST)
+    synchronizer = sync.LocationSynchronizer()
     return synchronizer.sync()
