@@ -25,6 +25,7 @@ class InvalidStatusError(Exception):
 class SyncJob(models.Model):
     start_time = models.DateTimeField(auto_now_add=True)
     end_time = models.DateTimeField(blank=True, null=True)
+    entity_name = models.CharField(max_length=100)
 
 
 class CallBackEntry(models.Model):
