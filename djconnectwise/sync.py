@@ -16,6 +16,18 @@ DEFAULT_AVATAR_EXTENSION = 'jpg'
 logger = logging.getLogger(__name__)
 
 
+def log_sync_job(f):
+    def wrapper(*args, **kwargs):
+        sync_instance = args[0]
+        sync_job = models.SyncJob.objects.create()
+        result = f(*args, **kwargs)
+        sync_job.end_time = timezone.now()
+        sync_job.entity_name = sync_instance.model_class.__name__
+        sync_job.save()
+        return result
+    return wrapper
+
+
 class Synchronizer:
     lookup_key = 'id'
     api_conditions = ''
@@ -110,6 +122,7 @@ class Synchronizer:
 
         return instance, created
 
+    @log_sync_job
     def sync(self, reset=False):
         created_count = 0
         updated_count = 0
@@ -117,8 +130,8 @@ class Synchronizer:
 
         synced_ids = set()
         for record in self.get():
-            _, created = self.update_or_create_instance(record)
 
+            _, created = self.update_or_create_instance(record)
             if created:
                 created_count += 1
             else:
@@ -134,7 +147,6 @@ class Synchronizer:
             )
             logger.info(msg)
             self.model_class.objects.filter(pk__in=stale_ids).delete()
-
         return created_count, updated_count, deleted_count
 
 
@@ -459,6 +471,7 @@ class MemberSynchronizer(Synchronizer):
     def get_page(self, *args, **kwargs):
         return self.client.get_members(*args, **kwargs)
 
+    @log_sync_job
     def sync(self, reset=False):
         members_json = self.get()
 
@@ -517,185 +530,101 @@ class MemberSynchronizer(Synchronizer):
         return created_count, updated_count, deleted_count
 
 
-class TicketSynchronizer:
+class TicketSynchronizer(Synchronizer):
     """
     Coordinates retrieval and demarshalling of ConnectWise JSON
     objects to the local counterparts.
     """
+    client_class = api.ServiceAPIClient
+    model_class = models.Ticket
+    api_conditions = 'closedFlag = False'
+    child_synchronizers = (
+        CompanySynchronizer,
+        BoardStatusSynchronizer,
+        PrioritySynchronizer,
+        LocationSynchronizer
+    )
 
-    def __init__(self, reset=False):
-        self.company_synchronizer = CompanySynchronizer()
-        self.status_synchronizer = BoardStatusSynchronizer()
-        self.priority_synchronizer = PrioritySynchronizer()
-        self.location_synchronizer = LocationSynchronizer()
-
-        self.reset = reset
-        self.last_sync_job = None
-        extra_conditions = ''
-        sync_job_qset = models.SyncJob.objects.all()
-
-        if sync_job_qset.exists() and not self.reset:
-            self.last_sync_job = sync_job_qset.last()
-            last_sync_job_time = self.last_sync_job.start_time.isoformat()
-            extra_conditions = "lastUpdated > [{0}]".format(last_sync_job_time)
-
-            log_msg = 'Preparing sync job for objects updated since {}.'
-            logger.info(log_msg.format(last_sync_job_time))
-            logger.info(
-                'Ticket extra conditions: {0}'.format(extra_conditions))
-        else:
-            logger.info('Preparing full ticket sync job.')
-            # absence of a sync job indicates that this is an initial/full
-            # sync, in which case we do not want to retrieve closed tickets
-            extra_conditions = 'closedFlag = False'
-
-        self.service_client = api.ServiceAPIClient(
-            extra_conditions=extra_conditions)
-
-        self.system_client = api.SystemAPIClient()
-
-        # We need to remove the underscores to ensure an accurate
-        # lookup of the normalized api fieldnames
-        self.local_ticket_fields = self._create_field_lookup(
-            models.Ticket
-        )
-        self.local_company_fields = self._create_field_lookup(models.Company)
-
+    def __init__(self):
+        super().__init__()
         self.members_map = {
             m.identifier: m for m in models.Member.objects.all()
         }
-        self.project_map = {p.id: p for p in models.Project.objects.all()}
 
-        self.exclude_fields = ('priority', 'status', 'company')
+    def _assign_relation(self, ticket, json_data,
+                         json_field, model_class, model_field):
+        relation_json = json_data.get(json_field)
+        if relation_json:
 
-    def _create_field_lookup(self, clazz):
-        field_map = [
-            (f.name, f.name.replace('_', '')) for
-            f in clazz._meta.get_fields(
-                include_parents=False, include_hidden=True)
-        ]
-        return dict(field_map)
+            try:
+                uid = relation_json['id']
+                related_instance = model_class.objects.get(pk=uid)
+                setattr(ticket, model_field, related_instance)
+            except model_class.DoesNotExist:
+                logger.warning(
+                    'Failed to find {} {} for ticket {}.'.format(
+                        json_field,
+                        uid,
+                        ticket.id
+                    )
+                )
 
-    def get_or_create_project(self, api_project):
-        if api_project:
-            project = self.project_map.get(api_project['id'])
-            if not project:
-                project = models.Project()
-                project.id = api_project['id']
-                project.name = api_project['name']
-                project.project_id = api_project['id']
-                project.save()
-                self.project_map[project.id] = project
-                logger.info('Project created: %s' % project.name)
-            return project
-
-    def sync_ticket(self, json_data):
-        """
-        Creates a new local instance of the supplied ConnectWise
-        Ticket instance.
-        """
-        json_data_id = json_data['id']
-        logger.info('Syncing ticket {}'.format(json_data_id))
-        ticket, created = models.Ticket.objects \
-            .get_or_create(pk=json_data_id)
-
-        ticket.api_text = str(json_data)
-
+    def _assign_field_data(self, instance, json_data):
+        created = instance.id is None
         # If the status results in a move to a different column
-        original_status = not created and ticket.status or None
+        original_status = not created and instance.status or None
 
-        ticket.summary = json_data['summary']
-        ticket.closed_flag = json_data.get('closedFlag')
-        ticket.type = json_data.get('type')
-        ticket.entered_date_utc = json_data.get('dateEntered')
-        ticket.last_updated_utc = json_data.get('_info').get('lastUpdated')
-        ticket.required_date_utc = json_data.get('requiredDate')
-        ticket.resources = json_data.get('resources')
-        ticket.budget_hours = json_data.get('budgetHours')
-        ticket.actual_hours = json_data.get('actualHours')
-        ticket.record_type = json_data.get('recordType')
-        ticket.parent_ticket_id = json_data.get('parentTicketId')
-        ticket.has_child_ticket = json_data.get('hasChildTicket')
+        json_data_id = json_data['id']
+        instance.api_text = str(json_data)
+        instance.id = json_data['id']
+        instance.summary = json_data['summary']
+        instance.closed_flag = json_data.get('closedFlag')
+        instance.type = json_data.get('type')
+        instance.entered_date_utc = json_data.get('dateEntered')
+        instance.last_updated_utc = json_data.get('_info').get('lastUpdated')
+        instance.required_date_utc = json_data.get('requiredDate')
+        instance.resources = json_data.get('resources')
+        instance.budget_hours = json_data.get('budgetHours')
+        instance.actual_hours = json_data.get('actualHours')
+        instance.record_type = json_data.get('recordType')
+        instance.parent_ticket_id = json_data.get('parentTicketId')
+        instance.has_child_ticket = json_data.get('hasChildTicket')
 
-        if 'team' in json_data:
-            team = json_data['team']
-            try:
-                if team:
-                    ticket.team = models.Team.objects.get(
-                        pk=team['id'])
-            except models.Team.DoesNotExist:
-                logger.warning(
-                    'Failed to find team {} for ticket {}.'.format(
-                        team['id'],
-                        json_data_id
-                    )
-                )
+        related_meta = {
+            'team': (models.Team, 'team'),
+            'board': (models.ConnectWiseBoard, 'board'),
+            'company': (models.Company, 'company'),
+            'priority': (models.TicketPriority, 'priority'),
+            'project': (models.Project, 'project'),
+            'serviceLocation': (models.Location, 'location'),
+            'status': (models.BoardStatus, 'status')
+        }
 
-        try:
-            ticket.board = models.ConnectWiseBoard.objects.get(
-                pk=json_data['board']['id'])
-        except models.ConnectWiseBoard.DoesNotExist:
-            logger.warning(
-                'Failed to find board {} for ticket {}.'.format(
-                    json_data['board']['id'],
-                    json_data_id
-                )
-            )
+        for json_field, value in related_meta.items():
+            model_class, field_name = value
+            self._assign_relation(instance,
+                                  json_data,
+                                  json_field,
+                                  model_class,
+                                  field_name)
 
-        ticket.company, _ = self.company_synchronizer \
-            .get_or_create_instance(json_data['company'])
+        self._manage_member_assignments(instance)
 
-        priority, _ = self.priority_synchronizer \
-            .get_or_create_instance(json_data['priority'])
-
-        ticket.priority = priority
-
-        if 'serviceLocation' in json_data:
-            location_id = json_data['serviceLocation']['id']
-            try:
-                ticket.location = models.Location.objects.get(id=location_id)
-            except models.Location.DoesNotExist:
-                logger.warning(
-                    'Failed to find location {} for ticket {}.'.format(
-                        location_id,
-                        json_data_id
-                    )
-                )
-
-        new_ticket_status = None
-        try:
-            # TODO - Discuss - Do we assume that the status exists
-            # or do we want to do a roundtrip and retrieve from the server?
-            new_ticket_status = models.BoardStatus.objects.get(
-                pk=json_data['status']['id'])
-        except models.BoardStatus.DoesNotExist:
-            logger.warning(
-                'Failed to find board status {} for ticket {}.'.format(
-                    json_data['status']['id'],
-                    json_data_id
-                )
-            )
-
-        ticket.status = new_ticket_status
-
-        if 'project' in json_data:
-            ticket.project = self.get_or_create_project(json_data['project'])
-
-        ticket.save()
+        instance.save()
+        logger.info('Syncing ticket {}'.format(json_data_id))
         action = created and 'Created' or 'Updated'
 
         status_changed = ''
-        if original_status != new_ticket_status:
+        if original_status != instance.status:
             status_changed = '; status changed from ' \
-                         '{} to {}'.format(original_status, new_ticket_status)
+                '{} to {}'.format(original_status, instance.status)
 
         log_info = '{} ticket {}{}'.format(
-            action, ticket.id, status_changed
+            action, instance.id, status_changed
         )
         logger.info(log_info)
 
-        self._manage_member_assignments(ticket)
-        return ticket, created
+        return instance
 
     def _manage_member_assignments(self, ticket):
         if not ticket.resources:
@@ -737,25 +666,13 @@ class TicketSynchronizer:
                 list(ticket_assignments.values())
             )
 
-    def prune_stale_records(self, synced_ids):
-        # first pass, delete closed tickets
-        logger.info('Deleting closed tickets')
-        delete_qset = models.Ticket.objects.filter(closed_flag=True)
-        deleted_count = delete_qset.count()
-        delete_qset.delete()
+    def get_page(self, *args, **kwargs):
+        kwargs['conditions'] = self.api_conditions
+        page = self.client.get_tickets(*args, **kwargs)
+        return page
 
-        local_ids = set(self.instance_map.keys())
-        stale_ids = local_ids - synced_ids
-        if stale_ids and local_ids:
-            delete_qset = models.Ticket.objects.filter(pk__in=stale_ids)
-            deleted_count += delete_qset.count()
-            msg = 'Removing {} stale records for model: Ticket'.format(
-                len(stale_ids)
-            )
-            logger.info(msg)
-            delete_qset.delete()
-
-        return deleted_count
+    def get_queryset(self):
+        return self.model_class.objects.all()
 
     def fetch_sync_by_id(self, ticket_id):
         ticket = self.service_client.get_ticket(ticket_id)
@@ -772,49 +689,3 @@ class TicketSynchronizer:
             logger.info(
                 'Deleted ticket {} (if it existed).'.format(ticket_id)
             )
-
-    def sync(self, reset=False):
-        """
-        Synchronizes tickets between the ConnectWise server and the
-        local database. Synchronization is performed in batches
-        specified in the DJCONNECTWISE_API_BATCH_LIMIT setting
-        """
-
-        self.instance_map = self.instance_map = {
-            i.id: i for i in models.Ticket.objects.all()
-        }
-
-        sync_job = models.SyncJob.objects.create()
-        page = 1  # Page is 1-indexed
-
-        created_count = 0
-        updated_count = 0
-        synced_ids = set()
-
-        while True:
-            logger.info('Processing ticket batch {}'.format(page))
-            tickets = self.service_client.get_tickets(
-                page=page,
-                page_size=settings.DJCONNECTWISE_API_BATCH_LIMIT
-            )
-            num_tickets = len(tickets)
-
-            for ticket in tickets:
-                ticket, created = self.sync_ticket(ticket)
-                if created:
-                    created_count += 1
-                else:
-                    updated_count += 1
-
-                synced_ids.add(ticket.id)
-
-            page += 1
-            if num_tickets < settings.DJCONNECTWISE_API_BATCH_LIMIT:
-                break
-
-        delete_count = self.prune_stale_records(synced_ids)
-
-        sync_job.end_time = timezone.now()
-        sync_job.save()
-
-        return created_count, updated_count, delete_count
