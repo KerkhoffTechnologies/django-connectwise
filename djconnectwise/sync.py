@@ -608,9 +608,9 @@ class TicketSynchronizer(Synchronizer):
                                   model_class,
                                   field_name)
 
+        instance.save()
         self._manage_member_assignments(instance)
 
-        instance.save()
         logger.info('Syncing ticket {}'.format(json_data_id))
         action = created and 'Created' or 'Updated'
 
@@ -689,3 +689,24 @@ class TicketSynchronizer(Synchronizer):
             logger.info(
                 'Deleted ticket {} (if it existed).'.format(ticket_id)
             )
+
+    def sync(self, reset=True):
+        extra_conditions = ''
+        sync_job_qset = models.SyncJob.objects.filter(
+            entity_name=self.model_class.__name__)
+
+        if sync_job_qset.exists() and not reset:
+            self.last_sync_job = sync_job_qset.last()
+            last_sync_job_time = self.last_sync_job.start_time.isoformat()
+            self.api_conditions = "lastUpdated > [{0}]".format(
+                last_sync_job_time)
+
+            log_msg = 'Preparing sync job for objects updated since {}.'
+            logger.info(log_msg.format(last_sync_job_time))
+            logger.info(
+                'Ticket extra conditions: {0}'.format(extra_conditions))
+        else:
+            logger.info('Preparing full ticket sync job.')
+            # absence of a sync job indicates that this is an initial/full
+            # sync, in which case we do not want to retrieve closed tickets
+        return super().sync(reset=reset)
