@@ -597,7 +597,8 @@ class TicketSynchronizer(Synchronizer):
             'priority': (models.TicketPriority, 'priority'),
             'project': (models.Project, 'project'),
             'serviceLocation': (models.Location, 'location'),
-            'status': (models.BoardStatus, 'status')
+            'status': (models.BoardStatus, 'status'),
+            'owner': (models.Member, 'owner')
         }
 
         for json_field, value in related_meta.items():
@@ -675,13 +676,13 @@ class TicketSynchronizer(Synchronizer):
         return self.model_class.objects.all()
 
     def fetch_sync_by_id(self, ticket_id):
-        ticket = self.service_client.get_ticket(ticket_id)
-        self.sync_ticket(ticket)
-        logger.info('Updated ticket {}'.format(ticket_id))
+        json_data = self.client.get_ticket(ticket_id)
+        ticket, _ = self.update_or_create_instance(json_data)
+        return ticket
 
     def fetch_delete_by_id(self, ticket_id):
         try:
-            self.service_client.get_ticket(ticket_id)
+            self.client.get_ticket(ticket_id)
         except api.ConnectWiseRecordNotFoundError:
             # This is what we expect to happen. Since it's gone in CW, we
             # are safe to delete it from here.

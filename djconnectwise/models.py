@@ -425,6 +425,7 @@ class Ticket(TimeStampedModel):
     api_text = models.TextField(blank=True, null=True)
 
     board = models.ForeignKey('ConnectwiseBoard', blank=True, null=True)
+    owner = models.ForeignKey('Member', blank=True, null=True)
     priority = models.ForeignKey('TicketPriority', blank=True, null=True)
     status = models.ForeignKey(
         'BoardStatus', blank=True, null=True, related_name='status_tickets')

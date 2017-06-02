@@ -202,6 +202,7 @@ API_SERVICE_PRIORITY_LIMITED = {
 
 API_SERVICE_PRIORITY_LIST = [API_SERVICE_PRIORITY_LIMITED, API_SERVICE_PRIORITY]
 
+
 API_SERVICE_TEAM_LIST = [   
     {   '_info': {'lastUpdated': '2017-02-14T18:21:15Z', 'updatedBy': 'User1'},
         'boardId': 1,
@@ -242,157 +243,6 @@ API_SERVICE_TEAM_LIST = [
                           'id': 189,
                           'identifier': 'User13',
                           'name': 'Training User13'}}]
-
-
-API_SERVICE_TICKET = {
-    'id': 69,
-    'summary': 'Schedule and Execute Conversion',
-    'recordType': 'ProjectTicket',
-    'board': {
-        'id': 1,
-        'name': 'Service A',
-        '_info': {
-            'board_href': 'https://some-host.com/v4_6_release/apis/3.0/service/boards/1'
-        }
-    },
-    'status': {
-        'id': 1,
-        'name': 'New',
-        '_info': {
-            'status_href': 'https://some-host.com/v4_6_release/apis/3.0/service/boards/1/statuses/1'
-        }
-    },
-    'project': API_PROJECT,
-    'phase': {
-        'id': 8,
-        'name': 'Solution Implementation',
-        '_info': {
-            'phase_href': 'https://some-host.com/v4_6_release/apis/3.0/project/projects/5/phases/8'
-        }
-    },
-    'wbsCode': '10.2',
-    'company': API_COMPANY,
-    'site': {
-        'id': 28,
-        'name': 'Main',
-        '_info': {
-            'site_href': 'https://some-host.com/v4_6_release/apis/3.0/company/companies/24/sites/28'
-        }
-    },
-    'siteName': None,
-    'addressLine1': '140 S. Village Ave.',
-    'addressLine2': '8th Floor',
-    'city': 'Tampa',
-    'stateIdentifier': 'FL',
-    'zip': '33880',
-    'country': None,
-    'contact': {
-        'id': 70,
-        'name': 'Gregg Kegle',
-        '_info': {
-            'contact_href': 'https://some-host.com/v4_6_release/apis/3.0/company/contacts/70'
-        }
-    },
-    'contactName': 'Gregg Kegle',
-    'contactPhoneNumber': '8135156666',
-    'contactPhoneExtension': None,
-    'contactEmailAddress': 'gregg.kegle@wildeagle.com',
-    'type': None,
-    'subType': None,
-    'item': None,
-    'team': API_SERVICE_TEAM_LIST[0],
-    'owner': None,
-    'priority': API_SERVICE_PRIORITY,
-    'locationId': 999,  # This is unknown, but it's *not* the service location.
-    'serviceLocation': {
-        'id': API_SERVICE_LOCATION['id'],
-        'name': API_SERVICE_LOCATION['name']
-    },
-    'source': {
-        'id': 2,
-        'name': 'Phone',
-        '_info': {
-            'source_href': 'https://some-host.com/v4_6_release/apis/3.0/service/sources/2'
-        }
-    },
-    'requiredDate': "2017-03-03T00:00:00Z",
-    'budgetHours': None,
-    'opportunity': None,
-    'agreement': None,
-    'severity': 'Medium',
-    'impact': 'Medium',
-    'externalXRef': None,
-    'poNumber': None,
-    'knowledgeBaseCategoryId': None,
-    'knowledgeBaseSubCategoryId': None,
-    'allowAllClientsPortalView': False,
-    'customerUpdatedFlag': False,
-    'automaticEmailContactFlag': False,
-    'automaticEmailResourceFlag': False,
-    'automaticEmailCcFlag': False,
-    'automaticEmailCc': None,
-    'contactEmailLookup': None,
-    'processNotifications': None,
-    'closedDate': None,
-    'closedBy': None,
-    'closedFlag': False,
-    'dateEntered': '2005-05-27T17:30:19Z',
-    'enteredBy': 'User10',
-    'actualHours': None,
-    'approved': True,
-    'subBillingMethod': None,
-    'subBillingAmount': None,
-    'subDateAccepted': None,
-    'dateResolved': None,
-    'dateResplan': None,
-    'dateResponded': None,
-    'resolveMinutes': 0,
-    'resPlanMinutes': 0,
-    'respondMinutes': 0,
-    'isInSla': False,
-    'knowledgeBaseLinkId': None,
-    'resources': 'User1',
-    'parentTicketId': None,
-    'hasChildTicket': False,
-    'knowledgeBaseLinkType': None,
-    'billTime': 'NoDefault',
-    'billExpenses': 'Billable',
-    'billProducts': 'Billable',
-    'predecessorType': None,
-    'predecessorId': None,
-    'predecessorClosedFlag': None,
-    'lagDays': None,
-    'lagNonworkingDaysFlag': None,
-    'estimatedStartDate': None,
-    'duration': None,
-    'businessUnitId': 10,
-    'mobileGuid': 'c5882071-79ac-4149-9088-3af3196a22f7',
-    'sla': None,
-    '_info': {
-        'lastUpdated': '2016-03-08T21:59:20Z',
-        'updatedBy': 'User1',
-        'activities_href': 'https://some-host.com/v4_6_release/apis/3.0/service/tickets/69/activities',
-        'timeentries_href': 'https://some-host.com/v4_6_release/apis/3.0/service/tickets/69/timeentries',
-        'scheduleentries_href': 'https://some-host.com/v4_6_release/apis/3.0/service/tickets/69/scheduleentries',
-        'documents_href': 'https://some-host.com/v4_6_release/apis/3.0/service/tickets/69/documents',
-        'products_href': 'https://some-host.com/v4_6_release/apis/3.0/service/tickets/69/products',
-        'configurations_href': 'https://some-host.com/v4_6_release/apis/3.0/service/tickets/69/configurations',
-        'tasks_href': 'https://some-host.com/v4_6_release/apis/3.0/service/tickets/69/tasks',
-        'notes_href': 'https://some-host.com/v4_6_release/apis/3.0/service/tickets/69/notes'
-    },
-    'customFields': None
-}
-
-API_SERVICE_TICKET_LIST = [API_SERVICE_TICKET]
-
-API_SERVICE_TICKET_MAP = {
-    t['id']: t
-    for t in API_SERVICE_TICKET_LIST
-}
-
-API_CW_VERSION = {
-    'version': 'v2.0'
-}
 
 API_MEMBER = {
     'adminFlag': False,
@@ -523,6 +373,157 @@ API_MEMBER = {
         'system/members/176/image?lastModified=2015-08-24T19:50:10Z'
     }
 }
+
+API_SERVICE_TICKET = {
+    'id': 69,
+    'summary': 'Schedule and Execute Conversion',
+    'recordType': 'ProjectTicket',
+    'board': {
+        'id': 1,
+        'name': 'Service A',
+        '_info': {
+            'board_href': 'https://some-host.com/v4_6_release/apis/3.0/service/boards/1'
+        }
+    },
+    'status': {
+        'id': 1,
+        'name': 'New',
+        '_info': {
+            'status_href': 'https://some-host.com/v4_6_release/apis/3.0/service/boards/1/statuses/1'
+        }
+    },
+    'project': API_PROJECT,
+    'phase': {
+        'id': 8,
+        'name': 'Solution Implementation',
+        '_info': {
+            'phase_href': 'https://some-host.com/v4_6_release/apis/3.0/project/projects/5/phases/8'
+        }
+    },
+    'wbsCode': '10.2',
+    'company': API_COMPANY,
+    'site': {
+        'id': 28,
+        'name': 'Main',
+        '_info': {
+            'site_href': 'https://some-host.com/v4_6_release/apis/3.0/company/companies/24/sites/28'
+        }
+    },
+    'siteName': None,
+    'addressLine1': '140 S. Village Ave.',
+    'addressLine2': '8th Floor',
+    'city': 'Tampa',
+    'stateIdentifier': 'FL',
+    'zip': '33880',
+    'country': None,
+    'contact': {
+        'id': 70,
+        'name': 'Gregg Kegle',
+        '_info': {
+            'contact_href': 'https://some-host.com/v4_6_release/apis/3.0/company/contacts/70'
+        }
+    },
+    'contactName': 'Gregg Kegle',
+    'contactPhoneNumber': '8135156666',
+    'contactPhoneExtension': None,
+    'contactEmailAddress': 'gregg.kegle@wildeagle.com',
+    'type': None,
+    'subType': None,
+    'item': None,
+    'team': API_SERVICE_TEAM_LIST[0],
+    'owner': API_MEMBER,
+    'priority': API_SERVICE_PRIORITY,
+    'locationId': 999,  # This is unknown, but it's *not* the service location.
+    'serviceLocation': {
+        'id': API_SERVICE_LOCATION['id'],
+        'name': API_SERVICE_LOCATION['name']
+    },
+    'source': {
+        'id': 2,
+        'name': 'Phone',
+        '_info': {
+            'source_href': 'https://some-host.com/v4_6_release/apis/3.0/service/sources/2'
+        }
+    },
+    'requiredDate': "2017-03-03T00:00:00Z",
+    'budgetHours': None,
+    'opportunity': None,
+    'agreement': None,
+    'severity': 'Medium',
+    'impact': 'Medium',
+    'externalXRef': None,
+    'poNumber': None,
+    'knowledgeBaseCategoryId': None,
+    'knowledgeBaseSubCategoryId': None,
+    'allowAllClientsPortalView': False,
+    'customerUpdatedFlag': False,
+    'automaticEmailContactFlag': False,
+    'automaticEmailResourceFlag': False,
+    'automaticEmailCcFlag': False,
+    'automaticEmailCc': None,
+    'contactEmailLookup': None,
+    'processNotifications': None,
+    'closedDate': None,
+    'closedBy': None,
+    'closedFlag': False,
+    'dateEntered': '2005-05-27T17:30:19Z',
+    'enteredBy': 'User10',
+    'actualHours': None,
+    'approved': True,
+    'subBillingMethod': None,
+    'subBillingAmount': None,
+    'subDateAccepted': None,
+    'dateResolved': None,
+    'dateResplan': None,
+    'dateResponded': None,
+    'resolveMinutes': 0,
+    'resPlanMinutes': 0,
+    'respondMinutes': 0,
+    'isInSla': False,
+    'knowledgeBaseLinkId': None,
+    'resources': 'User1',
+    'parentTicketId': None,
+    'hasChildTicket': False,
+    'knowledgeBaseLinkType': None,
+    'billTime': 'NoDefault',
+    'billExpenses': 'Billable',
+    'billProducts': 'Billable',
+    'predecessorType': None,
+    'predecessorId': None,
+    'predecessorClosedFlag': None,
+    'lagDays': None,
+    'lagNonworkingDaysFlag': None,
+    'estimatedStartDate': None,
+    'duration': None,
+    'businessUnitId': 10,
+    'mobileGuid': 'c5882071-79ac-4149-9088-3af3196a22f7',
+    'sla': None,
+    '_info': {
+        'lastUpdated': '2016-03-08T21:59:20Z',
+        'updatedBy': 'User1',
+        'activities_href': 'https://some-host.com/v4_6_release/apis/3.0/service/tickets/69/activities',
+        'timeentries_href': 'https://some-host.com/v4_6_release/apis/3.0/service/tickets/69/timeentries',
+        'scheduleentries_href': 'https://some-host.com/v4_6_release/apis/3.0/service/tickets/69/scheduleentries',
+        'documents_href': 'https://some-host.com/v4_6_release/apis/3.0/service/tickets/69/documents',
+        'products_href': 'https://some-host.com/v4_6_release/apis/3.0/service/tickets/69/products',
+        'configurations_href': 'https://some-host.com/v4_6_release/apis/3.0/service/tickets/69/configurations',
+        'tasks_href': 'https://some-host.com/v4_6_release/apis/3.0/service/tickets/69/tasks',
+        'notes_href': 'https://some-host.com/v4_6_release/apis/3.0/service/tickets/69/notes'
+    },
+    'customFields': None
+}
+
+API_SERVICE_TICKET_LIST = [API_SERVICE_TICKET]
+
+API_SERVICE_TICKET_MAP = {
+    t['id']: t
+    for t in API_SERVICE_TICKET_LIST
+}
+
+API_CW_VERSION = {
+    'version': 'v2.0'
+}
+
 
 API_MEMBER_LIST = [API_MEMBER]
 
