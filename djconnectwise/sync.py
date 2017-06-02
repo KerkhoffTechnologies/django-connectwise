@@ -667,7 +667,7 @@ class TicketSynchronizer(Synchronizer):
             )
 
     def get_page(self, *args, **kwargs):
-        kwargs['conditions'] = self.api_conditions
+        self.client.extra_conditions = self.api_conditions
         page = self.client.get_tickets(*args, **kwargs)
         return page
 
@@ -691,7 +691,6 @@ class TicketSynchronizer(Synchronizer):
             )
 
     def sync(self, reset=True):
-        extra_conditions = ''
         sync_job_qset = models.SyncJob.objects.filter(
             entity_name=self.model_class.__name__)
 
@@ -704,7 +703,7 @@ class TicketSynchronizer(Synchronizer):
             log_msg = 'Preparing sync job for objects updated since {}.'
             logger.info(log_msg.format(last_sync_job_time))
             logger.info(
-                'Ticket extra conditions: {0}'.format(extra_conditions))
+                'Ticket extra conditions: {0}'.format(self.api_conditions))
         else:
             logger.info('Preparing full ticket sync job.')
             # absence of a sync job indicates that this is an initial/full
