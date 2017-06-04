@@ -76,3 +76,11 @@ class LocationAdmin(admin.ModelAdmin):
 @admin.register(models.SyncJob)
 class SyncJobAdmin(admin.ModelAdmin):
     list_display = ('id', 'start_time', 'end_time', 'entity_name')
+
+
+@admin.register(models.OpportunityStatus)
+class OpportunityStatusAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'won_flag', 'lost_flag',
+                    'closed_flag', 'inactive_flag')
+    list_filter = ('won_flag', 'lost_flag', 'closed_flag', 'inactive_flag')
+    search_fields = ['name']

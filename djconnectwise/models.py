@@ -381,6 +381,17 @@ class Project(TimeStampedModel):
         return self.name or ''
 
 
+class OpportunityStatus(TimeStampedModel):
+    class Meta:
+        verbose_name_plural = "Opportunity Statuses"
+
+    name = models.CharField(max_length=30)
+    won_flag = models.BooleanField(default=False)
+    lost_flag = models.BooleanField(default=False)
+    closed_flag = models.BooleanField(default=False)
+    inactive_flag = models.BooleanField(default=False)
+
+
 class Ticket(TimeStampedModel):
     RECORD_TYPES = (
         ('Ticket', "Service Ticket"),
