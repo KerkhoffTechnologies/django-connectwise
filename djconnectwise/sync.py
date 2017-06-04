@@ -723,8 +723,8 @@ class OpportunityStatusSynchronizer(Synchronizer):
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
         instance.name = json_data['name']
-        instance.won_flag = json_data['id']
-        instance.lost_flag = json_data['id']
+        instance.won_flag = json_data['wonFlag']
+        instance.lost_flag = json_data['lostFlag']
         instance.closed_flag = json_data['closedFlag']
         instance.inactive_flag = json_data['inactiveFlag']
         return instance
