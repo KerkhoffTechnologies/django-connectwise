@@ -255,3 +255,13 @@ class TestSalesAPIClient(BaseAPITestCase):
         result = self.client.get_opportunity_statuses()
         self.assertEqual(result, fixtures.API_SALES_OPPORTUNITY_STATUSES)
         self.assertRequestShouldPage(True)
+
+    @responses.activate
+    def test_get_opportunity_types(self):
+        endpoint = self.client._endpoint(
+            self.client.ENDPOINT_OPPORTUNITY_TYPES)
+
+        mk.get(endpoint, fixtures.API_SALES_OPPORTUNITY_TYPES)
+        result = self.client.get_opportunity_types()
+        self.assertEqual(result, fixtures.API_SALES_OPPORTUNITY_TYPES)
+        self.assertRequestShouldPage(True)

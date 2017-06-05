@@ -150,6 +150,8 @@ class SalesAPIClient(ConnectWiseAPIClient):
     ENDPOINT_OPPORTUNITIES = 'opportunities'
     ENDPOINT_OPPORTUNITY_STATUSES = \
         '{}/statuses'.format(ENDPOINT_OPPORTUNITIES)
+    ENDPOINT_OPPORTUNITY_TYPES = \
+        '{}/types'.format(ENDPOINT_OPPORTUNITIES)
 
     def get_opportunities(self, *args, **kwargs):
         return self.fetch_resource(self.ENDPOINT_OPPORTUNITIES,
@@ -158,6 +160,11 @@ class SalesAPIClient(ConnectWiseAPIClient):
 
     def get_opportunity_statuses(self, *args, **kwargs):
         return self.fetch_resource(self.ENDPOINT_OPPORTUNITY_STATUSES,
+                                   should_page=True,
+                                   *args, **kwargs)
+
+    def get_opportunity_types(self, *args, **kwargs):
+        return self.fetch_resource(self.ENDPOINT_OPPORTUNITY_TYPES,
                                    should_page=True,
                                    *args, **kwargs)
 

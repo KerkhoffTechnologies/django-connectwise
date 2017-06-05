@@ -731,3 +731,21 @@ class OpportunityStatusSynchronizer(Synchronizer):
 
     def get_page(self, *args, **kwargs):
         return self.client.get_opportunity_statuses(*args, **kwargs)
+
+
+class OpportunityTypeSynchronizer(Synchronizer):
+    """
+    Coordinates retrieval and demarshalling of ConnectWise JSON
+    OpportunityType instances.
+    """
+    client_class = api.SalesAPIClient
+    model_class = models.OpportunityType
+
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data['id']
+        instance.description = json_data['description']
+        instance.inactive_flag = json_data['inactiveFlag']
+        return instance
+
+    def get_page(self, *args, **kwargs):
+        return self.client.get_opportunity_types(*args, **kwargs)
