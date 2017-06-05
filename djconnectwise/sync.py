@@ -616,6 +616,7 @@ class TicketSynchronizer:
         ticket.record_type = json_data.get('recordType')
         ticket.parent_ticket_id = json_data.get('parentTicketId')
         ticket.has_child_ticket = json_data.get('hasChildTicket')
+        ticket.customer_updated = json_data.get('customerUpdatedFlag')
 
         if 'team' in json_data:
             team = json_data['team']

@@ -422,6 +422,7 @@ class Ticket(TimeStampedModel):
     date_responded_utc = models.DateTimeField(blank=True, null=True)
     is_in_sla = models.NullBooleanField(blank=True, null=True)
     api_text = models.TextField(blank=True, null=True)
+    customer_updated = models.BooleanField(default=False)
 
     board = models.ForeignKey('ConnectwiseBoard', blank=True, null=True)
     owner = models.ForeignKey('Member', blank=True, null=True)
