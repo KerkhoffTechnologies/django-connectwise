@@ -45,6 +45,13 @@ TODO
    must add to INSTALLED\_APPS (I think)
 -  To use callbacks, must use Sites app- registers with ConnectWise with URL of first Sites instance
 
+Migrations
+----------
+
+::
+
+    ./makemigrations.py
+
 Testing
 _______
 
