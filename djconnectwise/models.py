@@ -409,7 +409,7 @@ class Opportunity(TimeStampedModel):
     name = models.CharField(max_length=100)
     expected_close_date = models.DateField()
     notes = models.TextField()
-    source = models.CharField(max_length=100)
+    source = models.CharField(max_length=100, blank=True, null=True)
 
     location_id = models.IntegerField()
     business_unit_id = models.IntegerField()
