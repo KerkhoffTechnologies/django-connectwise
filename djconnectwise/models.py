@@ -405,6 +405,37 @@ class OpportunityType(TimeStampedModel):
     inactive_flag = models.BooleanField(default=False)
 
 
+class Opportunity(TimeStampedModel):
+    name = models.CharField(max_length=100)
+    expected_close_date = models.DateField()
+    notes = models.TextField()
+    source = models.CharField(max_length=100)
+
+    location_id = models.IntegerField()
+    business_unit_id = models.IntegerField()
+    customer_po = models.CharField(max_length=100, blank=True, null=True)
+    pipeline_change_date = models.DateTimeField(blank=True, null=True)
+    date_became_lead = models.DateTimeField(blank=True, null=True)
+    closed_date = models.DateTimeField(blank=True, null=True)
+
+    type = models.ForeignKey('OpportunityType', blank=True, null=True)
+    stage = models.ForeignKey('OpportunityStage')
+    status = models.ForeignKey('OpportunityStatus', blank=True, null=True)
+    priority = models.ForeignKey('OpportunityPriority')
+    primary_sales_rep = models.ForeignKey('Member',
+                                          blank=True, null=True,
+                                          related_name='opportunity_primary')
+    secondary_sales_rep = models.ForeignKey(
+        'Member',
+        blank=True, null=True,
+        related_name='opportunity_secondary')
+
+    company = models.ForeignKey('Company', blank=True, null=True)
+    closed_by = models.ForeignKey('Member',
+                                  blank=True, null=True,
+                                  related_name='opportunity_closed_by')
+
+
 class Ticket(TimeStampedModel):
     RECORD_TYPES = (
         ('Ticket', "Service Ticket"),

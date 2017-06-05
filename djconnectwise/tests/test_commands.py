@@ -142,6 +142,19 @@ class TestSyncBoardsStatusesCommand(AbstractBaseSyncTest, TestCase):
         _patch.stop()
 
 
+class TestSyncOpportunityCommand(AbstractBaseSyncTest, TestCase):
+    args = (
+        mocks.sales_api_get_opportunities_call,
+        [fixtures.API_SALES_OPPORTUNITY],
+        'opportunity',
+    )
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_opportunity_statuses()
+        fixture_utils.init_opportunity_types()
+
+
 class TestSyncOpportunityStatusesCommand(AbstractBaseSyncTest, TestCase):
     args = (
         mocks.sales_api_get_opportunity_statuses_call,
@@ -177,7 +190,8 @@ class TestSyncAllCommand(TestCase):
             TestSyncBoardsStatusesCommand,
             TestSyncBoardsCommand,
             TestSyncOpportunityStatusesCommand,
-            TestSyncOpportunityTypesCommand
+            TestSyncOpportunityTypesCommand,
+            TestSyncOpportunityCommand
         ]
 
         self.test_args = []
@@ -236,6 +250,7 @@ class TestSyncAllCommand(TestCase):
             'location': models.Location,
             'ticket': models.Ticket,
             'company': models.Company,
+            'opportunity': models.Opportunity,
             'opportunity_status': models.OpportunityStatus,
             'opportunity_type': models.OpportunityType,
         }

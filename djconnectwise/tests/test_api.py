@@ -247,6 +247,15 @@ class TestSalesAPIClient(BaseAPITestCase):
             self.client.ENDPOINT_OPPORTUNITY_STATUSES)
 
     @responses.activate
+    def test_get_opportunities(self):
+        endpoint = self.client._endpoint(
+            self.client.ENDPOINT_OPPORTUNITIES)
+        mk.get(endpoint, fixtures.API_SALES_OPPORTUNITIES)
+        result = self.client.get_opportunities()
+        self.assertEqual(result, fixtures.API_SALES_OPPORTUNITIES)
+        self.assertRequestShouldPage(True)
+
+    @responses.activate
     def test_get_opportunity_statuses(self):
         endpoint = self.client._endpoint(
             self.client.ENDPOINT_OPPORTUNITY_STATUSES)
