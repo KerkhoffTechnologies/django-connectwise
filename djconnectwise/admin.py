@@ -71,3 +71,8 @@ class TeamAdmin(admin.ModelAdmin):
 @admin.register(models.Location)
 class LocationAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'where')
+
+
+@admin.register(models.SyncJob)
+class SyncJobAdmin(admin.ModelAdmin):
+    list_display = ('id', 'start_time', 'end_time', 'entity_name')

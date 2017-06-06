@@ -43,10 +43,7 @@ class Command(BaseCommand):
                             default=False)
 
     def sync_by_class(self, sync_class, obj_name, reset=False):
-        if sync_class == sync.TicketSynchronizer:
-            synchronizer = sync_class(reset=reset)
-        else:
-            synchronizer = sync_class()
+        synchronizer = sync_class()
 
         created_count, updated_count, deleted_count = synchronizer.sync(
             reset=reset)
@@ -88,7 +85,7 @@ class Command(BaseCommand):
         if reset_option and num_synchronizers and has_ticket_sync:
             sync_classes = list(sync_classes)
             sync_classes.reverse()
-            # need to move ticket synchronizer at the tail of the list
+            # need to move ticket synchronizer to the tail of the list
             sync_classes.append(sync_classes.pop(0))
 
         for sync_class, obj_name in sync_classes:

@@ -45,7 +45,7 @@ def project_api_get_project_call(return_value, raised=None):
     return create_mock_call(method_name, return_value, side_effect=raised)
 
 
-def _service_api_tickets_call(page=1, page_size=25):
+def _service_api_tickets_call(page=1, page_size=25, conditions=''):
     return_value = []
     if page == 1:
         return_value = [fixtures.API_SERVICE_TICKET]
