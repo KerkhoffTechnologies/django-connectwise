@@ -1,7 +1,7 @@
 import logging
 
 from django.conf import settings
-
+from djconnectwise.utils import get_request_settings
 import re
 import requests
 
@@ -65,6 +65,9 @@ class ConnectWiseAPIClient(object):
         self.auth = ('{0}+{1}'.format(company_id, self.api_public_key),
                      '{0}'.format(self.api_private_key),)
 
+        request_settings = get_request_settings()
+        self.timeout = request_settings['timeout']
+
     def _endpoint(self, path):
         return '{0}{1}'.format(self.server_url, path)
 
@@ -92,7 +95,7 @@ class ConnectWiseAPIClient(object):
                 endpoint,
                 params=params,
                 auth=self.auth,
-                timeout=settings.DJCONNECTWISE_API_TIMEOUT,
+                timeout=self.timeout,
             )
         except requests.RequestException as e:
             logger.error('Request failed: GET {}: {}'.format(endpoint, e))
@@ -204,7 +207,7 @@ class SystemAPIClient(ConnectWiseAPIClient):
                 'delete',
                 endpoint,
                 auth=self.auth,
-                timeout=settings.DJCONNECTWISE_API_TIMEOUT,
+                timeout=self.timeout,
             )
         except requests.RequestException as e:
             logger.error('Request failed: DELETE {}: {}'.format(endpoint, e))
@@ -222,7 +225,7 @@ class SystemAPIClient(ConnectWiseAPIClient):
                 endpoint,
                 json=callback_entry,
                 auth=self.auth,
-                timeout=settings.DJCONNECTWISE_API_TIMEOUT,
+                timeout=self.timeout,
             )
         except requests.RequestException as e:
             logger.error('Request failed: POST {}: {}'.format(endpoint, e))
@@ -245,7 +248,7 @@ class SystemAPIClient(ConnectWiseAPIClient):
                 endpoint,
                 json=callback_entry,
                 auth=self.auth,
-                timeout=settings.DJCONNECTWISE_API_TIMEOUT,
+                timeout=self.timeout,
             )
         except requests.RequestException as e:
             logger.error('Request failed: PUT {}: {}'.format(endpoint, e))
@@ -272,7 +275,7 @@ class SystemAPIClient(ConnectWiseAPIClient):
             response = requests.get(
                 endpoint,
                 auth=self.auth,
-                timeout=settings.DJCONNECTWISE_API_TIMEOUT,
+                timeout=self.timeout,
             )
         except requests.RequestException as e:
             logger.error('Request failed: GET {}: {}'.format(endpoint, e))
@@ -384,7 +387,7 @@ class ServiceAPIClient(ConnectWiseAPIClient):
                 endpoint,
                 json=body,
                 auth=self.auth,
-                timeout=settings.DJCONNECTWISE_API_TIMEOUT,
+                timeout=self.timeout,
             )
         except requests.RequestException as e:
             logger.error('Request failed: PATCH {}: {}'.format(endpoint, e))

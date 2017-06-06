@@ -1,6 +1,8 @@
 import hashlib
 import re
 
+from django.conf import settings
+
 _underscorer1 = re.compile(r'(.)([A-Z][a-z]+)')
 _underscorer2 = re.compile('([a-z0-9])([A-Z])')
 FILENAME_EXTENSION_RE = re.compile('\.([\w]*)$')
@@ -31,3 +33,15 @@ def get_filename_extension(filename):
     """
     m = FILENAME_EXTENSION_RE.search(filename)
     return m.group(1) if m else None
+
+
+def get_request_settings():
+    request_settings = {
+        'timeout': settings.DJCONNECTWISE_API_TIMEOUT,
+        'batch_size': settings.DJCONNECTWISE_API_BATCH_LIMIT,
+    }
+
+    if hasattr(settings, 'DJCONNECTWISE_CONF_CALLABLE'):
+        request_settings = settings.DJCONNECTWISE_CONF_CALLABLE()
+
+    return request_settings
