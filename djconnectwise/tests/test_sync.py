@@ -7,6 +7,7 @@ from djconnectwise.models import Company, CompanyStatus
 from djconnectwise.models import ConnectWiseBoard
 from djconnectwise.models import Location
 from djconnectwise.models import Member
+from djconnectwise.models import Opportunity
 from djconnectwise.models import OpportunityStatus
 from djconnectwise.models import OpportunityType
 from djconnectwise.models import Project
@@ -289,6 +290,65 @@ class TestOpportunityStatusSynchronizer(TestCase, SynchronizerTestMixin):
         self.assertEqual(instance.lost_flag, json_data['lostFlag'])
         self.assertEqual(instance.closed_flag, json_data['closedFlag'])
         self.assertEqual(instance.inactive_flag, json_data['inactiveFlag'])
+
+
+class TestOpportunitySynchronizer(TestCase, SynchronizerTestMixin):
+    synchronizer_class = sync.OpportunitySynchronizer
+    model_class = Opportunity
+    fixture = fixtures.API_SALES_OPPORTUNITIES
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_opportunity_statuses()
+        fixture_utils.init_opportunity_types()
+
+    def call_api(self, return_data):
+        return mocks.sales_api_get_opportunities_call(return_data)
+
+    def _assert_fields(self, instance, json_data):
+        self.assertEqual(instance.id, json_data['id'])
+        self.assertEqual(instance.name, json_data['name'])
+        self.assertEqual(instance.expected_close_date,
+                         parse(json_data['expectedCloseDate']).date())
+        self.assertEqual(instance.pipeline_change_date,
+                         parse(json_data['pipelineChangeDate']))
+        self.assertEqual(instance.date_became_lead,
+                         parse(json_data['dateBecameLead']))
+        self.assertEqual(instance.closed_date,
+                         parse(json_data['closedDate']))
+        self.assertEqual(instance.notes, json_data['notes'])
+        self.assertEqual(instance.source, json_data['source'])
+        self.assertEqual(instance.location_id, json_data['locationId'])
+
+        self.assertEqual(instance.business_unit_id,
+                         json_data['businessUnitId'])
+
+        self.assertEqual(instance.customer_po,
+                         json_data['customerPO'])
+
+        self.assertEqual(instance.priority_id,
+                         json_data['priority']['id'])
+
+        self.assertEqual(instance.stage_id,
+                         json_data['stage']['id'])
+
+        self.assertEqual(instance.type_id,
+                         json_data['type']['id'])
+
+        self.assertEqual(instance.status_id,
+                         json_data['status']['id'])
+
+        self.assertEqual(instance.primary_sales_rep_id,
+                         json_data['primarySalesRep']['id'])
+
+        self.assertEqual(instance.secondary_sales_rep_id,
+                         json_data['secondarySalesRep']['id'])
+
+        self.assertEqual(instance.company_id,
+                         json_data['company']['id'])
+
+        self.assertEqual(instance.closed_by_id,
+                         json_data['closedBy']['id'])
 
 
 class TestOpportunityTypeSynchronizer(TestCase, SynchronizerTestMixin):

@@ -37,6 +37,24 @@ class Synchronizer:
         self.client = self.client_class()
         self.load_instance_map()
 
+    def _assign_relation(self, ticket, json_data,
+                         json_field, model_class, model_field):
+        relation_json = json_data.get(json_field)
+        if relation_json:
+
+            try:
+                uid = relation_json['id']
+                related_instance = model_class.objects.get(pk=uid)
+                setattr(ticket, model_field, related_instance)
+            except model_class.DoesNotExist:
+                logger.warning(
+                    'Failed to find {} {} for ticket {}.'.format(
+                        json_field,
+                        uid,
+                        ticket.id
+                    )
+                )
+
     def load_instance_map(self):
         qset = self.get_queryset()
         self.instance_map = {
@@ -546,29 +564,22 @@ class TicketSynchronizer(Synchronizer):
         LocationSynchronizer
     )
 
+    related_meta = {
+        'team': (models.Team, 'team'),
+        'board': (models.ConnectWiseBoard, 'board'),
+        'company': (models.Company, 'company'),
+        'priority': (models.TicketPriority, 'priority'),
+        'project': (models.Project, 'project'),
+        'serviceLocation': (models.Location, 'location'),
+        'status': (models.BoardStatus, 'status'),
+        'owner': (models.Member, 'owner')
+    }
+
     def __init__(self):
         super().__init__()
         self.members_map = {
             m.identifier: m for m in models.Member.objects.all()
         }
-
-    def _assign_relation(self, ticket, json_data,
-                         json_field, model_class, model_field):
-        relation_json = json_data.get(json_field)
-        if relation_json:
-
-            try:
-                uid = relation_json['id']
-                related_instance = model_class.objects.get(pk=uid)
-                setattr(ticket, model_field, related_instance)
-            except model_class.DoesNotExist:
-                logger.warning(
-                    'Failed to find {} {} for ticket {}.'.format(
-                        json_field,
-                        uid,
-                        ticket.id
-                    )
-                )
 
     def _assign_field_data(self, instance, json_data):
         created = instance.id is None
@@ -592,18 +603,7 @@ class TicketSynchronizer(Synchronizer):
         instance.has_child_ticket = json_data.get('hasChildTicket')
         instance.customer_updated = json_data.get('customerUpdatedFlag')
 
-        related_meta = {
-            'team': (models.Team, 'team'),
-            'board': (models.ConnectWiseBoard, 'board'),
-            'company': (models.Company, 'company'),
-            'priority': (models.TicketPriority, 'priority'),
-            'project': (models.Project, 'project'),
-            'serviceLocation': (models.Location, 'location'),
-            'status': (models.BoardStatus, 'status'),
-            'owner': (models.Member, 'owner')
-        }
-
-        for json_field, value in related_meta.items():
+        for json_field, value in self.related_meta.items():
             model_class, field_name = value
             self._assign_relation(instance,
                                   json_data,
@@ -712,6 +712,93 @@ class TicketSynchronizer(Synchronizer):
             # absence of a sync job indicates that this is an initial/full
             # sync, in which case we do not want to retrieve closed tickets
         return super().sync(reset=reset)
+
+
+class OpportunitySynchronizer(Synchronizer):
+    """
+    Coordinates retrieval and demarshalling of ConnectWise JSON
+    Opportunity instances.
+    """
+    client_class = api.SalesAPIClient
+    model_class = models.Opportunity
+    related_meta = {
+        'type': (models.OpportunityType, 'type'),
+        'stage': (models.OpportunityStage, 'stage'),
+        'status': (models.OpportunityStatus, 'status'),
+        'primarySalesRep': (models.Member, 'primary_sales_rep'),
+        'secondarySalesRep': (models.Member, 'secondary_sales_rep'),
+        'company': (models.Company, 'company'),
+        'closedBy': (models.Member, 'closed_by')
+    }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.priority_map = {
+            p.id: p for p in models.OpportunityPriority.objects.all()
+        }
+
+        self.stage_map = {
+            s.id: s for s in models.OpportunityStage.objects.all()
+        }
+
+    def _instance_from_json(self, model_class, json_data, instance_map):
+        instance = instance_map.get(json_data['id'])
+        if not instance:
+            instance = model_class()
+            instance.id = json_data['id']
+            instance.name = json_data['name']
+            instance.save()
+        return instance
+
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data['id']
+        instance.name = json_data['name']
+        instance.notes = json_data['notes']
+        instance.source = json_data['source']
+        instance.location_id = json_data['locationId']
+        instance.business_unit_id = json_data['businessUnitId']
+        instance.customer_po = json_data['customerPO']
+
+        # handle dates
+        expected_close_date = json_data['expectedCloseDate']
+        if expected_close_date:
+            instance.expected_close_date = parse(expected_close_date).date()
+
+        pipeline_change_date = json_data['pipelineChangeDate']
+        if pipeline_change_date:
+            instance.pipeline_change_date = parse(pipeline_change_date)
+
+        date_became_lead = json_data['dateBecameLead']
+        if date_became_lead:
+            instance.date_became_lead = parse(date_became_lead)
+
+        closed_date = json_data['closedDate']
+        if closed_date:
+            instance.closed_date = parse(closed_date)
+
+        # handle foreign keys
+        for json_field, value in self.related_meta.items():
+            model_class, field_name = value
+            self._assign_relation(instance,
+                                  json_data,
+                                  json_field,
+                                  model_class,
+                                  field_name)
+
+        instance.priority = self._instance_from_json(
+            models.OpportunityPriority,
+            json_data['priority'],
+            self.priority_map)
+
+        instance.stage = self._instance_from_json(
+            models.OpportunityStage,
+            json_data['stage'],
+            self.stage_map)
+
+        return instance
+
+    def get_page(self, *args, **kwargs):
+        return self.client.get_opportunities(*args, **kwargs)
 
 
 class OpportunityStatusSynchronizer(Synchronizer):

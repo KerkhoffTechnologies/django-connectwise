@@ -63,3 +63,17 @@ def init_locations():
     mocks.service_api_get_locations_call(fixtures.API_SERVICE_LOCATION_LIST)
     synchronizer = sync.LocationSynchronizer()
     return synchronizer.sync()
+
+
+def init_opportunity_statuses():
+    mocks.sales_api_get_opportunity_statuses_call(
+        fixtures.API_SALES_OPPORTUNITY_STATUSES)
+    synchronizer = sync.OpportunityStatusSynchronizer()
+    return synchronizer.sync()
+
+
+def init_opportunity_types():
+    mocks.sales_api_get_opportunity_types_call(
+        fixtures.API_SALES_OPPORTUNITY_TYPES)
+    synchronizer = sync.OpportunityTypeSynchronizer()
+    return synchronizer.sync()
