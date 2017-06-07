@@ -154,3 +154,8 @@ class ProjectCallBackHandler(CallBackHandler):
 class CompanyCallBackHandler(CallBackHandler):
     CALLBACK_ID = 3
     CALLBACK_TYPE = CallBackEntry.CALLBACK_TYPES.company
+
+
+class OpportunityCallBackHandler(CallBackHandler):
+    CALLBACK_ID = 4
+    CALLBACK_TYPE = CallBackEntry.CALLBACK_TYPES.opportunity

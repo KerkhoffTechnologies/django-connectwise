@@ -1,6 +1,5 @@
 from django.test import TestCase
 
-from .. import api
 from . import fixtures
 from . import mocks
 
@@ -12,11 +11,9 @@ class TestCallBackHandler(TestCase):
     handlers = [
         callback.TicketCallBackHandler,
         callback.ProjectCallBackHandler,
-        callback.CompanyCallBackHandler
+        callback.CompanyCallBackHandler,
+        callback.OpportunityCallBackHandler
     ]
-
-    def setUp(self):
-        self.client = api.ServiceAPIClient()
 
     def get_fixture(self):
         fixture = fixtures.API_SYSTEM_CALLBACK_ENTRY

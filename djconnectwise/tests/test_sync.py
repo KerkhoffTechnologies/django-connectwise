@@ -565,7 +565,8 @@ class TestSyncJob(TestCase):
         self.assertEqual(sync_job.success, success)
 
     def test_sync_successful(self):
-        self.assert_sync_job(*self.synchronizer.sync(), '', True)
+        created, updated, deleted = self.synchronizer.sync()
+        self.assert_sync_job(created, updated, deleted, '', True)
 
     def test_sync_failed(self):
 

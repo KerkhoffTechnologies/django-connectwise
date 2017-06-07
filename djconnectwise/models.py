@@ -37,9 +37,11 @@ class CallBackEntry(models.Model):
     TICKET = 'ticket'
     PROJECT = 'project'
     COMPANY = 'company'
+    OPPORTUNITY = 'opportunity'
 
     CALLBACK_TYPES = Choices(
         (COMPANY, "Company"),
+        (OPPORTUNITY, "Opportunity"),
         (PROJECT, "Project"),
         (TICKET, "Ticket"),
     )
