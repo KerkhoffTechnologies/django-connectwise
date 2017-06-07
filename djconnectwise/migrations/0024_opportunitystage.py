@@ -8,7 +8,7 @@ import django_extensions.db.fields
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('djconnectwise', '0022_auto_20170605_0705'),
+        ('djconnectwise', '0023_auto_20170605_0705'),
     ]
 
     operations = [
