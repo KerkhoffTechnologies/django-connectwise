@@ -21,6 +21,7 @@ from . import fixtures
 from . import fixture_utils
 from . import mocks
 from .. import sync
+from ..sync import log_sync_job
 
 
 def assert_sync_job(model_class):
@@ -533,3 +534,44 @@ class TestSyncSettings(TestCase):
         self.assertEqual(synchronizer.batch_size,
                          request_settings['batch_size'])
         _patch.stop()
+
+
+class MockSynchronizer:
+    error_message = 'One heck of an error'
+    model_class = Ticket
+
+    @log_sync_job
+    def sync(self):
+        return 1, 2, 3
+
+    @log_sync_job
+    def sync_with_error(self):
+        raise ValueError(self.error_message)
+
+
+class TestSyncJob(TestCase):
+
+    def setUp(self):
+        self.synchronizer = MockSynchronizer()
+
+    def assert_sync_job(self, created, updated, deleted, message, success):
+        sync_job = SyncJob.objects.all().last()
+        self.assertEqual(created, sync_job.added)
+        self.assertEqual(updated, sync_job.updated)
+        self.assertEqual(deleted, sync_job.deleted)
+        self.assertEqual(self.synchronizer.model_class.__name__,
+                         sync_job.entity_name)
+        self.assertEqual(message, sync_job.message)
+        self.assertEqual(sync_job.success, success)
+
+    def test_sync_successful(self):
+        self.assert_sync_job(*self.synchronizer.sync(), '', True)
+
+    def test_sync_failed(self):
+
+        try:
+            self.synchronizer.sync_with_error()
+        except Exception:
+            pass
+
+        self.assert_sync_job(0, 0, 0, self.synchronizer.error_message, False)
