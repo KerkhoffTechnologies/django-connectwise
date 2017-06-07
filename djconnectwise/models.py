@@ -396,6 +396,10 @@ class OpportunityStatus(TimeStampedModel):
     inactive_flag = models.BooleanField(default=False)
 
 
+class OpportunityPriority(TimeStampedModel):
+    name = models.CharField(max_length=50)
+
+
 class OpportunityType(TimeStampedModel):
     description = models.CharField(max_length=50)
     inactive_flag = models.BooleanField(default=False)
