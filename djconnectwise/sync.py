@@ -5,7 +5,7 @@ from dateutil.parser import parse
 from djconnectwise import api
 from djconnectwise import models
 from djconnectwise.utils import get_hash, get_filename_extension
-from djconnectwise.utils import get_request_settings
+from djconnectwise.utils import RequestSettings
 
 from django.core.files.base import ContentFile
 from django.utils import timezone
@@ -37,14 +37,13 @@ class Synchronizer:
         self.client = self.client_class()
         self.load_instance_map()
 
-        request_settings = get_request_settings()
+        request_settings = RequestSettings().get_settings()
         self.batch_size = request_settings['batch_size']
 
     def _assign_relation(self, ticket, json_data,
                          json_field, model_class, model_field):
         relation_json = json_data.get(json_field)
         if relation_json:
-
             try:
                 uid = relation_json['id']
                 related_instance = model_class.objects.get(pk=uid)

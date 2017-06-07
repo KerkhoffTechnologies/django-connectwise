@@ -1,7 +1,7 @@
 import logging
 
 from django.conf import settings
-from djconnectwise.utils import get_request_settings
+from djconnectwise.utils import RequestSettings
 import re
 import requests
 
@@ -65,7 +65,7 @@ class ConnectWiseAPIClient(object):
         self.auth = ('{0}+{1}'.format(company_id, self.api_public_key),
                      '{0}'.format(self.api_private_key),)
 
-        request_settings = get_request_settings()
+        request_settings = RequestSettings().get_settings()
         self.timeout = request_settings['timeout']
 
     def _endpoint(self, path):

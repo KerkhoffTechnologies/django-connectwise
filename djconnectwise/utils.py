@@ -35,13 +35,14 @@ def get_filename_extension(filename):
     return m.group(1) if m else None
 
 
-def get_request_settings():
-    request_settings = {
-        'timeout': settings.DJCONNECTWISE_API_TIMEOUT,
-        'batch_size': settings.DJCONNECTWISE_API_BATCH_LIMIT,
-    }
+class RequestSettings:
+    def get_settings(self):
+        request_settings = {
+            'timeout': settings.DJCONNECTWISE_API_TIMEOUT,
+            'batch_size': settings.DJCONNECTWISE_API_BATCH_LIMIT,
+        }
 
-    if hasattr(settings, 'DJCONNECTWISE_CONF_CALLABLE'):
-        request_settings = settings.DJCONNECTWISE_CONF_CALLABLE()
+        if hasattr(settings, 'DJCONNECTWISE_CONF_CALLABLE'):
+            request_settings = settings.DJCONNECTWISE_CONF_CALLABLE()
 
-    return request_settings
+        return request_settings

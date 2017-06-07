@@ -1,5 +1,7 @@
 import responses
 
+
+from django.conf import settings
 from django.test import TestCase
 
 from .. import api
@@ -274,3 +276,24 @@ class TestSalesAPIClient(BaseAPITestCase):
         result = self.client.get_opportunity_types()
         self.assertEqual(result, fixtures.API_SALES_OPPORTUNITY_TYPES)
         self.assertRequestShouldPage(True)
+
+
+class TestAPISettings(TestCase):
+
+    def test_default_timeout(self):
+        client = api.ServiceAPIClient()
+        self.assertEqual(client.timeout,
+                         settings.DJCONNECTWISE_API_TIMEOUT)
+
+    def test_dynamic_batch_size(self):
+        method_name = 'djconnectwise.utils.RequestSettings.get_settings'
+        request_settings = {
+            'batch_size': 10,
+            'timeout': 10,
+        }
+        _, _patch = mk.create_mock_call(method_name, request_settings)
+        client = api.ServiceAPIClient()
+
+        self.assertEqual(client.timeout,
+                         request_settings['timeout'])
+        _patch.stop()
