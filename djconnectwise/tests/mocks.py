@@ -50,6 +50,11 @@ def sales_api_get_opportunity_statuses_call(return_value, raised=None):
     return create_mock_call(method_name, return_value, side_effect=raised)
 
 
+def sales_api_get_opportunity_types_call(return_value, raised=None):
+    method_name = 'djconnectwise.api.SalesAPIClient.get_opportunity_types'
+    return create_mock_call(method_name, return_value, side_effect=raised)
+
+
 def _service_api_tickets_call(page=1, page_size=25, conditions=''):
     return_value = []
     if page == 1:
