@@ -712,3 +712,24 @@ class TicketSynchronizer(Synchronizer):
             # absence of a sync job indicates that this is an initial/full
             # sync, in which case we do not want to retrieve closed tickets
         return super().sync(reset=reset)
+
+
+class OpportunityStatusSynchronizer(Synchronizer):
+    """
+    Coordinates retrieval and demarshalling of ConnectWise JSON
+    OpportunityStatus instances.
+    """
+    client_class = api.SalesAPIClient
+    model_class = models.OpportunityStatus
+
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data['id']
+        instance.name = json_data['name']
+        instance.won_flag = json_data['wonFlag']
+        instance.lost_flag = json_data['lostFlag']
+        instance.closed_flag = json_data['closedFlag']
+        instance.inactive_flag = json_data['inactiveFlag']
+        return instance
+
+    def get_page(self, *args, **kwargs):
+        return self.client.get_opportunity_statuses(*args, **kwargs)
