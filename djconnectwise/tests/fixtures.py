@@ -544,6 +544,15 @@ API_SYSTEM_CALLBACK_ENTRY = {
 }
 
 
+API_SALES_OPPORTUNITY_TYPES = [
+    {   
+    'id': 2, 
+    'description': 'Application Development', 
+    'inactiveFlag': False, 
+    '_info': {'lastUpdated': '2002-03-15T19:16:52Z', 'updatedBy': 'Arnie'}
+    }]
+
+    
 API_SALES_OPPORTUNITY_STATUSES = [{'_info': {'lastUpdated': '2000-12-28T19:35:17Z', 'updatedBy': None},
     'closedFlag': False,
     'dateEntered': '2000-12-28T19:35:17Z',
