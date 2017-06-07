@@ -381,6 +381,10 @@ class Project(TimeStampedModel):
         return self.name or ''
 
 
+class OpportunityStage(TimeStampedModel):
+    name = models.CharField(max_length=50)
+
+
 class OpportunityStatus(TimeStampedModel):
     class Meta:
         verbose_name_plural = "Opportunity Statuses"
