@@ -4,6 +4,7 @@ from django.conf import settings
 from djconnectwise.utils import RequestSettings
 import re
 import requests
+from retrying import retry
 
 
 class ConnectWiseAPIError(Exception):
@@ -65,8 +66,8 @@ class ConnectWiseAPIClient(object):
         self.auth = ('{0}+{1}'.format(company_id, self.api_public_key),
                      '{0}'.format(self.api_private_key),)
 
-        request_settings = RequestSettings().get_settings()
-        self.timeout = request_settings['timeout']
+        self.request_settings = RequestSettings().get_settings()
+        self.timeout = self.request_settings['timeout']
 
     def _endpoint(self, path):
         return '{0}{1}'.format(self.server_url, path)
@@ -76,40 +77,59 @@ class ConnectWiseAPIClient(object):
             response.url, response.status_code, response.content))
 
     def fetch_resource(self, endpoint_url, params=None, should_page=False,
+                       retry_counter=None,
                        *args, **kwargs):
         """
         A convenience method for issuing a request to the
         specified REST endpoint.
+
+        Note: retry_counter is used specifically for testing.
+        It is a dict in the form {'count': 0} that is passed in
+        to verify the number of attempts that were made
         """
-        if not params:
-            params = {}
+        @retry(stop_max_attempt_number=self.request_settings['retries'],
+               wait_exponential_multiplier=1000,
+               wait_exponential_max=10000)
+        def _fetch_resource(endpoint_url, params=None, should_page=False,
+                            retry_counter=None,
+                            *args, **kwargs):
 
-        if should_page:
-            params['pageSize'] = kwargs.get('page_size',
-                                            CW_RESPONSE_MAX_RECORDS)
-            params['page'] = kwargs.get('page', CW_DEFAULT_PAGE)
-        try:
-            endpoint = self._endpoint(endpoint_url)
-            logger.debug('Making GET request to {}'.format(endpoint))
-            response = requests.get(
-                endpoint,
-                params=params,
-                auth=self.auth,
-                timeout=self.timeout,
-            )
-        except requests.RequestException as e:
-            logger.error('Request failed: GET {}: {}'.format(endpoint, e))
-            raise ConnectWiseAPIError('{}'.format(e))
+            if retry_counter:
+                retry_counter['count'] += 1
 
-        if 200 <= response.status_code < 300:
-            return response.json()
-        if response.status_code == 404:
-            msg = 'Resource {} was not found.'.format(response.url)
-            logger.warning(msg)
-            raise ConnectWiseRecordNotFoundError(msg)
-        else:
-            self._log_failed(response)
-            raise ConnectWiseAPIError(response.content)
+            if not params:
+                params = {}
+
+            if should_page:
+                params['pageSize'] = kwargs.get('page_size',
+                                                CW_RESPONSE_MAX_RECORDS)
+                params['page'] = kwargs.get('page', CW_DEFAULT_PAGE)
+            try:
+                endpoint = self._endpoint(endpoint_url)
+                logger.debug('Making GET request to {}'.format(endpoint))
+                response = requests.get(
+                    endpoint,
+                    params=params,
+                    auth=self.auth,
+                    timeout=self.timeout,
+                )
+            except requests.RequestException as e:
+                logger.error('Request failed: GET {}: {}'.format(endpoint, e))
+                raise ConnectWiseAPIError('{}'.format(e))
+
+            if 200 <= response.status_code < 300:
+                return response.json()
+            if response.status_code == 404:
+                msg = 'Resource {} was not found.'.format(response.url)
+                logger.warning(msg)
+                raise ConnectWiseRecordNotFoundError(msg)
+            else:
+                self._log_failed(response)
+                raise ConnectWiseAPIError(response.content)
+
+        return _fetch_resource(endpoint_url, params=params,
+                               should_page=should_page,
+                               *args, **kwargs)
 
 
 class ProjectAPIClient(ConnectWiseAPIClient):

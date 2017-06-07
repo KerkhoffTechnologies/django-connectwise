@@ -9,6 +9,8 @@ from .. import api
 from . import fixtures
 from . import mocks as mk
 
+from djconnectwise.api import ConnectWiseAPIError
+
 
 API_URL = 'https://localhost/v4_6_release/apis/3.0/system/members/count'
 
@@ -297,3 +299,12 @@ class TestAPISettings(TestCase):
         self.assertEqual(client.timeout,
                          request_settings['timeout'])
         _patch.stop()
+
+    def test_retry_attempts(self):
+        with self.assertRaises(ConnectWiseAPIError):
+            retry_counter = {'count': 0}
+            client = api.ServiceAPIClient()
+            client.fetch_resource('localhost/some-bad-url',
+                                  retry_counter=retry_counter)
+            self.assertEqual(retry_counter['count'],
+                             client.request_settings['retries'])

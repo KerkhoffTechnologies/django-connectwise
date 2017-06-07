@@ -40,6 +40,7 @@ class RequestSettings:
         request_settings = {
             'timeout': settings.DJCONNECTWISE_API_TIMEOUT,
             'batch_size': settings.DJCONNECTWISE_API_BATCH_LIMIT,
+            'retries': settings.DJCONNECTWISE_API_REQUEST_RETRIES,
         }
 
         if hasattr(settings, 'DJCONNECTWISE_CONF_CALLABLE'):

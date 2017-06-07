@@ -2,13 +2,13 @@ import logging
 
 from dateutil.parser import parse
 
+from django.core.files.base import ContentFile
+from django.utils import timezone
+
 from djconnectwise import api
 from djconnectwise import models
 from djconnectwise.utils import get_hash, get_filename_extension
 from djconnectwise.utils import RequestSettings
-
-from django.core.files.base import ContentFile
-from django.utils import timezone
 
 
 DEFAULT_AVATAR_EXTENSION = 'jpg'
