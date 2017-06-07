@@ -29,6 +29,8 @@ class Command(BaseCommand):
                 _('Company Status')),
             ('company', sync.CompanySynchronizer, _('Company')),
             ('location', sync.LocationSynchronizer, _('Location')),
+            ('opportunity_status', sync.OpportunityStatusSynchronizer,
+                _('Opportunity Status')),
             ('ticket', sync.TicketSynchronizer, _('Ticket')),
         )
         self.synchronizer_map = OrderedDict()

@@ -145,6 +145,23 @@ class CompanyAPIClient(ConnectWiseAPIClient):
                                    *args, **kwargs)
 
 
+class SalesAPIClient(ConnectWiseAPIClient):
+    API = 'sales'
+    ENDPOINT_OPPORTUNITIES = 'opportunities'
+    ENDPOINT_OPPORTUNITY_STATUSES = \
+        '{}/statuses'.format(ENDPOINT_OPPORTUNITIES)
+
+    def get_opportunities(self, *args, **kwargs):
+        return self.fetch_resource(self.ENDPOINT_OPPORTUNITIES,
+                                   should_page=True,
+                                   *args, **kwargs)
+
+    def get_opportunity_statuses(self, *args, **kwargs):
+        return self.fetch_resource(self.ENDPOINT_OPPORTUNITY_STATUSES,
+                                   should_page=True,
+                                   *args, **kwargs)
+
+
 class SystemAPIClient(ConnectWiseAPIClient):
     API = 'system'
 

@@ -236,3 +236,22 @@ class TestCompanyAPIClient(BaseAPITestCase):
         result = self.client.get_company_statuses()
         self.assertEqual(result, fixtures.API_COMPANY_STATUS_LIST)
         self.assertRequestShouldPage(True)
+
+
+class TestSalesAPIClient(BaseAPITestCase):
+
+    def setUp(self):
+        super(TestSalesAPIClient, self).setUp()
+        self.client = api.SalesAPIClient()
+        self.endpoint = self.client._endpoint(
+            self.client.ENDPOINT_OPPORTUNITY_STATUSES)
+
+    @responses.activate
+    def test_get_opportunity_statuses(self):
+        endpoint = self.client._endpoint(
+            self.client.ENDPOINT_OPPORTUNITY_STATUSES)
+
+        mk.get(endpoint, fixtures.API_SALES_OPPORTUNITY_STATUSES)
+        result = self.client.get_opportunity_statuses()
+        self.assertEqual(result, fixtures.API_SALES_OPPORTUNITY_STATUSES)
+        self.assertRequestShouldPage(True)

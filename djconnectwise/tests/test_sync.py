@@ -2,16 +2,17 @@ from copy import deepcopy
 from unittest import TestCase
 
 from dateutil.parser import parse
+from djconnectwise.models import BoardStatus
 from djconnectwise.models import Company, CompanyStatus
 from djconnectwise.models import ConnectWiseBoard
-from djconnectwise.models import BoardStatus
 from djconnectwise.models import Location
-from djconnectwise.models import Team
+from djconnectwise.models import Member
+from djconnectwise.models import OpportunityStatus
 from djconnectwise.models import Project
+from djconnectwise.models import SyncJob
+from djconnectwise.models import Team
 from djconnectwise.models import Ticket
 from djconnectwise.models import TicketPriority
-from djconnectwise.models import Member
-from djconnectwise.models import SyncJob
 
 from . import fixtures
 from . import fixture_utils
@@ -270,6 +271,23 @@ class TestMemberSynchronization(TestCase):
         api_member = fixtures.API_MEMBER
         self._assert_member_fields(local_member, api_member)
         assert_sync_job(Member)
+
+
+class TestOpportunityStatusSynchronizer(TestCase, SynchronizerTestMixin):
+    synchronizer_class = sync.OpportunityStatusSynchronizer
+    model_class = OpportunityStatus
+    fixture = fixtures.API_SALES_OPPORTUNITY_STATUSES
+
+    def call_api(self, return_data):
+        return mocks.sales_api_get_opportunity_statuses_call(return_data)
+
+    def _assert_fields(self, instance, json_data):
+        self.assertEqual(instance.id, json_data['id'])
+        self.assertEqual(instance.name, json_data['name'])
+        self.assertEqual(instance.won_flag, json_data['wonFlag'])
+        self.assertEqual(instance.lost_flag, json_data['lostFlag'])
+        self.assertEqual(instance.closed_flag, json_data['closedFlag'])
+        self.assertEqual(instance.inactive_flag, json_data['inactiveFlag'])
 
 
 class TestTicketSynchronizer(TestCase):
