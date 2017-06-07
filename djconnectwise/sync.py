@@ -429,7 +429,8 @@ class MemberSynchronizer(Synchronizer):
         self.client = self.client_class()
         self.last_sync_job = None
 
-        sync_job_qset = models.SyncJob.objects.all()
+        sync_job_qset = models.SyncJob.objects.filter(
+            entity_name=self.model_class.__name__)
 
         if sync_job_qset.exists():
             self.last_sync_job = sync_job_qset.last()
@@ -582,6 +583,24 @@ class TicketSynchronizer(Synchronizer):
             m.identifier: m for m in models.Member.objects.all()
         }
 
+    def _assign_relation(self, ticket, json_data,
+                         json_field, model_class, model_field):
+        relation_json = json_data.get(json_field)
+        if relation_json:
+
+            try:
+                uid = relation_json['id']
+                related_instance = model_class.objects.get(pk=uid)
+                setattr(ticket, model_field, related_instance)
+            except model_class.DoesNotExist:
+                logger.warning(
+                    'Failed to find {} {} for ticket {}.'.format(
+                        json_field,
+                        uid,
+                        ticket.id
+                    )
+                )
+
     def _assign_field_data(self, instance, json_data):
         created = instance.id is None
         # If the status results in a move to a different column
@@ -602,6 +621,7 @@ class TicketSynchronizer(Synchronizer):
         instance.record_type = json_data.get('recordType')
         instance.parent_ticket_id = json_data.get('parentTicketId')
         instance.has_child_ticket = json_data.get('hasChildTicket')
+        instance.customer_updated = json_data.get('customerUpdatedFlag')
 
         for json_field, value in self.related_meta.items():
             model_class, field_name = value
