@@ -41,6 +41,7 @@ class RequestSettings:
         request_settings = {
             'timeout': 30.0,
             'batch_size': 50,
+            'max_attempts': 3,
         }
 
         if hasattr(settings, 'DJCONNECTWISE_CONF_CALLABLE'):
