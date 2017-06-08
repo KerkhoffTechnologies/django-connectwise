@@ -37,9 +37,10 @@ def get_filename_extension(filename):
 
 class RequestSettings:
     def get_settings(self):
+        # Make some defaults
         request_settings = {
-            'timeout': settings.DJCONNECTWISE_API_TIMEOUT,
-            'batch_size': settings.DJCONNECTWISE_API_BATCH_LIMIT,
+            'timeout': 30.0,
+            'batch_size': 50,
         }
 
         if hasattr(settings, 'DJCONNECTWISE_CONF_CALLABLE'):

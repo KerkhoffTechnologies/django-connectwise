@@ -2,7 +2,6 @@ from copy import deepcopy
 from unittest import TestCase
 
 from dateutil.parser import parse
-from django.conf import settings
 from djconnectwise.models import BoardStatus
 from djconnectwise.models import Company, CompanyStatus
 from djconnectwise.models import ConnectWiseBoard
@@ -516,15 +515,13 @@ class TestSyncSettings(TestCase):
 
     def test_default_batch_size(self):
         synchronizer = sync.BoardSynchronizer()
-
-        self.assertEqual(synchronizer.batch_size,
-                         settings.DJCONNECTWISE_API_BATCH_LIMIT)
+        self.assertEqual(synchronizer.batch_size, 50)
 
     def test_dynamic_batch_size(self):
         method_name = 'djconnectwise.utils.RequestSettings.get_settings'
         request_settings = {
             'batch_size': 10,
-            'timeout': 10,
+            'timeout': 10.0,
         }
         _, _patch = mocks.create_mock_call(method_name, request_settings)
 
