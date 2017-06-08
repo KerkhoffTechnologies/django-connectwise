@@ -14,19 +14,19 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='syncjob',
             name='added',
-            field=models.PositiveSmallIntegerField(default=1),
+            field=models.PositiveSmallIntegerField(null=True),
             preserve_default=False,
         ),
         migrations.AddField(
             model_name='syncjob',
             name='deleted',
-            field=models.PositiveSmallIntegerField(default=1),
+            field=models.PositiveSmallIntegerField(null=True),
             preserve_default=False,
         ),
         migrations.AddField(
             model_name='syncjob',
             name='message',
-            field=models.CharField(max_length=100, default=1, blank=True, null=True),
+            field=models.CharField(max_length=100, default=None, blank=True, null=True),
             preserve_default=False,
         ),
         migrations.AddField(
@@ -37,7 +37,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='syncjob',
             name='updated',
-            field=models.PositiveSmallIntegerField(default=1),
+            field=models.PositiveSmallIntegerField(null=True),
             preserve_default=False,
         ),
     ]

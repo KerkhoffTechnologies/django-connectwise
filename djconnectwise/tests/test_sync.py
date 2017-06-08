@@ -562,10 +562,9 @@ class TestSyncJob(TestCase):
         self.assertEqual(sync_job.success, success)
 
     def test_sync_successful(self):
-        self.assert_sync_job(*self.synchronizer.sync(), '', True)
+        self.assert_sync_job(*self.synchronizer.sync(), None, True)
 
     def test_sync_failed(self):
-
         try:
             self.synchronizer.sync_with_error()
         except Exception:

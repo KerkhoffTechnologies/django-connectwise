@@ -26,11 +26,11 @@ class SyncJob(models.Model):
     start_time = models.DateTimeField(auto_now_add=True)
     end_time = models.DateTimeField(blank=True, null=True)
     entity_name = models.CharField(max_length=100)
-    added = models.PositiveSmallIntegerField()
-    updated = models.PositiveSmallIntegerField()
-    deleted = models.PositiveSmallIntegerField()
+    added = models.PositiveIntegerField(null=True)
+    updated = models.PositiveIntegerField(null=True)
+    deleted = models.PositiveIntegerField(null=True)
     success = models.NullBooleanField()
-    message = models.CharField(max_length=100)
+    message = models.TextField(blank=True, null=True)
 
 
 class CallBackEntry(models.Model):
