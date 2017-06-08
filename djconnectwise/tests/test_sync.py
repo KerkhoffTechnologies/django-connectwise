@@ -563,7 +563,7 @@ class TestSyncJob(TestCase):
 
     def test_sync_successful(self):
         created, updated, deleted = self.synchronizer.sync()
-        self.assert_sync_job(created, updated, deleted, '', True)
+        self.assert_sync_job(created, updated, deleted, None, True)
 
     def test_sync_failed(self):
         try:
