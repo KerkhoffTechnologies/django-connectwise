@@ -5,10 +5,10 @@ from dateutil.parser import parse
 from djconnectwise import api
 from djconnectwise import models
 from djconnectwise.utils import get_hash, get_filename_extension
+from djconnectwise.utils import RequestSettings
 
 from django.core.files.base import ContentFile
 from django.utils import timezone
-from django.conf import settings
 
 
 DEFAULT_AVATAR_EXTENSION = 'jpg'
@@ -36,6 +36,9 @@ class Synchronizer:
         self.instance_map = {}
         self.client = self.client_class()
         self.load_instance_map()
+
+        request_settings = RequestSettings().get_settings()
+        self.batch_size = request_settings['batch_size']
 
     def _assign_relation(self, ticket, json_data,
                          json_field, model_class, model_field):
@@ -72,11 +75,11 @@ class Synchronizer:
                 'Fetching {} records, batch {}'.format(self.model_class, page)
             )
             page_records = self.get_page(
-                page=page, page_size=settings.DJCONNECTWISE_API_BATCH_LIMIT
+                page=page, page_size=self.batch_size
             )
             records += page_records
             page += 1
-            if len(page_records) < settings.DJCONNECTWISE_API_BATCH_LIMIT:
+            if len(page_records) < self.batch_size:
                 # This page wasn't full, so there's no more records after
                 # this page.
                 break
@@ -477,11 +480,11 @@ class MemberSynchronizer(Synchronizer):
                 'Fetching member records, batch {}'.format(page)
             )
             page_records = self.get_page(
-                page=page, page_size=settings.DJCONNECTWISE_API_BATCH_LIMIT
+                page=page, page_size=self.batch_size
             )
             records += page_records
             page += 1
-            if len(page_records) < settings.DJCONNECTWISE_API_BATCH_LIMIT:
+            if len(page_records) < self.batch_size:
                 # No more records
                 break
         return records
