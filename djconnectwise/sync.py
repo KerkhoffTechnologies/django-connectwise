@@ -19,12 +19,25 @@ logger = logging.getLogger(__name__)
 def log_sync_job(f):
     def wrapper(*args, **kwargs):
         sync_instance = args[0]
-        sync_job = models.SyncJob.objects.create()
-        result = f(*args, **kwargs)
-        sync_job.end_time = timezone.now()
-        sync_job.entity_name = sync_instance.model_class.__name__
-        sync_job.save()
-        return result
+        created_count = updated_count = deleted_count = 0
+        sync_job = models.SyncJob()
+
+        try:
+            created_count, updated_count, deleted_count = f(*args, **kwargs)
+            sync_job.success = True
+        except Exception as e:
+            sync_job.message = str(e.args[0])
+            sync_job.success = False
+            raise
+        finally:
+            sync_job.end_time = timezone.now()
+            sync_job.entity_name = sync_instance.model_class.__name__
+            sync_job.added = created_count
+            sync_job.updated = updated_count
+            sync_job.deleted = deleted_count
+            sync_job.save()
+
+        return created_count, updated_count, deleted_count
     return wrapper
 
 
