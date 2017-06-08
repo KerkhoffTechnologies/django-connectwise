@@ -213,7 +213,6 @@ class CompanyManager(models.Manager):
 
 class Company(TimeStampedModel):
     name = models.CharField(blank=True, null=True, max_length=250)
-    company_alias = models.CharField(blank=True, null=True, max_length=250)
     identifier = models.CharField(
         blank=True, null=True, max_length=250)
     phone_number = models.CharField(blank=True, null=True, max_length=250)
@@ -246,10 +245,7 @@ class Company(TimeStampedModel):
         return self.get_identifier() or ''
 
     def get_identifier(self):
-        identifier = self.identifier
-        if settings.DJCONNECTWISE_COMPANY_ALIAS:
-            identifier = self.company_alias or self.identifier
-        return identifier
+        return self.identifier
 
 
 class CompanyStatus(models.Model):
