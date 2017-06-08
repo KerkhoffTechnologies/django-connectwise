@@ -26,11 +26,11 @@ class SyncJob(models.Model):
     start_time = models.DateTimeField(auto_now_add=True)
     end_time = models.DateTimeField(blank=True, null=True)
     entity_name = models.CharField(max_length=100)
-    added = models.PositiveSmallIntegerField()
-    updated = models.PositiveSmallIntegerField()
-    deleted = models.PositiveSmallIntegerField()
+    added = models.PositiveIntegerField(null=True)
+    updated = models.PositiveIntegerField(null=True)
+    deleted = models.PositiveIntegerField(null=True)
     success = models.NullBooleanField()
-    message = models.CharField(max_length=100)
+    message = models.TextField(blank=True, null=True)
 
 
 class CallBackEntry(models.Model):
@@ -220,7 +220,6 @@ class CompanyManager(models.Manager):
 
 class Company(TimeStampedModel):
     name = models.CharField(blank=True, null=True, max_length=250)
-    company_alias = models.CharField(blank=True, null=True, max_length=250)
     identifier = models.CharField(
         blank=True, null=True, max_length=250)
     phone_number = models.CharField(blank=True, null=True, max_length=250)
@@ -253,10 +252,7 @@ class Company(TimeStampedModel):
         return self.get_identifier() or ''
 
     def get_identifier(self):
-        identifier = self.identifier
-        if settings.DJCONNECTWISE_COMPANY_ALIAS:
-            identifier = self.company_alias or self.identifier
-        return identifier
+        return self.identifier
 
 
 class CompanyStatus(models.Model):
@@ -391,6 +387,9 @@ class Project(TimeStampedModel):
 class OpportunityStage(TimeStampedModel):
     name = models.CharField(max_length=50)
 
+    def __str__(self):
+        return self.name
+
 
 class OpportunityStatus(TimeStampedModel):
     class Meta:
@@ -402,14 +401,23 @@ class OpportunityStatus(TimeStampedModel):
     closed_flag = models.BooleanField(default=False)
     inactive_flag = models.BooleanField(default=False)
 
+    def __str__(self):
+        return self.name
+
 
 class OpportunityPriority(TimeStampedModel):
     name = models.CharField(max_length=50)
+
+    def __str__(self):
+        return self.name
 
 
 class OpportunityType(TimeStampedModel):
     description = models.CharField(max_length=50)
     inactive_flag = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.description
 
 
 class Opportunity(TimeStampedModel):
@@ -441,6 +449,9 @@ class Opportunity(TimeStampedModel):
     closed_by = models.ForeignKey('Member',
                                   blank=True, null=True,
                                   related_name='opportunity_closed_by')
+
+    def __str__(self):
+        return self.name
 
 
 class Ticket(TimeStampedModel):

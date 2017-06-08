@@ -8,12 +8,12 @@ import django_extensions.db.fields
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('djconnectwise', '0022_auto_20170605_0705'),
+        ('djconnectwise', '0024_opportunitystage'),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='OpportunityStage',
+            name='OpportunityPriority',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', primary_key=True, serialize=False, auto_created=True)),
                 ('created', django_extensions.db.fields.CreationDateTimeField(verbose_name='created', auto_now_add=True)),

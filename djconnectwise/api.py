@@ -19,6 +19,10 @@ class ConnectWiseRecordNotFoundError(ConnectWiseAPIError):
 
 CW_RESPONSE_MAX_RECORDS = 1000  # The greatest number of records ConnectWise
 # will send us in one response.
+RETRY_WAIT_EXPONENTIAL_MULTAPPLIER = 1000  # Initial number of milliseconds to
+# wait before retrying a request.
+RETRY_WAIT_EXPONENTIAL_MAX = 10000  # Maximum number of milliseconds to wait
+# before retrying a request.
 CW_DEFAULT_PAGE = 1  # CW Pagination is 1-indexed
 CONTENT_DISPOSITION_RE = re.compile(
     '^attachment; filename=\"{0,1}(.*?)\"{0,1}$'
@@ -85,11 +89,11 @@ class ConnectWiseAPIClient(object):
 
         Note: retry_counter is used specifically for testing.
         It is a dict in the form {'count': 0} that is passed in
-        to verify the number of attempts that were made
+        to verify the number of attempts that were made.
         """
-        @retry(stop_max_attempt_number=self.request_settings['retries'],
-               wait_exponential_multiplier=1000,
-               wait_exponential_max=10000)
+        @retry(stop_max_attempt_number=self.request_settings['max_attempts'],
+               wait_exponential_multiplier=RETRY_WAIT_EXPONENTIAL_MULTAPPLIER,
+               wait_exponential_max=RETRY_WAIT_EXPONENTIAL_MAX)
         def _fetch_resource(endpoint_url, params=None, should_page=False,
                             retry_counter=None,
                             *args, **kwargs):

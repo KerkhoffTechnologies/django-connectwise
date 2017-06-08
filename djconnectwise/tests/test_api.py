@@ -1,7 +1,5 @@
 import responses
 
-
-from django.conf import settings
 from django.test import TestCase
 
 from .. import api
@@ -284,14 +282,13 @@ class TestAPISettings(TestCase):
 
     def test_default_timeout(self):
         client = api.ServiceAPIClient()
-        self.assertEqual(client.timeout,
-                         settings.DJCONNECTWISE_API_TIMEOUT)
+        self.assertEqual(client.timeout, 30.0)
 
     def test_dynamic_batch_size(self):
         method_name = 'djconnectwise.utils.RequestSettings.get_settings'
         request_settings = {
             'batch_size': 10,
-            'timeout': 10,
+            'timeout': 10.0,
         }
         _, _patch = mk.create_mock_call(method_name, request_settings)
         client = api.ServiceAPIClient()
@@ -307,4 +304,4 @@ class TestAPISettings(TestCase):
             client.fetch_resource('localhost/some-bad-url',
                                   retry_counter=retry_counter)
             self.assertEqual(retry_counter['count'],
-                             client.request_settings['retries'])
+                             client.request_settings['max_attempts'])

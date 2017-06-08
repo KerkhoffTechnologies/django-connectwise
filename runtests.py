@@ -42,10 +42,6 @@ settings.configure(
     MEDIA_ROOT=tmp_media.name,
     USE_TZ=True,  # Prevent 'ValueError: SQLite backend does not support
     # timezone-aware datetimes when USE_TZ is False.'
-    DJCONNECTWISE_COMPANY_ALIAS=False,
-    DJCONNECTWISE_API_BATCH_LIMIT=25,
-    DJCONNECTWISE_API_TIMEOUT=10.0,
-    DJCONNECTWISE_API_REQUEST_RETRIES=2,
     ROOT_URLCONF='djconnectwise.tests.urls',
     DJCONNECTWISE_CALLBACK_PROTOCOL='http' if DEBUG else 'https',
     DJCONNECTWISE_TEST_DOMAIN='localhost'
