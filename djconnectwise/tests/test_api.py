@@ -304,4 +304,4 @@ class TestAPISettings(TestCase):
             client.fetch_resource('localhost/some-bad-url',
                                   retry_counter=retry_counter)
             self.assertEqual(retry_counter['count'],
-                             client.request_settings['retries'])
+                             client.request_settings['max_attempts'])
