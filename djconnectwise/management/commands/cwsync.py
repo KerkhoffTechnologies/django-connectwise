@@ -33,6 +33,8 @@ class Command(BaseCommand):
                 _('Opportunity Status')),
             ('opportunity_type', sync.OpportunityTypeSynchronizer,
                 _('Opportunity Type')),
+            ('opportunity', sync.OpportunitySynchronizer,
+                _('Opportunity')),
             ('ticket', sync.TicketSynchronizer, _('Ticket')),
         )
         self.synchronizer_map = OrderedDict()

@@ -384,6 +384,9 @@ class Project(TimeStampedModel):
 class OpportunityStage(TimeStampedModel):
     name = models.CharField(max_length=50)
 
+    def __str__(self):
+        return self.name
+
 
 class OpportunityStatus(TimeStampedModel):
     class Meta:
@@ -395,14 +398,57 @@ class OpportunityStatus(TimeStampedModel):
     closed_flag = models.BooleanField(default=False)
     inactive_flag = models.BooleanField(default=False)
 
+    def __str__(self):
+        return self.name
+
 
 class OpportunityPriority(TimeStampedModel):
     name = models.CharField(max_length=50)
+
+    def __str__(self):
+        return self.name
 
 
 class OpportunityType(TimeStampedModel):
     description = models.CharField(max_length=50)
     inactive_flag = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.description
+
+
+class Opportunity(TimeStampedModel):
+    name = models.CharField(max_length=100)
+    expected_close_date = models.DateField()
+    notes = models.TextField()
+    source = models.CharField(max_length=100, blank=True, null=True)
+
+    location_id = models.IntegerField()
+    business_unit_id = models.IntegerField()
+    customer_po = models.CharField(max_length=100, blank=True, null=True)
+    pipeline_change_date = models.DateTimeField(blank=True, null=True)
+    date_became_lead = models.DateTimeField(blank=True, null=True)
+    closed_date = models.DateTimeField(blank=True, null=True)
+
+    type = models.ForeignKey('OpportunityType', blank=True, null=True)
+    stage = models.ForeignKey('OpportunityStage')
+    status = models.ForeignKey('OpportunityStatus', blank=True, null=True)
+    priority = models.ForeignKey('OpportunityPriority')
+    primary_sales_rep = models.ForeignKey('Member',
+                                          blank=True, null=True,
+                                          related_name='opportunity_primary')
+    secondary_sales_rep = models.ForeignKey(
+        'Member',
+        blank=True, null=True,
+        related_name='opportunity_secondary')
+
+    company = models.ForeignKey('Company', blank=True, null=True)
+    closed_by = models.ForeignKey('Member',
+                                  blank=True, null=True,
+                                  related_name='opportunity_closed_by')
+
+    def __str__(self):
+        return self.name
 
 
 class Ticket(TimeStampedModel):
