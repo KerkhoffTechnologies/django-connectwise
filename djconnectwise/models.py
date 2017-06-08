@@ -384,6 +384,9 @@ class Project(TimeStampedModel):
 class OpportunityStage(TimeStampedModel):
     name = models.CharField(max_length=50)
 
+    def __str__(self):
+        return self.name
+
 
 class OpportunityStatus(TimeStampedModel):
     class Meta:
@@ -395,14 +398,23 @@ class OpportunityStatus(TimeStampedModel):
     closed_flag = models.BooleanField(default=False)
     inactive_flag = models.BooleanField(default=False)
 
+    def __str__(self):
+        return self.name
+
 
 class OpportunityPriority(TimeStampedModel):
     name = models.CharField(max_length=50)
+
+    def __str__(self):
+        return self.name
 
 
 class OpportunityType(TimeStampedModel):
     description = models.CharField(max_length=50)
     inactive_flag = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.description
 
 
 class Opportunity(TimeStampedModel):
@@ -434,6 +446,9 @@ class Opportunity(TimeStampedModel):
     closed_by = models.ForeignKey('Member',
                                   blank=True, null=True,
                                   related_name='opportunity_closed_by')
+
+    def __str__(self):
+        return self.name
 
 
 class Ticket(TimeStampedModel):

@@ -41,7 +41,6 @@ class Synchronizer:
                          json_field, model_class, model_field):
         relation_json = json_data.get(json_field)
         if relation_json:
-
             try:
                 uid = relation_json['id']
                 related_instance = model_class.objects.get(pk=uid)
@@ -748,6 +747,7 @@ class OpportunitySynchronizer(Synchronizer):
             instance.id = json_data['id']
             instance.name = json_data['name']
             instance.save()
+            instance_map[instance.id] = instance
         return instance
 
     def _assign_field_data(self, instance, json_data):
