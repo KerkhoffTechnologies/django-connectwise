@@ -28,6 +28,7 @@ setup(
         'django-model-utils',
         'django-braces',
         'django-extensions',
+        'retrying',
     ],
     test_suite='runtests.suite',
     tests_require=[

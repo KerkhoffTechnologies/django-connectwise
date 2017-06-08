@@ -1,2 +1,1 @@
-requests
-# Additional requirements go here
+# Don't use this- use `install_requires` in setup.py.
