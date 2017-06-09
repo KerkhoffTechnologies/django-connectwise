@@ -1,10 +1,14 @@
 import logging
-
-from django.conf import settings
-from djconnectwise.utils import RequestSettings
+from urllib.parse import urlparse
+from urllib.parse import urljoin
 import re
+
 import requests
 from retrying import retry
+
+from django.conf import settings
+from django.core.cache import cache
+from djconnectwise.utils import RequestSettings
 
 
 class ConnectWiseAPIError(Exception):
@@ -16,6 +20,8 @@ class ConnectWiseRecordNotFoundError(ConnectWiseAPIError):
     """The record was not found."""
     pass
 
+
+CW_CLOUD_DOMAIN = 'myconnectwise.net'
 
 CW_RESPONSE_MAX_RECORDS = 1000  # The greatest number of records ConnectWise
 # will send us in one response.
@@ -29,6 +35,42 @@ CONTENT_DISPOSITION_RE = re.compile(
 )
 
 logger = logging.getLogger(__name__)
+
+
+def fetch_api_codebase(server_url):
+    """
+    Returns the Codebase value for the hosted Connectwise instance
+    at the supplied URL. The Codebase is retrieved from the cache
+    or, if it is not found, it is retrieved from the corresponding
+    companyinfo endpoint. If the Codebase lookup attempt fails in both
+    cases, the settings.CONNECTWISE_CREDENTIALS['api_codebase'] is used
+    as a last resort.
+    """
+    api_codebase_key = 'api_codebase'
+    api_codebase = settings.CONNECTWISE_CREDENTIALS[api_codebase_key]
+
+    if CW_CLOUD_DOMAIN in server_url:
+        if api_codebase_key in cache:
+            api_codebase = cache.get(api_codebase_key)
+        else:
+            companyinfo_path = '/login/companyinfo/connectwise'
+            parsed_uri = urlparse(server_url)
+            domain = '{uri.scheme}://{uri.netloc}/'.format(uri=parsed_uri)
+            company_endpoint = urljoin(domain, companyinfo_path)
+
+            try:
+                response = requests.get(company_endpoint)
+
+                if 200 <= response.status_code < 300:
+                    company_info_json = response.json()
+                    api_codebase = company_info_json['Codebase']
+                    cache.set(api_codebase_key, api_codebase)
+
+            except requests.RequestException as e:
+                msg = 'Request failed: GET {}: {}'
+                logger.error(msg.format(company_endpoint, e))
+
+    return api_codebase
 
 
 class ConnectWiseAPIClient(object):
