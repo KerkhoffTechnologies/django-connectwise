@@ -95,7 +95,8 @@ class ConnectWiseAPIClient(object):
                 'api_private_key'
             ]
         if not api_codebase:
-            api_codebase = settings.CONNECTWISE_CREDENTIALS['api_codebase']
+            api_codebase = fetch_api_codebase(server_url)
+
         if not self.API:
             raise ValueError('API not specified')
 

@@ -348,5 +348,3 @@ class TestFetchAPICodebase(TestCase):
                   fixtures.API_COMPANY_INFO['Codebase'])
         api_codebase = fetch_api_codebase(self._some_end_point())
         self.assertEqual(api_codebase, cache.get('api_codebase'))
-
-    
