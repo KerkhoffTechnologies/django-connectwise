@@ -511,6 +511,17 @@ class TestTicketSynchronizer(TestCase):
         self.assertEqual(ticket_qset.count(), 0)
         _patch.stop()
 
+    def test_manage_member_assignments_last_resource_removed(self):
+        # ticket with no resources should have all members removed
+        fixture_utils.init_tickets()
+
+        ticket = Ticket.objects.filter(members__isnull=False).first()
+        ticket.resources = None
+        synchronizer = sync.TicketSynchronizer()
+        synchronizer._manage_member_assignments(ticket)
+
+        self.assertEqual(ticket.members.all().count(), 0)
+
 
 class TestSyncSettings(TestCase):
 
