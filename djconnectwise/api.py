@@ -16,6 +16,12 @@ class ConnectWiseAPIError(Exception):
     pass
 
 
+class ConnectWiseAPIClientError(Exception):
+    """Raise this to indicate any http error that falls
+    within the The 4xx class of http status codes."""
+    pass
+
+
 class ConnectWiseRecordNotFoundError(ConnectWiseAPIError):
     """The record was not found."""
     pass
@@ -71,6 +77,10 @@ def fetch_api_codebase(server_url):
                 logger.error(msg.format(company_endpoint, e))
 
     return api_codebase
+
+
+def retry_if_api_error(exception):
+    return isinstance(exception, ConnectWiseAPIError)
 
 
 class ConnectWiseAPIClient(object):
@@ -136,7 +146,8 @@ class ConnectWiseAPIClient(object):
         """
         @retry(stop_max_attempt_number=self.request_settings['max_attempts'],
                wait_exponential_multiplier=RETRY_WAIT_EXPONENTIAL_MULTAPPLIER,
-               wait_exponential_max=RETRY_WAIT_EXPONENTIAL_MAX)
+               wait_exponential_max=RETRY_WAIT_EXPONENTIAL_MAX,
+               retry_on_exception=retry_if_api_error)
         def _fetch_resource(endpoint_url, params=None, should_page=False,
                             retry_counter=None,
                             *args, **kwargs):
@@ -166,10 +177,16 @@ class ConnectWiseAPIClient(object):
 
             if 200 <= response.status_code < 300:
                 return response.json()
+
             if response.status_code == 404:
                 msg = 'Resource {} was not found.'.format(response.url)
                 logger.warning(msg)
                 raise ConnectWiseRecordNotFoundError(msg)
+
+            elif 400 <= response.status_code < 499:
+                self._log_failed(response)
+                raise ConnectWiseAPIClientError(response.content)
+
             else:
                 self._log_failed(response)
                 raise ConnectWiseAPIError(response.content)

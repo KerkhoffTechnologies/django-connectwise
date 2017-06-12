@@ -10,7 +10,8 @@ from .. import api
 from . import fixtures
 from . import mocks as mk
 
-from djconnectwise.api import ConnectWiseAPIError, fetch_api_codebase
+from djconnectwise.api import ConnectWiseAPIError, ConnectWiseAPIClientError
+from djconnectwise.api import fetch_api_codebase
 
 
 API_URL = 'https://localhost/v4_6_release/apis/3.0/system/members/count'
@@ -308,6 +309,31 @@ class TestAPISettings(TestCase):
                                   retry_counter=retry_counter)
             self.assertEqual(retry_counter['count'],
                              client.request_settings['max_attempts'])
+
+    @responses.activate
+    def test_no_retry_attempts_in_400_range(self):
+        client = api.ServiceAPIClient()
+        endpoint = client._endpoint(
+            api.ServiceAPIClient.ENDPOINT_TICKETS)
+
+        tested_status_codes = []
+        http_400_range = list(range(400, 499))
+        # remove 404 code
+        http_400_range.pop(4)
+
+        for status_code in http_400_range:
+
+            retry_counter = {'count': 0}
+            try:
+                mk.get(endpoint, {}, status=status_code)
+                client.fetch_resource(
+                    api.ServiceAPIClient.ENDPOINT_TICKETS,
+                    retry_counter=retry_counter)
+            except ConnectWiseAPIClientError:
+                self.assertEqual(retry_counter['count'], 0)
+                tested_status_codes.append(status_code)
+
+        self.assertEqual(tested_status_codes, http_400_range)
 
 
 class TestFetchAPICodebase(TestCase):
