@@ -646,6 +646,7 @@ class TicketSynchronizer(Synchronizer):
 
     def _manage_member_assignments(self, ticket):
         if not ticket.resources:
+            ticket.members.clear()
             return
 
         ticket_assignments = {}
