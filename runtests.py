@@ -44,7 +44,13 @@ settings.configure(
     # timezone-aware datetimes when USE_TZ is False.'
     ROOT_URLCONF='djconnectwise.tests.urls',
     DJCONNECTWISE_CALLBACK_PROTOCOL='http' if DEBUG else 'https',
-    DJCONNECTWISE_TEST_DOMAIN='localhost'
+    DJCONNECTWISE_TEST_DOMAIN='localhost',
+    CACHES={
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'LOCATION': 'unique-snowflake',
+        }
+    }
 )
 
 
