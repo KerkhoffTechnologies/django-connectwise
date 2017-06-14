@@ -20,6 +20,11 @@ def create_mock_call(method_name, return_value, side_effect=None):
     return mock_get_call, _patch
 
 
+def company_info_get_company_info_call(return_value):
+    method_name = 'djconnectwise.api.CompanyInfoManager.get_company_info'
+    return create_mock_call(method_name, return_value)
+
+
 def company_api_get_call(return_value):
     method_name = 'djconnectwise.api.CompanyAPIClient.get_companies'
     return create_mock_call(method_name, return_value)

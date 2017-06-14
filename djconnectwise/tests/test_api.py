@@ -10,6 +10,7 @@ from . import fixtures
 from . import mocks as mk
 
 from djconnectwise.api import ConnectWiseAPIError, ConnectWiseAPIClientError
+from djconnectwise.api import ConnectWiseRecordNotFoundError
 from djconnectwise.api import CompanyInfoManager
 
 
@@ -243,6 +244,54 @@ class TestCompanyAPIClient(BaseAPITestCase):
         self.assertRequestShouldPage(True)
 
 
+class TestFetchAPICodebase(TestCase):
+    HOST = 'https://na.myconnectwise.net'
+
+    def setUp(self):
+        self.manager = CompanyInfoManager()
+
+    def _some_end_point(self):
+        return urljoin(self.HOST, 'some-endpoint')
+
+    def test_fetch_api_codebase_bad_url(self):
+        api_codebase, updated = self.manager.fetch_api_codebase('')
+        self.assertEqual(api_codebase,
+                         api.CW_API_CODE_BASE)
+
+    @responses.activate
+    def test_fetch_api_company_info_endpoint_unavailable(self):
+        mk.get(urljoin(self.HOST, api.CompanyInfoManager.COMPANYINFO_PATH),
+               fixtures.API_COMPANY_INFO,
+               status=503)
+        cache.clear()
+        with self.assertRaises(ConnectWiseAPIError):
+            endpoint = self._some_end_point()
+            api_codebase, updated = self.manager.fetch_api_codebase(endpoint)
+
+    @responses.activate
+    def test_fetch_api_codebase_added_to_cache(self):
+        cache.clear()
+        mk.get(urljoin(self.HOST, api.CompanyInfoManager.COMPANYINFO_PATH),
+               fixtures.API_COMPANY_INFO)
+
+        api_codebase, updated = self.manager.fetch_api_codebase(
+            self._some_end_point(),
+            update_cache=True)
+
+        self.assertEqual(api_codebase, fixtures.API_COMPANY_INFO['Codebase'])
+        self.assertEqual(api_codebase, cache.get('api_codebase'))
+
+    def test_fetch_api_codebase_from_warm_cache(self):
+        cache.set('api_codebase',
+                  fixtures.API_COMPANY_INFO['Codebase'])
+        mock_get_call, _patch = \
+            mk.company_info_get_company_info_call(fixtures.API_COMPANY_INFO)
+        api_codebase, updated = self.manager.fetch_api_codebase(
+            self._some_end_point())
+        self.assertEqual(api_codebase, cache.get('api_codebase'))
+        _patch.stop()
+
+
 class TestSalesAPIClient(BaseAPITestCase):
 
     def setUp(self):
@@ -282,6 +331,10 @@ class TestSalesAPIClient(BaseAPITestCase):
 
 
 class TestAPISettings(TestCase):
+
+    def get_cloud_client(self):
+        server_url = 'https://{}'.format(api.CW_CLOUD_DOMAIN)
+        return api.ServiceAPIClient(server_url=server_url)
 
     def test_default_timeout(self):
         client = api.ServiceAPIClient()
@@ -329,53 +382,78 @@ class TestAPISettings(TestCase):
                     api.ServiceAPIClient.ENDPOINT_TICKETS,
                     retry_counter=retry_counter)
             except ConnectWiseAPIClientError:
-                self.assertEqual(retry_counter['count'], 0)
+                self.assertEqual(retry_counter['count'], 1)
                 tested_status_codes.append(status_code)
 
         self.assertEqual(tested_status_codes, http_400_range)
 
+    @responses.activate
+    def test_no_retry_attempts_404_default_code_base(self):
+        """
+        Request should not be retried if a 404 is thrown, when
+        request contains default codebase in url
+        """
+        client = api.ServiceAPIClient()
+        mock_get_call, _patch = \
+            mk.company_info_get_company_info_call(fixtures.API_COMPANY_INFO)
+        endpoint = client._endpoint(
+            api.ServiceAPIClient.ENDPOINT_TICKETS)
 
-class TestFetchAPICodebase(TestCase):
-    HOST = 'https://na.myconnectwise.net'
+        retry_counter = {'count': 0}
+        mk.get(endpoint, {}, status=404)
 
-    def setUp(self):
-        self.manager = CompanyInfoManager()
+        with self.assertRaises(ConnectWiseRecordNotFoundError):
+            client.fetch_resource(
+                api.ServiceAPIClient.ENDPOINT_TICKETS,
+                retry_counter=retry_counter)
 
-    def _some_end_point(self):
-        return urljoin(self.HOST, 'some-endpoint')
-
-    def test_fetch_api_codebase_bad_url(self):
-        api_codebase, updated = self.manager.fetch_api_codebase('')
-        self.assertEqual(api_codebase,
-                         api.CW_API_CODE_BASE)
+        self.assertEqual(retry_counter['count'], 1)
+        _patch.stop()
 
     @responses.activate
-    def test_fetch_api_company_info_endpoint_unavailable(self):
-        path = "/login/companyinfo/connectwise"
-        mk.get(urljoin(self.HOST, path), fixtures.API_COMPANY_INFO,
-               status=503)
+    def test_retry_attempts_cloud_domain_cold_cache(self):
+        """
+        Request should  be retried if a 404 is thrown, when
+        request contains the cw domain and the CodeBase value
+        is not found in the cache
+        """
+        mock_get_call, _patch = \
+            mk.company_info_get_company_info_call(fixtures.API_COMPANY_INFO)
+        client = self.get_cloud_client()
 
-        cache.clear()
-        with self.assertRaises(ConnectWiseAPIError):
-            endpoint = self._some_end_point()
-            api_codebase, updated = self.manager.fetch_api_codebase(endpoint)
+        endpoint = client._endpoint(
+            api.ServiceAPIClient.ENDPOINT_TICKETS)
+
+        retry_counter = {'count': 0}
+        mk.get(endpoint, {}, status=404)
+        _patch.stop()
+
+        with self.assertRaises(ConnectWiseRecordNotFoundError):
+            client.fetch_resource(
+                api.ServiceAPIClient.ENDPOINT_TICKETS,
+                retry_counter=retry_counter)
+        self.assertEqual(retry_counter['count'],
+                         api.ServiceAPIClient.MAX_404_ATTEMPTS + 1)
 
     @responses.activate
-    def test_fetch_api_codebase_added_to_cache(self):
-        self.assertIsNone(cache.get('api_codebase'))
-        path = "/login/companyinfo/connectwise"
-        mk.get(urljoin(self.HOST, path), fixtures.API_COMPANY_INFO)
-
-        api_codebase, updated = self.manager.fetch_api_codebase(
-            self._some_end_point(),
-            update_cache=True)
-
-        self.assertEqual(api_codebase, fixtures.API_COMPANY_INFO['Codebase'])
-        self.assertEqual(api_codebase, cache.get('api_codebase'))
-
-    def test_fetch_api_codebase_from_warm_cache(self):
+    def test_retry_attempts_cloud_domain_warm_cache(self):
+        """
+        Request should  be retried if a 404 is thrown, when
+        request contains the cw domain and the CodeBase value
+        is found in the cache
+        """
         cache.set('api_codebase',
                   fixtures.API_COMPANY_INFO['Codebase'])
-        api_codebase, updated = self.manager.fetch_api_codebase(
-            self._some_end_point())
-        self.assertEqual(api_codebase, cache.get('api_codebase'))
+        client = self.get_cloud_client()
+        endpoint = client._endpoint(
+            api.ServiceAPIClient.ENDPOINT_TICKETS)
+
+        retry_counter = {'count': 0}
+        mk.get(endpoint, {}, status=404)
+
+        with self.assertRaises(ConnectWiseRecordNotFoundError):
+            client.fetch_resource(
+                api.ServiceAPIClient.ENDPOINT_TICKETS,
+                retry_counter=retry_counter)
+        self.assertEqual(retry_counter['count'],
+                         api.ServiceAPIClient.MAX_404_ATTEMPTS + 1)

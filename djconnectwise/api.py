@@ -46,12 +46,12 @@ logger = logging.getLogger(__name__)
 
 
 class CompanyInfoManager:
+    COMPANYINFO_PATH = '/login/companyinfo/connectwise'
 
     def get_company_info(self, server_url):
-        companyinfo_path = '/login/companyinfo/connectwise'
         parsed_uri = urlparse(server_url)
         domain = '{uri.scheme}://{uri.netloc}/'.format(uri=parsed_uri)
-        company_endpoint = urljoin(domain, companyinfo_path)
+        company_endpoint = urljoin(domain, self.COMPANYINFO_PATH)
 
         try:
             response = requests.get(company_endpoint)
@@ -98,15 +98,12 @@ class CompanyInfoManager:
 
 
 def retry_if_api_error(exception):
-    return isinstance(exception, ConnectWiseAPIError)
-
-
-def retry_if_company_info_required(result):
-    return result is COMPANY_INFO_REQUIRED
+    return type(exception) is ConnectWiseAPIError
 
 
 class ConnectWiseAPIClient(object):
     API = None
+    MAX_404_ATTEMPTS = 1
 
     def __init__(
         self,
@@ -130,35 +127,35 @@ class ConnectWiseAPIClient(object):
         if not self.API:
             raise ValueError('API not specified')
 
+        self.info_manager = CompanyInfoManager()
         self.api_public_key = api_public_key
         self.api_private_key = api_private_key
-        self.api_codebase = api_codebase
-
-        self.server_url = '{0}/{1}/apis/3.0/{2}/'.format(
-            server_url,
-            self.api_codebase,
-            self.API,
-        )
-
+        self.server_url = self.host = server_url
         self.auth = ('{0}+{1}'.format(company_id, self.api_public_key),
                      '{0}'.format(self.api_private_key),)
 
         self.request_settings = RequestSettings().get_settings()
         self.timeout = self.request_settings['timeout']
+        self.build_server_url()
 
     def _endpoint(self, path):
-        return '{0}{1}'.format(self.get_server_url(), path)
+        return '{0}{1}'.format(self.server_url, path)
 
     def _log_failed(self, response):
         logger.error('FAILED API CALL: {0} - {1} - {2}'.format(
             response.url, response.status_code, response.content))
 
-    def get_server_url(self):
-        return '{0}/{1}/apis/3.0/{2}/'.format(
-            self.server_url,
-            self.api_codebase,
-            self.API,
-        )
+    def build_server_url(self, update_cache=False):
+        self.api_codebase, self.cache_updated = \
+            self.info_manager.fetch_api_codebase(self.server_url,
+                                                 update_cache=update_cache)
+
+        if self.cache_updated:
+            self.server_url = '{0}/{1}/apis/3.0/{2}/'.format(
+                self.server_url,
+                self.api_codebase,
+                self.API,
+            )
 
     def fetch_resource(self, endpoint_url, params=None, should_page=False,
                        retry_counter=None,
@@ -171,19 +168,13 @@ class ConnectWiseAPIClient(object):
         It is a dict in the form {'count': 0} that is passed in
         to verify the number of attempts that were made.
         """
-        info_manager = CompanyInfoManager()
-        self.api_codebase, cache_updated = info_manager.fetch_api_codebase(
-            endpoint_url)
-
         @retry(stop_max_attempt_number=self.request_settings['max_attempts'],
                wait_exponential_multiplier=RETRY_WAIT_EXPONENTIAL_MULTAPPLIER,
                wait_exponential_max=RETRY_WAIT_EXPONENTIAL_MAX,
-               retry_on_exception=retry_if_api_error,
-               retry_on_result=retry_if_company_info_required)
+               retry_on_exception=retry_if_api_error)
         def _fetch_resource(endpoint_url, params=None, should_page=False,
                             retry_counter=None,
                             *args, **kwargs):
-
             if not retry_counter:
                 retry_counter = {'count': 0}
 
@@ -213,25 +204,30 @@ class ConnectWiseAPIClient(object):
                 return response.json()
 
             if response.status_code == 404:
-                msg = 'Resource {} was not found.'.format(response.url)
+                msg = '404 Resource {} was not found.'.format(response.url)
                 logger.warning(msg)
 
-                if retry_counter['count'] == 1:
-                    return COMPANY_INFO_REQUIRED
-
+                # If this is the first attempt, try updating the
+                # company info Codebase value and retry the request.
+                if retry_counter['count'] <= self.MAX_404_ATTEMPTS:
+                    self.build_server_url(update_cache=True)
+                    if self.cache_updated:
+                        raise ConnectWiseAPIError(response.content)
                 raise ConnectWiseRecordNotFoundError(msg)
 
             elif 400 <= response.status_code < 499:
                 self._log_failed(response)
-
                 raise ConnectWiseAPIClientError(response.content)
 
             else:
                 self._log_failed(response)
                 raise ConnectWiseAPIError(response.content)
 
+        if not retry_counter:
+            retry_counter = {'count': 0}
         return _fetch_resource(endpoint_url, params=params,
                                should_page=should_page,
+                               retry_counter=retry_counter,
                                *args, **kwargs)
 
 
