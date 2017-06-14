@@ -27,7 +27,9 @@ class ConnectWiseRecordNotFoundError(ConnectWiseAPIError):
     pass
 
 
+COMPANY_INFO_REQUIRED = 'company-info-required'
 CW_CLOUD_DOMAIN = 'myconnectwise.net'
+CW_API_CODE_BASE = 'v4_6_release'
 
 CW_RESPONSE_MAX_RECORDS = 1000  # The greatest number of records ConnectWise
 # will send us in one response.
@@ -43,44 +45,64 @@ CONTENT_DISPOSITION_RE = re.compile(
 logger = logging.getLogger(__name__)
 
 
-def fetch_api_codebase(server_url):
-    """
-    Returns the Codebase value for the hosted Connectwise instance
-    at the supplied URL. The Codebase is retrieved from the cache
-    or, if it is not found, it is retrieved from the corresponding
-    companyinfo endpoint. If the Codebase lookup attempt fails in both
-    cases, the settings.CONNECTWISE_CREDENTIALS['api_codebase'] is used
-    as a last resort.
-    """
-    api_codebase_key = 'api_codebase'
-    api_codebase = settings.CONNECTWISE_CREDENTIALS[api_codebase_key]
+class CompanyInfoManager:
 
-    if CW_CLOUD_DOMAIN in server_url:
-        if api_codebase_key in cache:
+    def get_company_info(self, server_url):
+        companyinfo_path = '/login/companyinfo/connectwise'
+        parsed_uri = urlparse(server_url)
+        domain = '{uri.scheme}://{uri.netloc}/'.format(uri=parsed_uri)
+        company_endpoint = urljoin(domain, companyinfo_path)
+
+        try:
+            response = requests.get(company_endpoint)
+            if 200 <= response.status_code < 300:
+                return response.json()
+            else:
+                raise ConnectWiseAPIError(response.content)
+
+        except requests.RequestException as e:
+            msg = 'CompanyInfo Request failed: GET {}: {}'
+            msg_fmt = msg.format(company_endpoint, e)
+            raise ConnectWiseAPIError(msg_fmt)
+
+    def fetch_api_codebase(self, server_url, update_cache=True):
+        """
+        Returns the Codebase value for the hosted Connectwise instance
+        at the supplied URL. The Codebase is retrieved from the cache
+        or, if it is not found, it is retrieved from the corresponding
+        companyinfo endpoint. If the Codebase lookup attempt fails in both
+        cases, the settings.CONNECTWISE_CREDENTIALS['api_codebase'] is used
+        as a last resort.
+        """
+        api_codebase_key = 'api_codebase'
+        api_codebase = CW_API_CODE_BASE
+        cache_changed = False
+
+        if CW_CLOUD_DOMAIN in server_url:
             api_codebase = cache.get(api_codebase_key)
-        else:
-            companyinfo_path = '/login/companyinfo/connectwise'
-            parsed_uri = urlparse(server_url)
-            domain = '{uri.scheme}://{uri.netloc}/'.format(uri=parsed_uri)
-            company_endpoint = urljoin(domain, companyinfo_path)
 
-            try:
-                response = requests.get(company_endpoint)
+            if not api_codebase or update_cache:
+                try:
+                    company_info_json = self.get_company_info(server_url)
+                    codebase = company_info_json['Codebase']
 
-                if 200 <= response.status_code < 300:
-                    company_info_json = response.json()
-                    api_codebase = company_info_json['Codebase']
+                    if update_cache:
+                        cache_changed = codebase == api_codebase
+
+                    api_codebase = codebase
                     cache.set(api_codebase_key, api_codebase)
+                except ConnectWiseAPIError:
+                    raise
 
-            except requests.RequestException as e:
-                msg = 'Request failed: GET {}: {}'
-                logger.error(msg.format(company_endpoint, e))
-
-    return api_codebase
+        return api_codebase, cache_changed
 
 
 def retry_if_api_error(exception):
     return isinstance(exception, ConnectWiseAPIError)
+
+
+def retry_if_company_info_required(result):
+    return result is COMPANY_INFO_REQUIRED
 
 
 class ConnectWiseAPIClient(object):
@@ -104,8 +126,6 @@ class ConnectWiseAPIClient(object):
             api_private_key = settings.CONNECTWISE_CREDENTIALS[
                 'api_private_key'
             ]
-        if not api_codebase:
-            api_codebase = fetch_api_codebase(server_url)
 
         if not self.API:
             raise ValueError('API not specified')
@@ -127,11 +147,18 @@ class ConnectWiseAPIClient(object):
         self.timeout = self.request_settings['timeout']
 
     def _endpoint(self, path):
-        return '{0}{1}'.format(self.server_url, path)
+        return '{0}{1}'.format(self.get_server_url(), path)
 
     def _log_failed(self, response):
         logger.error('FAILED API CALL: {0} - {1} - {2}'.format(
             response.url, response.status_code, response.content))
+
+    def get_server_url(self):
+        return '{0}/{1}/apis/3.0/{2}/'.format(
+            self.server_url,
+            self.api_codebase,
+            self.API,
+        )
 
     def fetch_resource(self, endpoint_url, params=None, should_page=False,
                        retry_counter=None,
@@ -144,16 +171,23 @@ class ConnectWiseAPIClient(object):
         It is a dict in the form {'count': 0} that is passed in
         to verify the number of attempts that were made.
         """
+        info_manager = CompanyInfoManager()
+        self.api_codebase, cache_updated = info_manager.fetch_api_codebase(
+            endpoint_url)
+
         @retry(stop_max_attempt_number=self.request_settings['max_attempts'],
                wait_exponential_multiplier=RETRY_WAIT_EXPONENTIAL_MULTAPPLIER,
                wait_exponential_max=RETRY_WAIT_EXPONENTIAL_MAX,
-               retry_on_exception=retry_if_api_error)
+               retry_on_exception=retry_if_api_error,
+               retry_on_result=retry_if_company_info_required)
         def _fetch_resource(endpoint_url, params=None, should_page=False,
                             retry_counter=None,
                             *args, **kwargs):
 
-            if retry_counter:
-                retry_counter['count'] += 1
+            if not retry_counter:
+                retry_counter = {'count': 0}
+
+            retry_counter['count'] += 1
 
             if not params:
                 params = {}
@@ -181,10 +215,15 @@ class ConnectWiseAPIClient(object):
             if response.status_code == 404:
                 msg = 'Resource {} was not found.'.format(response.url)
                 logger.warning(msg)
+
+                if retry_counter['count'] == 1:
+                    return COMPANY_INFO_REQUIRED
+
                 raise ConnectWiseRecordNotFoundError(msg)
 
             elif 400 <= response.status_code < 499:
                 self._log_failed(response)
+
                 raise ConnectWiseAPIClientError(response.content)
 
             else:
