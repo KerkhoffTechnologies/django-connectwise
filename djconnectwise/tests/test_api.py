@@ -249,6 +249,17 @@ class TestSalesAPIClient(BaseAPITestCase):
             self.client.ENDPOINT_OPPORTUNITY_STATUSES)
 
     @responses.activate
+    def test_by_id(self):
+        endpoint = self.client._endpoint(
+            self.client.ENDPOINT_OPPORTUNITIES)
+        json_data = fixtures.API_SALES_OPPORTUNITIES[0]
+        instance_id = json_data['id']
+        endpoint = '{}/{}'.format(endpoint, instance_id)
+        mk.get(endpoint, json_data)
+        result = self.client.by_id(instance_id)
+        self.assertEqual(result, json_data)
+
+    @responses.activate
     def test_get_opportunities(self):
         endpoint = self.client._endpoint(
             self.client.ENDPOINT_OPPORTUNITIES)

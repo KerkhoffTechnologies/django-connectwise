@@ -300,7 +300,10 @@ class TestOpportunitySynchronizer(TestCase, SynchronizerTestMixin):
 
     def setUp(self):
         super().setUp()
+        self.synchronizer = self.synchronizer_class()
         fixture_utils.init_opportunity_statuses()
+        fixture_utils.init_members()
+        fixture_utils.init_companies()
         fixture_utils.init_opportunity_types()
 
     def call_api(self, return_data):
@@ -350,6 +353,21 @@ class TestOpportunitySynchronizer(TestCase, SynchronizerTestMixin):
 
         self.assertEqual(instance.closed_by_id,
                          json_data['closedBy']['id'])
+
+    def test_fetch_sync_by_id(self):
+        json_data = self.fixture[0]
+        _, patch = mocks.sales_api_by_id_call(json_data)
+        result = self.synchronizer.fetch_sync_by_id(json_data['id'])
+        self.assertEqual(result, json_data)
+        patch.stop()
+
+    def test_fetch_delete_by_id(self):
+        json_data = self.fixture[0]
+        _, patch = mocks.sales_api_by_id_call(json_data)
+        self.synchronizer.fetch_delete_by_id(json_data['id'])
+        self.assertFalse(Opportunity.objects.filter(
+            id=json_data['id']).exists())
+        patch.stop()
 
 
 class TestOpportunityTypeSynchronizer(TestCase, SynchronizerTestMixin):
