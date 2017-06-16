@@ -305,7 +305,8 @@ class TestCallBackCommand(TestCase):
     handlers = [
         callback.TicketCallBackHandler,
         callback.ProjectCallBackHandler,
-        callback.CompanyCallBackHandler
+        callback.CompanyCallBackHandler,
+        callback.OpportunityCallBackHandler
     ]
 
     def get_fixture(self):
