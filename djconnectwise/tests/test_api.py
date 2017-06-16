@@ -1,5 +1,8 @@
 import responses
+from urllib.parse import urljoin
 
+from django.conf import settings
+from django.core.cache import cache
 from django.test import TestCase
 
 from .. import api
@@ -7,7 +10,8 @@ from .. import api
 from . import fixtures
 from . import mocks as mk
 
-from djconnectwise.api import ConnectWiseAPIError
+from djconnectwise.api import ConnectWiseAPIError, ConnectWiseAPIClientError
+from djconnectwise.api import fetch_api_codebase
 
 
 API_URL = 'https://localhost/v4_6_release/apis/3.0/system/members/count'
@@ -316,3 +320,68 @@ class TestAPISettings(TestCase):
                                   retry_counter=retry_counter)
             self.assertEqual(retry_counter['count'],
                              client.request_settings['max_attempts'])
+
+    @responses.activate
+    def test_no_retry_attempts_in_400_range(self):
+        client = api.ServiceAPIClient()
+        endpoint = client._endpoint(
+            api.ServiceAPIClient.ENDPOINT_TICKETS)
+
+        tested_status_codes = []
+        http_400_range = list(range(400, 499))
+        # remove 404 code
+        http_400_range.pop(4)
+
+        for status_code in http_400_range:
+
+            retry_counter = {'count': 0}
+            try:
+                mk.get(endpoint, {}, status=status_code)
+                client.fetch_resource(
+                    api.ServiceAPIClient.ENDPOINT_TICKETS,
+                    retry_counter=retry_counter)
+            except ConnectWiseAPIClientError:
+                self.assertEqual(retry_counter['count'], 0)
+                tested_status_codes.append(status_code)
+
+        self.assertEqual(tested_status_codes, http_400_range)
+
+
+class TestFetchAPICodebase(TestCase):
+    HOST = 'https://na.myconnectwise.net'
+
+    def _some_end_point(self):
+        return urljoin(self.HOST, 'some-endpoint')
+
+    def test_fetch_api_codebase_bad_url(self):
+        api_codebase = fetch_api_codebase('')
+        self.assertEqual(api_codebase,
+                         settings.CONNECTWISE_CREDENTIALS['api_codebase'])
+
+    @responses.activate
+    def test_fetch_api_company_info_endpoint_unavailable(self):
+        path = "/login/companyinfo/connectwise"
+        mk.get(urljoin(self.HOST, path), fixtures.API_COMPANY_INFO,
+               status=503)
+
+        cache.clear()
+        api_codebase = fetch_api_codebase(self._some_end_point())
+        self.assertEqual(api_codebase,
+                         settings.CONNECTWISE_CREDENTIALS['api_codebase'])
+
+    @responses.activate
+    def test_fetch_api_codebase_added_to_cache(self):
+        self.assertIsNone(cache.get('api_codebase'))
+        path = "/login/companyinfo/connectwise"
+        mk.get(urljoin(self.HOST, path), fixtures.API_COMPANY_INFO)
+
+        api_codebase = fetch_api_codebase(self._some_end_point())
+
+        self.assertEqual(api_codebase, fixtures.API_COMPANY_INFO['Codebase'])
+        self.assertEqual(api_codebase, cache.get('api_codebase'))
+
+    def test_fetch_api_codebase_from_warm_cache(self):
+        cache.set('api_codebase',
+                  fixtures.API_COMPANY_INFO['Codebase'])
+        api_codebase = fetch_api_codebase(self._some_end_point())
+        self.assertEqual(api_codebase, cache.get('api_codebase'))

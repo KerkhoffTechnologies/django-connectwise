@@ -1,10 +1,14 @@
 import logging
-
-from django.conf import settings
-from djconnectwise.utils import RequestSettings
+from urllib.parse import urlparse
+from urllib.parse import urljoin
 import re
+
 import requests
 from retrying import retry
+
+from django.conf import settings
+from django.core.cache import cache
+from djconnectwise.utils import RequestSettings
 
 
 class ConnectWiseAPIError(Exception):
@@ -12,10 +16,18 @@ class ConnectWiseAPIError(Exception):
     pass
 
 
+class ConnectWiseAPIClientError(Exception):
+    """Raise this to indicate any http error that falls
+    within the The 4xx class of http status codes."""
+    pass
+
+
 class ConnectWiseRecordNotFoundError(ConnectWiseAPIError):
     """The record was not found."""
     pass
 
+
+CW_CLOUD_DOMAIN = 'myconnectwise.net'
 
 CW_RESPONSE_MAX_RECORDS = 1000  # The greatest number of records ConnectWise
 # will send us in one response.
@@ -29,6 +41,46 @@ CONTENT_DISPOSITION_RE = re.compile(
 )
 
 logger = logging.getLogger(__name__)
+
+
+def fetch_api_codebase(server_url):
+    """
+    Returns the Codebase value for the hosted Connectwise instance
+    at the supplied URL. The Codebase is retrieved from the cache
+    or, if it is not found, it is retrieved from the corresponding
+    companyinfo endpoint. If the Codebase lookup attempt fails in both
+    cases, the settings.CONNECTWISE_CREDENTIALS['api_codebase'] is used
+    as a last resort.
+    """
+    api_codebase_key = 'api_codebase'
+    api_codebase = settings.CONNECTWISE_CREDENTIALS[api_codebase_key]
+
+    if CW_CLOUD_DOMAIN in server_url:
+        if api_codebase_key in cache:
+            api_codebase = cache.get(api_codebase_key)
+        else:
+            companyinfo_path = '/login/companyinfo/connectwise'
+            parsed_uri = urlparse(server_url)
+            domain = '{uri.scheme}://{uri.netloc}/'.format(uri=parsed_uri)
+            company_endpoint = urljoin(domain, companyinfo_path)
+
+            try:
+                response = requests.get(company_endpoint)
+
+                if 200 <= response.status_code < 300:
+                    company_info_json = response.json()
+                    api_codebase = company_info_json['Codebase']
+                    cache.set(api_codebase_key, api_codebase)
+
+            except requests.RequestException as e:
+                msg = 'Request failed: GET {}: {}'
+                logger.error(msg.format(company_endpoint, e))
+
+    return api_codebase
+
+
+def retry_if_api_error(exception):
+    return isinstance(exception, ConnectWiseAPIError)
 
 
 class ConnectWiseAPIClient(object):
@@ -53,7 +105,8 @@ class ConnectWiseAPIClient(object):
                 'api_private_key'
             ]
         if not api_codebase:
-            api_codebase = settings.CONNECTWISE_CREDENTIALS['api_codebase']
+            api_codebase = fetch_api_codebase(server_url)
+
         if not self.API:
             raise ValueError('API not specified')
 
@@ -93,7 +146,8 @@ class ConnectWiseAPIClient(object):
         """
         @retry(stop_max_attempt_number=self.request_settings['max_attempts'],
                wait_exponential_multiplier=RETRY_WAIT_EXPONENTIAL_MULTAPPLIER,
-               wait_exponential_max=RETRY_WAIT_EXPONENTIAL_MAX)
+               wait_exponential_max=RETRY_WAIT_EXPONENTIAL_MAX,
+               retry_on_exception=retry_if_api_error)
         def _fetch_resource(endpoint_url, params=None, should_page=False,
                             retry_counter=None,
                             *args, **kwargs):
@@ -123,10 +177,16 @@ class ConnectWiseAPIClient(object):
 
             if 200 <= response.status_code < 300:
                 return response.json()
+
             if response.status_code == 404:
                 msg = 'Resource {} was not found.'.format(response.url)
                 logger.warning(msg)
                 raise ConnectWiseRecordNotFoundError(msg)
+
+            elif 400 <= response.status_code < 499:
+                self._log_failed(response)
+                raise ConnectWiseAPIClientError(response.content)
+
             else:
                 self._log_failed(response)
                 raise ConnectWiseAPIError(response.content)

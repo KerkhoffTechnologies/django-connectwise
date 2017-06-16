@@ -166,17 +166,19 @@ def cw_api_fetch_resource_call(return_value):
     return create_mock_call(method_name, return_value)
 
 
-def get(url, data, headers=None):
+def get(url, data, headers=None, status=200):
     """Set up requests mock for given URL and JSON-serializable data."""
-    get_raw(url, json.dumps(data), "application/json", headers)
+    get_raw(url, json.dumps(data), "application/json", headers, status=status)
 
 
-def get_raw(url, data, content_type="application/octet-stream", headers=None):
+def get_raw(url, data, content_type="application/octet-stream", headers=None,
+            status=200):
     """Set up requests mock for given URL."""
     responses.add(
         responses.GET,
         url,
         body=data,
+        status=status,
         content_type=content_type,
         adding_headers=headers,
     )
