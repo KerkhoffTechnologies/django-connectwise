@@ -150,12 +150,11 @@ class ConnectWiseAPIClient(object):
             self.info_manager.fetch_api_codebase(self.server_url,
                                                  update_cache=update_cache)
 
-        if self.cache_updated:
-            self.server_url = '{0}/{1}/apis/3.0/{2}/'.format(
-                self.server_url,
-                self.api_codebase,
-                self.API,
-            )
+        self.server_url = '{0}/{1}/apis/3.0/{2}/'.format(
+            self.server_url,
+            self.api_codebase,
+            self.API,
+        )
 
     def fetch_resource(self, endpoint_url, params=None, should_page=False,
                        retry_counter=None,
