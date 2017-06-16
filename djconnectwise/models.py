@@ -456,7 +456,7 @@ class Opportunity(TimeStampedModel):
 
 class Ticket(TimeStampedModel):
     RECORD_TYPES = (
-        ('Ticket', "Service Ticket"),
+        ('ServiceTicket', "Service Ticket"),
         ('ProjectTicket', "Project Ticket"),
         ('ProjectIssue', "Project Issue"),
     )
