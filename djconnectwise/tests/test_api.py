@@ -1,5 +1,6 @@
 import responses
 from urllib.parse import urljoin
+# import json
 
 from django.core.cache import cache
 from django.test import TestCase
@@ -256,7 +257,7 @@ class TestFetchAPICodebase(TestCase):
     def test_fetch_api_codebase_bad_url(self):
         api_codebase, updated = self.manager.fetch_api_codebase('')
         self.assertEqual(api_codebase,
-                         api.CW_API_CODE_BASE)
+                         api.DEFAULT_CW_API_CODEBASE)
 
     @responses.activate
     def test_fetch_api_company_info_endpoint_unavailable(self):
@@ -275,8 +276,8 @@ class TestFetchAPICodebase(TestCase):
                fixtures.API_COMPANY_INFO)
 
         api_codebase, updated = self.manager.fetch_api_codebase(
-            self._some_end_point(),
-            update_cache=True)
+            self.HOST,
+        )
 
         self.assertEqual(api_codebase, fixtures.API_COMPANY_INFO['Codebase'])
         self.assertEqual(api_codebase, cache.get('api_codebase'))
@@ -424,7 +425,7 @@ class TestAPISettings(TestCase):
     @responses.activate
     def test_retry_attempts_cloud_domain_cold_cache(self):
         """
-        Request should  be retried if a 404 is thrown, when
+        Request should not be retried if a 404 is thrown, when
         request contains the cw domain and the CodeBase value
         is not found in the cache
         """
@@ -443,21 +444,21 @@ class TestAPISettings(TestCase):
             client.fetch_resource(
                 api.ServiceAPIClient.ENDPOINT_TICKETS,
                 retry_counter=retry_counter)
-        self.assertEqual(retry_counter['count'],
-                         api.ServiceAPIClient.MAX_404_ATTEMPTS + 1)
+        self.assertEqual(
+            retry_counter['count'],
+            api.ServiceAPIClient.MAX_404_ATTEMPTS + 1
+        )
 
     @responses.activate
     def test_retry_attempts_cloud_domain_warm_cache(self):
         """
-        Request should  be retried if a 404 is thrown, when
-        request contains the cw domain and the CodeBase value
-        is found in the cache
+        Request should not be retried if a 404 is thrown, when
+        request contains the cw domain and the Codebase value
+        is found in the cache.
         """
-        cache.set('api_codebase',
-                  fixtures.API_COMPANY_INFO['Codebase'])
+        cache.set('api_codebase', fixtures.API_COMPANY_INFO['Codebase'])
         client = self.get_cloud_client()
-        endpoint = client._endpoint(
-            api.ServiceAPIClient.ENDPOINT_TICKETS)
+        endpoint = client._endpoint(api.ServiceAPIClient.ENDPOINT_TICKETS)
 
         retry_counter = {'count': 0}
         mk.get(endpoint, {}, status=404)
@@ -465,6 +466,9 @@ class TestAPISettings(TestCase):
         with self.assertRaises(ConnectWiseRecordNotFoundError):
             client.fetch_resource(
                 api.ServiceAPIClient.ENDPOINT_TICKETS,
-                retry_counter=retry_counter)
-        self.assertEqual(retry_counter['count'],
-                         api.ServiceAPIClient.MAX_404_ATTEMPTS + 1)
+                retry_counter=retry_counter
+            )
+        self.assertEqual(
+            retry_counter['count'],
+            api.ServiceAPIClient.MAX_404_ATTEMPTS + 1
+        )

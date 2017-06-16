@@ -14,12 +14,7 @@ class ConnectWiseAPIError(Exception):
     pass
 
 
-class ConnectWiseRecordNotFoundError(ConnectWiseAPIError):
-    """The record was not found."""
-    pass
-
-
-class ConnectWiseAPIClientError(Exception):
+class ConnectWiseAPIClientError(ConnectWiseAPIError):
     """
     Raise this to indicate any http error that falls within the
     4xx class of http status codes.
@@ -27,9 +22,14 @@ class ConnectWiseAPIClientError(Exception):
     pass
 
 
+class ConnectWiseRecordNotFoundError(ConnectWiseAPIClientError):
+    """The record was not found."""
+    pass
+
+
 COMPANY_INFO_REQUIRED = 'company-info-required'
 CW_CLOUD_DOMAIN = 'myconnectwise.net'
-CW_API_CODE_BASE = 'v4_6_release'
+DEFAULT_CW_API_CODEBASE = 'v4_6_release/'
 
 CW_RESPONSE_MAX_RECORDS = 1000  # The greatest number of records ConnectWise
 # will send us in one response.
@@ -52,6 +52,7 @@ class CompanyInfoManager:
         company_endpoint = '{0}{1}'.format(server_url, self.COMPANYINFO_PATH)
 
         try:
+            logger.debug('Making GET request to {}'.format(company_endpoint))
             response = requests.get(company_endpoint)
             if 200 <= response.status_code < 300:
                 return response.json()
@@ -64,37 +65,47 @@ class CompanyInfoManager:
                 )
             )
 
-    def fetch_api_codebase(self, server_url, update_cache=True):
+    def fetch_api_codebase(self, server_url, force_fetch=True):
         """
         Returns the Codebase value for the hosted Connectwise instance
         at the supplied URL. The Codebase is retrieved from the cache
-        or, if it is not found, it is retrieved from the corresponding
-        companyinfo endpoint.
+        or, if it is not found, it is retrieved from the companyinfo endpoint.
         """
-        api_codebase_key = 'api_codebase'
-        api_codebase = CW_API_CODE_BASE
+        cache_key = 'api_codebase'
+        codebase_result = DEFAULT_CW_API_CODEBASE
         codebase_updated = False
 
         if CW_CLOUD_DOMAIN in server_url:
-            api_codebase = cache.get(api_codebase_key)
-
-            if not api_codebase or update_cache:
+            logger.debug('Fetching ConnectWise codebase value from cache.')
+            codebase_from_cache = cache.get(cache_key)
+            logger.info(
+                'Cached ConnectWise codebase was: {}'.format(
+                    codebase_from_cache
+                )
+            )
+            if not codebase_from_cache or force_fetch:
                 company_info_json = self.get_company_info(server_url)
-                codebase = company_info_json['Codebase']
+                codebase_from_api = company_info_json['Codebase']
 
-                if update_cache:
-                    codebase_updated = codebase == api_codebase
+                codebase_updated = codebase_from_cache != codebase_from_api
 
-                api_codebase = codebase
-                cache.set(api_codebase_key, api_codebase)
-
-        return api_codebase, codebase_updated
+                codebase_result = codebase_from_api
+                logger.info(
+                    'Setting ConnectWise codebase cache value to: {}'.format(
+                        codebase_result
+                    )
+                )
+                cache.set(cache_key, codebase_result)
+        return codebase_result, codebase_updated
 
 
 def retry_if_api_error(exception):
     """
     Return True if we should retry (in this case when it's an
     ConnectWiseAPIError), False otherwise.
+
+    Basically, don't retry on ConnectWiseAPIClientError, because those are the
+    type of exceptions where retrying won't help (404s, 403s, etc).
     """
     return type(exception) is ConnectWiseAPIError
 
@@ -138,7 +149,8 @@ class ConnectWiseAPIClient(object):
         self.api_base_url = None  # This will be set to the base URL for this
         # particular API-
         # i.e. https://connectwise.example.com/v4_6_release/apis/3.0/service/
-        self.build_api_base_url()
+
+        self.build_api_base_url(force_fetch=False)
 
     def _endpoint(self, path):
         return '{0}{1}'.format(self.api_base_url, path)
@@ -147,13 +159,13 @@ class ConnectWiseAPIClient(object):
         logger.error('Failed API call: {0} - {1} - {2}'.format(
             response.url, response.status_code, response.content))
 
-    def build_api_base_url(self, update_cache=False):
+    def build_api_base_url(self, force_fetch):
         api_codebase, codebase_updated = \
             self.info_manager.fetch_api_codebase(
-                self.server_url, update_cache=update_cache
+                self.server_url, force_fetch=force_fetch
             )
 
-        self.api_base_url = '{0}/{1}/apis/3.0/{2}/'.format(
+        self.api_base_url = '{0}/{1}apis/3.0/{2}/'.format(
             self.server_url,
             api_codebase,
             self.API,
@@ -205,21 +217,23 @@ class ConnectWiseAPIClient(object):
                 return response.json()
 
             elif response.status_code == 404:
-                msg = '404 Resource {} was not found.'.format(response.url)
+                msg = 'Resource not found: {}'.format(response.url)
                 logger.warning(msg)
-
-                # If this is the first attempt, try updating the
-                # company info Codebase value and retry the request.
+                # If this is the first failure, try updating the
+                # company info codebase value and let it be retried by the
+                # @retry decorator.
                 if retry_counter['count'] <= self.MAX_404_ATTEMPTS:
                     codebase_updated = self.build_api_base_url(
-                        update_cache=True
+                        force_fetch=True
                     )
                     if codebase_updated:
                         # Since the codebase was updated, it is worthwhile
                         # to try this request again. It could be that the 404
                         # was due to hosted ConnectWise changing the codebase
                         # URL recently. So raise ConnectWiseAPIError, which
-                        # will cause this call to be retried.
+                        # will cause the call to be retried.
+                        logger.info('Codebase value has changed, so this '
+                                    'request will be retried.')
                         raise ConnectWiseAPIError(response.content)
                 raise ConnectWiseRecordNotFoundError(msg)
 

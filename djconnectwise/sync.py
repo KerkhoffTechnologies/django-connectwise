@@ -439,7 +439,6 @@ class MemberSynchronizer(Synchronizer):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.client = self.client_class()
         self.last_sync_job = None
 
         sync_job_qset = models.SyncJob.objects.filter(
