@@ -1,6 +1,4 @@
 import logging
-from urllib.parse import urlparse
-from urllib.parse import urljoin
 import re
 
 import requests
@@ -16,14 +14,16 @@ class ConnectWiseAPIError(Exception):
     pass
 
 
-class ConnectWiseAPIClientError(Exception):
-    """Raise this to indicate any http error that falls
-    within the The 4xx class of http status codes."""
+class ConnectWiseRecordNotFoundError(ConnectWiseAPIError):
+    """The record was not found."""
     pass
 
 
-class ConnectWiseRecordNotFoundError(ConnectWiseAPIError):
-    """The record was not found."""
+class ConnectWiseAPIClientError(Exception):
+    """
+    Raise this to indicate any http error that falls within the
+    4xx class of http status codes.
+    """
     pass
 
 
@@ -49,9 +49,7 @@ class CompanyInfoManager:
     COMPANYINFO_PATH = '/login/companyinfo/connectwise'
 
     def get_company_info(self, server_url):
-        parsed_uri = urlparse(server_url)
-        domain = '{uri.scheme}://{uri.netloc}/'.format(uri=parsed_uri)
-        company_endpoint = urljoin(domain, self.COMPANYINFO_PATH)
+        company_endpoint = '{0}{1}'.format(server_url, self.COMPANYINFO_PATH)
 
         try:
             response = requests.get(company_endpoint)
@@ -59,20 +57,19 @@ class CompanyInfoManager:
                 return response.json()
             else:
                 raise ConnectWiseAPIError(response.content)
-
         except requests.RequestException as e:
-            msg = 'CompanyInfo Request failed: GET {}: {}'
-            msg_fmt = msg.format(company_endpoint, e)
-            raise ConnectWiseAPIError(msg_fmt)
+            raise ConnectWiseAPIError(
+                'CompanyInfo request failed: GET {}: {}'.format(
+                    company_endpoint, e
+                )
+            )
 
     def fetch_api_codebase(self, server_url, update_cache=True):
         """
         Returns the Codebase value for the hosted Connectwise instance
         at the supplied URL. The Codebase is retrieved from the cache
         or, if it is not found, it is retrieved from the corresponding
-        companyinfo endpoint. If the Codebase lookup attempt fails in both
-        cases, the settings.CONNECTWISE_CREDENTIALS['api_codebase'] is used
-        as a last resort.
+        companyinfo endpoint.
         """
         api_codebase_key = 'api_codebase'
         api_codebase = CW_API_CODE_BASE
@@ -82,22 +79,23 @@ class CompanyInfoManager:
             api_codebase = cache.get(api_codebase_key)
 
             if not api_codebase or update_cache:
-                try:
-                    company_info_json = self.get_company_info(server_url)
-                    codebase = company_info_json['Codebase']
+                company_info_json = self.get_company_info(server_url)
+                codebase = company_info_json['Codebase']
 
-                    if update_cache:
-                        cache_changed = codebase == api_codebase
+                if update_cache:
+                    cache_changed = codebase == api_codebase
 
-                    api_codebase = codebase
-                    cache.set(api_codebase_key, api_codebase)
-                except ConnectWiseAPIError:
-                    raise
+                api_codebase = codebase
+                cache.set(api_codebase_key, api_codebase)
 
         return api_codebase, cache_changed
 
 
 def retry_if_api_error(exception):
+    """
+    Return True if we should retry (in this case when it's an
+    ConnectWiseAPIError), False otherwise.
+    """
     return type(exception) is ConnectWiseAPIError
 
 
@@ -111,7 +109,6 @@ class ConnectWiseAPIClient(object):
         server_url=None,
         api_public_key=None,
         api_private_key=None,
-        api_codebase=None
     ):
         if not company_id:
             company_id = settings.CONNECTWISE_CREDENTIALS['company_id']
@@ -130,27 +127,35 @@ class ConnectWiseAPIClient(object):
         self.info_manager = CompanyInfoManager()
         self.api_public_key = api_public_key
         self.api_private_key = api_private_key
-        self.server_url = self.host = server_url
-        self.auth = ('{0}+{1}'.format(company_id, self.api_public_key),
-                     '{0}'.format(self.api_private_key),)
+        self.server_url = server_url
+        self.auth = (
+            '{0}+{1}'.format(company_id, self.api_public_key),
+            '{0}'.format(self.api_private_key),
+        )
 
         self.request_settings = RequestSettings().get_settings()
         self.timeout = self.request_settings['timeout']
-        self.build_server_url()
+        self.api_codebase = None  # This will be set to the appropriate
+        # "codebase" value- "v4_6_release" for on-premise ConnectWise, or
+        # something like "v2017_3/" for hosted ConnectWise.
+        self.api_base_url = None  # This will be set to the base URL for this
+        # particular API-
+        # i.e. https://connectwise.example.com/v4_6_release/apis/3.0/service/
+        self.build_api_base_url()
 
     def _endpoint(self, path):
-        return '{0}{1}'.format(self.server_url, path)
+        return '{0}{1}'.format(self.api_base_url, path)
 
     def _log_failed(self, response):
-        logger.error('FAILED API CALL: {0} - {1} - {2}'.format(
+        logger.error('Failed API call: {0} - {1} - {2}'.format(
             response.url, response.status_code, response.content))
 
-    def build_server_url(self, update_cache=False):
+    def build_api_base_url(self, update_cache=False):
         self.api_codebase, self.cache_updated = \
             self.info_manager.fetch_api_codebase(self.server_url,
                                                  update_cache=update_cache)
 
-        self.server_url = '{0}/{1}/apis/3.0/{2}/'.format(
+        self.api_base_url = '{0}/{1}/apis/3.0/{2}/'.format(
             self.server_url,
             self.api_codebase,
             self.API,
@@ -160,11 +165,9 @@ class ConnectWiseAPIClient(object):
                        retry_counter=None,
                        *args, **kwargs):
         """
-        A convenience method for issuing a request to the
-        specified REST endpoint.
+        Issue a request to the specified REST endpoint.
 
-        Note: retry_counter is used specifically for testing.
-        It is a dict in the form {'count': 0} that is passed in
+        retry_counter is a dict in the form {'count': 0} that is passed in
         to verify the number of attempts that were made.
         """
         @retry(stop_max_attempt_number=self.request_settings['max_attempts'],
@@ -176,7 +179,6 @@ class ConnectWiseAPIClient(object):
                             *args, **kwargs):
             if not retry_counter:
                 retry_counter = {'count': 0}
-
             retry_counter['count'] += 1
 
             if not params:
@@ -202,15 +204,20 @@ class ConnectWiseAPIClient(object):
             if 200 <= response.status_code < 300:
                 return response.json()
 
-            if response.status_code == 404:
+            elif response.status_code == 404:
                 msg = '404 Resource {} was not found.'.format(response.url)
                 logger.warning(msg)
 
                 # If this is the first attempt, try updating the
                 # company info Codebase value and retry the request.
                 if retry_counter['count'] <= self.MAX_404_ATTEMPTS:
-                    self.build_server_url(update_cache=True)
+                    self.build_api_base_url(update_cache=True)
                     if self.cache_updated:
+                        # Since the codebase was updated, it is worthwhile
+                        # to try this request again. It could be that the 404
+                        # was due to hosted ConnectWise changing the codebase
+                        # URL recently. So raise ConnectWiseAPIError, which
+                        # will cause this call to be retried.
                         raise ConnectWiseAPIError(response.content)
                 raise ConnectWiseRecordNotFoundError(msg)
 
