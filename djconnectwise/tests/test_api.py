@@ -425,7 +425,7 @@ class TestAPISettings(TestCase):
     @responses.activate
     def test_retry_attempts_cloud_domain_cold_cache(self):
         """
-        Request should not be retried if a 404 is thrown, when
+        Request should be retried if a 404 is thrown, when
         request contains the cw domain and the CodeBase value
         is not found in the cache
         """
@@ -452,7 +452,7 @@ class TestAPISettings(TestCase):
     @responses.activate
     def test_retry_attempts_cloud_domain_warm_cache(self):
         """
-        Request should not be retried if a 404 is thrown, when
+        Request should be retried if a 404 is thrown, when
         request contains the cw domain and the Codebase value
         is found in the cache.
         """
