@@ -73,7 +73,7 @@ class CompanyInfoManager:
         """
         api_codebase_key = 'api_codebase'
         api_codebase = CW_API_CODE_BASE
-        cache_changed = False
+        codebase_updated = False
 
         if CW_CLOUD_DOMAIN in server_url:
             api_codebase = cache.get(api_codebase_key)
@@ -83,12 +83,12 @@ class CompanyInfoManager:
                 codebase = company_info_json['Codebase']
 
                 if update_cache:
-                    cache_changed = codebase == api_codebase
+                    codebase_updated = codebase == api_codebase
 
                 api_codebase = codebase
                 cache.set(api_codebase_key, api_codebase)
 
-        return api_codebase, cache_changed
+        return api_codebase, codebase_updated
 
 
 def retry_if_api_error(exception):
@@ -135,9 +135,6 @@ class ConnectWiseAPIClient(object):
 
         self.request_settings = RequestSettings().get_settings()
         self.timeout = self.request_settings['timeout']
-        self.api_codebase = None  # This will be set to the appropriate
-        # "codebase" value- "v4_6_release" for on-premise ConnectWise, or
-        # something like "v2017_3/" for hosted ConnectWise.
         self.api_base_url = None  # This will be set to the base URL for this
         # particular API-
         # i.e. https://connectwise.example.com/v4_6_release/apis/3.0/service/
@@ -151,15 +148,18 @@ class ConnectWiseAPIClient(object):
             response.url, response.status_code, response.content))
 
     def build_api_base_url(self, update_cache=False):
-        self.api_codebase, self.cache_updated = \
-            self.info_manager.fetch_api_codebase(self.server_url,
-                                                 update_cache=update_cache)
+        api_codebase, codebase_updated = \
+            self.info_manager.fetch_api_codebase(
+                self.server_url, update_cache=update_cache
+            )
 
         self.api_base_url = '{0}/{1}/apis/3.0/{2}/'.format(
             self.server_url,
-            self.api_codebase,
+            api_codebase,
             self.API,
         )
+
+        return codebase_updated
 
     def fetch_resource(self, endpoint_url, params=None, should_page=False,
                        retry_counter=None,
@@ -211,8 +211,10 @@ class ConnectWiseAPIClient(object):
                 # If this is the first attempt, try updating the
                 # company info Codebase value and retry the request.
                 if retry_counter['count'] <= self.MAX_404_ATTEMPTS:
-                    self.build_api_base_url(update_cache=True)
-                    if self.cache_updated:
+                    codebase_updated = self.build_api_base_url(
+                        update_cache=True
+                    )
+                    if codebase_updated:
                         # Since the codebase was updated, it is worthwhile
                         # to try this request again. It could be that the 404
                         # was due to hosted ConnectWise changing the codebase
