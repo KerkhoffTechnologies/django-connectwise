@@ -661,3 +661,11 @@ API_SALES_OPPORTUNITY = {'_info': {'lastUpdated': '2016-10-12T19:24:07Z',
 API_SALES_OPPORTUNITIES = [
     API_SALES_OPPORTUNITY,
 ]
+
+API_COMPANY_INFO = {
+    'CompanyName':'ConnectWise',
+    'Codebase':'v2017_3/',
+    'VersionCode':'v2017.3',
+    'VersionNumber':'v4.6.47174',
+    'CompanyID':'CW',
+    'IsCloud':True}
