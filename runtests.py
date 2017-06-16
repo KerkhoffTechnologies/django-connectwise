@@ -44,7 +44,13 @@ settings.configure(
     # timezone-aware datetimes when USE_TZ is False.'
     ROOT_URLCONF='djconnectwise.tests.urls',
     DJCONNECTWISE_CALLBACK_PROTOCOL='http' if DEBUG else 'https',
-    DJCONNECTWISE_TEST_DOMAIN='localhost'
+    DJCONNECTWISE_TEST_DOMAIN='localhost',
+    CACHES={
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'LOCATION': 'unique-snowflake',
+        }
+    }
 )
 
 
@@ -88,4 +94,6 @@ def suite():
 if __name__ == '__main__':
     _setup()
     call_command('test')
+    # To run specific tests, try something such as:
+    # call_command('test', 'djconnectwise.tests.test_api.TestAPISettings.test_retry_attempts_cloud_domain_warm_cache')  # noqa: E501
     exit_on_failure(flake8_main())
