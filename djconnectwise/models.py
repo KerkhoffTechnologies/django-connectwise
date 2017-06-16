@@ -23,7 +23,7 @@ class InvalidStatusError(Exception):
 
 
 class SyncJob(models.Model):
-    start_time = models.DateTimeField(auto_now_add=True)
+    start_time = models.DateTimeField(null=False)
     end_time = models.DateTimeField(blank=True, null=True)
     entity_name = models.CharField(max_length=100)
     added = models.PositiveIntegerField(null=True)
@@ -456,7 +456,7 @@ class Opportunity(TimeStampedModel):
 
 class Ticket(TimeStampedModel):
     RECORD_TYPES = (
-        ('Ticket', "Service Ticket"),
+        ('ServiceTicket', "Service Ticket"),
         ('ProjectTicket', "Project Ticket"),
         ('ProjectIssue', "Project Issue"),
     )

@@ -21,6 +21,7 @@ def log_sync_job(f):
         sync_instance = args[0]
         created_count = updated_count = deleted_count = 0
         sync_job = models.SyncJob()
+        sync_job.start_time = timezone.now()
 
         try:
             created_count, updated_count, deleted_count = f(*args, **kwargs)
