@@ -18,6 +18,7 @@ class Command(BaseCommand):
             ('ticket', callback.TicketCallBackHandler),
             ('project', callback.ProjectCallBackHandler),
             ('company', callback.CompanyCallBackHandler),
+            ('opportunity', callback.OpportunityCallBackHandler),
         )
         self.handler_map = OrderedDict()
         for name, handler in handlers:

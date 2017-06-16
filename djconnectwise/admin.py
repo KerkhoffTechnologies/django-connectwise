@@ -75,7 +75,10 @@ class LocationAdmin(admin.ModelAdmin):
 
 @admin.register(models.SyncJob)
 class SyncJobAdmin(admin.ModelAdmin):
-    list_display = ('id', 'start_time', 'end_time', 'entity_name')
+    list_display = (
+        'id', 'start_time', 'end_time', 'entity_name', 'success', 'added',
+        'updated', 'deleted'
+    )
 
 
 @admin.register(models.OpportunityStatus)

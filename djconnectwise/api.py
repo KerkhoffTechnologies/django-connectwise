@@ -240,6 +240,11 @@ class SalesAPIClient(ConnectWiseAPIClient):
     ENDPOINT_OPPORTUNITY_TYPES = \
         '{}/types'.format(ENDPOINT_OPPORTUNITIES)
 
+    def by_id(self, opportunity_id):
+        endpoint_url = '{}/{}'.format(
+            self.ENDPOINT_OPPORTUNITIES, opportunity_id)
+        return self.fetch_resource(endpoint_url)
+
     def get_opportunities(self, *args, **kwargs):
         return self.fetch_resource(self.ENDPOINT_OPPORTUNITIES,
                                    should_page=True,

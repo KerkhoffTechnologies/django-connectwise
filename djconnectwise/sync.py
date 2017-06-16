@@ -21,6 +21,7 @@ def log_sync_job(f):
         sync_instance = args[0]
         created_count = updated_count = deleted_count = 0
         sync_job = models.SyncJob()
+        sync_job.start_time = timezone.now()
 
         try:
             created_count, updated_count, deleted_count = f(*args, **kwargs)
@@ -815,6 +816,25 @@ class OpportunitySynchronizer(Synchronizer):
 
     def get_page(self, *args, **kwargs):
         return self.client.get_opportunities(*args, **kwargs)
+
+    # TODO - The implementation of these fetch methods ought
+    # to be pushed up to the superclass, given that this pattern has emerged.
+    def fetch_sync_by_id(self, instance_id):
+        opportunity = self.client.by_id(instance_id)
+        self.update_or_create_instance(opportunity)
+        logger.info('Updated Opportunity {}'.format(opportunity))
+        return opportunity
+
+    def fetch_delete_by_id(self, instance_id):
+        try:
+            self.client.by_id(instance_id)
+        except api.ConnectWiseRecordNotFoundError:
+            # This is what we expect to happen. Since it's gone in CW, we
+            # are safe to delete it from here.
+            models.Opportunity.objects.filter(id=instance_id).delete()
+            logger.info(
+                'Deleted Opportunity {} (if it existed).'.format(instance_id)
+            )
 
 
 class OpportunityStatusSynchronizer(Synchronizer):
