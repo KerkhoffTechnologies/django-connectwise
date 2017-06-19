@@ -86,7 +86,7 @@ class ConnectWiseBoard(TimeStampedModel):
 
     @property
     def board_statuses(self):
-        return BoardStatus.objects.filter(board=self)
+        return BoardStatus.available_objects.filter(board=self)
 
     def get_closed_status(self):
         """
@@ -108,9 +108,14 @@ class ConnectWiseBoard(TimeStampedModel):
 
 
 class AvailableBoardStatusManager(models.Manager):
-    """Return only statuses whose ConnectWise board is active."""
+    """
+    Return only statuses whose ConnectWise board is active, and whose
+    inactive field is False.
+    """
     def get_queryset(self):
-        return super().get_queryset().filter(board__inactive=False)
+        return super().get_queryset().filter(
+            board__inactive=False, inactive=False
+        )
 
 
 class BoardStatusManager(models.Manager):
