@@ -254,7 +254,7 @@ class TeamSynchronizer(BoardChildSynchronizer):
             instance, json_data)
 
         members = []
-        if json_data['members']:
+        if json_data.get('members'):
             members = list(models.Member.objects.filter(
                 id__in=json_data['members']))
 
