@@ -203,6 +203,8 @@ class ConnectWiseAPIClient(object):
             try:
                 endpoint = self._endpoint(endpoint_url)
                 logger.debug('Making GET request to {}'.format(endpoint))
+                if 'conditions' in params:
+                    logger.debug('Conditions: {}'.format(params['conditions']))
                 response = requests.get(
                     endpoint,
                     params=params,
@@ -252,6 +254,13 @@ class ConnectWiseAPIClient(object):
                                retry_counter=retry_counter,
                                *args, **kwargs)
 
+    def prepare_conditions(self, conditions):
+        """
+        From the given array of individual conditions, format the conditions
+        URL parameter according to ConnectWise requirements.
+        """
+        return '({})'.format(' and '.join(conditions))
+
 
 class ProjectAPIClient(ConnectWiseAPIClient):
     API = 'project'
@@ -278,7 +287,7 @@ class CompanyAPIClient(ConnectWiseAPIClient):
     def get_companies(self, *args, **kwargs):
         if 'conditions' in kwargs:
             kwargs['params'] = {
-                'conditions': kwargs['conditions']
+                'conditions': self.prepare_conditions(kwargs['conditions'])
             }
         return self.fetch_resource(self.ENDPOINT_COMPANIES, should_page=True,
                                    *args, **kwargs)
@@ -463,27 +472,6 @@ class ServiceAPIClient(ConnectWiseAPIClient):
     ENDPOINT_PRIORITIES = 'priorities'
     ENDPOINT_LOCATIONS = 'locations'
 
-    def __init__(self, *args, **kwargs):
-        self.extra_conditions = None
-        if 'extra_conditions' in kwargs:
-            self.extra_conditions = kwargs.pop('extra_conditions')
-
-        super().__init__(*args, **kwargs)
-
-    def get_conditions(self):
-        default_conditions = settings.DJCONNECTWISE_DEFAULT_TICKET_CONDITIONS
-
-        condition_list = [c for c in [
-            default_conditions, self.extra_conditions] if c]
-        conditions = ''
-
-        for condition in condition_list:
-            condition = '({})'.format(condition)
-            if conditions:
-                condition = ' AND {}'.format(condition)
-            conditions += condition
-        return conditions
-
     def tickets_count(self):
         params = dict(
             conditions=self.get_conditions(),
@@ -497,11 +485,12 @@ class ServiceAPIClient(ConnectWiseAPIClient):
         return self.fetch_resource(endpoint_url)
 
     def get_tickets(self, *args, **kwargs):
-        params = dict(
-            conditions=self.get_conditions()
-        )
+        if 'conditions' in kwargs:
+            kwargs['params'] = {
+                'conditions': self.prepare_conditions(kwargs['conditions'])
+            }
         return self.fetch_resource(self.ENDPOINT_TICKETS, should_page=True,
-                                   params=params, *args, **kwargs)
+                                   *args, **kwargs)
 
     def update_ticket_status(self, ticket_id, closed_flag, status):
         """
