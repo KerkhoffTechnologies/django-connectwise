@@ -20,7 +20,7 @@ API_URL = 'https://localhost/v4_6_release/apis/3.0/system/members/count'
 
 class BaseAPITestCase(TestCase):
 
-    def assertRequestShouldPage(self, should_page):
+    def assert_request_should_page(self, should_page):
         request_url = responses.calls[0].request.url
         params = ['pageSize=1000', 'page=1']
 
@@ -30,6 +30,31 @@ class BaseAPITestCase(TestCase):
         else:
             for param in params:
                 self.assertNotIn(param, request_url)
+
+
+class TestConnectWiseAPIClient(TestCase):
+    def test_prepare_conditions_single(self):
+        client = api.ServiceAPIClient()  # Must use a real client as
+        # ConnectWiseAPIClient is effectively abstract
+        conditions = [
+            'closedFlag = False',
+        ]
+        self.assertEqual(
+            client.prepare_conditions(conditions),
+            '(closedFlag = False)'
+        )
+
+    def test_prepare_conditions_multiple(self):
+        client = api.ServiceAPIClient()  # Must use a real client as
+        # ConnectWiseAPIClient is effectively abstract
+        conditions = [
+            'closedFlag = False',
+            'status/id in (1,2,3)',
+        ]
+        self.assertEqual(
+            client.prepare_conditions(conditions),
+            '(closedFlag = False and status/id in (1,2,3))'
+        )
 
 
 class TestServiceAPIClient(BaseAPITestCase):
@@ -47,7 +72,7 @@ class TestServiceAPIClient(BaseAPITestCase):
 
         result = self.client.get_boards()
         self.assertEqual(result, fixtures.API_BOARD_LIST)
-        self.assertRequestShouldPage(True)
+        self.assert_request_should_page(True)
 
     @responses.activate
     def test_get_boards_no_data(self):
@@ -68,7 +93,7 @@ class TestServiceAPIClient(BaseAPITestCase):
 
         result = self.client.get_statuses(fixtures.API_BOARD['id'])
         self.assertEqual(result, fixtures.API_BOARD_STATUS_LIST)
-        self.assertRequestShouldPage(True)
+        self.assert_request_should_page(True)
 
     @responses.activate
     def test_get_priorities(self):
@@ -77,7 +102,7 @@ class TestServiceAPIClient(BaseAPITestCase):
 
         result = self.client.get_priorities()
         self.assertEqual(result, fixtures.API_SERVICE_PRIORITY_LIST)
-        self.assertRequestShouldPage(True)
+        self.assert_request_should_page(True)
 
     @responses.activate
     def test_get_teams(self):
@@ -87,7 +112,7 @@ class TestServiceAPIClient(BaseAPITestCase):
         mk.get(endpoint_url, fixtures.API_SERVICE_TEAM_LIST)
         result = self.client.get_teams(board_id)
         self.assertEqual(result, fixtures.API_SERVICE_TEAM_LIST)
-        self.assertRequestShouldPage(True)
+        self.assert_request_should_page(True)
 
     @responses.activate
     def test_get_locations(self):
@@ -96,7 +121,7 @@ class TestServiceAPIClient(BaseAPITestCase):
 
         result = self.client.get_locations()
         self.assertEqual(result, fixtures.API_SERVICE_LOCATION_LIST)
-        self.assertRequestShouldPage(True)
+        self.assert_request_should_page(True)
 
 
 class TestSystemAPIClient(BaseAPITestCase):
@@ -111,7 +136,7 @@ class TestSystemAPIClient(BaseAPITestCase):
                fixtures.API_CW_VERSION)
         result = self.client.get_connectwise_version()
         self.assertEqual(result, fixtures.API_CW_VERSION['version'])
-        self.assertRequestShouldPage(False)
+        self.assert_request_should_page(False)
 
     @responses.activate
     def test_get_members(self):
@@ -125,7 +150,7 @@ class TestSystemAPIClient(BaseAPITestCase):
 
         result = self.client.get_members()
         self.assertEqual(result, fixtures.API_MEMBER_LIST)
-        self.assertRequestShouldPage(True)
+        self.assert_request_should_page(True)
 
     @responses.activate
     def test_get_member_image_by_identifier(self):
@@ -196,7 +221,7 @@ class TestProjectAPIClient(BaseAPITestCase):
         result = self.client.get_projects()
 
         self.assertIsNotNone(result)
-        self.assertRequestShouldPage(True)
+        self.assert_request_should_page(True)
 
 
 class TestCompanyAPIClient(BaseAPITestCase):
@@ -215,7 +240,7 @@ class TestCompanyAPIClient(BaseAPITestCase):
                fixtures.API_COMPANY)
         result = self.client.by_id(company_id)
         self.assertEqual(result, fixtures.API_COMPANY)
-        self.assertRequestShouldPage(False)
+        self.assert_request_should_page(False)
 
     @responses.activate
     def test_get(self):
@@ -223,7 +248,7 @@ class TestCompanyAPIClient(BaseAPITestCase):
                fixtures.API_COMPANY_LIST)
         result = self.client.get_companies()
         self.assertEqual(len(result), len(fixtures.API_COMPANY_LIST))
-        self.assertRequestShouldPage(True)
+        self.assert_request_should_page(True)
 
     @responses.activate
     def test_get_no_results(self):
@@ -242,7 +267,7 @@ class TestCompanyAPIClient(BaseAPITestCase):
         mk.get(endpoint, fixtures.API_COMPANY_STATUS_LIST)
         result = self.client.get_company_statuses()
         self.assertEqual(result, fixtures.API_COMPANY_STATUS_LIST)
-        self.assertRequestShouldPage(True)
+        self.assert_request_should_page(True)
 
 
 class TestFetchAPICodebase(TestCase):
@@ -319,7 +344,7 @@ class TestSalesAPIClient(BaseAPITestCase):
         mk.get(endpoint, fixtures.API_SALES_OPPORTUNITIES)
         result = self.client.get_opportunities()
         self.assertEqual(result, fixtures.API_SALES_OPPORTUNITIES)
-        self.assertRequestShouldPage(True)
+        self.assert_request_should_page(True)
 
     @responses.activate
     def test_get_opportunity_statuses(self):
@@ -329,7 +354,7 @@ class TestSalesAPIClient(BaseAPITestCase):
         mk.get(endpoint, fixtures.API_SALES_OPPORTUNITY_STATUSES)
         result = self.client.get_opportunity_statuses()
         self.assertEqual(result, fixtures.API_SALES_OPPORTUNITY_STATUSES)
-        self.assertRequestShouldPage(True)
+        self.assert_request_should_page(True)
 
     @responses.activate
     def test_get_opportunity_types(self):
@@ -339,7 +364,7 @@ class TestSalesAPIClient(BaseAPITestCase):
         mk.get(endpoint, fixtures.API_SALES_OPPORTUNITY_TYPES)
         result = self.client.get_opportunity_types()
         self.assertEqual(result, fixtures.API_SALES_OPPORTUNITY_TYPES)
-        self.assertRequestShouldPage(True)
+        self.assert_request_should_page(True)
 
 
 class TestAPISettings(TestCase):

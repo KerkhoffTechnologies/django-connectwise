@@ -44,7 +44,7 @@ def log_sync_job(f):
 
 class Synchronizer:
     lookup_key = 'id'
-    api_conditions = ''
+    api_conditions = []
 
     def __init__(self, *args, **kwargs):
         self.instance_map = {}
@@ -275,7 +275,7 @@ class CompanySynchronizer(Synchronizer):
     """
     client_class = api.CompanyAPIClient
     model_class = models.Company
-    api_conditions = 'deletedFlag=False'
+    api_conditions = ['deletedFlag=False']
 
     def _assign_field_data(self, company, company_json):
         """
@@ -571,7 +571,7 @@ class TicketSynchronizer(Synchronizer):
     """
     client_class = api.ServiceAPIClient
     model_class = models.Ticket
-    api_conditions = 'closedFlag = False'
+    api_conditions = ['closedFlag = False']
     child_synchronizers = (
         CompanySynchronizer,
         BoardStatusSynchronizer,
@@ -595,6 +595,19 @@ class TicketSynchronizer(Synchronizer):
         self.members_map = {
             m.identifier: m for m in models.Member.objects.all()
         }
+        # To get all open tickets, we can simply supply a `closedFlag=False`
+        # condition for on-premise ConnectWise. But for hosted ConnectWise,
+        # this results in timeouts for requests, so we also need to add a
+        # condition for all the open statuses. This doesn't impact on-premise
+        # ConnectWise, so we just do it for all cases.
+        open_statuses = models.BoardStatus.available_objects.\
+            filter(closed_status=False).values_list('id', flat=True)
+        if open_statuses:
+            # Only do this if we know of at least one open status.
+            open_statuses_condition = 'status/id in ({})'.format(
+                ','.join([str(i) for i in open_statuses])
+            )
+            self.api_conditions.append(open_statuses_condition)
 
     def _assign_field_data(self, instance, json_data):
         created = instance.id is None
@@ -686,9 +699,8 @@ class TicketSynchronizer(Synchronizer):
             )
 
     def get_page(self, *args, **kwargs):
-        self.client.extra_conditions = self.api_conditions
-        page = self.client.get_tickets(*args, **kwargs)
-        return page
+        kwargs['conditions'] = self.api_conditions
+        return self.client.get_tickets(*args, **kwargs)
 
     def get_queryset(self):
         return self.model_class.objects.all()
@@ -711,22 +723,15 @@ class TicketSynchronizer(Synchronizer):
 
     def sync(self, reset=True):
         sync_job_qset = models.SyncJob.objects.filter(
-            entity_name=self.model_class.__name__)
+            entity_name=self.model_class.__name__
+        )
 
         if sync_job_qset.exists() and not reset:
-            self.last_sync_job = sync_job_qset.last()
-            last_sync_job_time = self.last_sync_job.start_time.isoformat()
-            self.api_conditions = "lastUpdated > [{0}]".format(
-                last_sync_job_time)
+            last_sync_job_time = sync_job_qset.last().start_time.isoformat()
+            self.api_conditions.append(
+                "lastUpdated > [{0}]".format(last_sync_job_time)
+            )
 
-            log_msg = 'Preparing sync job for objects updated since {}.'
-            logger.info(log_msg.format(last_sync_job_time))
-            logger.info(
-                'Ticket extra conditions: {0}'.format(self.api_conditions))
-        else:
-            logger.info('Preparing full ticket sync job.')
-            # absence of a sync job indicates that this is an initial/full
-            # sync, in which case we do not want to retrieve closed tickets
         return super().sync(reset=reset)
 
 
