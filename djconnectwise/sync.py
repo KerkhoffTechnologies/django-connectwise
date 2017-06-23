@@ -77,9 +77,6 @@ class Synchronizer:
         )
         return set(ids)
 
-    def get_queryset(self):
-        return self.model_class.objects.all()
-
     def get(self):
         """Buffer and return all pages of results."""
         records = []
@@ -191,9 +188,6 @@ class BoardSynchronizer(Synchronizer):
     def get_page(self, *args, **kwargs):
         return self.client.get_boards(*args, **kwargs)
 
-    def get_queryset(self):
-        return self.model_class.objects.all()
-
 
 class BoardChildSynchronizer(Synchronizer):
 
@@ -234,9 +228,6 @@ class BoardStatusSynchronizer(BoardChildSynchronizer):
 
     def client_call(self, board_id, *args, **kwargs):
         return self.client.get_statuses(board_id, *args, **kwargs)
-
-    def get_queryset(self):
-        return self.model_class.objects.all()
 
 
 class TeamSynchronizer(BoardChildSynchronizer):
@@ -309,9 +300,6 @@ class CompanySynchronizer(Synchronizer):
     def get_page(self, *args, **kwargs):
         kwargs['conditions'] = self.api_conditions
         return self.client.get_companies(*args, **kwargs)
-
-    def get_queryset(self):
-        return self.model_class.objects.all()
 
     def fetch_sync_by_id(self, company_id):
         company = self.client.by_id(company_id)
@@ -407,9 +395,6 @@ class ProjectSynchronizer(Synchronizer):
 
     def get_page(self, *args, **kwargs):
         return self.client.get_projects(*args, **kwargs)
-
-    def get_queryset(self):
-        return self.model_class.objects.all()
 
     def fetch_sync_by_id(self, project_id):
         project = self.client.get_project(project_id)
@@ -691,9 +676,6 @@ class TicketSynchronizer(Synchronizer):
     def get_page(self, *args, **kwargs):
         kwargs['conditions'] = self.api_conditions
         return self.client.get_tickets(*args, **kwargs)
-
-    def get_queryset(self):
-        return self.model_class.objects.all()
 
     def fetch_sync_by_id(self, ticket_id):
         json_data = self.client.get_ticket(ticket_id)
