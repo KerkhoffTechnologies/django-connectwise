@@ -105,33 +105,28 @@ class Synchronizer:
     def fetch_delete_by_id(self, *args, **kwargs):
         raise NotImplementedError
 
-    def get_or_create_instance(self, api_instance):
-        lookup_key = api_instance[self.lookup_key]
-        created = False
-        try:
-            instance = self.model_class.objects.get(pk=lookup_key)
-        except self.model_class.DoesNotExist:
-            instance = self.model_class()
-            self._assign_field_data(instance, api_instance)
-            instance.save()
-            created = True
-
-        return instance, created
-
     def update_or_create_instance(self, api_instance):
         """
         Creates and returns an instance if it does not already exist.
         """
-        instance, created = self.get_or_create_instance(
-            api_instance)
+        created = False
+        try:
+            instance_pk = api_instance[self.lookup_key]
+            instance = self.model_class.objects.get(pk=instance_pk)
+        except self.model_class.DoesNotExist:
+            instance = self.model_class()
+            created = True
 
-        action = 'Created' if created else 'Updated'
-        if not created:
-            self._assign_field_data(instance, api_instance)
-            instance.save()
+        self._assign_field_data(instance, api_instance)
+        instance.save()
 
-        msg = ' {}: {} {}'
-        logger.info(msg.format(action, self.model_class.__name__, instance))
+        logger.info(
+            '{}: {} {}'.format(
+                'Created' if created else 'Updated',
+                self.model_class.__name__,
+                instance
+            )
+        )
 
         return instance, created
 
