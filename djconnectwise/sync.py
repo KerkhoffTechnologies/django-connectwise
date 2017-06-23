@@ -111,10 +111,10 @@ class Synchronizer:
         # import pdb
         # pdb.set_trace()
         lookup_key = api_instance[self.lookup_key]
-        instance = self.model_class.objects.get(pk=lookup_key)
-
         created = False
-        if not instance:
+        try:
+            instance = self.model_class.objects.get(pk=lookup_key)
+        except self.model_class.DoesNotExist:
             instance = self.model_class()
             self._assign_field_data(instance, api_instance)
             instance.save()
