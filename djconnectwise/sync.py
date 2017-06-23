@@ -48,9 +48,6 @@ class Synchronizer:
 
     def __init__(self, *args, **kwargs):
         self.client = self.client_class()
-        self.initial_ids = self._instance_ids()  # Set of IDs of all records
-        # at instantiation, to find stale records for deletion.
-
         request_settings = RequestSettings().get_settings()
         self.batch_size = request_settings['batch_size']
 
@@ -130,12 +127,12 @@ class Synchronizer:
 
         return instance, created
 
-    def prune_stale_records(self, synced_ids):
+    def prune_stale_records(self, initial_ids, synced_ids):
         """
-        Delete records that existed when Synchronizer was created but were
+        Delete records that existed when sync started but were
         not seen as we iterated through all records from REST API.
         """
-        stale_ids = self.initial_ids - synced_ids
+        stale_ids = initial_ids - synced_ids
         deleted_count = 0
         if stale_ids:
             delete_qset = self.model_class.objects.filter(pk__in=stale_ids)
@@ -153,7 +150,8 @@ class Synchronizer:
         created_count = 0
         updated_count = 0
         deleted_count = 0
-
+        initial_ids = self._instance_ids()  # Set of IDs of all records prior
+        # to sync, to find stale records for deletion.
         synced_ids = set()
         for record in self.get():
             _, created = self.update_or_create_instance(record)
@@ -165,7 +163,7 @@ class Synchronizer:
             synced_ids.add(record['id'])
 
         if reset:
-            deleted_count = self.prune_stale_records(synced_ids)
+            deleted_count = self.prune_stale_records(initial_ids, synced_ids)
 
         return created_count, updated_count, deleted_count
 
@@ -486,6 +484,8 @@ class MemberSynchronizer(Synchronizer):
         updated_count = 0
         created_count = 0
         deleted_count = 0
+        initial_ids = self._instance_ids()  # Set of IDs of all records prior
+        # to sync, to find stale records for deletion.
         synced_ids = set()
 
         for api_member in members_json:
@@ -533,7 +533,7 @@ class MemberSynchronizer(Synchronizer):
             synced_ids.add(api_member['id'])
 
         if reset:
-            deleted_count = self.prune_stale_records(synced_ids)
+            deleted_count = self.prune_stale_records(initial_ids, synced_ids)
 
         return created_count, updated_count, deleted_count
 
@@ -719,6 +719,23 @@ class OpportunitySynchronizer(Synchronizer):
         'closedBy': (models.Member, 'closed_by')
     }
 
+    def _update_or_create_child(self, model_class, json_data):
+        child_name = json_data['name']
+        # Setting the name default ensures that if Django has to create the
+        # object, then the name has already been set and we don't have to save
+        # again.
+        child, created = model_class.objects.get_or_create(
+            id=json_data['id'],
+            defaults={
+                'name': child_name,
+            }
+        )
+        if not created:
+            # Ensure the name is up to date.
+            child.name = child_name
+            child.save()
+        return child
+
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
         instance.name = json_data['name']
@@ -754,21 +771,12 @@ class OpportunitySynchronizer(Synchronizer):
                                   model_class,
                                   field_name)
 
-        priority, created = models.OpportunityPriority.objects.get_or_create(
-            id=json_data['priority']['id'],
-            defaults={
-                'name': json_data['priority']['name'],
-            }
+        instance.priority = self._update_or_create_child(
+            models.OpportunityPriority, json_data['priority']
         )
-        instance.priority = priority
-
-        stage, created = models.OpportunityStage.objects.get_or_create(
-            id=json_data['stage']['id'],
-            defaults={
-                'name': json_data['stage']['name'],
-            }
+        instance.stage = self._update_or_create_child(
+            models.OpportunityStage, json_data['stage']
         )
-        instance.stage = stage
 
         return instance
 
