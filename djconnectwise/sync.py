@@ -49,6 +49,7 @@ class Synchronizer:
     def __init__(self, *args, **kwargs):
         self.client = self.client_class()
         self.initial_ids = self._instance_ids()  # Set of IDs of all records
+        # at instantiation, to find stale records for deletion.
 
         request_settings = RequestSettings().get_settings()
         self.batch_size = request_settings['batch_size']
