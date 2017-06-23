@@ -633,7 +633,7 @@ class TicketSynchronizer(Synchronizer):
         instance.save()
         self._manage_member_assignments(instance)
 
-        logger.info('Syncing member {}'.format(json_data_id))
+        logger.info('Syncing ticket {}'.format(json_data_id))
         action = created and 'Created' or 'Updated'
 
         status_changed = ''
