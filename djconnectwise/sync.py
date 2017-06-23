@@ -47,9 +47,9 @@ class Synchronizer:
     api_conditions = []
 
     def __init__(self, *args, **kwargs):
-        self.instance_map = {}
         self.client = self.client_class()
-        self.load_instance_map()
+        self.initial_ids = self._instance_ids()  # Set of IDs of all records
+        # at instantiation, to find stale records for deletion.
 
         request_settings = RequestSettings().get_settings()
         self.batch_size = request_settings['batch_size']
@@ -71,11 +71,11 @@ class Synchronizer:
                     )
                 )
 
-    def load_instance_map(self):
-        qset = self.get_queryset()
-        self.instance_map = {
-            getattr(i, self.lookup_key): i for i in qset
-        }
+    def _instance_ids(self):
+        ids = self.model_class.objects.all().values_list(
+            self.lookup_key, flat=True
+        )
+        return set(ids)
 
     def get_queryset(self):
         return self.model_class.objects.all()
@@ -110,32 +110,16 @@ class Synchronizer:
 
     def get_or_create_instance(self, api_instance):
         lookup_key = api_instance[self.lookup_key]
-        instance = self.instance_map.get(lookup_key)
-
         created = False
-
-        if not instance:
+        try:
+            instance = self.model_class.objects.get(pk=lookup_key)
+        except self.model_class.DoesNotExist:
             instance = self.model_class()
             self._assign_field_data(instance, api_instance)
             instance.save()
             created = True
-            self.instance_map[lookup_key] = instance
 
         return instance, created
-
-    def prune_stale_records(self, synced_ids):
-        stale_ids = set(self.instance_map.keys()) - synced_ids
-        deleted_count = 0
-        if stale_ids:
-            delete_qset = self.model_class.objects.filter(pk__in=stale_ids)
-            deleted_count = delete_qset.count()
-            msg = 'Removing {} stale records for model: {}'.format(
-                len(stale_ids), self.model_class,
-            )
-            logger.info(msg)
-            delete_qset.delete()
-
-        return deleted_count
 
     def update_or_create_instance(self, api_instance):
         """
@@ -149,12 +133,28 @@ class Synchronizer:
             self._assign_field_data(instance, api_instance)
             instance.save()
 
-        self.instance_map[instance.id] = instance
-
         msg = ' {}: {} {}'
         logger.info(msg.format(action, self.model_class.__name__, instance))
 
         return instance, created
+
+    def prune_stale_records(self, synced_ids):
+        """
+        Delete records that existed when Synchronizer was created but were
+        not seen as we iterated through all records from REST API.
+        """
+        stale_ids = self.initial_ids - synced_ids
+        deleted_count = 0
+        if stale_ids:
+            delete_qset = self.model_class.objects.filter(pk__in=stale_ids)
+            deleted_count = delete_qset.count()
+            msg = 'Removing {} stale records for model: {}'.format(
+                len(stale_ids), self.model_class,
+            )
+            logger.info(msg)
+            delete_qset.delete()
+
+        return deleted_count
 
     @log_sync_job
     def sync(self, reset=False):
@@ -164,7 +164,6 @@ class Synchronizer:
 
         synced_ids = set()
         for record in self.get():
-
             _, created = self.update_or_create_instance(record)
             if created:
                 created_count += 1
@@ -173,14 +172,9 @@ class Synchronizer:
 
             synced_ids.add(record['id'])
 
-        stale_ids = set(self.instance_map.keys()) - synced_ids
-        if stale_ids and reset:
-            deleted_count = len(stale_ids)
-            msg = 'Removing {} stale records for model: {}'.format(
-                len(stale_ids), self.model_class,
-            )
-            logger.info(msg)
-            self.model_class.objects.filter(pk__in=stale_ids).delete()
+        if reset:
+            deleted_count = self.prune_stale_records(synced_ids)
+
         return created_count, updated_count, deleted_count
 
 
@@ -592,9 +586,6 @@ class TicketSynchronizer(Synchronizer):
 
     def __init__(self):
         super().__init__()
-        self.members_map = {
-            m.identifier: m for m in models.Member.objects.all()
-        }
         # To get all open tickets, we can simply supply a `closedFlag=False`
         # condition for on-premise ConnectWise. But for hosted ConnectWise,
         # this results in timeouts for requests, so we also need to add a
@@ -671,9 +662,8 @@ class TicketSynchronizer(Synchronizer):
         models.TicketAssignment.objects.filter(
             ticket=ticket).delete()
         for username in usernames:
-            member = self.members_map.get(username)
-
-            if member:
+            try:
+                member = models.Member.objects.get(identifier=username)
                 assignment = models.TicketAssignment()
                 assignment.member = member
                 assignment.ticket = ticket
@@ -682,7 +672,7 @@ class TicketSynchronizer(Synchronizer):
                 msg = 'Member ticket assignment: ' \
                       'ticket {}, member {}'.format(ticket.id, username)
                 logger.info(msg)
-            else:
+            except models.Member.DoesNotExist:
                 logger.warning(
                     'Failed to locate member with username {} for ticket '
                     '{} assignment.'.format(username, ticket.id)
@@ -752,26 +742,6 @@ class OpportunitySynchronizer(Synchronizer):
         'closedBy': (models.Member, 'closed_by')
     }
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.priority_map = {
-            p.id: p for p in models.OpportunityPriority.objects.all()
-        }
-
-        self.stage_map = {
-            s.id: s for s in models.OpportunityStage.objects.all()
-        }
-
-    def _instance_from_json(self, model_class, json_data, instance_map):
-        instance = instance_map.get(json_data['id'])
-        if not instance:
-            instance = model_class()
-            instance.id = json_data['id']
-            instance.name = json_data['name']
-            instance.save()
-            instance_map[instance.id] = instance
-        return instance
-
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
         instance.name = json_data['name']
@@ -807,15 +777,21 @@ class OpportunitySynchronizer(Synchronizer):
                                   model_class,
                                   field_name)
 
-        instance.priority = self._instance_from_json(
-            models.OpportunityPriority,
-            json_data['priority'],
-            self.priority_map)
+        priority, created = models.OpportunityPriority.objects.get_or_create(
+            id=json_data['priority']['id'],
+            defaults={
+                'name': json_data['priority']['name'],
+            }
+        )
+        instance.priority = priority
 
-        instance.stage = self._instance_from_json(
-            models.OpportunityStage,
-            json_data['stage'],
-            self.stage_map)
+        stage, created = models.OpportunityStage.objects.get_or_create(
+            id=json_data['stage']['id'],
+            defaults={
+                'name': json_data['stage']['name'],
+            }
+        )
+        instance.stage = stage
 
         return instance
 
