@@ -109,8 +109,6 @@ class Synchronizer:
         raise NotImplementedError
 
     def get_or_create_instance(self, api_instance):
-        # import pdb
-        # pdb.set_trace()
         lookup_key = api_instance[self.lookup_key]
         created = False
         try:
