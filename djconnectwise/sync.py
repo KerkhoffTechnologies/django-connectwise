@@ -392,7 +392,6 @@ class ProjectSynchronizer(Synchronizer):
     def fetch_sync_by_id(self, project_id):
         project = self.client.get_project(project_id)
         self.update_or_create_instance(project)
-        logger.info('Updated project {}'.format(project))
 
     def fetch_delete_by_id(self, project_id):
         try:
@@ -411,14 +410,8 @@ class MemberSynchronizer(Synchronizer):
     model_class = models.Member
 
     def __init__(self, *args, **kwargs):
+        self.last_sync_job_time = None
         super().__init__(*args, **kwargs)
-        self.last_sync_job = None
-
-        sync_job_qset = models.SyncJob.objects.filter(
-            entity_name=self.model_class.__name__)
-
-        if sync_job_qset.exists():
-            self.last_sync_job = sync_job_qset.last()
 
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
@@ -457,85 +450,42 @@ class MemberSynchronizer(Synchronizer):
         logger.info("Saved member '{}' avatar to {}.".format(
             member.identifier, member.avatar.name))
 
-    def get(self):
-        records = []
-        page = 1
-        while True:
-            logger.info(
-                'Fetching member records, batch {}'.format(page)
-            )
-            page_records = self.get_page(
-                page=page, page_size=self.batch_size
-            )
-            records += page_records
-            page += 1
-            if len(page_records) < self.batch_size:
-                # No more records
-                break
-        return records
-
     def get_page(self, *args, **kwargs):
         return self.client.get_members(*args, **kwargs)
 
-    @log_sync_job
-    def sync(self, reset=False):
-        members_json = self.get()
+    def update_or_create_instance(self, api_instance):
+        """
+        In addition to what the parent does, also update avatar if necessary.
+        """
+        instance, created = super().update_or_create_instance(api_instance)
+        username = instance.identifier
 
-        updated_count = 0
-        created_count = 0
-        deleted_count = 0
-        initial_ids = self._instance_ids()  # Set of IDs of all records prior
-        # to sync, to find stale records for deletion.
-        synced_ids = set()
+        # Only update the avatar if the member profile
+        # was updated since last sync.
+        member_last_updated = parse(api_instance['_info']['lastUpdated'])
+        member_stale = False
+        if self.last_sync_job_time:
+            member_stale = member_last_updated > self.last_sync_job_time
 
-        for api_member in members_json:
-            member_id = api_member['id']
-            username = api_member['identifier']
-
-            try:
-                member = models.Member.objects.get(id=member_id)
-                self._assign_field_data(member, api_member)
-                member.save()
-                updated_count += 1
-                logger.info('Updated member: {0}'.format(member.identifier))
-            except models.Member.DoesNotExist:
-                # Member with that ID wasn't found, so let's make one.
-                member = models.Member()
-                self._assign_field_data(member, api_member)
-                member.save()
-                created_count += 1
-                logger.info('Created member: {0}'.format(member.identifier))
-
-            # Only update the avatar if the member profile
-            # was updated since last sync.
-            member_last_updated = parse(api_member['_info']['lastUpdated'])
-            logger.debug(
-                'Member {} last updated: {}'.format(
-                    member.identifier,
-                    member_last_updated
-                )
+        if not self.last_sync_job_time or member_stale or created:
+            logger.info(
+                'Fetching avatar for member {}.'.format(username)
             )
-            member_stale = False
-            if self.last_sync_job:
-                member_stale = member_last_updated > \
-                    self.last_sync_job.start_time
+            (attachment_filename, avatar) = self.client \
+                .get_member_image_by_identifier(username)
+            if attachment_filename and avatar:
+                self._save_avatar(instance, avatar, attachment_filename)
 
-            if not self.last_sync_job or member_stale:
-                logger.debug(
-                    'Fetching avatar for member {}.'.format(member.identifier)
-                )
-                (attachment_filename, avatar) = self.client \
-                    .get_member_image_by_identifier(username)
-                if attachment_filename and avatar:
-                    self._save_avatar(member, avatar, attachment_filename)
+        return instance, created
 
-            member.save()
-            synced_ids.add(api_member['id'])
+    def sync(self, reset=True):
+        sync_job_qset = models.SyncJob.objects.filter(
+            entity_name=self.model_class.__name__
+        )
+        if sync_job_qset.exists():
+            self.last_sync_job_time = sync_job_qset.last().start_time
 
-        if reset:
-            deleted_count = self.prune_stale_records(initial_ids, synced_ids)
-
-        return created_count, updated_count, deleted_count
+        return super().sync(reset=reset)
 
 
 class TicketSynchronizer(Synchronizer):
@@ -604,11 +554,13 @@ class TicketSynchronizer(Synchronizer):
 
         for json_field, value in self.related_meta.items():
             model_class, field_name = value
-            self._assign_relation(instance,
-                                  json_data,
-                                  json_field,
-                                  model_class,
-                                  field_name)
+            self._assign_relation(
+                instance,
+                json_data,
+                json_field,
+                model_class,
+                field_name
+            )
 
         instance.save()
         self._manage_member_assignments(instance)
