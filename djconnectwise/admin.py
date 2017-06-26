@@ -79,6 +79,7 @@ class SyncJobAdmin(admin.ModelAdmin):
         'id', 'start_time', 'end_time', 'entity_name', 'success', 'added',
         'updated', 'deleted'
     )
+    list_filter = ('entity_name', )
 
 
 @admin.register(models.OpportunityStatus)
