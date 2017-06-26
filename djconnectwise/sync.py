@@ -96,11 +96,27 @@ class Synchronizer:
     def get_page(self, *args, **kwargs):
         raise NotImplementedError
 
-    def fetch_sync_by_id(self, *args, **kwargs):
+    def get_single(self, *args, **kwargs):
         raise NotImplementedError
 
-    def fetch_delete_by_id(self, *args, **kwargs):
-        raise NotImplementedError
+    def fetch_sync_by_id(self, instance_id):
+        api_instance = self.get_single(instance_id)
+        instance, created = self.update_or_create_instance(api_instance)
+        return instance
+
+    def fetch_delete_by_id(self, instance_id):
+        try:
+            self.get_single(instance_id)
+        except api.ConnectWiseRecordNotFoundError:
+            # This is what we expect to happen. Since it's gone in CW, we
+            # are safe to delete it from here.
+            self.model_class.objects.filter(pk=instance_id).delete()
+            logger.info(
+                'Deleted {} {} (if it existed).'.format(
+                    self.model_class.__name__,
+                    instance_id
+                )
+            )
 
     def update_or_create_instance(self, api_instance):
         """
@@ -294,9 +310,8 @@ class CompanySynchronizer(Synchronizer):
         kwargs['conditions'] = self.api_conditions
         return self.client.get_companies(*args, **kwargs)
 
-    def fetch_sync_by_id(self, company_id):
-        company = self.client.by_id(company_id)
-        self.update_or_create_instance(company)
+    def get_single(self, company_id):
+        return self.client.by_id(company_id)
 
     def fetch_delete_by_id(self, company_id):
         # Companies are deleted by setting deleted_flag = True, so
@@ -389,20 +404,8 @@ class ProjectSynchronizer(Synchronizer):
     def get_page(self, *args, **kwargs):
         return self.client.get_projects(*args, **kwargs)
 
-    def fetch_sync_by_id(self, project_id):
-        project = self.client.get_project(project_id)
-        self.update_or_create_instance(project)
-
-    def fetch_delete_by_id(self, project_id):
-        try:
-            self.client.get_project(project_id)
-        except api.ConnectWiseRecordNotFoundError:
-            # This is what we expect to happen. Since it's gone in CW, we
-            # are safe to delete it from here.
-            models.Project.objects.filter(id=project_id).delete()
-            logger.info(
-                'Deleted project {} (if it existed).'.format(project_id)
-            )
+    def get_single(self, project_id):
+        return self.client.get_project(project_id)
 
 
 class MemberSynchronizer(Synchronizer):
@@ -624,21 +627,8 @@ class TicketSynchronizer(Synchronizer):
         kwargs['conditions'] = self.api_conditions
         return self.client.get_tickets(*args, **kwargs)
 
-    def fetch_sync_by_id(self, ticket_id):
-        json_data = self.client.get_ticket(ticket_id)
-        ticket, _ = self.update_or_create_instance(json_data)
-        return ticket
-
-    def fetch_delete_by_id(self, ticket_id):
-        try:
-            self.client.get_ticket(ticket_id)
-        except api.ConnectWiseRecordNotFoundError:
-            # This is what we expect to happen. Since it's gone in CW, we
-            # are safe to delete it from here.
-            models.Ticket.objects.filter(id=ticket_id).delete()
-            logger.info(
-                'Deleted ticket {} (if it existed).'.format(ticket_id)
-            )
+    def get_single(self, ticket_id):
+        return self.client.get_ticket(ticket_id)
 
     def sync(self, reset=True):
         sync_job_qset = models.SyncJob.objects.filter(
@@ -735,24 +725,8 @@ class OpportunitySynchronizer(Synchronizer):
     def get_page(self, *args, **kwargs):
         return self.client.get_opportunities(*args, **kwargs)
 
-    # TODO - The implementation of these fetch methods ought
-    # to be pushed up to the superclass, given that this pattern has emerged.
-    def fetch_sync_by_id(self, instance_id):
-        opportunity = self.client.by_id(instance_id)
-        self.update_or_create_instance(opportunity)
-        logger.info('Updated Opportunity {}'.format(opportunity))
-        return opportunity
-
-    def fetch_delete_by_id(self, instance_id):
-        try:
-            self.client.by_id(instance_id)
-        except api.ConnectWiseRecordNotFoundError:
-            # This is what we expect to happen. Since it's gone in CW, we
-            # are safe to delete it from here.
-            models.Opportunity.objects.filter(id=instance_id).delete()
-            logger.info(
-                'Deleted Opportunity {} (if it existed).'.format(instance_id)
-            )
+    def get_single(self, opportunity_id):
+        return self.client.by_id(opportunity_id)
 
 
 class OpportunityStatusSynchronizer(Synchronizer):
