@@ -478,6 +478,7 @@ class MemberSynchronizer(Synchronizer):
                 .get_member_image_by_identifier(username)
             if attachment_filename and avatar:
                 self._save_avatar(instance, avatar, attachment_filename)
+                instance.save()
 
         return instance, created
 
