@@ -48,9 +48,6 @@ class Synchronizer:
 
     def __init__(self, *args, **kwargs):
         self.client = self.client_class()
-        self.initial_ids = self._instance_ids()  # Set of IDs of all records
-        # at instantiation, to find stale records for deletion.
-
         request_settings = RequestSettings().get_settings()
         self.batch_size = request_settings['batch_size']
 
@@ -77,9 +74,6 @@ class Synchronizer:
         )
         return set(ids)
 
-    def get_queryset(self):
-        return self.model_class.objects.all()
-
     def get(self):
         """Buffer and return all pages of results."""
         records = []
@@ -102,48 +96,59 @@ class Synchronizer:
     def get_page(self, *args, **kwargs):
         raise NotImplementedError
 
-    def fetch_sync_by_id(self, *args, **kwargs):
+    def get_single(self, *args, **kwargs):
         raise NotImplementedError
 
-    def fetch_delete_by_id(self, *args, **kwargs):
-        raise NotImplementedError
+    def fetch_sync_by_id(self, instance_id):
+        api_instance = self.get_single(instance_id)
+        instance, created = self.update_or_create_instance(api_instance)
+        return instance
 
-    def get_or_create_instance(self, api_instance):
-        lookup_key = api_instance[self.lookup_key]
-        created = False
+    def fetch_delete_by_id(self, instance_id):
         try:
-            instance = self.model_class.objects.get(pk=lookup_key)
-        except self.model_class.DoesNotExist:
-            instance = self.model_class()
-            self._assign_field_data(instance, api_instance)
-            instance.save()
-            created = True
-
-        return instance, created
+            self.get_single(instance_id)
+        except api.ConnectWiseRecordNotFoundError:
+            # This is what we expect to happen. Since it's gone in CW, we
+            # are safe to delete it from here.
+            self.model_class.objects.filter(pk=instance_id).delete()
+            logger.info(
+                'Deleted {} {} (if it existed).'.format(
+                    self.model_class.__name__,
+                    instance_id
+                )
+            )
 
     def update_or_create_instance(self, api_instance):
         """
         Creates and returns an instance if it does not already exist.
         """
-        instance, created = self.get_or_create_instance(
-            api_instance)
+        created = False
+        try:
+            instance_pk = api_instance[self.lookup_key]
+            instance = self.model_class.objects.get(pk=instance_pk)
+        except self.model_class.DoesNotExist:
+            instance = self.model_class()
+            created = True
 
-        action = 'Created' if created else 'Updated'
-        if not created:
-            self._assign_field_data(instance, api_instance)
-            instance.save()
+        self._assign_field_data(instance, api_instance)
+        instance.save()
 
-        msg = ' {}: {} {}'
-        logger.info(msg.format(action, self.model_class.__name__, instance))
+        logger.info(
+            '{}: {} {}'.format(
+                'Created' if created else 'Updated',
+                self.model_class.__name__,
+                instance
+            )
+        )
 
         return instance, created
 
-    def prune_stale_records(self, synced_ids):
+    def prune_stale_records(self, initial_ids, synced_ids):
         """
-        Delete records that existed when Synchronizer was created but were
+        Delete records that existed when sync started but were
         not seen as we iterated through all records from REST API.
         """
-        stale_ids = self.initial_ids - synced_ids
+        stale_ids = initial_ids - synced_ids
         deleted_count = 0
         if stale_ids:
             delete_qset = self.model_class.objects.filter(pk__in=stale_ids)
@@ -161,7 +166,8 @@ class Synchronizer:
         created_count = 0
         updated_count = 0
         deleted_count = 0
-
+        initial_ids = self._instance_ids()  # Set of IDs of all records prior
+        # to sync, to find stale records for deletion.
         synced_ids = set()
         for record in self.get():
             _, created = self.update_or_create_instance(record)
@@ -173,7 +179,7 @@ class Synchronizer:
             synced_ids.add(record['id'])
 
         if reset:
-            deleted_count = self.prune_stale_records(synced_ids)
+            deleted_count = self.prune_stale_records(initial_ids, synced_ids)
 
         return created_count, updated_count, deleted_count
 
@@ -190,9 +196,6 @@ class BoardSynchronizer(Synchronizer):
 
     def get_page(self, *args, **kwargs):
         return self.client.get_boards(*args, **kwargs)
-
-    def get_queryset(self):
-        return self.model_class.objects.all()
 
 
 class BoardChildSynchronizer(Synchronizer):
@@ -234,9 +237,6 @@ class BoardStatusSynchronizer(BoardChildSynchronizer):
 
     def client_call(self, board_id, *args, **kwargs):
         return self.client.get_statuses(board_id, *args, **kwargs)
-
-    def get_queryset(self):
-        return self.model_class.objects.all()
 
 
 class TeamSynchronizer(BoardChildSynchronizer):
@@ -310,12 +310,8 @@ class CompanySynchronizer(Synchronizer):
         kwargs['conditions'] = self.api_conditions
         return self.client.get_companies(*args, **kwargs)
 
-    def get_queryset(self):
-        return self.model_class.objects.all()
-
-    def fetch_sync_by_id(self, company_id):
-        company = self.client.by_id(company_id)
-        self.update_or_create_instance(company)
+    def get_single(self, company_id):
+        return self.client.by_id(company_id)
 
     def fetch_delete_by_id(self, company_id):
         # Companies are deleted by setting deleted_flag = True, so
@@ -408,24 +404,8 @@ class ProjectSynchronizer(Synchronizer):
     def get_page(self, *args, **kwargs):
         return self.client.get_projects(*args, **kwargs)
 
-    def get_queryset(self):
-        return self.model_class.objects.all()
-
-    def fetch_sync_by_id(self, project_id):
-        project = self.client.get_project(project_id)
-        self.update_or_create_instance(project)
-        logger.info('Updated project {}'.format(project))
-
-    def fetch_delete_by_id(self, project_id):
-        try:
-            self.client.get_project(project_id)
-        except api.ConnectWiseRecordNotFoundError:
-            # This is what we expect to happen. Since it's gone in CW, we
-            # are safe to delete it from here.
-            models.Project.objects.filter(id=project_id).delete()
-            logger.info(
-                'Deleted project {} (if it existed).'.format(project_id)
-            )
+    def get_single(self, project_id):
+        return self.client.get_project(project_id)
 
 
 class MemberSynchronizer(Synchronizer):
@@ -433,14 +413,8 @@ class MemberSynchronizer(Synchronizer):
     model_class = models.Member
 
     def __init__(self, *args, **kwargs):
+        self.last_sync_job_time = None
         super().__init__(*args, **kwargs)
-        self.last_sync_job = None
-
-        sync_job_qset = models.SyncJob.objects.filter(
-            entity_name=self.model_class.__name__)
-
-        if sync_job_qset.exists():
-            self.last_sync_job = sync_job_qset.last()
 
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
@@ -479,83 +453,42 @@ class MemberSynchronizer(Synchronizer):
         logger.info("Saved member '{}' avatar to {}.".format(
             member.identifier, member.avatar.name))
 
-    def get(self):
-        records = []
-        page = 1
-        while True:
-            logger.info(
-                'Fetching member records, batch {}'.format(page)
-            )
-            page_records = self.get_page(
-                page=page, page_size=self.batch_size
-            )
-            records += page_records
-            page += 1
-            if len(page_records) < self.batch_size:
-                # No more records
-                break
-        return records
-
     def get_page(self, *args, **kwargs):
         return self.client.get_members(*args, **kwargs)
 
-    @log_sync_job
-    def sync(self, reset=False):
-        members_json = self.get()
+    def update_or_create_instance(self, api_instance):
+        """
+        In addition to what the parent does, also update avatar if necessary.
+        """
+        instance, created = super().update_or_create_instance(api_instance)
+        username = instance.identifier
 
-        updated_count = 0
-        created_count = 0
-        deleted_count = 0
-        synced_ids = set()
+        # Only update the avatar if the member profile
+        # was updated since last sync.
+        member_last_updated = parse(api_instance['_info']['lastUpdated'])
+        member_stale = False
+        if self.last_sync_job_time:
+            member_stale = member_last_updated > self.last_sync_job_time
 
-        for api_member in members_json:
-            member_id = api_member['id']
-            username = api_member['identifier']
-
-            try:
-                member = models.Member.objects.get(id=member_id)
-                self._assign_field_data(member, api_member)
-                member.save()
-                updated_count += 1
-                logger.info('Updated member: {0}'.format(member.identifier))
-            except models.Member.DoesNotExist:
-                # Member with that ID wasn't found, so let's make one.
-                member = models.Member()
-                self._assign_field_data(member, api_member)
-                member.save()
-                created_count += 1
-                logger.info('Created member: {0}'.format(member.identifier))
-
-            # Only update the avatar if the member profile
-            # was updated since last sync.
-            member_last_updated = parse(api_member['_info']['lastUpdated'])
-            logger.debug(
-                'Member {} last updated: {}'.format(
-                    member.identifier,
-                    member_last_updated
-                )
+        if not self.last_sync_job_time or member_stale or created:
+            logger.info(
+                'Fetching avatar for member {}.'.format(username)
             )
-            member_stale = False
-            if self.last_sync_job:
-                member_stale = member_last_updated > \
-                    self.last_sync_job.start_time
+            (attachment_filename, avatar) = self.client \
+                .get_member_image_by_identifier(username)
+            if attachment_filename and avatar:
+                self._save_avatar(instance, avatar, attachment_filename)
 
-            if not self.last_sync_job or member_stale:
-                logger.debug(
-                    'Fetching avatar for member {}.'.format(member.identifier)
-                )
-                (attachment_filename, avatar) = self.client \
-                    .get_member_image_by_identifier(username)
-                if attachment_filename and avatar:
-                    self._save_avatar(member, avatar, attachment_filename)
+        return instance, created
 
-            member.save()
-            synced_ids.add(api_member['id'])
+    def sync(self, reset=True):
+        sync_job_qset = models.SyncJob.objects.filter(
+            entity_name=self.model_class.__name__
+        )
+        if sync_job_qset.exists():
+            self.last_sync_job_time = sync_job_qset.last().start_time
 
-        if reset:
-            deleted_count = self.prune_stale_records(synced_ids)
-
-        return created_count, updated_count, deleted_count
+        return super().sync(reset=reset)
 
 
 class TicketSynchronizer(Synchronizer):
@@ -624,11 +557,13 @@ class TicketSynchronizer(Synchronizer):
 
         for json_field, value in self.related_meta.items():
             model_class, field_name = value
-            self._assign_relation(instance,
-                                  json_data,
-                                  json_field,
-                                  model_class,
-                                  field_name)
+            self._assign_relation(
+                instance,
+                json_data,
+                json_field,
+                model_class,
+                field_name
+            )
 
         instance.save()
         self._manage_member_assignments(instance)
@@ -692,24 +627,8 @@ class TicketSynchronizer(Synchronizer):
         kwargs['conditions'] = self.api_conditions
         return self.client.get_tickets(*args, **kwargs)
 
-    def get_queryset(self):
-        return self.model_class.objects.all()
-
-    def fetch_sync_by_id(self, ticket_id):
-        json_data = self.client.get_ticket(ticket_id)
-        ticket, _ = self.update_or_create_instance(json_data)
-        return ticket
-
-    def fetch_delete_by_id(self, ticket_id):
-        try:
-            self.client.get_ticket(ticket_id)
-        except api.ConnectWiseRecordNotFoundError:
-            # This is what we expect to happen. Since it's gone in CW, we
-            # are safe to delete it from here.
-            models.Ticket.objects.filter(id=ticket_id).delete()
-            logger.info(
-                'Deleted ticket {} (if it existed).'.format(ticket_id)
-            )
+    def get_single(self, ticket_id):
+        return self.client.get_ticket(ticket_id)
 
     def sync(self, reset=True):
         sync_job_qset = models.SyncJob.objects.filter(
@@ -741,6 +660,23 @@ class OpportunitySynchronizer(Synchronizer):
         'company': (models.Company, 'company'),
         'closedBy': (models.Member, 'closed_by')
     }
+
+    def _update_or_create_child(self, model_class, json_data):
+        child_name = json_data['name']
+        # Setting the name default ensures that if Django has to create the
+        # object, then the name has already been set and we don't have to save
+        # again.
+        child, created = model_class.objects.get_or_create(
+            id=json_data['id'],
+            defaults={
+                'name': child_name,
+            }
+        )
+        if not created:
+            # Ensure the name is up to date.
+            child.name = child_name
+            child.save()
+        return child
 
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
@@ -777,45 +713,20 @@ class OpportunitySynchronizer(Synchronizer):
                                   model_class,
                                   field_name)
 
-        priority, created = models.OpportunityPriority.objects.get_or_create(
-            id=json_data['priority']['id'],
-            defaults={
-                'name': json_data['priority']['name'],
-            }
+        instance.priority = self._update_or_create_child(
+            models.OpportunityPriority, json_data['priority']
         )
-        instance.priority = priority
-
-        stage, created = models.OpportunityStage.objects.get_or_create(
-            id=json_data['stage']['id'],
-            defaults={
-                'name': json_data['stage']['name'],
-            }
+        instance.stage = self._update_or_create_child(
+            models.OpportunityStage, json_data['stage']
         )
-        instance.stage = stage
 
         return instance
 
     def get_page(self, *args, **kwargs):
         return self.client.get_opportunities(*args, **kwargs)
 
-    # TODO - The implementation of these fetch methods ought
-    # to be pushed up to the superclass, given that this pattern has emerged.
-    def fetch_sync_by_id(self, instance_id):
-        opportunity = self.client.by_id(instance_id)
-        self.update_or_create_instance(opportunity)
-        logger.info('Updated Opportunity {}'.format(opportunity))
-        return opportunity
-
-    def fetch_delete_by_id(self, instance_id):
-        try:
-            self.client.by_id(instance_id)
-        except api.ConnectWiseRecordNotFoundError:
-            # This is what we expect to happen. Since it's gone in CW, we
-            # are safe to delete it from here.
-            models.Opportunity.objects.filter(id=instance_id).delete()
-            logger.info(
-                'Deleted Opportunity {} (if it existed).'.format(instance_id)
-            )
+    def get_single(self, opportunity_id):
+        return self.client.by_id(opportunity_id)
 
 
 class OpportunityStatusSynchronizer(Synchronizer):

@@ -358,7 +358,7 @@ class TestOpportunitySynchronizer(TestCase, SynchronizerTestMixin):
         json_data = self.fixture[0]
         _, patch = mocks.sales_api_by_id_call(json_data)
         result = self.synchronizer.fetch_sync_by_id(json_data['id'])
-        self.assertEqual(result, json_data)
+        self._assert_fields(result, json_data)
         patch.stop()
 
     def test_fetch_delete_by_id(self):
