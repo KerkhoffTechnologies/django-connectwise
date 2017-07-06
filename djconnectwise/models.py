@@ -458,6 +458,38 @@ class Opportunity(TimeStampedModel):
     def __str__(self):
         return self.name
 
+    def get_connectwise_url(self):
+        params = dict(
+            recordType='OpportunityFV',
+            recid=self.id,
+            companyName=settings.CONNECTWISE_CREDENTIALS['company_id']
+        )
+        return '{}/{}?{}'.format(
+            settings.CONNECTWISE_SERVER_URL,
+            settings.CONNECTWISE_TICKET_PATH,
+            urllib.parse.urlencode(params)
+        )
+
+    def save(self, *args, **kwargs):
+        """
+        Save the object.
+
+        If update_cw as a kwarg is True, then update ConnectWise with changes.
+        """
+        update_cw = kwargs.pop('update_cw', False)
+        super().save(*args, **kwargs)
+        if update_cw:
+            self.update_cw()
+
+    def update_cw(self):
+        """
+        Send ticket status and closed_flag updates to ConnectWise.
+        """
+        sales_client = api.SalesAPIClient()
+        return sales_client.update_opportunity_stage(
+            self.id, self.stage
+        )
+
 
 class Ticket(TimeStampedModel):
     RECORD_TYPES = (
@@ -541,18 +573,15 @@ class Ticket(TimeStampedModel):
             recid=self.id,
             companyName=settings.CONNECTWISE_CREDENTIALS['company_id']
         )
-
-        ticket_url = '{}/{}?{}'.format(
+        return '{}/{}?{}'.format(
             settings.CONNECTWISE_SERVER_URL,
             settings.CONNECTWISE_TICKET_PATH,
             urllib.parse.urlencode(params)
         )
 
-        return ticket_url
-
     def save(self, *args, **kwargs):
         """
-        Save the ticket.
+        Save the object.
 
         If update_cw as a kwarg is True, then update ConnectWise with changes.
         """

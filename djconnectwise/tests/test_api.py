@@ -1,4 +1,5 @@
 import responses
+import requests
 from urllib.parse import urljoin
 # import json
 
@@ -33,28 +34,56 @@ class BaseAPITestCase(TestCase):
 
 
 class TestConnectWiseAPIClient(TestCase):
-    def test_prepare_conditions_single(self):
-        client = api.ServiceAPIClient()  # Must use a real client as
+    def setUp(self):
+        self.client = api.ServiceAPIClient()  # Must use a real client as
         # ConnectWiseAPIClient is effectively abstract
+
+    def test_prepare_conditions_single(self):
         conditions = [
             'closedFlag = False',
         ]
         self.assertEqual(
-            client.prepare_conditions(conditions),
+            self.client.prepare_conditions(conditions),
             '(closedFlag = False)'
         )
 
     def test_prepare_conditions_multiple(self):
-        client = api.ServiceAPIClient()  # Must use a real client as
-        # ConnectWiseAPIClient is effectively abstract
         conditions = [
             'closedFlag = False',
             'status/id in (1,2,3)',
         ]
         self.assertEqual(
-            client.prepare_conditions(conditions),
+            self.client.prepare_conditions(conditions),
             '(closedFlag = False and status/id in (1,2,3))'
         )
+
+    @responses.activate
+    def test_request(self):
+        endpoint = 'http://example.com/'
+        response = 'ok'
+        responses.add(responses.GET, endpoint, json=response, status=200)
+
+        result = self.client.request('get', endpoint, None)
+        self.assertEqual(result, response)
+
+    @responses.activate
+    def test_request_failure(self):
+        endpoint = 'http://example.com/'
+        responses.add(
+            responses.GET, endpoint, body=requests.RequestException()
+        )
+
+        with self.assertRaises(ConnectWiseAPIError):
+            self.client.request('get', endpoint, None)
+
+    @responses.activate
+    def test_request_400(self):
+        endpoint = 'http://example.com/'
+        response = {'error': 'this is bad'}
+        responses.add(responses.GET, endpoint, json=response, status=400)
+
+        with self.assertRaises(ConnectWiseAPIError):
+            self.client.request('get', endpoint, None)
 
 
 class TestServiceAPIClient(BaseAPITestCase):
