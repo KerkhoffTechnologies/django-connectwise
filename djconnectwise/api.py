@@ -177,7 +177,7 @@ class ConnectWiseAPIClient(object):
                        retry_counter=None,
                        *args, **kwargs):
         """
-        Issue a request to the specified REST endpoint.
+        Issue a GET request to the specified REST endpoint.
 
         retry_counter is a dict in the form {'count': 0} that is passed in
         to verify the number of attempts that were made.
@@ -187,8 +187,7 @@ class ConnectWiseAPIClient(object):
                wait_exponential_max=RETRY_WAIT_EXPONENTIAL_MAX,
                retry_on_exception=retry_if_api_error)
         def _fetch_resource(endpoint_url, params=None, should_page=False,
-                            retry_counter=None,
-                            *args, **kwargs):
+                            retry_counter=None, *args, **kwargs):
             if not retry_counter:
                 retry_counter = {'count': 0}
             retry_counter['count'] += 1
@@ -261,6 +260,33 @@ class ConnectWiseAPIClient(object):
         """
         return '({})'.format(' and '.join(conditions))
 
+    def request(self, method, endpoint_url, body):
+        """
+        Issue the given type of request to the specified REST endpoint.
+        """
+        try:
+            logger.debug(
+                'Making {} request to {}'.format(method, endpoint_url)
+            )
+            response = requests.request(
+                method,
+                endpoint_url,
+                json=body,
+                auth=self.auth,
+                timeout=self.timeout,
+            )
+        except requests.RequestException as e:
+            logger.error(
+                'Request failed: {} {}: {}'.format(method, endpoint_url, e)
+            )
+            raise ConnectWiseAPIError('{}'.format(e))
+
+        if 200 <= response.status_code < 300:
+            return response.json()
+        else:
+            self._log_failed(response)
+            raise ConnectWiseAPIError(response.content)
+
 
 class ProjectAPIClient(ConnectWiseAPIClient):
     API = 'project'
@@ -325,6 +351,27 @@ class SalesAPIClient(ConnectWiseAPIClient):
         return self.fetch_resource(self.ENDPOINT_OPPORTUNITY_TYPES,
                                    should_page=True,
                                    *args, **kwargs)
+
+    def update_opportunity_stage(self, obj_id, stage):
+        """
+        Update the opportunities' stage on the server.
+        """
+        # Yeah, this schema is a bit bizarre. See CW docs at
+        # https://developer.connectwise.com/Manage/Developer_Guide#Patch
+        endpoint_url = self._endpoint(
+            '{}/{}'.format(self.ENDPOINT_OPPORTUNITIES, obj_id)
+        )
+        body = [
+            {
+                'op': 'replace',
+                'path': 'stage',
+                'value': {
+                    'id': stage.id,
+                    'name': stage.name,
+                },
+            },
+        ]
+        return self.request('patch', endpoint_url, body)
 
 
 class SystemAPIClient(ConnectWiseAPIClient):
@@ -498,6 +545,9 @@ class ServiceAPIClient(ConnectWiseAPIClient):
         """
         # Yeah, this schema is a bit bizarre. See CW docs at
         # https://developer.connectwise.com/Manage/Developer_Guide#Patch
+        endpoint_url = self._endpoint(
+            '{}/{}'.format(self.ENDPOINT_TICKETS, ticket_id)
+        )
         body = [
             {
                 'op': 'replace',
@@ -513,26 +563,7 @@ class ServiceAPIClient(ConnectWiseAPIClient):
                 },
             },
         ]
-        try:
-            endpoint = self._endpoint(
-                '{}/{}'.format(self.ENDPOINT_TICKETS, ticket_id)
-            )
-            logger.debug('Making PATCH request to {}'.format(endpoint))
-            response = requests.patch(
-                endpoint,
-                json=body,
-                auth=self.auth,
-                timeout=self.timeout,
-            )
-        except requests.RequestException as e:
-            logger.error('Request failed: PATCH {}: {}'.format(endpoint, e))
-            raise ConnectWiseAPIError('{}'.format(e))
-
-        if 200 <= response.status_code < 300:
-            return response.json()
-        else:
-            self._log_failed(response)
-            raise ConnectWiseAPIError(response.content)
+        return self.request('patch', endpoint_url, body)
 
     def get_statuses(self, board_id, *args, **kwargs):
         """
