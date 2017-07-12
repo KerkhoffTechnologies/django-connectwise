@@ -324,6 +324,18 @@ class CompanyAPIClient(ConnectWiseAPIClient):
                                    *args, **kwargs)
 
 
+class ScheduleAPIClient(ConnectWiseAPIClient):
+    API = 'schedule'
+    ENDPOINT_ENTRIES = 'entries'
+    ENDPOINT_SCHEDULE_TYPES = 'types'
+    ENDPOINT_SCHEDULE_STATUSES = 'statuses'
+
+    def get_schedule_statuses(self, *args, **kwargs):
+        return self.fetch_resource(self.ENDPOINT_SCHEDULE_STATUSES,
+                                   should_page=True,
+                                   *args, **kwargs)
+
+
 class SalesAPIClient(ConnectWiseAPIClient):
     API = 'sales'
     ENDPOINT_OPPORTUNITIES = 'opportunities'

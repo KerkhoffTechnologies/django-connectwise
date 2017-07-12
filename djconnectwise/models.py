@@ -279,6 +279,39 @@ class CompanyStatus(models.Model):
         return self.name
 
 
+class ScheduleType(models.Model):
+    name = models.CharField(max_length=50)
+    identifier = models.CharField(max_length=1)
+
+    def __str__(self):
+        return self.name
+
+
+class ScheduleStatus(models.Model):
+    name = models.CharField(max_length=30)
+
+    def __str__(self):
+        return self.name
+
+
+class ScheduleEntry(models.Model):
+    name = models.CharField(max_length=250)
+    object = models.ForeignKey('Ticket',
+                               blank=True, null=True)
+    member = models.ForeignKey('Member',
+                               blank=True, null=True)
+    where = models.ForeignKey('Location',
+                              blank=True, null=True)
+    date_start = models.DateTimeField(blank=True, null=True)
+    date_end = models.DateTimeField(blank=True, null=True)
+    status = models.ForeignKey('ScheduleStatus')
+    schedule_type = models.ForeignKey('ScheduleType')
+    done_flag = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.name
+
+
 class AvailableBoardTeamManager(models.Manager):
     """Return only teams whose ConnectWise board is active."""
     def get_queryset(self):

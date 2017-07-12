@@ -349,6 +349,38 @@ class CompanyStatusSynchronizer(Synchronizer):
         return self.client.get_company_statuses(*args, **kwargs)
 
 
+class ScheduleStatusSynchronizer(Synchronizer):
+    """
+    Coordinates retrieval and demarshalling of ConnectWise JSON
+    ScheduleStatus instances.
+    """
+    client_class = api.ScheduleAPIClient
+    model_class = models.ScheduleType
+
+    def _assign_field_data(self, instance, json_data):
+        instance.name = json_data['name']
+
+        return instance
+
+    def get_page(self, *args, **kwargs):
+        return self.client.get_schedule_statuses(*args, **kwargs)
+
+
+class ScheduleTypeSychronizer(Synchronizer):
+    """
+    Coordinates retrieval and demarshalling of ConnectWise JSON
+    ScheduleType instances.
+    """
+    client_class = api.ScheduleAPIClient
+    model_class = models.ScheduleType
+
+    def _assign_field_data(self, instance, json_data):
+        instance.name = json_data['name']
+        instance.identifier = json_data['identifier']
+
+        return instance
+
+
 class LocationSynchronizer(Synchronizer):
     """
     Coordinates retrieval and demarshalling of ConnectWise JSON
