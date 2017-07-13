@@ -296,17 +296,18 @@ class ScheduleStatus(models.Model):
 
 class ScheduleEntry(models.Model):
     name = models.CharField(max_length=250)
+    date_start = models.DateTimeField(blank=True, null=True)
+    date_end = models.DateTimeField(blank=True, null=True)
+    done_flag = models.BooleanField(default=False)
+
     object = models.ForeignKey('Ticket',
                                blank=True, null=True)
     member = models.ForeignKey('Member',
                                blank=True, null=True)
     where = models.ForeignKey('Location',
                               blank=True, null=True)
-    date_start = models.DateTimeField(blank=True, null=True)
-    date_end = models.DateTimeField(blank=True, null=True)
     status = models.ForeignKey('ScheduleStatus')
     schedule_type = models.ForeignKey('ScheduleType')
-    done_flag = models.BooleanField(default=False)
 
     def __str__(self):
         return self.name

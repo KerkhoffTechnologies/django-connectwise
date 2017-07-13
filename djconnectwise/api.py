@@ -335,6 +335,20 @@ class ScheduleAPIClient(ConnectWiseAPIClient):
                                    should_page=True,
                                    *args, **kwargs)
 
+    def get_schedule_types(self, *args, **kwargs):
+        return self.fetch_resource(self.ENDPOINT_SCHEDULE_TYPES,
+                                   should_page=True,
+                                   *args, **kwargs)
+
+    def get_schedule_entries(self, *args, **kwargs):
+        return self.fetch_resource(self.ENDPOINT_ENTRIES,
+                                   should_page=True,
+                                   *args, **kwargs)
+
+    def get_schedule_entry(self, entry_id):
+        endpoint_url = '{}/{}'.format(self.ENDPOINT_ENTRIES, entry_id)
+        return self.fetch_resource(endpoint_url)
+
 
 class SalesAPIClient(ConnectWiseAPIClient):
     API = 'sales'

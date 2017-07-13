@@ -349,6 +349,56 @@ class CompanyStatusSynchronizer(Synchronizer):
         return self.client.get_company_statuses(*args, **kwargs)
 
 
+class ScheduleEntriesSynchronizer(Synchronizer):
+    """
+    Coordinates retrieval and demarshalling of ConnectWise JSON
+    ScheduleEntries instances.
+    """
+    client_class = api.ScheduleAPIClient
+    model_class = models.ScheduleEntry
+
+    related_meta = {
+        'object': (models.Ticket, 'object'),
+        'member': (models.Member, 'member'),
+        'where': (models.Location, 'where'),
+        'status': (models.ScheduleStatus, 'status'),
+        'type': (models.ScheduleType, 'schedule_type')
+    }
+
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data['id']
+        instance.name = json_data['name']
+        instance.done_flag = json_data['doneFlag']
+
+        # handle dates
+        expected_date_start = json_data['dateStart']
+        if expected_date_start:
+            instance.expected_date_start = parse(expected_date_start).date()
+
+        expected_date_end = json_data['dateEnd']
+        if expected_date_end:
+            instance.expected_date_end = parse(expected_date_end).date()
+
+        # handle foreign keys
+        for json_field, value in self.related_meta.items():
+            model_class, field_name = value
+            self._assign_relation(instance,
+                                  json_data,
+                                  json_field,
+                                  model_class,
+                                  field_name)
+
+        return instance
+
+    def get_page(self, *args, **kwargs):
+        return self.client.get_schedule_entries(*args, **kwargs)
+
+
+    def get_single(self, entry_id):
+        return self.client.get_schedule_entry(entry_id)
+
+
+
 class ScheduleStatusSynchronizer(Synchronizer):
     """
     Coordinates retrieval and demarshalling of ConnectWise JSON
@@ -379,6 +429,9 @@ class ScheduleTypeSychronizer(Synchronizer):
         instance.identifier = json_data['identifier']
 
         return instance
+
+    def get_page(self, *args, **kwargs):
+        return self.client.get_schedule_types(*args, **kwargs)
 
 
 class LocationSynchronizer(Synchronizer):
