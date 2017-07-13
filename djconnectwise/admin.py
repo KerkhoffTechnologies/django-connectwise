@@ -88,3 +88,25 @@ class OpportunityStatusAdmin(admin.ModelAdmin):
                     'closed_flag', 'inactive_flag')
     list_filter = ('won_flag', 'lost_flag', 'closed_flag', 'inactive_flag')
     search_fields = ['name']
+
+
+@admin.register(models.ScheduleType)
+class ScheduleTypeAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'identifier')
+    list_filter = ('name')
+    search_fields = ['name']
+
+
+@admin.register(models.ScheduleStatus)
+class ScheduleStatusAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name')
+    list_filter = ('name')
+    search_fields = ['name']
+
+
+@admin.register(models.ScheduleEntry)
+class ScheduleEntryAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'date_start', 'date_end', 'done_flag',
+                    'object', 'member', 'where', 'status', 'schedule_type')
+    list_filter = ('name', 'member', 'where', 'status')
+    search_fields = ['name', 'object', 'member']

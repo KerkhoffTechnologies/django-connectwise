@@ -393,10 +393,8 @@ class ScheduleEntriesSynchronizer(Synchronizer):
     def get_page(self, *args, **kwargs):
         return self.client.get_schedule_entries(*args, **kwargs)
 
-
     def get_single(self, entry_id):
         return self.client.get_schedule_entry(entry_id)
-
 
 
 class ScheduleStatusSynchronizer(Synchronizer):
