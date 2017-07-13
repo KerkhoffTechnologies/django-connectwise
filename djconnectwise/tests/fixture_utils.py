@@ -80,18 +80,21 @@ def init_opportunity_types():
 
 
 def init_schedule_types():
-    #todo: schedule type mock code
+    mocks.schedule_api_get_schedule_types_call(
+        fixtures.API_SCHEDULE_TYPE_LIST)
     synchronizer = sync.ScheduleTypeSychronizer()
     return synchronizer.sync()
 
 
 def init_schedule_statuses():
-    #todo: schedule status mock code
+    mocks.schedule_api_get_schedule_statuses_call(
+        fixtures.API_SCHEDULE_STATUS_LIST)
     synchronizer = sync.ScheduleStatusSynchronizer()
     return synchronizer.sync()
 
 
 def init_schedule_entries():
-    #todo: schedule entries mock code
+    mocks.schedule_api_get_schedule_entries_call(
+        fixtures.API_SCHEDULE_ENTRIES)
     synchronizer = sync.ScheduleEntriesSynchronizer()
     return synchronizer.sync()
