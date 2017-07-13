@@ -299,6 +299,16 @@ class TestCompanyAPIClient(BaseAPITestCase):
         self.assert_request_should_page(True)
 
 
+class TestScheduleAPIClient(BaseAPITestCase):
+
+    def setUp(self):
+        super(TestScheduleAPIClient, self).setUp()
+        self.client = api.ScheduleAPIClient()
+        self.endpoint = self.client._endpoint(self.client.ENDPOINT_ENTRIES)
+
+
+
+
 class TestFetchAPICodebase(TestCase):
     HOST = 'https://na.myconnectwise.net'
 
