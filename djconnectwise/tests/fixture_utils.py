@@ -77,3 +77,21 @@ def init_opportunity_types():
         fixtures.API_SALES_OPPORTUNITY_TYPES)
     synchronizer = sync.OpportunityTypeSynchronizer()
     return synchronizer.sync()
+
+
+def init_schedule_types():
+    #todo: schedule type mock code
+    synchronizer = sync.ScheduleTypeSychronizer()
+    return synchronizer.sync()
+
+
+def init_schedule_statuses():
+    #todo: schedule status mock code
+    synchronizer = sync.ScheduleStatusSynchronizer()
+    return synchronizer.sync()
+
+
+def init_schedule_entries():
+    #todo: schedule entries mock code
+    synchronizer = sync.ScheduleEntriesSynchronizer()
+    return synchronizer.sync()
