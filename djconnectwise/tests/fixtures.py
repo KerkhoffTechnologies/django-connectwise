@@ -670,3 +670,66 @@ API_COMPANY_INFO = {
     'CompanyID': 'CW',
     'IsCloud': True
 }
+
+API_SCHEDULE_TYPE = {
+    'id': 2,
+    'name': 'Vacation',
+    'identifier': 'V',
+    'chargeCode': None,
+    'where': API_SERVICE_LOCATION,
+    'systemFlag': False,
+    '_info': {
+        'lastUpdated': '2002-01-23T19:47:30Z',
+        'updatedBy': 'JBelanger'
+    }
+}
+
+API_SCHEDULE_TYPE_LIST = [API_SCHEDULE_TYPE]
+
+API_SCHEDULE_STATUS = {
+    'id': 2,
+    'name': 'Firm',
+    'defaultFlag': True,
+    'showAsTentativeFlag': False,
+    '_info': {
+        'lastUpdated': '2001-04-30T18:48:51Z',
+        'updatedBy': None
+    }
+}
+
+API_SCHEDULE_STATUS_LIST = [API_SCHEDULE_STATUS]
+
+API_SCHEDULE_ENTRY = {
+    'id': 4,
+    'objectId': 47,
+    'name': 'Network Upgrade / Project Management / Senior Engineer Project Planning',
+    'member': API_MEMBER,
+    'where': API_SERVICE_LOCATION,
+    'dateStart': '2005-05-02T12:00:00Z',
+    'dateEnd': '2005-05-02T16:00:00Z',
+    'reminder': {
+        'id': 4,
+        'name': '15 minutes',
+        '_info': None
+    },
+    'status': API_SCHEDULE_STATUS,
+    'type': API_SCHEDULE_TYPE,
+    'span': None,
+    'doneFlag': False,
+    'acknowledgedFlag': False,
+    'ownerFlag': False,
+    'allowScheduleConflictsFlag': None,
+    'addMemberToProjectFlag': None,
+    'projectRoleId': None,
+    'mobileGuid': '4cafb36f-418f-4f91-a6f1-e7fbdba87fd5',
+    'closeDate': '2015-11-19T18:57:55Z',
+    'hours': 4,
+    '_info': {
+        'lastUpdated': '2015-11-19T18:57:55Z',
+        'updatedBy': 'kanban'
+    }
+}
+
+API_SCHEDULE_ENTRIES = [
+    API_SCHEDULE_ENTRY
+]
