@@ -36,10 +36,15 @@ class Command(BaseCommand):
             ('opportunity', sync.OpportunitySynchronizer,
                 _('Opportunity')),
             ('ticket', sync.TicketSynchronizer, _('Ticket')),
+            ('schedule_type', sync.ScheduleTypeSychronizer, _('Schedule Type')),
+            ('schedule_status', sync.ScheduleStatusSynchronizer,
+                _('Schedule Status')),
+            ('schedule_entry', sync.ScheduleEntriesSynchronizer,
+                _('Schedule Entry')),
         )
         self.synchronizer_map = OrderedDict()
-        for name, syncronizer, obj_name in synchronizers:
-            self.synchronizer_map[name] = (syncronizer, obj_name)
+        for name, synchronizer, obj_name in synchronizers:
+            self.synchronizer_map[name] = (synchronizer, obj_name)
 
     def add_arguments(self, parser):
         parser.add_argument(OPTION_NAME, nargs='?', type=str)
