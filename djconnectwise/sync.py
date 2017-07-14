@@ -406,6 +406,7 @@ class ScheduleStatusSynchronizer(Synchronizer):
     model_class = models.ScheduleType
 
     def _assign_field_data(self, instance, json_data):
+        instance.id = json_data['id']
         instance.name = json_data['name']
 
         return instance
@@ -423,6 +424,7 @@ class ScheduleTypeSychronizer(Synchronizer):
     model_class = models.ScheduleType
 
     def _assign_field_data(self, instance, json_data):
+        instance.id = json_data['id']
         instance.name = json_data['name']
         instance.identifier = json_data['identifier']
 

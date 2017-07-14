@@ -93,8 +93,8 @@ def init_schedule_statuses():
     return synchronizer.sync()
 
 
-# def init_schedule_entries():
-#     mocks.schedule_api_get_schedule_entries_call(
-#         fixtures.API_SCHEDULE_ENTRIES)
-#     synchronizer = sync.ScheduleEntriesSynchronizer()
-#     return synchronizer.sync()
+def init_schedule_entries():
+    mocks.schedule_api_get_schedule_entries_call(
+        fixtures.API_SCHEDULE_ENTRIES)
+    synchronizer = sync.ScheduleEntriesSynchronizer()
+    return synchronizer.sync()
