@@ -308,7 +308,7 @@ class TestScheduleAPIClient(BaseAPITestCase):
 
     @responses.activate
     def test_get_schedule_types(self):
-        endpoint = self.client._endpoint(self.client.ENDPPOINT_SCHEDULE_TYPES)
+        endpoint = self.client._endpoint(self.client.ENDPOINT_SCHEDULE_TYPES)
 
         mk.get(endpoint, fixtures.API_SCHEDULE_TYPE_LIST)
         result = self.client.get_schedule_types()
@@ -317,7 +317,8 @@ class TestScheduleAPIClient(BaseAPITestCase):
 
     @responses.activate
     def test_get_schedule_statuses(self):
-        endpoint = self.client._endpoint(self.client.ENDPOINT_SCHEDULE_STATUSES)
+        endpoint = \
+            self.client._endpoint(self.client.ENDPOINT_SCHEDULE_STATUSES)
 
         mk.get(endpoint, fixtures.API_SCHEDULE_STATUS_LIST)
         result = self.client.get_schedule_statuses()
