@@ -171,6 +171,35 @@ class TestSyncOpportunityTypesCommand(AbstractBaseSyncTest, TestCase):
     )
 
 
+class TestSyncScheduleCommand(AbstractBaseSyncTest, TestCase):
+    args = (
+        mocks.schedule_api_get_schedule_entries_call,
+        fixtures.API_SCHEDULE_ENTRIES,
+        'entry_type'
+    )
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_schedule_types()
+        fixture_utils.init_schedule_statuses()
+
+
+class TestSyncScheduleTypesCommand(AbstractBaseSyncTest, TestCase):
+    args = (
+        mocks.schedule_api_get_schedule_types_call,
+        fixtures.API_SCHEDULE_TYPE_LIST,
+        'schedule_type'
+    )
+
+
+class TestSyncScheduleStatusesCommand(AbstractBaseSyncTest, TestCase):
+    args = (
+        mocks.schedule_api_get_schedule_statuses_call,
+        fixtures.API_SCHEDULE_STATUS_LIST,
+        'schedule_status'
+    )
+
+
 class TestSyncAllCommand(TestCase):
 
     def setUp(self):
@@ -191,7 +220,10 @@ class TestSyncAllCommand(TestCase):
             TestSyncBoardsCommand,
             TestSyncOpportunityStatusesCommand,
             TestSyncOpportunityTypesCommand,
-            TestSyncOpportunityCommand
+            TestSyncOpportunityCommand,
+            TestSyncScheduleTypesCommand,
+            TestSyncScheduleStatusesCommand,
+            TestSyncScheduleCommand
         ]
 
         self.test_args = []
@@ -253,6 +285,9 @@ class TestSyncAllCommand(TestCase):
             'opportunity': models.Opportunity,
             'opportunity_status': models.OpportunityStatus,
             'opportunity_type': models.OpportunityType,
+            'schedule_entry': models.ScheduleEntry,
+            'schedule_type': models.ScheduleType,
+            'schedule_status': models.ScheduleStatus,
         }
 
         self.test_sync()

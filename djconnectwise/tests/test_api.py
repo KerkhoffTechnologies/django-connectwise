@@ -306,7 +306,42 @@ class TestScheduleAPIClient(BaseAPITestCase):
         self.client = api.ScheduleAPIClient()
         self.endpoint = self.client._endpoint(self.client.ENDPOINT_ENTRIES)
 
+    @responses.activate
+    def test_get_schedule_types(self):
+        endpoint = self.client._endpoint(self.client.ENDPPOINT_SCHEDULE_TYPES)
 
+        mk.get(endpoint, fixtures.API_SCHEDULE_TYPE_LIST)
+        result = self.client.get_schedule_types()
+        self.assertEqual(result, fixtures.API_SCHEDULE_TYPE_LIST)
+        self.assert_request_should_page(True)
+
+    @responses.activate
+    def test_get_schedule_statuses(self):
+        endpoint = self.client._endpoint(self.client.ENDPOINT_SCHEDULE_STATUSES)
+
+        mk.get(endpoint, fixtures.API_SCHEDULE_STATUS_LIST)
+        result = self.client.get_schedule_statuses()
+        self.assertEqual(result, fixtures.API_SCHEDULE_STATUS_LIST)
+        self.assert_request_should_page(True)
+
+    @responses.activate
+    def test_get_schedule_entries(self):
+        endpoint = self.client._endpoint(self.client.ENDPOINT_ENTRIES)
+
+        mk.get(endpoint, fixtures.API_SCHEDULE_ENTRIES)
+        result = self.client.get_schedule_entries()
+        self.assertEqual(result, fixtures.API_SCHEDULE_ENTRIES)
+        self.assert_request_should_page(True)
+
+    @responses.activate
+    def test_get_schedule_entry(self):
+        entry_id = fixtures.API_SCHEDULE_ENTRY['id']
+        endpoint_url = '{}/{}'.format(self.endpoint, entry_id)
+
+        mk.get(endpoint_url, fixtures.API_SCHEDULE_ENTRY)
+        result = self.client.get_schedule_entry(entry_id)
+        self.assertEqual(result, fixtures.API_SCHEDULE_ENTRY)
+        self.assert_request_should_page(False)
 
 
 class TestFetchAPICodebase(TestCase):
