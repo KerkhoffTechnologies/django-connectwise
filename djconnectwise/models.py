@@ -300,14 +300,11 @@ class ScheduleEntry(models.Model):
     date_end = models.DateTimeField(blank=True, null=True)
     done_flag = models.BooleanField(default=False)
 
-    object = models.ForeignKey('Ticket',
-                               blank=True, null=True)
-    member = models.ForeignKey('Member',
-                               blank=True, null=True)
-    where = models.ForeignKey('Location',
-                              blank=True, null=True)
-    status = models.ForeignKey('ScheduleStatus')
-    schedule_type = models.ForeignKey('ScheduleType')
+    object = models.ForeignKey('Ticket')
+    member = models.ForeignKey('Member')
+    where = models.ForeignKey('Location', blank=True, null=True)
+    status = models.ForeignKey('ScheduleStatus', blank=True, null=True)
+    schedule_type = models.ForeignKey('ScheduleType', blank=True, null=True)
 
     def __str__(self):
         return self.name
@@ -387,6 +384,8 @@ class TicketPriority(TimeStampedModel):
         self._color = color
 
 
+# todo: With the change to Schedule Models, TicketAssignment will be removed.
+#       search the rest of the code and port to ScheduleEntries.
 class TicketAssignment(TimeStampedModel):
     ticket = models.ForeignKey('Ticket')
     member = models.ForeignKey('Member')

@@ -51,20 +51,21 @@ class Synchronizer:
         request_settings = RequestSettings().get_settings()
         self.batch_size = request_settings['batch_size']
 
-    def _assign_relation(self, ticket, json_data,
+    def _assign_relation(self, instance, json_data,
                          json_field, model_class, model_field):
         relation_json = json_data.get(json_field)
         if relation_json:
             try:
                 uid = relation_json['id']
                 related_instance = model_class.objects.get(pk=uid)
-                setattr(ticket, model_field, related_instance)
+                setattr(instance, model_field, related_instance)
             except model_class.DoesNotExist:
                 logger.warning(
-                    'Failed to find {} {} for ticket {}.'.format(
+                    'Failed to find {} {} for {} {}.'.format(
                         json_field,
                         uid,
-                        ticket.id
+                        type(instance),
+                        instance.id
                     )
                 )
 
@@ -170,6 +171,8 @@ class Synchronizer:
         # to sync, to find stale records for deletion.
         synced_ids = set()
         for record in self.get():
+            # todo: handle django doesNotExist exception with an error message
+            # use a try-catch block to log the error and don't save the record
             _, created = self.update_or_create_instance(record)
             if created:
                 created_count += 1
@@ -358,7 +361,6 @@ class ScheduleEntriesSynchronizer(Synchronizer):
     model_class = models.ScheduleEntry
 
     related_meta = {
-        'object': (models.Ticket, 'object'),
         'member': (models.Member, 'member'),
         'where': (models.Location, 'where'),
         'status': (models.ScheduleStatus, 'status'),
@@ -380,6 +382,9 @@ class ScheduleEntriesSynchronizer(Synchronizer):
             instance.expected_date_end = parse(expected_date_end).date()
 
         # handle foreign keys
+        #todo: _assign relation expects a dict. objectId is an integer.
+        #       handle it as a special situation.  See Ticket member assignment
+        #       for a possible example.
         for json_field, value in self.related_meta.items():
             model_class, field_name = value
             self._assign_relation(instance,
@@ -403,7 +408,7 @@ class ScheduleStatusSynchronizer(Synchronizer):
     ScheduleStatus instances.
     """
     client_class = api.ScheduleAPIClient
-    model_class = models.ScheduleType
+    model_class = models.ScheduleStatus
 
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
@@ -669,6 +674,8 @@ class TicketSynchronizer(Synchronizer):
 
         return instance
 
+    # todo: this method will be removed when Scheduling Entries handle tickets
+    #       and resources.  Refactor as necessary
     def _manage_member_assignments(self, ticket):
         if not ticket.resources:
             ticket.members.clear()

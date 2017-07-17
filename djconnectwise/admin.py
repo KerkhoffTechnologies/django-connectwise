@@ -93,14 +93,14 @@ class OpportunityStatusAdmin(admin.ModelAdmin):
 @admin.register(models.ScheduleType)
 class ScheduleTypeAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'identifier')
-    list_filter = ('name')
+    list_filter = ('name', )
     search_fields = ['name']
 
 
 @admin.register(models.ScheduleStatus)
 class ScheduleStatusAdmin(admin.ModelAdmin):
     list_display = ('id', 'name')
-    list_filter = ('name')
+    list_filter = ('name', )
     search_fields = ['name']
 
 

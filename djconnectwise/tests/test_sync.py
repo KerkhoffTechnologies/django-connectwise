@@ -585,6 +585,8 @@ class TestTicketSynchronizer(TestCase):
         self.assertEqual(ticket_qset.count(), 0)
         _patch.stop()
 
+    # todo: this test can be removed because _manage_member_assignments will
+    #       be removed
     def test_manage_member_assignments_last_resource_removed(self):
         # ticket with no resources should have all members removed
         fixture_utils.init_tickets()
