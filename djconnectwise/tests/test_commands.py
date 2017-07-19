@@ -151,6 +151,8 @@ class TestSyncOpportunityCommand(AbstractBaseSyncTest, TestCase):
 
     def setUp(self):
         super().setUp()
+        fixture_utils.init_companies()
+        fixture_utils.init_members()
         fixture_utils.init_opportunity_statuses()
         fixture_utils.init_opportunity_types()
 
@@ -171,17 +173,26 @@ class TestSyncOpportunityTypesCommand(AbstractBaseSyncTest, TestCase):
     )
 
 
-class TestSyncScheduleCommand(AbstractBaseSyncTest, TestCase):
+class TestSyncScheduleEntriesCommand(AbstractBaseSyncTest, TestCase):
     args = (
         mocks.schedule_api_get_schedule_entries_call,
         fixtures.API_SCHEDULE_ENTRIES,
-        'entry_type'
+        'schedule_entry'
     )
 
     def setUp(self):
         super().setUp()
+        fixture_utils.init_boards()
+        fixture_utils.init_board_statuses()
+        fixture_utils.init_companies()
+        fixture_utils.init_locations()
+        fixture_utils.init_teams()
+        fixture_utils.init_members()
+        fixture_utils.init_priorities()
+        fixture_utils.init_projects()
         fixture_utils.init_schedule_types()
         fixture_utils.init_schedule_statuses()
+        fixture_utils.init_tickets()
 
 
 class TestSyncScheduleTypesCommand(AbstractBaseSyncTest, TestCase):
@@ -223,7 +234,7 @@ class TestSyncAllCommand(TestCase):
             TestSyncOpportunityCommand,
             TestSyncScheduleTypesCommand,
             TestSyncScheduleStatusesCommand,
-            TestSyncScheduleCommand
+            TestSyncScheduleEntriesCommand
         ]
 
         self.test_args = []

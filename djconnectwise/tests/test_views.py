@@ -91,6 +91,11 @@ class TestTicketCallBackView(BaseTestCallBackView):
         self.assertEqual(instance.summary, entity['summary'])
 
     def test_add(self):
+        fixture_utils.init_priorities()
+        fixture_utils.init_projects()
+        fixture_utils.init_companies()
+        fixture_utils.init_locations()
+        fixture_utils.init_teams()
         self.assertEqual(Ticket.objects.count(), 0)
         mocks.service_api_get_ticket_call()
         self._test_added(CallBackEntry.TICKET, fixtures.API_SERVICE_TICKET)

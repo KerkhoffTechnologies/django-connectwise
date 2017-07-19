@@ -700,9 +700,9 @@ API_SCHEDULE_STATUS = {
 API_SCHEDULE_STATUS_LIST = [API_SCHEDULE_STATUS]
 
 API_SCHEDULE_ENTRY = {
-    'id': 4,
-    'objectId': 47,
-    'name': 'Network Upgrade / Project Management / Senior Engineer Project Planning',
+    'id': 11,
+    'objectId': 69,
+    'name': 'Set up new Workstation for Gregg',
     'member': API_MEMBER,
     'where': API_SERVICE_LOCATION,
     'dateStart': '2005-05-02T12:00:00Z',
@@ -730,6 +730,4 @@ API_SCHEDULE_ENTRY = {
     }
 }
 
-API_SCHEDULE_ENTRIES = [
-    API_SCHEDULE_ENTRY
-]
+API_SCHEDULE_ENTRIES = [API_SCHEDULE_ENTRY]

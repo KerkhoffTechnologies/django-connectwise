@@ -82,9 +82,10 @@ class Command(BaseCommand):
             if sync_tuple:
                 sync_classes.append(sync_tuple)
             else:
-                msg = _('Invalid CW object, choose one of the following: \n{}')
+                msg = _('Invalid CW object {}, '
+                        'choose one of the following: \n{}')
                 options_txt = ', '.join(self.synchronizer_map.keys())
-                msg = msg.format(options_txt)
+                msg = msg.format(sync_tuple, options_txt)
                 raise CommandError(msg)
         else:
             sync_classes = self.synchronizer_map.values()
