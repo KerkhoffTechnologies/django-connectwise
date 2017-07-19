@@ -180,17 +180,16 @@ class TestScheduleEntriesSynchronizer(TestCase, SynchronizerTestMixin):
         self.assertEqual(instance.name, json_data['name'])
         self.assertEqual(instance.done_flag, json_data['doneFlag'])
         self.assertEqual(instance.expected_date_start,
-                         parse(json_data['dateStart']).date())
+                         parse(json_data['dateStart']))
         self.assertEqual(instance.expected_date_end,
-                         parse(json_data['dateEnd']).date())
+                         parse(json_data['dateEnd']))
 
         # verify referenced objects
-        # todo: fix this test.  should objectId be a dict?
-        self.assertEqual(instance.object['id'], json_data['objectId'])
-        self.assertEqual(instance.where, json_data['where']['id'])
-        self.assertEqual(instance.member, json_data['member']['id'])
-        self.assertEqual(instance.status, json_data['status']['id'])
-        self.assertEqual(instance.type, json_data['schedule_type']['id'])
+        self.assertEqual(instance.object.id, json_data['objectId'])
+        self.assertEqual(instance.where.id, json_data['where']['id'])
+        self.assertEqual(instance.member.id, json_data['member']['id'])
+        self.assertEqual(instance.status.id, json_data['status']['id'])
+        self.assertEqual(instance.schedule_type.id, json_data['type']['id'])
 
 
 class TestScheduleTypeSynchronizer(TestCase, SynchronizerTestMixin):

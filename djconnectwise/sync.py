@@ -3,7 +3,7 @@ import logging
 from dateutil.parser import parse
 
 from django.core.files.base import ContentFile
-# from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import IntegrityError
 from django.db import transaction
 from django.utils import timezone
@@ -174,9 +174,8 @@ class Synchronizer:
         # to sync, to find stale records for deletion.
         synced_ids = set()
         for record in self.get():
-            # todo(WIP): handle django doesNotExist exception
-            # with an error message
-            # use a try-catch block to log the error and don't save the record
+            # When a ScheduleEntry references a ticket that can't be found or
+            # does not exist, log the error.  Entry is not saved.
             try:
                 with transaction.atomic():
                     _, created = self.update_or_create_instance(record)
@@ -186,16 +185,16 @@ class Synchronizer:
                     updated_count += 1
             except IntegrityError as e:
                 logger.warning('IntegrityError: {}'.format(e.__cause__))
-            # except ObjectDoesNotExist as e:
-            #     logger.warning(
-            #         'ObjectDoesNotExist: {} error {} id {}. '
-            #         'objectId {}'.format(
-            #             e.args,
-            #             self.model_class.__name__,
-            #             record['id'],
-            #             record['objectId'],
-            #         )
-            #     )
+            except ObjectDoesNotExist as e:
+                logger.warning(
+                    'ObjectDoesNotExist: {} {} id {}. '
+                    'objectId {}'.format(
+                        e.args,
+                        self.model_class.__name__,
+                        record['id'],
+                        record['objectId'],
+                    )
+                )
 
             synced_ids.add(record['id'])
 
@@ -393,11 +392,11 @@ class ScheduleEntriesSynchronizer(Synchronizer):
         # handle dates
         expected_date_start = json_data['dateStart']
         if expected_date_start:
-            instance.expected_date_start = parse(expected_date_start).date()
+            instance.expected_date_start = parse(expected_date_start)
 
         expected_date_end = json_data['dateEnd']
         if expected_date_end:
-            instance.expected_date_end = parse(expected_date_end).date()
+            instance.expected_date_end = parse(expected_date_end)
 
         # handle foreign keys
         for json_field, value in self.related_meta.items():
@@ -407,12 +406,8 @@ class ScheduleEntriesSynchronizer(Synchronizer):
                                   json_field,
                                   model_class,
                                   field_name)
-        # todo(DONE): _assign relation expects a dict. objectId is an integer.
-        #       handle it as a special situation.  See Ticket member assignment
-        #       for a possible example.
-        # json_field: 'objectId'
-        # model_class: models.Ticket
-        # field_name: 'object')
+        # _assign relation expects a dict. objectId is an integer. Handle it
+        # as a special situation.
         # try:
         ticket_class = models.Ticket
         uid = json_data['objectId']
@@ -428,8 +423,6 @@ class ScheduleEntriesSynchronizer(Synchronizer):
         #         )
         #     )
 
-        # instance.object = json_data['objectId']
-
         return instance
 
     def get_page(self, *args, **kwargs):
@@ -437,50 +430,6 @@ class ScheduleEntriesSynchronizer(Synchronizer):
 
     def get_single(self, entry_id):
         return self.client.get_schedule_entry(entry_id)
-
-    def update_or_create_instance(self, api_instance):
-        """
-        Creates and returns an instance if it does not already exist.
-        """
-        created = False
-        try:
-            instance_pk = api_instance[self.lookup_key]
-            instance = self.model_class.objects.get(pk=instance_pk)
-        except self.model_class.DoesNotExist:
-            instance = self.model_class()
-            created = True
-
-        self._assign_field_data(instance, api_instance)
-        instance.save()
-
-        logger.info(
-            '{}: {} {}'.format(
-                'Created' if created else 'Updated',
-                self.model_class.__name__,
-                instance
-            )
-        )
-
-        return instance, created
-
-    def get(self):
-        """Buffer and return all pages of results."""
-        records = []
-        page = 1
-        while True:
-            logger.info(
-                'Fetching {} records, batch {}'.format(self.model_class, page)
-            )
-            page_records = self.get_page(
-                page=page, page_size=self.batch_size
-            )
-            records += page_records
-            page += 1
-            if len(page_records) < self.batch_size:
-                # This page wasn't full, so there's no more records after
-                # this page.
-                break
-        return records
 
 
 class ScheduleStatusSynchronizer(Synchronizer):
