@@ -546,9 +546,9 @@ class TestTicketSynchronizer(TestCase):
         resource_names = set(json_data.get('resources').split(','))
 
         # verify members
-        member_qset = instance.members.all()
-        member_names = set(member_qset.values_list('identifier', flat=True))
-        self.assertEqual(resource_names, member_names)
+        # member_qset = instance.members.all()
+        # member_names = set(member_qset.values_list('identifier', flat=True))
+        # self.assertEqual(resource_names, member_names)
 
         # verify assigned team
         self.assertEqual(instance.team_id, json_data['team']['id'])
@@ -622,16 +622,16 @@ class TestTicketSynchronizer(TestCase):
 
     # todo: this test can be removed because _manage_member_assignments will
     #       be removed
-    def test_manage_member_assignments_last_resource_removed(self):
-        # ticket with no resources should have all members removed
-        fixture_utils.init_tickets()
-
-        ticket = Ticket.objects.filter(members__isnull=False).first()
-        ticket.resources = None
-        synchronizer = sync.TicketSynchronizer()
-        synchronizer._manage_member_assignments(ticket)
-
-        self.assertEqual(ticket.members.all().count(), 0)
+    # def test_manage_member_assignments_last_resource_removed(self):
+    #     # ticket with no resources should have all members removed
+    #     fixture_utils.init_tickets()
+    #
+    #     ticket = Ticket.objects.filter(members__isnull=False).first()
+    #     ticket.resources = None
+    #     synchronizer = sync.TicketSynchronizer()
+    #     synchronizer._manage_member_assignments(ticket)
+    #
+    #     self.assertEqual(ticket.members.all().count(), 0)
 
 
 class TestSyncSettings(TestCase):

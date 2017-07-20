@@ -386,12 +386,12 @@ class TicketPriority(TimeStampedModel):
 
 # todo: With the change to Schedule Models, TicketAssignment will be removed.
 #       search the rest of the code and port to ScheduleEntries.
-class TicketAssignment(TimeStampedModel):
-    ticket = models.ForeignKey('Ticket')
-    member = models.ForeignKey('Member')
-
-    def __str__(self):
-        return '{}: {}'.format(self.ticket, self.member)
+# class TicketAssignment(TimeStampedModel):
+#     ticket = models.ForeignKey('Ticket')
+#     member = models.ForeignKey('Member')
+#
+#     def __str__(self):
+#         return '{}: {}'.format(self.ticket, self.member)
 
 
 class AvailableProjectManager(models.Manager):
@@ -581,9 +581,9 @@ class Ticket(TimeStampedModel):
         'Team', blank=True, null=True, related_name='team_tickets')
     project = models.ForeignKey(
         'Project', blank=True, null=True, related_name='project_tickets')
-    members = models.ManyToManyField(
-        'Member', through='TicketAssignment',
-        related_name='member_tickets')
+    # members = models.ManyToManyField(
+    #     'Member', through='TicketAssignment',
+    #     related_name='member_tickets')
 
     class Meta:
         verbose_name = 'Ticket'
