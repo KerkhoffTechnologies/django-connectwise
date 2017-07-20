@@ -543,7 +543,7 @@ class TestTicketSynchronizer(TestCase):
 
         self.assertEqual(instance.has_child_ticket,
                          json_data.get('hasChildTicket'))
-        resource_names = set(json_data.get('resources').split(','))
+        # resource_names = set(json_data.get('resources').split(','))
 
         # verify members
         # member_qset = instance.members.all()
