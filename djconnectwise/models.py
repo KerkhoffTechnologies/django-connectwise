@@ -539,7 +539,7 @@ class Ticket(TimeStampedModel):
     summary = models.CharField(blank=True, null=True, max_length=250)
     entered_date_utc = models.DateTimeField(blank=True, null=True)
     last_updated_utc = models.DateTimeField(blank=True, null=True)
-    resources = models.CharField(blank=True, null=True, max_length=250)
+    # resources = models.CharField(blank=True, null=True, max_length=250)
     parent_ticket_id = models.IntegerField(blank=True, null=True)
     has_child_ticket = models.NullBooleanField()
     required_date_utc = models.DateTimeField(blank=True, null=True)
