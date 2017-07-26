@@ -585,7 +585,6 @@ class Ticket(TimeStampedModel):
         'Member', through='ScheduleEntry',
         related_name='member_tickets')
 
-
     class Meta:
         verbose_name = 'Ticket'
         verbose_name_plural = 'Tickets'

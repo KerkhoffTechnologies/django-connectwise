@@ -15,4 +15,9 @@ class Migration(migrations.Migration):
             model_name='ticket',
             name='resources',
         ),
+        migrations.AddField(
+            model_name='ticket',
+            name='members',
+            field=models.ManyToManyField(through='djconnectwise.ScheduleEntry', to='djconnectwise.Member', related_name='member_tickets'),
+        ),
     ]
