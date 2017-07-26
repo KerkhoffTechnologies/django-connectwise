@@ -96,6 +96,8 @@ class CompanyInfoManager:
                     )
                 )
                 cache.set(cache_key, codebase_result)
+            else:
+                codebase_result = codebase_from_cache
         return codebase_result, codebase_updated
 
 
