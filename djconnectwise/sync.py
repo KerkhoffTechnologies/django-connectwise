@@ -376,6 +376,7 @@ class ScheduleEntriesSynchronizer(Synchronizer):
     """
     client_class = api.ScheduleAPIClient
     model_class = models.ScheduleEntry
+    api_conditions = ['doneFlag = False']
 
     related_meta = {
         'member': (models.Member, 'member'),
@@ -426,6 +427,7 @@ class ScheduleEntriesSynchronizer(Synchronizer):
         return instance
 
     def get_page(self, *args, **kwargs):
+        kwargs['conditions'] = self.api_conditions
         return self.client.get_schedule_entries(*args, **kwargs)
 
     def get_single(self, entry_id):

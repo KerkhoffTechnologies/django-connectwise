@@ -341,6 +341,10 @@ class ScheduleAPIClient(ConnectWiseAPIClient):
                                    *args, **kwargs)
 
     def get_schedule_entries(self, *args, **kwargs):
+        if 'conditions' in kwargs:
+            kwargs['params'] = {
+                'conditions': self.prepare_conditions(kwargs['conditions'])
+            }
         return self.fetch_resource(self.ENDPOINT_ENTRIES,
                                    should_page=True,
                                    *args, **kwargs)
