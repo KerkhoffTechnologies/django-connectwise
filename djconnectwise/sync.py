@@ -668,7 +668,7 @@ class TicketSynchronizer(Synchronizer):
         instance.entered_date_utc = json_data.get('dateEntered')
         instance.last_updated_utc = json_data.get('_info').get('lastUpdated')
         instance.required_date_utc = json_data.get('requiredDate')
-        instance.resources = json_data.get('resources')
+        # instance.resources = json_data.get('resources')
         instance.budget_hours = json_data.get('budgetHours')
         instance.actual_hours = json_data.get('actualHours')
         instance.record_type = json_data.get('recordType')

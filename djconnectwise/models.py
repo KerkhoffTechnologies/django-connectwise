@@ -539,7 +539,7 @@ class Ticket(TimeStampedModel):
     summary = models.CharField(blank=True, null=True, max_length=250)
     entered_date_utc = models.DateTimeField(blank=True, null=True)
     last_updated_utc = models.DateTimeField(blank=True, null=True)
-    resources = models.CharField(blank=True, null=True, max_length=250)
+    # resources = models.CharField(blank=True, null=True, max_length=250)
     parent_ticket_id = models.IntegerField(blank=True, null=True)
     has_child_ticket = models.NullBooleanField()
     required_date_utc = models.DateTimeField(blank=True, null=True)
@@ -581,9 +581,11 @@ class Ticket(TimeStampedModel):
         'Team', blank=True, null=True, related_name='team_tickets')
     project = models.ForeignKey(
         'Project', blank=True, null=True, related_name='project_tickets')
-    # members = models.ManyToManyField(
-    #     'Member', through='TicketAssignment',
-    #     related_name='member_tickets')
+    members = models.ManyToManyField(
+        'Member', through='ScheduleEntry',
+        related_name='member_tickets')
+
+
 
     class Meta:
         verbose_name = 'Ticket'
