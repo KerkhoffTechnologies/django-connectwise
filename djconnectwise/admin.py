@@ -47,7 +47,6 @@ class ProjectAdmin(admin.ModelAdmin):
 
 @admin.register(models.Ticket)
 class TicketAdmin(admin.ModelAdmin):
-    # list_display = ('id', 'summary', 'status', 'resources', 'record_type',)
     list_display = ('id', 'summary', 'status', 'record_type',)
 
     list_filter = ('status', 'record_type')

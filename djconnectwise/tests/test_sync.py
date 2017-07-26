@@ -532,7 +532,7 @@ class TestTicketSynchronizer(TestCase):
                          parse(json_data.get('_info').get('lastUpdated')))
         self.assertEqual(instance.required_date_utc,
                          parse(json_data.get('requiredDate')))
-        self.assertEqual(instance.resources, json_data.get('resources'))
+        # self.assertEqual(instance.resources, json_data.get('resources'))
         self.assertEqual(instance.budget_hours, json_data.get('budgetHours'))
         self.assertEqual(instance.actual_hours, json_data.get('actualHours'))
         self.assertEqual(instance.record_type, json_data.get('recordType'))
