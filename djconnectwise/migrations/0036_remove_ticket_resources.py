@@ -11,13 +11,13 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name='ticket',
-            name='resources',
-        ),
         migrations.AddField(
             model_name='ticket',
             name='members',
             field=models.ManyToManyField(through='djconnectwise.ScheduleEntry', to='djconnectwise.Member', related_name='member_tickets'),
+        ),
+        migrations.RemoveField(
+            model_name='ticket',
+            name='resources',
         ),
     ]
