@@ -2,11 +2,21 @@ import logging
 import re
 
 import requests
+import urllib
+import urllib.parse
 from retrying import retry
 
 from django.conf import settings
 from django.core.cache import cache
 from djconnectwise.utils import RequestSettings
+
+
+class NoQuotedCommasSession(requests.Session):
+    """Used to remove Requests encoding commas in the url"""
+    def send(self, *a, **kw):
+        # a[0] is prepared request
+        a[0].url = a[0].url.replace(urllib.parse.quote(","), ",")
+        return requests.Session.send(self, *a, **kw)
 
 
 class ConnectWiseAPIError(Exception):
@@ -206,12 +216,16 @@ class ConnectWiseAPIClient(object):
                 logger.debug('Making GET request to {}'.format(endpoint))
                 if 'conditions' in params:
                     logger.debug('Conditions: {}'.format(params['conditions']))
-                response = requests.get(
+                # use NoQuotedCommaSession to put the commas back into the url
+                s = NoQuotedCommasSession()
+                response = s.get(
                     endpoint,
                     params=params,
                     auth=self.auth,
-                    timeout=self.timeout,
+                    timeout=self.timeout
                 )
+                logger.info(" URL: {}".format(response.url))
+
             except requests.RequestException as e:
                 logger.error('Request failed: GET {}: {}'.format(endpoint, e))
                 raise ConnectWiseAPIError('{}'.format(e))
