@@ -639,7 +639,7 @@ class TicketSynchronizer(Synchronizer):
         if sync_job_qset.exists() and not reset:
             last_sync_job_time = sync_job_qset.last().start_time.isoformat()
             self.api_conditions.append(
-                "lastUpdated > [{0}]".format(last_sync_job_time)
+                "lastUpdated>[{0}]".format(last_sync_job_time)
             )
 
         return super().sync(reset=reset)
