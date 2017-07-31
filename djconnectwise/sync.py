@@ -499,7 +499,7 @@ class TicketSynchronizer(Synchronizer):
     """
     client_class = api.ServiceAPIClient
     model_class = models.Ticket
-    api_conditions = ['closedFlag = False']
+    api_conditions = ['closedFlag=False']
     child_synchronizers = (
         CompanySynchronizer,
         BoardStatusSynchronizer,

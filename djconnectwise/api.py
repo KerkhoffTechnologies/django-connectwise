@@ -2,21 +2,11 @@ import logging
 import re
 
 import requests
-import urllib
-import urllib.parse
 from retrying import retry
 
 from django.conf import settings
 from django.core.cache import cache
 from djconnectwise.utils import RequestSettings
-
-
-class NoQuotedCommasSession(requests.Session):
-    """Used to remove Requests encoding commas in the url"""
-    def send(self, *a, **kw):
-        # a[0] is prepared request
-        a[0].url = a[0].url.replace(urllib.parse.quote(","), ",")
-        return requests.Session.send(self, *a, **kw)
 
 
 class ConnectWiseAPIError(Exception):
@@ -207,20 +197,33 @@ class ConnectWiseAPIClient(object):
             if not params:
                 params = {}
 
-            if should_page:
-                params['pageSize'] = kwargs.get('page_size',
-                                                CW_RESPONSE_MAX_RECORDS)
-                params['page'] = kwargs.get('page', CW_DEFAULT_PAGE)
             try:
                 endpoint = self._endpoint(endpoint_url)
                 logger.debug('Making GET request to {}'.format(endpoint))
+
                 if 'conditions' in params:
-                    logger.debug('Conditions: {}'.format(params['conditions']))
-                # use NoQuotedCommaSession to put the commas back into the url
-                s = NoQuotedCommasSession()
-                response = s.get(
+                    logger.debug('Conditions: {}'.format(
+                        params['conditions']))
+                    conditions_str = "conditions=" + params['conditions']
+                    # URL encode needed characters
+                    conditions_str = conditions_str.replace("+", "%2B")
+                    conditions_str = conditions_str.replace(" ", "+")
+                else:
+                    conditions_str = ""
+
+                if should_page:
+                    params['pageSize'] = kwargs.get('page_size',
+                                                    CW_RESPONSE_MAX_RECORDS)
+                    params['page'] = kwargs.get('page', CW_DEFAULT_PAGE)
+                    endpoint += "?pageSize={}&page={}".format(
+                        params['pageSize'], params['page'])
+
+                    endpoint += "&" + conditions_str
+                else:
+                    endpoint += "?" + conditions_str
+
+                response = requests.get(
                     endpoint,
-                    params=params,
                     auth=self.auth,
                     timeout=self.timeout
                 )
