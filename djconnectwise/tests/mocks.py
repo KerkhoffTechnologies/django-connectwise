@@ -1,10 +1,12 @@
 import os
 from mock import patch
 
+from datetime import datetime, date, time
 import json
 import responses
 
 from . import fixtures
+from django.utils import timezone
 
 CW_MEMBER_IMAGE_FILENAME = 'AnonymousMember.png'
 
@@ -70,8 +72,14 @@ def sales_api_get_opportunity_types_call(return_value, raised=None):
     return create_mock_call(method_name, return_value, side_effect=raised)
 
 
-def _service_api_tickets_call(page=1, page_size=25, conditions=''):
+def _service_api_tickets_call(page=1, page_size=25, conditions=[]):
     return_value = []
+    test_date = date(1948, 5, 14)
+    test_time = time(12, 0, 0, tzinfo=timezone.get_current_timezone())
+    test_datetime = datetime.combine(test_date, test_time)
+    conditions.append('lastUpdated>' + timezone.localtime(
+        value=test_datetime).isoformat()
+        )
     if page == 1:
         return_value = [fixtures.API_SERVICE_TICKET]
     return return_value

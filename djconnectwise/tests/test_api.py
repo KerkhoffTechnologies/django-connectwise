@@ -2,9 +2,11 @@ import responses
 import requests
 from urllib.parse import urljoin
 # import json
+from datetime import datetime, date, time
 
 from django.core.cache import cache
 from django.test import TestCase
+from django.utils import timezone
 
 from .. import api
 
@@ -40,21 +42,28 @@ class TestConnectWiseAPIClient(TestCase):
 
     def test_prepare_conditions_single(self):
         conditions = [
-            'closedFlag = False',
+            'closedFlag=False',
         ]
         self.assertEqual(
             self.client.prepare_conditions(conditions),
-            '(closedFlag = False)'
+            '(closedFlag=False)'
         )
 
     def test_prepare_conditions_multiple(self):
+        test_date = date(1948, 5, 14)
+        test_time = time(12, 0, 0, tzinfo=timezone.get_current_timezone())
+        test_datetime = datetime.combine(test_date, test_time)
+
         conditions = [
-            'closedFlag = False',
+            'closedFlag=False',
             'status/id in (1,2,3)',
+            'lastUpdated>' +
+            timezone.localtime(value=test_datetime).isoformat()
         ]
         self.assertEqual(
             self.client.prepare_conditions(conditions),
-            '(closedFlag = False and status/id in (1,2,3))'
+            '(closedFlag=False and status/id in (1,2,3) '
+            'and lastUpdated>1948-05-14T12:51:00-05:00)'
         )
 
     @responses.activate

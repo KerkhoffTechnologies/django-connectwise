@@ -197,21 +197,38 @@ class ConnectWiseAPIClient(object):
             if not params:
                 params = {}
 
-            if should_page:
-                params['pageSize'] = kwargs.get('page_size',
-                                                CW_RESPONSE_MAX_RECORDS)
-                params['page'] = kwargs.get('page', CW_DEFAULT_PAGE)
             try:
                 endpoint = self._endpoint(endpoint_url)
                 logger.debug('Making GET request to {}'.format(endpoint))
+
                 if 'conditions' in params:
-                    logger.debug('Conditions: {}'.format(params['conditions']))
+                    logger.debug('Conditions: {}'.format(
+                        params['conditions']))
+                    conditions_str = "conditions=" + params['conditions']
+                    # URL encode needed characters
+                    conditions_str = conditions_str.replace("+", "%2B")
+                    conditions_str = conditions_str.replace(" ", "+")
+                else:
+                    conditions_str = ""
+
+                if should_page:
+                    params['pageSize'] = kwargs.get('page_size',
+                                                    CW_RESPONSE_MAX_RECORDS)
+                    params['page'] = kwargs.get('page', CW_DEFAULT_PAGE)
+                    endpoint += "?pageSize={}&page={}".format(
+                        params['pageSize'], params['page'])
+
+                    endpoint += "&" + conditions_str
+                else:
+                    endpoint += "?" + conditions_str
+
                 response = requests.get(
                     endpoint,
-                    params=params,
                     auth=self.auth,
-                    timeout=self.timeout,
+                    timeout=self.timeout
                 )
+                logger.info(" URL: {}".format(response.url))
+
             except requests.RequestException as e:
                 logger.error('Request failed: GET {}: {}'.format(endpoint, e))
                 raise ConnectWiseAPIError('{}'.format(e))
