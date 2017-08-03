@@ -283,6 +283,9 @@ class ScheduleType(models.Model):
     name = models.CharField(max_length=50)
     identifier = models.CharField(max_length=1)
 
+    class Meta:
+        ordering = ('name', )
+
     def __str__(self):
         return self.name
 
@@ -305,6 +308,10 @@ class ScheduleEntry(models.Model):
     where = models.ForeignKey('Location', blank=True, null=True)
     status = models.ForeignKey('ScheduleStatus', blank=True, null=True)
     schedule_type = models.ForeignKey('ScheduleType', blank=True, null=True)
+
+    class Meta:
+        verbose_name_plural = 'Schedule Entries'
+        ordering = ('name', )
 
     def __str__(self):
         return self.name
