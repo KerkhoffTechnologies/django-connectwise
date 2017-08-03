@@ -409,20 +409,10 @@ class ScheduleEntriesSynchronizer(Synchronizer):
                                   field_name)
         # _assign relation expects a dict. objectId is an integer. Handle it
         # as a special situation.
-        # try:
         ticket_class = models.Ticket
         uid = json_data['objectId']
         related_instance = ticket_class.objects.get(pk=uid)
         setattr(instance, 'object', related_instance)
-        # except model_class.DoesNotExist:
-        #     logger.warning(
-        #         'Failed to find {} {} for {} {}.'.format(
-        #             json_data['objectId'],
-        #             uid,
-        #             type(instance),
-        #             instance.id
-        #         )
-        #     )
 
         return instance
 
@@ -670,7 +660,6 @@ class TicketSynchronizer(Synchronizer):
         instance.entered_date_utc = json_data.get('dateEntered')
         instance.last_updated_utc = json_data.get('_info').get('lastUpdated')
         instance.required_date_utc = json_data.get('requiredDate')
-        # instance.resources = json_data.get('resources')
         instance.budget_hours = json_data.get('budgetHours')
         instance.actual_hours = json_data.get('actualHours')
         instance.record_type = json_data.get('recordType')
@@ -689,7 +678,6 @@ class TicketSynchronizer(Synchronizer):
             )
 
         instance.save()
-        # self._manage_member_assignments(instance)
 
         logger.info('Syncing ticket {}'.format(json_data_id))
         action = created and 'Created' or 'Updated'
@@ -705,48 +693,6 @@ class TicketSynchronizer(Synchronizer):
         logger.info(log_info)
 
         return instance
-
-    # todo: this method will be removed when Scheduling Entries handle tickets
-    #       and resources.  Refactor as necessary
-    # def _manage_member_assignments(self, ticket):
-    #     if not ticket.resources:
-    #         ticket.members.clear()
-    #         return
-    #
-    #     ticket_assignments = {}
-    #     usernames = [
-    #         u.strip() for u in ticket.resources.split(',')
-    #     ]
-    #     # Reset board/ticket assignment in case the assigned resources
-    #     # have changed since last sync.
-    #     models.TicketAssignment.objects.filter(
-    #         ticket=ticket).delete()
-    #     for username in usernames:
-    #         try:
-    #             member = models.Member.objects.get(identifier=username)
-    #             assignment = models.TicketAssignment()
-    #             assignment.member = member
-    #             assignment.ticket = ticket
-    #             ticket_assignments[(username, ticket.id,)] = \
-    #                 assignment
-    #             msg = 'Member ticket assignment: ' \
-    #                   'ticket {}, member {}'.format(ticket.id, username)
-    #             logger.info(msg)
-    #         except models.Member.DoesNotExist:
-    #             logger.warning(
-    #                 'Failed to locate member with username {} for ticket '
-    #                 '{} assignment.'.format(username, ticket.id)
-    #             )
-    #
-    #     if ticket_assignments:
-    #         logger.info(
-    #             'Saving {} ticket assignments'.format(
-    #                 len(ticket_assignments)
-    #             )
-    #         )
-    #         models.TicketAssignment.objects.bulk_create(
-    #             list(ticket_assignments.values())
-    #         )
 
     def get_page(self, *args, **kwargs):
         kwargs['conditions'] = self.api_conditions

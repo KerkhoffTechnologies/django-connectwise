@@ -513,12 +513,15 @@ API_SERVICE_TICKET = {
     'customFields': None
 }
 
+
 API_SERVICE_TICKET_LIST = [API_SERVICE_TICKET]
+
 
 API_SERVICE_TICKET_MAP = {
     t['id']: t
     for t in API_SERVICE_TICKET_LIST
 }
+
 
 API_CW_VERSION = {
     'version': 'v2.0'
@@ -527,9 +530,11 @@ API_CW_VERSION = {
 
 API_MEMBER_LIST = [API_MEMBER]
 
+
 API_MEMBER_COUNT = {
     'count': len(API_MEMBER_LIST)
 }
+
 
 API_SYSTEM_CALLBACK_ENTRY = {
     "id": 0,
@@ -540,7 +545,7 @@ API_SYSTEM_CALLBACK_ENTRY = {
     "level": "Sample string",
     "memberId": API_MEMBER['id'],
     "inactiveFlag": False,
-    "_info ": { "lastUpdated": "", "updatedBy": "" }
+    "_info ": {"lastUpdated": "", "updatedBy": ""}
 }
 
 

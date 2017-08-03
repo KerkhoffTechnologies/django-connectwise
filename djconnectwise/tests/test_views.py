@@ -94,6 +94,7 @@ class TestTicketCallBackView(BaseTestCallBackView):
         fixture_utils.init_priorities()
         fixture_utils.init_projects()
         fixture_utils.init_companies()
+        fixture_utils.init_board_statuses()
         fixture_utils.init_locations()
         fixture_utils.init_teams()
         self.assertEqual(Ticket.objects.count(), 0)
@@ -101,6 +102,12 @@ class TestTicketCallBackView(BaseTestCallBackView):
         self._test_added(CallBackEntry.TICKET, fixtures.API_SERVICE_TICKET)
 
     def test_update(self):
+        fixture_utils.init_priorities()
+        fixture_utils.init_projects()
+        fixture_utils.init_companies()
+        fixture_utils.init_board_statuses()
+        fixture_utils.init_locations()
+        fixture_utils.init_teams()
         fixture_utils.init_tickets()
         self.assertEqual(Ticket.objects.count(), 1)
         # Change the summary of the local record to make our test meaningful.
@@ -113,6 +120,10 @@ class TestTicketCallBackView(BaseTestCallBackView):
 
     def test_delete(self):
         fixture_utils.init_tickets()
+        fixture_utils.init_priorities()
+        fixture_utils.init_companies()
+        fixture_utils.init_locations()
+        fixture_utils.init_teams()
         self.assertEqual(Ticket.objects.count(), 1)
 
         mocks.service_api_get_ticket_call(api.ConnectWiseRecordNotFoundError)

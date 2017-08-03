@@ -144,6 +144,7 @@ class TestScheduleEntriesSynchronizer(TestCase, SynchronizerTestMixin):
         fixture_utils.init_members()
         fixture_utils.init_opportunity_statuses()
         fixture_utils.init_opportunity_types()
+        fixture_utils.init_teams()
         fixture_utils.init_board_statuses()
         fixture_utils.init_schedule_statuses()
         fixture_utils.init_schedule_types()
@@ -532,7 +533,6 @@ class TestTicketSynchronizer(TestCase):
                          parse(json_data.get('_info').get('lastUpdated')))
         self.assertEqual(instance.required_date_utc,
                          parse(json_data.get('requiredDate')))
-        # self.assertEqual(instance.resources, json_data.get('resources'))
         self.assertEqual(instance.budget_hours, json_data.get('budgetHours'))
         self.assertEqual(instance.actual_hours, json_data.get('actualHours'))
         self.assertEqual(instance.record_type, json_data.get('recordType'))
@@ -543,12 +543,6 @@ class TestTicketSynchronizer(TestCase):
 
         self.assertEqual(instance.has_child_ticket,
                          json_data.get('hasChildTicket'))
-        # resource_names = set(json_data.get('resources').split(','))
-
-        # verify members
-        # member_qset = instance.members.all()
-        # member_names = set(member_qset.values_list('identifier', flat=True))
-        # self.assertEqual(resource_names, member_names)
 
         # verify assigned team
         self.assertEqual(instance.team_id, json_data['team']['id'])
@@ -619,19 +613,6 @@ class TestTicketSynchronizer(TestCase):
         synchronizer.sync(reset=True)
         self.assertEqual(ticket_qset.count(), 0)
         _patch.stop()
-
-    # todo: this test can be removed because _manage_member_assignments will
-    #       be removed
-    # def test_manage_member_assignments_last_resource_removed(self):
-    #     # ticket with no resources should have all members removed
-    #     fixture_utils.init_tickets()
-    #
-    #     ticket = Ticket.objects.filter(members__isnull=False).first()
-    #     ticket.resources = None
-    #     synchronizer = sync.TicketSynchronizer()
-    #     synchronizer._manage_member_assignments(ticket)
-    #
-    #     self.assertEqual(ticket.members.all().count(), 0)
 
 
 class TestSyncSettings(TestCase):
