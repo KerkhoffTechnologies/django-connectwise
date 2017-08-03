@@ -384,16 +384,6 @@ class TicketPriority(TimeStampedModel):
         self._color = color
 
 
-# todo: With the change to Schedule Models, TicketAssignment will be removed.
-#       search the rest of the code and port to ScheduleEntries.
-# class TicketAssignment(TimeStampedModel):
-#     ticket = models.ForeignKey('Ticket')
-#     member = models.ForeignKey('Member')
-#
-#     def __str__(self):
-#         return '{}: {}'.format(self.ticket, self.member)
-
-
 class AvailableProjectManager(models.Manager):
     """Return only projects whose status isn't "Closed"."""
     def get_queryset(self):
@@ -461,7 +451,7 @@ class OpportunityType(TimeStampedModel):
 class Opportunity(TimeStampedModel):
     name = models.CharField(max_length=100)
     expected_close_date = models.DateField()
-    notes = models.TextField()
+    notes = models.TextField(blank=True, null=True)
     source = models.CharField(max_length=100, blank=True, null=True)
 
     location_id = models.IntegerField()
