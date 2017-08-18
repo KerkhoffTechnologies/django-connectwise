@@ -362,6 +362,11 @@ class SalesAPIClient(ConnectWiseAPIClient):
                                    should_page=True,
                                    *args, **kwargs)
 
+    def get_single_activity(self, activity_id):
+        endpoint_url = '{}/{}'.format(
+            self.ENDPOINT_ACTIVITIES, activity_id)
+        return self.fetch_resource(endpoint_url)
+
     def get_opportunities(self, *args, **kwargs):
         return self.fetch_resource(self.ENDPOINT_OPPORTUNITIES,
                                    should_page=True,

@@ -319,6 +319,54 @@ class CompanySynchronizer(Synchronizer):
         self.fetch_sync_by_id(company_id)
 
 
+class ActivitySynchronizer(Synchronizer):
+    """
+    Coordinates retrieval and demarshalling of ConnectWise JSON Activity
+    instances.
+    """
+    client_class = api.SalesAPIClient
+    model_class = models.Activity
+
+    related_meta = {
+        'assignTo': (models.Member, 'member'),
+        'opportunity': (models.Opportunity, 'name'),
+        'ticket': (models.Ticket, 'summary')
+    }
+
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data['id']
+        instance.name = json_data['name']
+        instance.notes = json_data['notes']
+
+        # handle dates
+        date_start = json_data['dateStart']
+        if date_start:
+            instance.date_start = parse(date_start)
+
+        date_end = json_data['dateEnd']
+        if date_end:
+            instance.date_end = parse(date_end)
+
+        for json_field, value in self.related_meta.items():
+            model_class, field_name = value
+            self._assign_relation(
+                instance,
+                json_data,
+                json_field,
+                model_class,
+                field_name
+            )
+
+        return instance
+
+    def get_page(self, *args, **kwargs):
+        kwargs['conditions'] = self.api_conditions
+        return self.client.get_activities(*args, **kwargs)
+
+    def get_single(self, activity_id):
+        return self.client.get_single_activity(activity_id)
+
+
 class CompanyStatusSynchronizer(Synchronizer):
     """
     Coordinates retrieval and demarshalling of ConnectWise JSON

@@ -645,12 +645,13 @@ class Ticket(TimeStampedModel):
 
 class Activity(TimeStampedModel):
     name = models.CharField(blank=True, null=True, max_length=250)
-    assign_to = models.ForeignKey('Member', )
-    opportunity = models.ForeignKey('Opportunity', blank=True, null=True)
-    ticket = models.ForeignKey('Ticket', blank=True, null=True)
     notes = models.CharField(blank=True, null=True, max_length=1000)
     date_start = models.DateTimeField(blank=True, null=True)
     date_end = models.DateTimeField(blank=True, null=True)
+
+    assign_to = models.ForeignKey('Member', )
+    opportunity = models.ForeignKey('Opportunity', blank=True, null=True)
+    ticket = models.ForeignKey('Ticket', blank=True, null=True)
 
     class Meta:
         verbose_name_plural = 'activities'
