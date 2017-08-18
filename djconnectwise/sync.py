@@ -329,7 +329,7 @@ class ActivitySynchronizer(Synchronizer):
 
     related_meta = {
         'assignTo': (models.Member, 'member'),
-        'opportunity': (models.Opportunity, 'name'),
+        'opportunity': (models.Opportunity, 'opportunity'),
         'ticket': (models.Ticket, 'summary')
     }
 
