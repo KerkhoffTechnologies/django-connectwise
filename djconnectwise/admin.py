@@ -88,3 +88,10 @@ class OpportunityStatusAdmin(admin.ModelAdmin):
                     'closed_flag', 'inactive_flag')
     list_filter = ('won_flag', 'lost_flag', 'closed_flag', 'inactive_flag')
     search_fields = ['name']
+
+@admin.register(models.Activity)
+class ActivityAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'notes', 'date_start', 'date_end',
+                    'assign_to', 'opportunity', 'ticket')
+    list_filter = ['name', 'notes']
+    search_fields = ['name', 'notes']
