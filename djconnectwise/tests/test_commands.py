@@ -211,6 +211,24 @@ class TestSyncScheduleStatusesCommand(AbstractBaseSyncTest, TestCase):
     )
 
 
+class TestSyncActivityCommand(AbstractBaseSyncTest, TestCase):
+    args = (
+        mocks.sales_api_get_activities_call,
+        fixtures.API_SALES_ACTIVITIES,
+        'activity'
+    )
+
+    def setUp(self):
+        super(). setUp()
+        fixture_utils.init_companies()
+        mocks.system_api_get_member_image_by_identifier_call(
+            (mocks.CW_MEMBER_IMAGE_FILENAME, mocks.get_member_avatar()))
+        fixture_utils.init_members()
+        fixture_utils.init_opportunity_types()
+        fixture_utils.init_opportunities()
+        fixture_utils.init_activities()
+
+
 class TestSyncAllCommand(TestCase):
 
     def setUp(self):
@@ -232,6 +250,7 @@ class TestSyncAllCommand(TestCase):
             TestSyncOpportunityStatusesCommand,
             TestSyncOpportunityTypesCommand,
             TestSyncOpportunityCommand,
+            TestSyncActivityCommand,
             TestSyncScheduleTypesCommand,
             TestSyncScheduleStatusesCommand,
             TestSyncScheduleEntriesCommand
@@ -296,6 +315,7 @@ class TestSyncAllCommand(TestCase):
             'opportunity': models.Opportunity,
             'opportunity_status': models.OpportunityStatus,
             'opportunity_type': models.OpportunityType,
+            'activity': models.Activity,
             'schedule_entry': models.ScheduleEntry,
             'schedule_type': models.ScheduleType,
             'schedule_status': models.ScheduleStatus,

@@ -79,6 +79,13 @@ def init_opportunity_types():
     return synchronizer.sync()
 
 
+def init_opportunities():
+    mocks.sales_api_get_opportunities_call(
+        fixtures.API_SALES_OPPORTUNITIES)
+    synchronizer = sync.OpportunitySynchronizer()
+    return synchronizer.sync()
+
+
 def init_schedule_types():
     mocks.schedule_api_get_schedule_types_call(
         fixtures.API_SCHEDULE_TYPE_LIST)
@@ -97,4 +104,11 @@ def init_schedule_entries():
     mocks.schedule_api_get_schedule_entries_call(
         fixtures.API_SCHEDULE_ENTRIES)
     synchronizer = sync.ScheduleEntriesSynchronizer()
+    return synchronizer.sync()
+
+
+def init_activities():
+    mocks.sales_api_get_activities_call(
+        fixtures.API_SALES_ACTIVITIES)
+    synchronizer = sync.ActivitySynchronizer()
     return synchronizer.sync()

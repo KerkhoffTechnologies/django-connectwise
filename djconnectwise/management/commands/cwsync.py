@@ -36,6 +36,7 @@ class Command(BaseCommand):
             ('opportunity', sync.OpportunitySynchronizer,
                 _('Opportunity')),
             ('ticket', sync.TicketSynchronizer, _('Ticket')),
+            ('activity', sync.ActivitySynchronizer, _('Activity')),
             ('schedule_type', sync.ScheduleTypeSychronizer,
                 _('Schedule Type')),
             ('schedule_status', sync.ScheduleStatusSynchronizer,
