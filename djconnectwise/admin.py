@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 from django.contrib import admin
+from django.db import models as db_models
+from django.forms import TextInput
 
 from . import models
 
@@ -81,7 +83,6 @@ class OpportunityStatusAdmin(admin.ModelAdmin):
     search_fields = ['name']
 
 
-<<<<<<< HEAD
 @admin.register(models.ScheduleType)
 class ScheduleTypeAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'identifier')
@@ -103,11 +104,15 @@ class ScheduleEntryAdmin(admin.ModelAdmin):
                     'status', 'schedule_type')
     list_filter = ('name', 'member', 'where', 'status')
     search_fields = ['name', 'object', 'member']
-=======
+
+
 @admin.register(models.Activity)
 class ActivityAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'notes', 'date_start', 'date_end',
                     'assign_to', 'opportunity', 'ticket')
-    list_filter = ['name', 'notes']
+    list_filter = ['opportunity', 'ticket']
     search_fields = ['name', 'notes']
->>>>>>> 3f4e06ffb8a636eb30ebe13f227682d48746a13e
+
+    formfield_overrides = {
+        db_models.CharField: {'widget': TextInput(attrs={'size': '40'})}
+    }
