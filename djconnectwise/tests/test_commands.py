@@ -180,8 +180,12 @@ class TestSyncActivityCommand(AbstractBaseSyncTest, TestCase):
 
     def setUp(self):
         super(). setUp()
-        fixture_utils.init_members()
         fixture_utils.init_companies()
+        mocks.system_api_get_member_image_by_identifier_call(
+            (mocks.CW_MEMBER_IMAGE_FILENAME, mocks.get_member_avatar()))
+        fixture_utils.init_members()
+        fixture_utils.init_opportunity_types()
+        fixture_utils.init_opportunities()
         fixture_utils.init_activities()
 
 
