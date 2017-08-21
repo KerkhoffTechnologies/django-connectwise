@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 from django.contrib import admin
+from django.db import models as db_models
+from django.forms import TextInput
 
 from . import models
 
@@ -94,5 +96,9 @@ class OpportunityStatusAdmin(admin.ModelAdmin):
 class ActivityAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'notes', 'date_start', 'date_end',
                     'assign_to', 'opportunity', 'ticket')
-    list_filter = ['name', 'notes']
+    list_filter = ['opportunity', 'ticket']
     search_fields = ['name', 'notes']
+
+    formfield_overrides = {
+        db_models.CharField: {'widget': TextInput(attrs={'size': '40'})}
+    }

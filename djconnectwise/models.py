@@ -645,7 +645,7 @@ class Ticket(TimeStampedModel):
 
 class Activity(TimeStampedModel):
     name = models.CharField(max_length=250)
-    notes = models.CharField(blank=True, null=True, max_length=1000)
+    notes = models.TextField(blank=True, null=True, max_length=2000)
     date_start = models.DateTimeField(blank=True, null=True)
     date_end = models.DateTimeField(blank=True, null=True)
 
@@ -655,7 +655,7 @@ class Activity(TimeStampedModel):
 
     class Meta:
         verbose_name_plural = 'activities'
-        ordering = ('opportunity', 'ticket')
+        # ordering = ('opportunity', 'ticket')
 
     def __str__(self):
         return self.get_identifier() or ''
