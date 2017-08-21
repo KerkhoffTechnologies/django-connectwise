@@ -15,20 +15,20 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Activity',
             fields=[
-                ('id', models.AutoField(primary_key=True, serialize=False, auto_created=True, verbose_name='ID')),
+                ('id', models.AutoField(auto_created=True, serialize=False, verbose_name='ID', primary_key=True)),
                 ('created', django_extensions.db.fields.CreationDateTimeField(verbose_name='created', auto_now_add=True)),
                 ('modified', django_extensions.db.fields.ModificationDateTimeField(verbose_name='modified', auto_now=True)),
-                ('name', models.CharField(max_length=250, null=True, blank=True)),
-                ('notes', models.CharField(max_length=1000, null=True, blank=True)),
-                ('date_start', models.DateTimeField(null=True, blank=True)),
-                ('date_end', models.DateTimeField(null=True, blank=True)),
+                ('name', models.CharField(max_length=250)),
+                ('notes', models.CharField(max_length=1000, blank=True, null=True)),
+                ('date_start', models.DateTimeField(blank=True, null=True)),
+                ('date_end', models.DateTimeField(blank=True, null=True)),
                 ('assign_to', models.ForeignKey(to='djconnectwise.Member')),
-                ('opportunity', models.ForeignKey(null=True, blank=True, to='djconnectwise.Opportunity')),
-                ('ticket', models.ForeignKey(null=True, blank=True, to='djconnectwise.Ticket')),
+                ('opportunity', models.ForeignKey(to='djconnectwise.Opportunity', blank=True, null=True)),
+                ('ticket', models.ForeignKey(to='djconnectwise.Ticket', blank=True, null=True)),
             ],
             options={
-                'ordering': ('opportunity', 'ticket'),
                 'verbose_name_plural': 'activities',
+                'ordering': ('opportunity', 'ticket'),
             },
         ),
     ]

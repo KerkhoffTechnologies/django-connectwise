@@ -328,9 +328,9 @@ class ActivitySynchronizer(Synchronizer):
     model_class = models.Activity
 
     related_meta = {
-        'assignTo': (models.Member, 'member'),
+        'assignTo': (models.Member, 'assign_to'),
         'opportunity': (models.Opportunity, 'opportunity'),
-        'ticket': (models.Ticket, 'summary')
+        'ticket': (models.Ticket, 'ticket')
     }
 
     def _assign_field_data(self, instance, json_data):

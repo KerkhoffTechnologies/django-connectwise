@@ -644,7 +644,7 @@ class Ticket(TimeStampedModel):
 
 
 class Activity(TimeStampedModel):
-    name = models.CharField(blank=True, null=True, max_length=250)
+    name = models.CharField(max_length=250)
     notes = models.CharField(blank=True, null=True, max_length=1000)
     date_start = models.DateTimeField(blank=True, null=True)
     date_end = models.DateTimeField(blank=True, null=True)
