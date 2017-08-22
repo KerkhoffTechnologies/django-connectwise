@@ -110,7 +110,7 @@ class ScheduleEntryAdmin(admin.ModelAdmin):
 class ActivityAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'notes', 'date_start', 'date_end',
                     'assign_to', 'opportunity', 'ticket')
-    list_filter = ['opportunity', 'ticket']
+    list_filter = ['opportunity', ]
     search_fields = ['name', 'notes']
 
     formfield_overrides = {

@@ -339,6 +339,36 @@ class CompanySynchronizer(Synchronizer):
         self.fetch_sync_by_id(company_id)
 
 
+class CompanyStatusSynchronizer(Synchronizer):
+    """
+    Coordinates retrieval and demarshalling of ConnectWise JSON
+    CompanyStatus instances.
+    """
+    client_class = api.CompanyAPIClient
+    model_class = models.CompanyStatus
+
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data['id']
+        instance.name = json_data['name']
+        instance.default_flag = json_data.get('defaultFlag')
+        instance.inactive_flag = json_data.get('inactiveFlag')
+        instance.notify_flag = json_data.get('notifyFlag')
+        instance.dissalow_saving_flag = json_data.get('disallowSavingFlag')
+        instance.notification_message = json_data.get('notificationMessage')
+        instance.custom_note_flag = json_data.get('customNoteFlag')
+        instance.cancel_open_tracks_flag = json_data.get(
+            'cancelOpenTracksFlag'
+        )
+
+        if json_data.get('track'):
+            instance.track_id = json_data['track']['id']
+
+        return instance
+
+    def get_page(self, *args, **kwargs):
+        return self.client.get_company_statuses(*args, **kwargs)
+
+
 class ActivitySynchronizer(Synchronizer):
     """
     Coordinates retrieval and demarshalling of ConnectWise JSON Activity
@@ -385,36 +415,6 @@ class ActivitySynchronizer(Synchronizer):
 
     def get_single(self, activity_id):
         return self.client.get_single_activity(activity_id)
-
-
-class CompanyStatusSynchronizer(Synchronizer):
-    """
-    Coordinates retrieval and demarshalling of ConnectWise JSON
-    CompanyStatus instances.
-    """
-    client_class = api.CompanyAPIClient
-    model_class = models.CompanyStatus
-
-    def _assign_field_data(self, instance, json_data):
-        instance.id = json_data['id']
-        instance.name = json_data['name']
-        instance.default_flag = json_data.get('defaultFlag')
-        instance.inactive_flag = json_data.get('inactiveFlag')
-        instance.notify_flag = json_data.get('notifyFlag')
-        instance.dissalow_saving_flag = json_data.get('disallowSavingFlag')
-        instance.notification_message = json_data.get('notificationMessage')
-        instance.custom_note_flag = json_data.get('customNoteFlag')
-        instance.cancel_open_tracks_flag = json_data.get(
-            'cancelOpenTracksFlag'
-        )
-
-        if json_data.get('track'):
-            instance.track_id = json_data['track']['id']
-
-        return instance
-
-    def get_page(self, *args, **kwargs):
-        return self.client.get_company_statuses(*args, **kwargs)
 
 
 class ScheduleEntriesSynchronizer(Synchronizer):
