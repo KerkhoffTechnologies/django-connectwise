@@ -359,14 +359,14 @@ class ActivitySynchronizer(Synchronizer):
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
         instance.name = json_data['name']
-        instance.notes = json_data['notes']
+        instance.notes = json_data.get('notes')
 
         # handle dates
-        date_start = json_data['dateStart']
+        date_start = json_data.get('dateStart')
         if date_start:
             instance.date_start = parse(date_start)
 
-        date_end = json_data['dateEnd']
+        date_end = json_data.get('dateEnd')
         if date_end:
             instance.date_end = parse(date_end)
 
