@@ -71,6 +71,9 @@ class Synchronizer:
                         instance.id
                     )
                 )
+        else:
+            # clear any existing value in the related instance
+            setattr(instance, model_field, None)
 
     def _instance_ids(self):
         ids = self.model_class.objects.all().values_list(
@@ -800,26 +803,26 @@ class OpportunitySynchronizer(Synchronizer):
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
         instance.name = json_data['name']
-        instance.notes = json_data['notes']
-        instance.source = json_data['source']
-        instance.location_id = json_data['locationId']
-        instance.business_unit_id = json_data['businessUnitId']
-        instance.customer_po = json_data['customerPO']
+        instance.notes = json_data.get('notes')
+        instance.source = json_data.get('source')
+        instance.location_id = json_data.get('locationId')
+        instance.business_unit_id = json_data.get('businessUnitId')
+        instance.customer_po = json_data.get('customerPO')
 
         # handle dates
-        expected_close_date = json_data['expectedCloseDate']
+        expected_close_date = json_data.get('expectedCloseDate')
         if expected_close_date:
             instance.expected_close_date = parse(expected_close_date).date()
 
-        pipeline_change_date = json_data['pipelineChangeDate']
+        pipeline_change_date = json_data.get('pipelineChangeDate')
         if pipeline_change_date:
             instance.pipeline_change_date = parse(pipeline_change_date)
 
-        date_became_lead = json_data['dateBecameLead']
+        date_became_lead = json_data.get('dateBecameLead')
         if date_became_lead:
             instance.date_became_lead = parse(date_became_lead)
 
-        closed_date = json_data['closedDate']
+        closed_date = json_data.get('closedDate')
         if closed_date:
             instance.closed_date = parse(closed_date)
 
