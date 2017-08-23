@@ -438,15 +438,15 @@ class ScheduleEntriesSynchronizer(Synchronizer):
 
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
-        instance.name = json_data['name']
+        instance.name = json_data.get('name')
         instance.done_flag = json_data['doneFlag']
 
         # handle dates
-        expected_date_start = json_data['dateStart']
+        expected_date_start = json_data.get('dateStart')
         if expected_date_start:
             instance.expected_date_start = parse(expected_date_start)
 
-        expected_date_end = json_data['dateEnd']
+        expected_date_end = json_data.get('dateEnd')
         if expected_date_end:
             instance.expected_date_end = parse(expected_date_end)
 
