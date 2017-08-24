@@ -168,6 +168,10 @@ class Synchronizer:
 
         return deleted_count
 
+    @staticmethod
+    def clear_field(instance, model_field):
+        setattr(instance, model_field, None)
+
     @log_sync_job
     def sync(self, reset=False):
         created_count = 0
@@ -427,7 +431,7 @@ class ScheduleEntriesSynchronizer(Synchronizer):
     """
     client_class = api.ScheduleAPIClient
     model_class = models.ScheduleEntry
-    api_conditions = ['doneFlag = False']
+    # api_conditions = ['doneFlag = False']
 
     related_meta = {
         'member': (models.Member, 'member'),
@@ -461,14 +465,60 @@ class ScheduleEntriesSynchronizer(Synchronizer):
         # _assign relation expects a dict. objectId is an integer. Handle it
         # as a special situation.
         ticket_class = models.Ticket
+        activity_class = models.Activity
         uid = json_data['objectId']
-        related_instance = ticket_class.objects.get(pk=uid)
-        setattr(instance, 'object', related_instance)
+        # objectId could be an Activity or a Ticket. Check for each case.
+        related_ticket = None
+        related_activity = None
+        try:
+            related_ticket = ticket_class.objects.get(pk=uid)
+        except ObjectDoesNotExist as e:
+            # logger.info(
+            #     'ObjectDoesNotExist: {} {} id {} '
+            #     'referencing objectId {}'.format(
+            #         e.args[0],
+            #         self.model_class.__name__,
+            #         json_data['id'],
+            #         uid,
+            #     )
+            # )
+            pass
+        try:
+            related_activity = activity_class.objects.get(pk=uid)
+        except ObjectDoesNotExist as e:
+            # logger.info(
+            #     'ObjectDoesNotExist: {} {} id {} '
+            #     'referencing objectId {}'.format(
+            #         e.args[0],
+            #         self.model_class.__name__,
+            #         json_data['id'],
+            #         uid,
+            #     )
+            # )
+            pass
+
+        if related_ticket and not related_activity:
+            if json_data['doneFlag']:
+                Synchronizer.clear_field(instance, 'ticket_object')
+            else:
+                setattr(instance, 'ticket_object', related_ticket)
+        elif related_activity and not related_ticket:
+            # activity_ticket = related_activity.ticket
+            setattr(instance, 'activity_object', related_activity)
+
+        if related_ticket and related_activity:
+            ticket_resources = related_ticket.resources
+            schedule_member = json_data['member']['identifier']
+            if ticket_resources is not None:
+                if schedule_member in ticket_resources:
+                    setattr(instance, 'ticket_object', related_ticket)
+                else:
+                    setattr(instance, 'activity_object', related_activity)
 
         return instance
 
     def get_page(self, *args, **kwargs):
-        kwargs['conditions'] = self.api_conditions
+        # kwargs['conditions'] = self.api_conditions
         return self.client.get_schedule_entries(*args, **kwargs)
 
     def get_single(self, entry_id):
@@ -711,6 +761,7 @@ class TicketSynchronizer(Synchronizer):
         instance.entered_date_utc = json_data.get('dateEntered')
         instance.last_updated_utc = json_data.get('_info').get('lastUpdated')
         instance.required_date_utc = json_data.get('requiredDate')
+        instance.resources = json_data.get('resources')
         instance.budget_hours = json_data.get('budgetHours')
         instance.actual_hours = json_data.get('actualHours')
         instance.record_type = json_data.get('recordType')
