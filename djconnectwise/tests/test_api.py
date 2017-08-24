@@ -345,12 +345,12 @@ class TestScheduleAPIClient(BaseAPITestCase):
 
     @responses.activate
     def test_get_schedule_entry(self):
-        entry_id = fixtures.API_SCHEDULE_ENTRY['id']
+        entry_id = fixtures.API_SCHEDULE_ENTRY_FOR_TICKET['id']
         endpoint_url = '{}/{}'.format(self.endpoint, entry_id)
 
-        mk.get(endpoint_url, fixtures.API_SCHEDULE_ENTRY)
+        mk.get(endpoint_url, fixtures.API_SCHEDULE_ENTRY_FOR_TICKET)
         result = self.client.get_schedule_entry(entry_id)
-        self.assertEqual(result, fixtures.API_SCHEDULE_ENTRY)
+        self.assertEqual(result, fixtures.API_SCHEDULE_ENTRY_FOR_TICKET)
         self.assert_request_should_page(False)
 
 

@@ -149,6 +149,7 @@ class TestScheduleEntriesSynchronizer(TestCase, SynchronizerTestMixin):
         fixture_utils.init_schedule_statuses()
         fixture_utils.init_schedule_types()
         fixture_utils.init_tickets()
+        fixture_utils.init_activities()
         # mocks.schedule_api_get_schedule_entries_call(
         #     fixtures.API_SCHEDULE_ENTRIES)
         # sync.ScheduleEntriesSynchronizer().sync()
@@ -186,7 +187,10 @@ class TestScheduleEntriesSynchronizer(TestCase, SynchronizerTestMixin):
                          parse(json_data['dateEnd']))
 
         # verify referenced objects
-        self.assertEqual(instance.object.id, json_data['objectId'])
+        if instance.activity_object is not None:
+            self.assertEqual(instance.activity_object.id, json_data['objectId'])
+        if instance.ticket_object is not None:
+            self.assertEqual(instance.ticket_object.id, json_data['objectId'])
         self.assertEqual(instance.where.id, json_data['where']['id'])
         self.assertEqual(instance.member.id, json_data['member']['id'])
         self.assertEqual(instance.status.id, json_data['status']['id'])

@@ -168,10 +168,6 @@ class Synchronizer:
 
         return deleted_count
 
-    @staticmethod
-    def clear_field(instance, model_field):
-        setattr(instance, model_field, None)
-
     @log_sync_job
     def sync(self, reset=False):
         created_count = 0
@@ -467,12 +463,13 @@ class ScheduleEntriesSynchronizer(Synchronizer):
         ticket_class = models.Ticket
         activity_class = models.Activity
         uid = json_data['objectId']
+
         # objectId could be an Activity or a Ticket. Check for each case.
         related_ticket = None
         related_activity = None
         try:
             related_ticket = ticket_class.objects.get(pk=uid)
-        except ObjectDoesNotExist as e:
+        except ObjectDoesNotExist:
             # logger.info(
             #     'ObjectDoesNotExist: {} {} id {} '
             #     'referencing objectId {}'.format(
@@ -485,7 +482,7 @@ class ScheduleEntriesSynchronizer(Synchronizer):
             pass
         try:
             related_activity = activity_class.objects.get(pk=uid)
-        except ObjectDoesNotExist as e:
+        except ObjectDoesNotExist:
             # logger.info(
             #     'ObjectDoesNotExist: {} {} id {} '
             #     'referencing objectId {}'.format(
@@ -499,11 +496,10 @@ class ScheduleEntriesSynchronizer(Synchronizer):
 
         if related_ticket and not related_activity:
             if json_data['doneFlag']:
-                Synchronizer.clear_field(instance, 'ticket_object')
+                setattr(instance, 'ticket_object', None)
             else:
                 setattr(instance, 'ticket_object', related_ticket)
         elif related_activity and not related_ticket:
-            # activity_ticket = related_activity.ticket
             setattr(instance, 'activity_object', related_activity)
 
         if related_ticket and related_activity:
