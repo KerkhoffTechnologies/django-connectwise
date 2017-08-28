@@ -77,3 +77,17 @@ def init_opportunity_types():
         fixtures.API_SALES_OPPORTUNITY_TYPES)
     synchronizer = sync.OpportunityTypeSynchronizer()
     return synchronizer.sync()
+
+
+def init_opportunities():
+    mocks.sales_api_get_opportunities_call(
+        fixtures.API_SALES_OPPORTUNITIES)
+    synchronizer = sync.OpportunitySynchronizer()
+    return synchronizer.sync()
+
+
+def init_activities():
+    mocks.sales_api_get_activities_call(
+        fixtures.API_SALES_ACTIVITIES)
+    synchronizer = sync.ActivitySynchronizer()
+    return synchronizer.sync()

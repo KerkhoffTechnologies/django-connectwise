@@ -404,6 +404,26 @@ class TestSalesAPIClient(BaseAPITestCase):
         self.assertEqual(result, fixtures.API_SALES_OPPORTUNITY_TYPES)
         self.assert_request_should_page(True)
 
+    @responses.activate
+    def test_get_activities(self):
+        endpoint = self.client._endpoint(
+            self.client.ENDPOINT_ACTIVITIES)
+        mk.get(endpoint, fixtures.API_SALES_ACTIVITIES)
+        result = self.client.get_activities()
+        self.assertEqual(result, fixtures.API_SALES_ACTIVITIES)
+        self.assert_request_should_page(True)
+
+    @responses.activate
+    def test_get_single_activity(self):
+        endpoint = self.client._endpoint(
+            self.client.ENDPOINT_ACTIVITIES)
+        json_data = fixtures.API_SALES_ACTIVITIES[0]
+        instance_id = json_data['id']
+        endpoint = '{}/{}'.format(endpoint, instance_id)
+        mk.get(endpoint, json_data)
+        result = self.client.get_single_activity(instance_id)
+        self.assertEqual(result, json_data)
+
 
 class TestAPISettings(TestCase):
 

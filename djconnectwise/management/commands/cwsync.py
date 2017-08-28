@@ -36,6 +36,7 @@ class Command(BaseCommand):
             ('opportunity', sync.OpportunitySynchronizer,
                 _('Opportunity')),
             ('ticket', sync.TicketSynchronizer, _('Ticket')),
+            ('activity', sync.ActivitySynchronizer, _('Activity')),
         )
         self.synchronizer_map = OrderedDict()
         for name, syncronizer, obj_name in synchronizers:
