@@ -3,6 +3,9 @@ import logging
 from dateutil.parser import parse
 
 from django.core.files.base import ContentFile
+from django.core.exceptions import ObjectDoesNotExist
+from django.db import IntegrityError
+from django.db import transaction
 from django.utils import timezone
 
 from djconnectwise import api
@@ -51,22 +54,26 @@ class Synchronizer:
         request_settings = RequestSettings().get_settings()
         self.batch_size = request_settings['batch_size']
 
-    def _assign_relation(self, ticket, json_data,
+    def _assign_relation(self, instance, json_data,
                          json_field, model_class, model_field):
         relation_json = json_data.get(json_field)
         if relation_json:
             try:
                 uid = relation_json['id']
                 related_instance = model_class.objects.get(pk=uid)
-                setattr(ticket, model_field, related_instance)
+                setattr(instance, model_field, related_instance)
             except model_class.DoesNotExist:
                 logger.warning(
-                    'Failed to find {} {} for ticket {}.'.format(
+                    'Failed to find {} {} for {} {}.'.format(
                         json_field,
                         uid,
-                        ticket.id
+                        type(instance),
+                        instance.id
                     )
                 )
+        else:
+            # clear any existing value in the related instance
+            setattr(instance, model_field, None)
 
     def _instance_ids(self):
         ids = self.model_class.objects.all().values_list(
@@ -170,11 +177,27 @@ class Synchronizer:
         # to sync, to find stale records for deletion.
         synced_ids = set()
         for record in self.get():
-            _, created = self.update_or_create_instance(record)
-            if created:
-                created_count += 1
-            else:
-                updated_count += 1
+            # When a ScheduleEntry references a ticket that can't be found or
+            # does not exist, log the error.  Entry is not saved.
+            try:
+                with transaction.atomic():
+                    _, created = self.update_or_create_instance(record)
+                if created:
+                    created_count += 1
+                else:
+                    updated_count += 1
+            except IntegrityError as e:
+                logger.warning('IntegrityError: {}'.format(e.__cause__))
+            except ObjectDoesNotExist as e:
+                logger.warning(
+                    'ObjectDoesNotExist: {} {} id {}. '
+                    'objectId {}'.format(
+                        e.args,
+                        self.model_class.__name__,
+                        record['id'],
+                        record['objectId']
+                    )
+                )
 
             synced_ids.add(record['id'])
 
@@ -317,6 +340,54 @@ class CompanySynchronizer(Synchronizer):
         # Companies are deleted by setting deleted_flag = True, so
         # just treat this as a normal sync.
         self.fetch_sync_by_id(company_id)
+
+
+class ActivitySynchronizer(Synchronizer):
+    """
+    Coordinates retrieval and demarshalling of ConnectWise JSON Activity
+    instances.
+    """
+    client_class = api.SalesAPIClient
+    model_class = models.Activity
+
+    related_meta = {
+        'assignTo': (models.Member, 'assign_to'),
+        'opportunity': (models.Opportunity, 'opportunity'),
+        'ticket': (models.Ticket, 'ticket')
+    }
+
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data['id']
+        instance.name = json_data['name']
+        instance.notes = json_data.get('notes')
+
+        # handle dates
+        date_start = json_data.get('dateStart')
+        if date_start:
+            instance.date_start = parse(date_start)
+
+        date_end = json_data.get('dateEnd')
+        if date_end:
+            instance.date_end = parse(date_end)
+
+        for json_field, value in self.related_meta.items():
+            model_class, field_name = value
+            self._assign_relation(
+                instance,
+                json_data,
+                json_field,
+                model_class,
+                field_name
+            )
+
+        return instance
+
+    def get_page(self, *args, **kwargs):
+        kwargs['conditions'] = self.api_conditions
+        return self.client.get_activities(*args, **kwargs)
+
+    def get_single(self, activity_id):
+        return self.client.get_single_activity(activity_id)
 
 
 class CompanyStatusSynchronizer(Synchronizer):
@@ -682,26 +753,26 @@ class OpportunitySynchronizer(Synchronizer):
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
         instance.name = json_data['name']
-        instance.notes = json_data['notes']
-        instance.source = json_data['source']
-        instance.location_id = json_data['locationId']
-        instance.business_unit_id = json_data['businessUnitId']
-        instance.customer_po = json_data['customerPO']
+        instance.notes = json_data.get('notes')
+        instance.source = json_data.get('source')
+        instance.location_id = json_data.get('locationId')
+        instance.business_unit_id = json_data.get('businessUnitId')
+        instance.customer_po = json_data.get('customerPO')
 
         # handle dates
-        expected_close_date = json_data['expectedCloseDate']
+        expected_close_date = json_data.get('expectedCloseDate')
         if expected_close_date:
             instance.expected_close_date = parse(expected_close_date).date()
 
-        pipeline_change_date = json_data['pipelineChangeDate']
+        pipeline_change_date = json_data.get('pipelineChangeDate')
         if pipeline_change_date:
             instance.pipeline_change_date = parse(pipeline_change_date)
 
-        date_became_lead = json_data['dateBecameLead']
+        date_became_lead = json_data.get('dateBecameLead')
         if date_became_lead:
             instance.date_became_lead = parse(date_became_lead)
 
-        closed_date = json_data['closedDate']
+        closed_date = json_data.get('closedDate')
         if closed_date:
             instance.closed_date = parse(closed_date)
 

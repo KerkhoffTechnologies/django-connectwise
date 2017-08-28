@@ -72,6 +72,16 @@ def sales_api_get_opportunity_types_call(return_value, raised=None):
     return create_mock_call(method_name, return_value, side_effect=raised)
 
 
+def sales_api_get_activities_call(return_value, raised=None):
+    method_name = 'djconnectwise.api.SalesAPIClient.get_activities'
+    return create_mock_call(method_name, return_value, side_effect=raised)
+
+
+def sales_api_get_single_activity_call(return_value, raised=None):
+    method_name = 'djconnectwise.api.SalesAPIClient.get_single_activity'
+    return create_mock_call(method_name, return_value, side_effect=raised)
+
+
 def _service_api_tickets_call(page=1, page_size=25, conditions=[]):
     return_value = []
     test_date = date(1948, 5, 14)
