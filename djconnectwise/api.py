@@ -589,6 +589,10 @@ class ServiceAPIClient(ConnectWiseAPIClient):
         Returns the status types associated with the specified board.
         """
         endpoint_url = '{}/{}/statuses'.format(self.ENDPOINT_BOARDS, board_id)
+        if 'conditions' in kwargs:
+            kwargs['params'] = {
+                'conditions': self.prepare_conditions(kwargs['conditions'])
+            }
         return self.fetch_resource(endpoint_url, should_page=True,
                                    *args, **kwargs)
 
