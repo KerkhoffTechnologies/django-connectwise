@@ -1,6 +1,7 @@
 import logging
 
 from dateutil.parser import parse
+from copy import deepcopy
 
 from django.core.files.base import ContentFile
 from django.core.exceptions import ObjectDoesNotExist
@@ -570,9 +571,11 @@ class TicketSynchronizer(Synchronizer):
     Coordinates retrieval and demarshalling of ConnectWise JSON
     objects to the local counterparts.
     """
+
     client_class = api.ServiceAPIClient
     model_class = models.Ticket
     api_conditions = ['closedFlag=False']
+    batch_chunks = []
     child_synchronizers = (
         CompanySynchronizer,
         BoardStatusSynchronizer,
@@ -600,12 +603,14 @@ class TicketSynchronizer(Synchronizer):
         # ConnectWise, so we just do it for all cases.
         open_statuses = models.BoardStatus.available_objects.\
             filter(closed_status=False).values_list('id', flat=True)
+        optimal_size = self.get_optimal_size(open_statuses)
         if open_statuses:
             # Only do this if we know of at least one open status.
-            open_statuses_condition = 'status/id in ({})'.format(
-                ','.join([str(i) for i in open_statuses])
-            )
-            self.api_conditions.append(open_statuses_condition)
+            for status_batch in self.chunk(open_statuses, optimal_size):
+                open_statuses_condition = 'status/id in ({})'.format(
+                    ','.join([str(i) for i in status_batch])
+                )
+                self.batch_chunks.append(open_statuses_condition)
 
     def _assign_field_data(self, instance, json_data):
         created = instance.id is None
@@ -697,8 +702,55 @@ class TicketSynchronizer(Synchronizer):
                 list(ticket_assignments.values())
             )
 
+    def chunk(self, l, size):
+        # Takes a list, and returns that list as a list of lists, divided into
+        # chunks defined by 'size'
+        return [l[pos:pos + size] for pos in range(0, len(l), size)]
+
+    def get(self):
+        """Buffer and return all pages of results."""
+        records = []
+        batch = 1
+        for status_batch in self.batch_chunks:
+            page = 1
+            batch_conditions = deepcopy(self.api_conditions)
+            batch_conditions.append(status_batch)
+            while True:
+                logger.info(
+                    'Fetching {} records, batch {}, page {}'. \
+                        format(self.model_class, batch, page)
+                )
+                page_records = self.get_page(
+                    page=page,
+                    page_size=self.batch_size,
+                    conditions=batch_conditions
+                )
+                records += page_records
+                page += 1
+                if len(page_records) < self.batch_size:
+                    # This page wasn't full, so there's no more records after
+                    # this page.
+                    break
+        return records
+
+    def get_optimal_size(self, statuses):
+        size = len(statuses)
+        byte_count = 9001
+        while True:
+            # We add the approximate amount of characters for the url that we
+            # know will be there every time, and add size, because for the
+            # amount of status numbers, there will be just as many commas
+            #separating them
+            byte_count = sum(len(str(i)) for i in statuses[:size]) + 200 + size
+            if byte_count > 2000:
+                size = size/2
+            else:
+                break
+        logger.debug("Optimal batch size is {}.".format(size))
+        return size
+
+
     def get_page(self, *args, **kwargs):
-        kwargs['conditions'] = self.api_conditions
         return self.client.get_tickets(*args, **kwargs)
 
     def get_single(self, ticket_id):
