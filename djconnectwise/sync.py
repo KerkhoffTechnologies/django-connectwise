@@ -2,6 +2,7 @@ import logging
 
 from dateutil.parser import parse
 from copy import deepcopy
+import math
 
 from django.core.files.base import ContentFile
 from django.core.exceptions import ObjectDoesNotExist
@@ -743,7 +744,7 @@ class TicketSynchronizer(Synchronizer):
             #separating them
             byte_count = sum(len(str(i)) for i in statuses[:size]) + 200 + size
             if byte_count > 2000:
-                size = size/2
+                size = math.ceil(size/2)
             else:
                 break
         logger.debug("Optimal batch size is {}.".format(size))
