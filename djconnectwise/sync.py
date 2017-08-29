@@ -576,7 +576,7 @@ class TicketSynchronizer(Synchronizer):
     client_class = api.ServiceAPIClient
     model_class = models.Ticket
     api_conditions = ['closedFlag=False']
-    batch_chunks = []
+    statuses = []
     child_synchronizers = (
         CompanySynchronizer,
         BoardStatusSynchronizer,
@@ -602,16 +602,11 @@ class TicketSynchronizer(Synchronizer):
         # this results in timeouts for requests, so we also need to add a
         # condition for all the open statuses. This doesn't impact on-premise
         # ConnectWise, so we just do it for all cases.
-        open_statuses = models.BoardStatus.available_objects.\
-            filter(closed_status=False).values_list('id', flat=True)
-        optimal_size = self.get_optimal_size(open_statuses)
+        open_statuses = list(models.BoardStatus.available_objects.\
+            filter(closed_status=False).values_list('id', flat=True))
         if open_statuses:
             # Only do this if we know of at least one open status.
-            for status_batch in self.chunk(open_statuses, optimal_size):
-                open_statuses_condition = 'status/id in ({})'.format(
-                    ','.join([str(i) for i in status_batch])
-                )
-                self.batch_chunks.append(open_statuses_condition)
+            self.statuses = open_statuses
 
     def _assign_field_data(self, instance, json_data):
         created = instance.id is None
@@ -703,19 +698,21 @@ class TicketSynchronizer(Synchronizer):
                 list(ticket_assignments.values())
             )
 
-    def chunk(self, l, size):
-        # Takes a list, and returns that list as a list of lists, divided into
-        # chunks defined by 'size'
-        return [l[pos:pos + size] for pos in range(0, len(l), size)]
-
     def get(self):
         """Buffer and return all pages of results."""
         records = []
         batch = 1
-        for status_batch in self.batch_chunks:
+        while self.statuses:
+            # While there are still statuses left in the list there are still
+            # batches left to be processed
             page = 1
+            optimal_size = self.get_optimal_size(self.statuses)
+            status_batch = 'status/id in ({})'.format(
+                    ','.join([str(i) for i in self.statuses[:optimal_size]])
+                )
             batch_conditions = deepcopy(self.api_conditions)
             batch_conditions.append(status_batch)
+            del self.statuses[:optimal_size]
             while True:
                 logger.info(
                     'Fetching {} records, batch {}, page {}'. \
@@ -732,17 +729,18 @@ class TicketSynchronizer(Synchronizer):
                     # This page wasn't full, so there's no more records after
                     # this page.
                     break
+            batch += 1
         return records
 
-    def get_optimal_size(self, statuses):
-        size = len(statuses)
+    def get_optimal_size(self, status_list):
+        size = len(status_list)
         byte_count = 9001
         while True:
             # We add the approximate amount of characters for the url that we
             # know will be there every time, and add size, because for the
             # amount of status numbers, there will be just as many commas
             #separating them
-            byte_count = sum(len(str(i)) for i in statuses[:size]) + 200 + size
+            byte_count = sum(len(str(i)) for i in status_list[:size]) + 200 + size
             if byte_count > 2000:
                 size = math.ceil(size/2)
             else:
