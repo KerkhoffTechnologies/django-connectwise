@@ -246,6 +246,7 @@ class BoardChildSynchronizer(Synchronizer):
 class BoardStatusSynchronizer(BoardChildSynchronizer):
     client_class = api.ServiceAPIClient
     model_class = models.BoardStatus
+    api_conditions = ['inactive=False']
 
     def _assign_field_data(self, instance, json_data):
         instance = super(BoardStatusSynchronizer, self)._assign_field_data(
@@ -259,6 +260,7 @@ class BoardStatusSynchronizer(BoardChildSynchronizer):
         return instance
 
     def client_call(self, board_id, *args, **kwargs):
+        kwargs['conditions'] = self.api_conditions
         return self.client.get_statuses(board_id, *args, **kwargs)
 
 
