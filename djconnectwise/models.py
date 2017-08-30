@@ -491,7 +491,7 @@ class Opportunity(TimeStampedModel):
 
     def get_connectwise_url(self):
         params = dict(
-            recordType='OpportunityFV',
+            recordType='OpportunityFv',
             recid=self.id,
             companyName=settings.CONNECTWISE_CREDENTIALS['company_id']
         )
