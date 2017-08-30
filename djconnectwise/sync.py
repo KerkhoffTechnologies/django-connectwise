@@ -748,7 +748,10 @@ class TicketSynchronizer(Synchronizer):
     def get_optimal_size(self, status_list):
         size = len(status_list)
         byte_count = self.url_length(status_list, size)
-        if byte_count < MAX_URL_LENGTH:
+        if not status_list:
+            # Return none if empty list
+            return None
+        elif byte_count < MAX_URL_LENGTH:
             # If we can fit all of the statuses in the first batch, return
             return size
 

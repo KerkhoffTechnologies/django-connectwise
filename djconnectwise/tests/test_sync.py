@@ -562,7 +562,7 @@ class TestTicketSynchronizer(TestCase):
 
         size = synchronizer.get_optimal_size([])
 
-        self.assertEqual(size, 0)
+        self.assertIsNone(size)
 
     def test_delete_stale_tickets(self):
         """Local ticket should be deleted if omitted from sync"""
