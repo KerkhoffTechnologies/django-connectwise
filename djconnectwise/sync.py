@@ -1,6 +1,8 @@
 import logging
 
 from dateutil.parser import parse
+from copy import deepcopy
+import math
 
 from django.core.files.base import ContentFile
 from django.core.exceptions import ObjectDoesNotExist
@@ -15,6 +17,8 @@ from djconnectwise.utils import RequestSettings
 
 
 DEFAULT_AVATAR_EXTENSION = 'jpg'
+MAX_URL_LENGTH = 2000
+MIN_URL_LENGTH = 1980
 
 logger = logging.getLogger(__name__)
 
@@ -570,9 +574,11 @@ class TicketSynchronizer(Synchronizer):
     Coordinates retrieval and demarshalling of ConnectWise JSON
     objects to the local counterparts.
     """
+
     client_class = api.ServiceAPIClient
     model_class = models.Ticket
     api_conditions = ['closedFlag=False']
+    board_status_set = []
     child_synchronizers = (
         CompanySynchronizer,
         BoardStatusSynchronizer,
@@ -598,14 +604,14 @@ class TicketSynchronizer(Synchronizer):
         # this results in timeouts for requests, so we also need to add a
         # condition for all the open statuses. This doesn't impact on-premise
         # ConnectWise, so we just do it for all cases.
-        open_statuses = models.BoardStatus.available_objects.\
-            filter(closed_status=False).values_list('id', flat=True)
+        open_statuses = list(
+            models.BoardStatus.available_objects.
+            filter(closed_status=False).
+            values_list('id', flat=True)
+        )
         if open_statuses:
             # Only do this if we know of at least one open status.
-            open_statuses_condition = 'status/id in ({})'.format(
-                ','.join([str(i) for i in open_statuses])
-            )
-            self.api_conditions.append(open_statuses_condition)
+            self.board_status_set = open_statuses
 
     def _assign_field_data(self, instance, json_data):
         created = instance.id is None
@@ -697,8 +703,80 @@ class TicketSynchronizer(Synchronizer):
                 list(ticket_assignments.values())
             )
 
+    def get(self):
+        """Buffer and return all pages of results."""
+        unfetched_statuses = deepcopy(self.board_status_set)
+        records = []
+        batch = 1
+        while unfetched_statuses:
+            # While there are still statuses left in the list there are still
+            # batches left to be processed
+            page = 1
+            optimal_size = self.get_optimal_size(unfetched_statuses)
+            batched_statuses = unfetched_statuses[:optimal_size]
+            logger.debug("Batch size is {}.".format(optimal_size))
+            logger.debug(
+                "Fetching tickets with these statuses: {}".format(
+                    batched_statuses
+                )
+            )
+            status_batch = 'status/id in ({})'.format(
+                ','.join([str(i) for i in batched_statuses])
+            )
+            batch_conditions = deepcopy(self.api_conditions)
+            batch_conditions.append(status_batch)
+            del unfetched_statuses[:optimal_size]
+            while True:
+                logger.info(
+                    'Fetching {} records, batch {}, page {}'.
+                    format(self.model_class, batch, page)
+                )
+                page_records = self.get_page(
+                    page=page,
+                    page_size=self.batch_size,
+                    conditions=batch_conditions
+                )
+                records += page_records
+                page += 1
+                if len(page_records) < self.batch_size:
+                    # This page wasn't full, so there's no more records after
+                    # this page.
+                    break
+            batch += 1
+        return records
+
+    def get_optimal_size(self, status_list):
+        size = len(status_list)
+        byte_count = self.url_length(status_list, size)
+        if not status_list:
+            # Return none if empty list
+            return None
+        elif byte_count < MAX_URL_LENGTH:
+            # If we can fit all of the statuses in the first batch, return
+            return size
+
+        max_size = size
+        min_size = 1
+        while True:
+            byte_count = self.url_length(status_list, size)
+            if byte_count < MAX_URL_LENGTH and byte_count > MIN_URL_LENGTH:
+                break
+            elif byte_count > MAX_URL_LENGTH:
+                max_size = size
+                size = math.floor((max_size+min_size)/2)
+            else:
+                min_size = size
+                size = math.floor((max_size+min_size)/2)
+        return size
+
+    def url_length(self, status_list, size):
+        # We add the approximate amount of characters for the url that we
+        # know will be there every time (200) plus a little more to ensure we
+        # don't undercut it (300), and add size, because for the amount of
+        # status numbers, there will be just as many commas separating them
+        return sum(len(str(i)) for i in status_list[:size]) + 300 + size
+
     def get_page(self, *args, **kwargs):
-        kwargs['conditions'] = self.api_conditions
         return self.client.get_tickets(*args, **kwargs)
 
     def get_single(self, ticket_id):
