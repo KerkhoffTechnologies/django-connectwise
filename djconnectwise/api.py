@@ -343,6 +343,36 @@ class CompanyAPIClient(ConnectWiseAPIClient):
                                    *args, **kwargs)
 
 
+class ScheduleAPIClient(ConnectWiseAPIClient):
+    API = 'schedule'
+    ENDPOINT_ENTRIES = 'entries'
+    ENDPOINT_SCHEDULE_TYPES = 'types'
+    ENDPOINT_SCHEDULE_STATUSES = 'statuses'
+
+    def get_schedule_statuses(self, *args, **kwargs):
+        return self.fetch_resource(self.ENDPOINT_SCHEDULE_STATUSES,
+                                   should_page=True,
+                                   *args, **kwargs)
+
+    def get_schedule_types(self, *args, **kwargs):
+        return self.fetch_resource(self.ENDPOINT_SCHEDULE_TYPES,
+                                   should_page=True,
+                                   *args, **kwargs)
+
+    def get_schedule_entries(self, *args, **kwargs):
+        if 'conditions' in kwargs:
+            kwargs['params'] = {
+                'conditions': self.prepare_conditions(kwargs['conditions'])
+            }
+        return self.fetch_resource(self.ENDPOINT_ENTRIES,
+                                   should_page=True,
+                                   *args, **kwargs)
+
+    def get_schedule_entry(self, entry_id):
+        endpoint_url = '{}/{}'.format(self.ENDPOINT_ENTRIES, entry_id)
+        return self.fetch_resource(endpoint_url)
+
+
 class SalesAPIClient(ConnectWiseAPIClient):
     API = 'sales'
     ENDPOINT_OPPORTUNITIES = 'opportunities'

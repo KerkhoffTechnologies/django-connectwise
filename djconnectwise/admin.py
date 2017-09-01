@@ -42,21 +42,12 @@ class ProjectAdmin(admin.ModelAdmin):
     search_fields = ['name']
 
 
-class ResourceInline(admin.TabularInline):
-    model = models.Ticket.members.through
-    extra = 0
-
-
 @admin.register(models.Ticket)
 class TicketAdmin(admin.ModelAdmin):
-    list_display = ('id', 'summary', 'status', 'resources', 'record_type',)
+    list_display = ('id', 'summary', 'status', 'record_type',)
 
     list_filter = ('status', 'record_type')
     search_fields = ['id', 'summary', 'company__name']
-    inlines = [ResourceInline]
-
-    def resources(self, obj):
-        return ', '.join([str(m) for m in obj.members.all()])
 
 
 @admin.register(models.TicketPriority)
@@ -92,11 +83,34 @@ class OpportunityStatusAdmin(admin.ModelAdmin):
     search_fields = ['name']
 
 
+@admin.register(models.ScheduleType)
+class ScheduleTypeAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'identifier')
+    list_filter = ('name', )
+    search_fields = ['name']
+
+
+@admin.register(models.ScheduleStatus)
+class ScheduleStatusAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name')
+    list_filter = ('name', )
+    search_fields = ['name']
+
+
+@admin.register(models.ScheduleEntry)
+class ScheduleEntryAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'expected_date_start', 'expected_date_end',
+                    'done_flag', 'ticket_object', 'activity_object', 'member',
+                    'where', 'status', 'schedule_type')
+    list_filter = ('name', 'member', 'where', 'status')
+    search_fields = ['name', 'ticket_object', 'activity_object', 'member']
+
+
 @admin.register(models.Activity)
 class ActivityAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'notes', 'date_start', 'date_end',
                     'assign_to', 'opportunity', 'ticket')
-    list_filter = ['opportunity', 'ticket']
+    list_filter = ['opportunity', ]
     search_fields = ['name', 'notes']
 
     formfield_overrides = {

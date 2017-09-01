@@ -199,7 +199,7 @@ class Synchronizer:
                         e.args,
                         self.model_class.__name__,
                         record['id'],
-                        record['objectId']
+                        record['objectId'],
                     )
                 )
 
@@ -348,6 +348,36 @@ class CompanySynchronizer(Synchronizer):
         self.fetch_sync_by_id(company_id)
 
 
+class CompanyStatusSynchronizer(Synchronizer):
+    """
+    Coordinates retrieval and demarshalling of ConnectWise JSON
+    CompanyStatus instances.
+    """
+    client_class = api.CompanyAPIClient
+    model_class = models.CompanyStatus
+
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data['id']
+        instance.name = json_data['name']
+        instance.default_flag = json_data.get('defaultFlag')
+        instance.inactive_flag = json_data.get('inactiveFlag')
+        instance.notify_flag = json_data.get('notifyFlag')
+        instance.dissalow_saving_flag = json_data.get('disallowSavingFlag')
+        instance.notification_message = json_data.get('notificationMessage')
+        instance.custom_note_flag = json_data.get('customNoteFlag')
+        instance.cancel_open_tracks_flag = json_data.get(
+            'cancelOpenTracksFlag'
+        )
+
+        if json_data.get('track'):
+            instance.track_id = json_data['track']['id']
+
+        return instance
+
+    def get_page(self, *args, **kwargs):
+        return self.client.get_company_statuses(*args, **kwargs)
+
+
 class ActivitySynchronizer(Synchronizer):
     """
     Coordinates retrieval and demarshalling of ConnectWise JSON Activity
@@ -396,34 +426,142 @@ class ActivitySynchronizer(Synchronizer):
         return self.client.get_single_activity(activity_id)
 
 
-class CompanyStatusSynchronizer(Synchronizer):
+class ScheduleEntriesSynchronizer(Synchronizer):
     """
     Coordinates retrieval and demarshalling of ConnectWise JSON
-    CompanyStatus instances.
+    ScheduleEntries instances.
     """
-    client_class = api.CompanyAPIClient
-    model_class = models.CompanyStatus
+    client_class = api.ScheduleAPIClient
+    model_class = models.ScheduleEntry
+    # api_conditions = ['doneFlag = False']
+
+    related_meta = {
+        'member': (models.Member, 'member'),
+        'where': (models.Location, 'where'),
+        'status': (models.ScheduleStatus, 'status'),
+        'type': (models.ScheduleType, 'schedule_type')
+    }
 
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
-        instance.name = json_data['name']
-        instance.default_flag = json_data.get('defaultFlag')
-        instance.inactive_flag = json_data.get('inactiveFlag')
-        instance.notify_flag = json_data.get('notifyFlag')
-        instance.dissalow_saving_flag = json_data.get('disallowSavingFlag')
-        instance.notification_message = json_data.get('notificationMessage')
-        instance.custom_note_flag = json_data.get('customNoteFlag')
-        instance.cancel_open_tracks_flag = json_data.get(
-            'cancelOpenTracksFlag'
-        )
+        instance.name = json_data.get('name')
+        instance.done_flag = json_data['doneFlag']
 
-        if json_data.get('track'):
-            instance.track_id = json_data['track']['id']
+        # handle dates
+        expected_date_start = json_data.get('dateStart')
+        if expected_date_start:
+            instance.expected_date_start = parse(expected_date_start)
+
+        expected_date_end = json_data.get('dateEnd')
+        if expected_date_end:
+            instance.expected_date_end = parse(expected_date_end)
+
+        # handle foreign keys
+        for json_field, value in self.related_meta.items():
+            model_class, field_name = value
+            self._assign_relation(instance,
+                                  json_data,
+                                  json_field,
+                                  model_class,
+                                  field_name)
+        # _assign relation expects a dict. objectId is an integer. Handle it
+        # as a special situation.
+        ticket_class = models.Ticket
+        activity_class = models.Activity
+        uid = json_data['objectId']
+
+        # objectId could be an Activity or a Ticket. Check for each case.
+        related_ticket = None
+        related_activity = None
+        try:
+            related_ticket = ticket_class.objects.get(pk=uid)
+        except ObjectDoesNotExist:
+            # logger.info(
+            #     'ObjectDoesNotExist: {} {} id {} '
+            #     'referencing objectId {}'.format(
+            #         e.args[0],
+            #         self.model_class.__name__,
+            #         json_data['id'],
+            #         uid,
+            #     )
+            # )
+            pass
+        try:
+            related_activity = activity_class.objects.get(pk=uid)
+        except ObjectDoesNotExist:
+            # logger.info(
+            #     'ObjectDoesNotExist: {} {} id {} '
+            #     'referencing objectId {}'.format(
+            #         e.args[0],
+            #         self.model_class.__name__,
+            #         json_data['id'],
+            #         uid,
+            #     )
+            # )
+            pass
+
+        if related_ticket and not related_activity:
+            if json_data['doneFlag']:
+                setattr(instance, 'ticket_object', None)
+            else:
+                setattr(instance, 'ticket_object', related_ticket)
+        elif related_activity and not related_ticket:
+            setattr(instance, 'activity_object', related_activity)
+
+        if related_ticket and related_activity:
+            ticket_resources = related_ticket.resources
+            schedule_member = json_data['member']['identifier']
+            if ticket_resources is not None:
+                if schedule_member in ticket_resources:
+                    setattr(instance, 'ticket_object', related_ticket)
+                else:
+                    setattr(instance, 'activity_object', related_activity)
 
         return instance
 
     def get_page(self, *args, **kwargs):
-        return self.client.get_company_statuses(*args, **kwargs)
+        # kwargs['conditions'] = self.api_conditions
+        return self.client.get_schedule_entries(*args, **kwargs)
+
+    def get_single(self, entry_id):
+        return self.client.get_schedule_entry(entry_id)
+
+
+class ScheduleStatusSynchronizer(Synchronizer):
+    """
+    Coordinates retrieval and demarshalling of ConnectWise JSON
+    ScheduleStatus instances.
+    """
+    client_class = api.ScheduleAPIClient
+    model_class = models.ScheduleStatus
+
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data['id']
+        instance.name = json_data['name']
+
+        return instance
+
+    def get_page(self, *args, **kwargs):
+        return self.client.get_schedule_statuses(*args, **kwargs)
+
+
+class ScheduleTypeSychronizer(Synchronizer):
+    """
+    Coordinates retrieval and demarshalling of ConnectWise JSON
+    ScheduleType instances.
+    """
+    client_class = api.ScheduleAPIClient
+    model_class = models.ScheduleType
+
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data['id']
+        instance.name = json_data['name']
+        instance.identifier = json_data['identifier']
+
+        return instance
+
+    def get_page(self, *args, **kwargs):
+        return self.client.get_schedule_types(*args, **kwargs)
 
 
 class LocationSynchronizer(Synchronizer):
@@ -646,7 +784,6 @@ class TicketSynchronizer(Synchronizer):
             )
 
         instance.save()
-        self._manage_member_assignments(instance)
 
         logger.info('Syncing ticket {}'.format(json_data_id))
         action = created and 'Created' or 'Updated'
@@ -662,46 +799,6 @@ class TicketSynchronizer(Synchronizer):
         logger.info(log_info)
 
         return instance
-
-    def _manage_member_assignments(self, ticket):
-        if not ticket.resources:
-            ticket.members.clear()
-            return
-
-        ticket_assignments = {}
-        usernames = [
-            u.strip() for u in ticket.resources.split(',')
-        ]
-        # Reset board/ticket assignment in case the assigned resources
-        # have changed since last sync.
-        models.TicketAssignment.objects.filter(
-            ticket=ticket).delete()
-        for username in usernames:
-            try:
-                member = models.Member.objects.get(identifier=username)
-                assignment = models.TicketAssignment()
-                assignment.member = member
-                assignment.ticket = ticket
-                ticket_assignments[(username, ticket.id,)] = \
-                    assignment
-                msg = 'Member ticket assignment: ' \
-                      'ticket {}, member {}'.format(ticket.id, username)
-                logger.info(msg)
-            except models.Member.DoesNotExist:
-                logger.warning(
-                    'Failed to locate member with username {} for ticket '
-                    '{} assignment.'.format(username, ticket.id)
-                )
-
-        if ticket_assignments:
-            logger.info(
-                'Saving {} ticket assignments'.format(
-                    len(ticket_assignments)
-                )
-            )
-            models.TicketAssignment.objects.bulk_create(
-                list(ticket_assignments.values())
-            )
 
     def get(self):
         """Buffer and return all pages of results."""

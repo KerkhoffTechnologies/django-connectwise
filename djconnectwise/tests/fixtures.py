@@ -513,12 +513,15 @@ API_SERVICE_TICKET = {
     'customFields': None
 }
 
+
 API_SERVICE_TICKET_LIST = [API_SERVICE_TICKET]
+
 
 API_SERVICE_TICKET_MAP = {
     t['id']: t
     for t in API_SERVICE_TICKET_LIST
 }
+
 
 API_CW_VERSION = {
     'version': 'v2.0'
@@ -527,9 +530,11 @@ API_CW_VERSION = {
 
 API_MEMBER_LIST = [API_MEMBER]
 
+
 API_MEMBER_COUNT = {
     'count': len(API_MEMBER_LIST)
 }
+
 
 API_SYSTEM_CALLBACK_ENTRY = {
     "id": 0,
@@ -699,7 +704,7 @@ API_SALES_ACTIVITY = {
     'campaign': None,
     'notes': 'Stage Change from 1.Prospect to 2.Qualification',
     'dateStart': '2005-11-30',
-    'dateEnd': None,
+    # 'dateEnd': None,                  # ConnectWise 2017.5 removed null values
     'assignedBy': {
         'id': 196,
         'identifier': 'User20',
@@ -743,3 +748,98 @@ API_COMPANY_INFO = {
     'CompanyID': 'CW',
     'IsCloud': True
 }
+
+API_SCHEDULE_TYPE = {
+    'id': 2,
+    'name': 'Vacation',
+    'identifier': 'V',
+    'chargeCode': None,
+    'where': API_SERVICE_LOCATION,
+    'systemFlag': False,
+    '_info': {
+        'lastUpdated': '2002-01-23T19:47:30Z',
+        'updatedBy': 'JBelanger'
+    }
+}
+
+API_SCHEDULE_TYPE_LIST = [API_SCHEDULE_TYPE]
+
+API_SCHEDULE_STATUS = {
+    'id': 2,
+    'name': 'Firm',
+    'defaultFlag': True,
+    'showAsTentativeFlag': False,
+    '_info': {
+        'lastUpdated': '2001-04-30T18:48:51Z',
+        'updatedBy': None
+    }
+}
+
+API_SCHEDULE_STATUS_LIST = [API_SCHEDULE_STATUS]
+
+API_SCHEDULE_ENTRY_FOR_TICKET = {
+    'id': 11,
+    'objectId': 69,
+    'name': 'Set up new Workstation for Gregg',
+    'member': API_MEMBER,
+    'where': API_SERVICE_LOCATION,
+    'dateStart': '2005-05-02T12:00:00Z',
+    'dateEnd': '2005-05-02T16:00:00Z',
+    'reminder': {
+        'id': 4,
+        'name': '15 minutes',
+        '_info': None
+    },
+    'status': API_SCHEDULE_STATUS,
+    'type': API_SCHEDULE_TYPE,
+    'span': None,
+    'doneFlag': False,
+    'acknowledgedFlag': False,
+    'ownerFlag': False,
+    'allowScheduleConflictsFlag': None,
+    'addMemberToProjectFlag': None,
+    'projectRoleId': None,
+    'mobileGuid': '4cafb36f-418f-4f91-a6f1-e7fbdba87fd5',
+    'closeDate': '2015-11-19T18:57:55Z',
+    'hours': 4,
+    '_info': {
+        'lastUpdated': '2015-11-19T18:57:55Z',
+        'updatedBy': 'kanban'
+    }
+}
+
+API_SCHEDULE_ENTRY_FOR_ACTIVITY = {
+    'id': 112,
+    'objectId': 47,
+    'name': 'Key Pool, Co. / Testing rates',
+    'member': {
+        'id': 176,
+        'identifier': 'User1',
+        'name': 'Peter Thompson (User1)',
+        '_info': {
+            'member_href': 'https://connectwise.kerkhofftech.ca/v4_6_release/apis/3.0/system/members/176'
+        }
+    },
+    'where': API_SERVICE_LOCATION,
+    'dateStart': '2006-10-17T15:00:00Z',
+    'dateEnd': '2006-10-17T16:00:00Z',
+    'reminder': {
+        'id': 3,
+        'name': '10 minutes'
+    },
+    'status': API_SCHEDULE_STATUS,
+    'type': API_SCHEDULE_TYPE,
+    'doneFlag': True,
+    'acknowledgedFlag': True,
+    'ownerFlag': False,
+    'mobileGuid': 'b5009399-041d-4ce8-84ed-75e6e673cf13',
+    'hours': 1,
+    '_info': {
+        'lastUpdated': None,
+        'updatedBy': 'User1',
+        'objectMobileGuid': '8122b270-56b3-4c90-a671-90fd306aaa33'
+    }
+}
+
+API_SCHEDULE_ENTRIES = [API_SCHEDULE_ENTRY_FOR_TICKET,
+                        API_SCHEDULE_ENTRY_FOR_ACTIVITY]

@@ -86,6 +86,27 @@ def init_opportunities():
     return synchronizer.sync()
 
 
+def init_schedule_types():
+    mocks.schedule_api_get_schedule_types_call(
+        fixtures.API_SCHEDULE_TYPE_LIST)
+    synchronizer = sync.ScheduleTypeSychronizer()
+    return synchronizer.sync()
+
+
+def init_schedule_statuses():
+    mocks.schedule_api_get_schedule_statuses_call(
+        fixtures.API_SCHEDULE_STATUS_LIST)
+    synchronizer = sync.ScheduleStatusSynchronizer()
+    return synchronizer.sync()
+
+
+def init_schedule_entries():
+    mocks.schedule_api_get_schedule_entries_call(
+        fixtures.API_SCHEDULE_ENTRIES)
+    synchronizer = sync.ScheduleEntriesSynchronizer()
+    return synchronizer.sync()
+
+
 def init_activities():
     mocks.sales_api_get_activities_call(
         fixtures.API_SALES_ACTIVITIES)

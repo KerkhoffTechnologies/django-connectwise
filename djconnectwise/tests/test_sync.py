@@ -11,6 +11,9 @@ from djconnectwise.models import Opportunity
 from djconnectwise.models import OpportunityStatus
 from djconnectwise.models import OpportunityType
 from djconnectwise.models import Project
+from djconnectwise.models import ScheduleEntry
+from djconnectwise.models import ScheduleStatus
+from djconnectwise.models import ScheduleType
 from djconnectwise.models import SyncJob
 from djconnectwise.models import Team
 from djconnectwise.models import Ticket
@@ -61,8 +64,7 @@ class SynchronizerTestMixin:
         json_data = self.fixture[0]
 
         instance_id = json_data['id']
-        original = self.model_class.objects \
-            .get(id=instance_id)
+        original = self.model_class.objects.get(id=instance_id)
 
         name = 'Some New Name'
         new_json = deepcopy(self.fixture[0])
@@ -101,6 +103,125 @@ class TestCompanySynchronizer(TestCase, SynchronizerTestMixin):
         self.assertEqual(company.state_identifier, api_company['state'])
         self.assertEqual(company.zip, api_company['zip'])
         self.assertEqual(company.status.id, api_company['status']['id'])
+
+
+class TestCompanyStatusSynchronizer(TestCase, SynchronizerTestMixin):
+    synchronizer_class = sync.CompanyStatusSynchronizer
+    model_class = CompanyStatus
+    fixture = fixtures.API_COMPANY_STATUS_LIST
+
+    def call_api(self, return_data):
+        return mocks.company_api_get_company_statuses_call(return_data)
+
+    def _assert_fields(self, instance, json_data):
+        self.assertEqual(instance.name, json_data['name'])
+        self.assertEqual(instance.default_flag, json_data['defaultFlag'])
+        self.assertEqual(instance.inactive_flag, json_data['inactiveFlag'])
+        self.assertEqual(instance.notify_flag, json_data['notifyFlag'])
+        self.assertEqual(instance.dissalow_saving_flag,
+                         json_data['disallowSavingFlag'])
+        self.assertEqual(instance.notification_message,
+                         json_data['notificationMessage'])
+        self.assertEqual(instance.custom_note_flag,
+                         json_data['customNoteFlag'])
+        self.assertEqual(instance.cancel_open_tracks_flag,
+                         json_data['cancelOpenTracksFlag'])
+
+
+class TestScheduleEntriesSynchronizer(TestCase, SynchronizerTestMixin):
+    synchronizer_class = sync.ScheduleEntriesSynchronizer
+    model_class = ScheduleEntry
+    fixture = fixtures.API_SCHEDULE_ENTRIES
+
+    def setUp(self):
+        super().setUp()
+        # self.synchronizer = self.synchronizer_class()
+        fixture_utils.init_boards()
+        fixture_utils.init_companies()
+        fixture_utils.init_projects()
+        fixture_utils.init_locations()
+        fixture_utils.init_priorities()
+        fixture_utils.init_members()
+        fixture_utils.init_opportunity_statuses()
+        fixture_utils.init_opportunity_types()
+        fixture_utils.init_teams()
+        fixture_utils.init_board_statuses()
+        fixture_utils.init_schedule_statuses()
+        fixture_utils.init_schedule_types()
+        fixture_utils.init_tickets()
+        fixture_utils.init_activities()
+        # mocks.schedule_api_get_schedule_entries_call(
+        #     fixtures.API_SCHEDULE_ENTRIES)
+        # sync.ScheduleEntriesSynchronizer().sync()
+
+    def call_api(self, return_data):
+        return mocks.schedule_api_get_schedule_entries_call(return_data)
+
+    def test_sync_update(self):
+        self._sync(self.fixture)
+
+        json_data = self.fixture[0]
+
+        instance_id = json_data['id']
+        original = self.model_class.objects.get(id=instance_id)
+
+        name = 'Some New Name'
+        new_json = deepcopy(self.fixture[0])
+        new_json['name'] = name
+        new_json_list = [new_json]
+
+        self._sync(new_json_list)
+
+        changed = self.model_class.objects.get(id=instance_id)
+        self.assertNotEqual(original.name,
+                            name)
+        self._assert_fields(changed, new_json)
+
+    def _assert_fields(self, instance, json_data):
+        self.assertEqual(instance.id, json_data['id'])
+        self.assertEqual(instance.name, json_data['name'])
+        self.assertEqual(instance.done_flag, json_data['doneFlag'])
+        self.assertEqual(instance.expected_date_start,
+                         parse(json_data['dateStart']))
+        self.assertEqual(instance.expected_date_end,
+                         parse(json_data['dateEnd']))
+
+        # verify referenced objects
+        if instance.activity_object is not None:
+            self.assertEqual(instance.activity_object.id,
+                             json_data['objectId'])
+        if instance.ticket_object is not None:
+            self.assertEqual(instance.ticket_object.id, json_data['objectId'])
+        self.assertEqual(instance.where.id, json_data['where']['id'])
+        self.assertEqual(instance.member.id, json_data['member']['id'])
+        self.assertEqual(instance.status.id, json_data['status']['id'])
+        self.assertEqual(instance.schedule_type.id, json_data['type']['id'])
+
+
+class TestScheduleTypeSynchronizer(TestCase, SynchronizerTestMixin):
+    synchronizer_class = sync.ScheduleTypeSychronizer
+    model_class = ScheduleType
+    fixture = fixtures.API_SCHEDULE_TYPE_LIST
+
+    def call_api(self, return_data):
+        return mocks.schedule_api_get_schedule_types_call(return_data)
+
+    def _assert_fields(self, instance, json_data):
+        self.assertEqual(instance.id, json_data['id'])
+        self.assertEqual(instance.name, json_data['name'])
+
+
+class TestScheduleStatusSynchronizer(TestCase, SynchronizerTestMixin):
+    synchronizer_class = sync.ScheduleStatusSynchronizer
+    model_class = ScheduleStatus
+    fixture = fixtures.API_SCHEDULE_STATUS_LIST
+
+    def call_api(self, return_data):
+        return mocks.schedule_api_get_schedule_statuses_call(return_data)
+
+    def _assert_fields(self, instance, json_data):
+        self.assertEqual(instance.id, json_data['id'])
+        self.assertEqual(instance.name, json_data['name'])
 
 
 class TestProjectSynchronizer(TestCase, SynchronizerTestMixin):
@@ -160,29 +281,6 @@ class TestPrioritySynchronizer(TestCase, SynchronizerTestMixin):
 
     def call_api(self, return_data):
         return mocks.service_api_get_priorities_call(return_data)
-
-
-class TestCompanyStatusSynchronizer(TestCase, SynchronizerTestMixin):
-    synchronizer_class = sync.CompanyStatusSynchronizer
-    model_class = CompanyStatus
-    fixture = fixtures.API_COMPANY_STATUS_LIST
-
-    def call_api(self, return_data):
-        return mocks.company_api_get_company_statuses_call(return_data)
-
-    def _assert_fields(self, instance, json_data):
-        self.assertEqual(instance.name, json_data['name'])
-        self.assertEqual(instance.default_flag, json_data['defaultFlag'])
-        self.assertEqual(instance.inactive_flag, json_data['inactiveFlag'])
-        self.assertEqual(instance.notify_flag, json_data['notifyFlag'])
-        self.assertEqual(instance.dissalow_saving_flag,
-                         json_data['disallowSavingFlag'])
-        self.assertEqual(instance.notification_message,
-                         json_data['notificationMessage'])
-        self.assertEqual(instance.custom_note_flag,
-                         json_data['customNoteFlag'])
-        self.assertEqual(instance.cancel_open_tracks_flag,
-                         json_data['cancelOpenTracksFlag'])
 
 
 class TestLocationSynchronizer(TestCase, SynchronizerTestMixin):
@@ -276,23 +374,6 @@ class TestMemberSynchronization(TestCase):
         assert_sync_job(Member)
 
 
-class TestOpportunityStatusSynchronizer(TestCase, SynchronizerTestMixin):
-    synchronizer_class = sync.OpportunityStatusSynchronizer
-    model_class = OpportunityStatus
-    fixture = fixtures.API_SALES_OPPORTUNITY_STATUSES
-
-    def call_api(self, return_data):
-        return mocks.sales_api_get_opportunity_statuses_call(return_data)
-
-    def _assert_fields(self, instance, json_data):
-        self.assertEqual(instance.id, json_data['id'])
-        self.assertEqual(instance.name, json_data['name'])
-        self.assertEqual(instance.won_flag, json_data['wonFlag'])
-        self.assertEqual(instance.lost_flag, json_data['lostFlag'])
-        self.assertEqual(instance.closed_flag, json_data['closedFlag'])
-        self.assertEqual(instance.inactive_flag, json_data['inactiveFlag'])
-
-
 class TestOpportunitySynchronizer(TestCase, SynchronizerTestMixin):
     synchronizer_class = sync.OpportunitySynchronizer
     model_class = Opportunity
@@ -370,6 +451,23 @@ class TestOpportunitySynchronizer(TestCase, SynchronizerTestMixin):
         patch.stop()
 
 
+class TestOpportunityStatusSynchronizer(TestCase, SynchronizerTestMixin):
+    synchronizer_class = sync.OpportunityStatusSynchronizer
+    model_class = OpportunityStatus
+    fixture = fixtures.API_SALES_OPPORTUNITY_STATUSES
+
+    def call_api(self, return_data):
+        return mocks.sales_api_get_opportunity_statuses_call(return_data)
+
+    def _assert_fields(self, instance, json_data):
+        self.assertEqual(instance.id, json_data['id'])
+        self.assertEqual(instance.name, json_data['name'])
+        self.assertEqual(instance.won_flag, json_data['wonFlag'])
+        self.assertEqual(instance.lost_flag, json_data['lostFlag'])
+        self.assertEqual(instance.closed_flag, json_data['closedFlag'])
+        self.assertEqual(instance.inactive_flag, json_data['inactiveFlag'])
+
+
 class TestOpportunityTypeSynchronizer(TestCase, SynchronizerTestMixin):
     synchronizer_class = sync.OpportunityTypeSynchronizer
     model_class = OpportunityType
@@ -389,8 +487,7 @@ class TestOpportunityTypeSynchronizer(TestCase, SynchronizerTestMixin):
         json_data = self.fixture[0]
 
         instance_id = json_data['id']
-        original = self.model_class.objects \
-            .get(id=instance_id)
+        original = self.model_class.objects.get(id=instance_id)
 
         description = 'Some New Description'
         new_json = deepcopy(self.fixture[0])
@@ -452,12 +549,6 @@ class TestTicketSynchronizer(TestCase):
 
         self.assertEqual(instance.has_child_ticket,
                          json_data.get('hasChildTicket'))
-        resource_names = set(json_data.get('resources').split(','))
-
-        # verify members
-        member_qset = instance.members.all()
-        member_names = set(member_qset.values_list('identifier', flat=True))
-        self.assertEqual(resource_names, member_names)
 
         # verify assigned team
         self.assertEqual(instance.team_id, json_data['team']['id'])
@@ -578,17 +669,6 @@ class TestTicketSynchronizer(TestCase):
         synchronizer.sync(reset=True)
         self.assertEqual(ticket_qset.count(), 0)
         _patch.stop()
-
-    def test_manage_member_assignments_last_resource_removed(self):
-        # ticket with no resources should have all members removed
-        fixture_utils.init_tickets()
-
-        ticket = Ticket.objects.filter(members__isnull=False).first()
-        ticket.resources = None
-        synchronizer = sync.TicketSynchronizer()
-        synchronizer._manage_member_assignments(ticket)
-
-        self.assertEqual(ticket.members.all().count(), 0)
 
 
 class TestSyncSettings(TestCase):

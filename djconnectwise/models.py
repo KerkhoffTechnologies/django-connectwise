@@ -279,6 +279,45 @@ class CompanyStatus(models.Model):
         return self.name
 
 
+class ScheduleType(models.Model):
+    name = models.CharField(max_length=50)
+    identifier = models.CharField(max_length=1)
+
+    class Meta:
+        ordering = ('name', )
+
+    def __str__(self):
+        return self.name
+
+
+class ScheduleStatus(models.Model):
+    name = models.CharField(max_length=30)
+
+    def __str__(self):
+        return self.name
+
+
+class ScheduleEntry(models.Model):
+    name = models.CharField(max_length=250)
+    expected_date_start = models.DateTimeField(blank=True, null=True)
+    expected_date_end = models.DateTimeField(blank=True, null=True)
+    done_flag = models.BooleanField(default=False)
+
+    ticket_object = models.ForeignKey('Ticket', blank=True, null=True)
+    activity_object = models.ForeignKey('Activity', blank=True, null=True)
+    member = models.ForeignKey('Member')
+    where = models.ForeignKey('Location', blank=True, null=True)
+    status = models.ForeignKey('ScheduleStatus', blank=True, null=True)
+    schedule_type = models.ForeignKey('ScheduleType', blank=True, null=True)
+
+    class Meta:
+        verbose_name_plural = 'Schedule Entries'
+        ordering = ('name', )
+
+    def __str__(self):
+        return self.name
+
+
 class AvailableBoardTeamManager(models.Manager):
     """Return only teams whose ConnectWise board is active."""
     def get_queryset(self):
@@ -351,14 +390,6 @@ class TicketPriority(TimeStampedModel):
     @color.setter
     def color(self, color):
         self._color = color
-
-
-class TicketAssignment(TimeStampedModel):
-    ticket = models.ForeignKey('Ticket')
-    member = models.ForeignKey('Member')
-
-    def __str__(self):
-        return '{}: {}'.format(self.ticket, self.member)
 
 
 class AvailableProjectManager(models.Manager):
@@ -549,7 +580,7 @@ class Ticket(TimeStampedModel):
     project = models.ForeignKey(
         'Project', blank=True, null=True, related_name='project_tickets')
     members = models.ManyToManyField(
-        'Member', through='TicketAssignment',
+        'Member', through='ScheduleEntry',
         related_name='member_tickets')
 
     class Meta:

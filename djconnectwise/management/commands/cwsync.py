@@ -37,10 +37,16 @@ class Command(BaseCommand):
                 _('Opportunity')),
             ('ticket', sync.TicketSynchronizer, _('Ticket')),
             ('activity', sync.ActivitySynchronizer, _('Activity')),
+            ('schedule_type', sync.ScheduleTypeSychronizer,
+                _('Schedule Type')),
+            ('schedule_status', sync.ScheduleStatusSynchronizer,
+                _('Schedule Status')),
+            ('schedule_entry', sync.ScheduleEntriesSynchronizer,
+                _('Schedule Entry')),
         )
         self.synchronizer_map = OrderedDict()
-        for name, syncronizer, obj_name in synchronizers:
-            self.synchronizer_map[name] = (syncronizer, obj_name)
+        for name, synchronizer, obj_name in synchronizers:
+            self.synchronizer_map[name] = (synchronizer, obj_name)
 
     def add_arguments(self, parser):
         parser.add_argument(OPTION_NAME, nargs='?', type=str)
@@ -77,9 +83,10 @@ class Command(BaseCommand):
             if sync_tuple:
                 sync_classes.append(sync_tuple)
             else:
-                msg = _('Invalid CW object, choose one of the following: \n{}')
+                msg = _('Invalid CW object {}, '
+                        'choose one of the following: \n{}')
                 options_txt = ', '.join(self.synchronizer_map.keys())
-                msg = msg.format(options_txt)
+                msg = msg.format(sync_tuple, options_txt)
                 raise CommandError(msg)
         else:
             sync_classes = self.synchronizer_map.values()

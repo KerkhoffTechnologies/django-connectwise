@@ -151,6 +151,8 @@ class TestSyncOpportunityCommand(AbstractBaseSyncTest, TestCase):
 
     def setUp(self):
         super().setUp()
+        fixture_utils.init_companies()
+        fixture_utils.init_members()
         fixture_utils.init_opportunity_statuses()
         fixture_utils.init_opportunity_types()
 
@@ -168,6 +170,44 @@ class TestSyncOpportunityTypesCommand(AbstractBaseSyncTest, TestCase):
         mocks.sales_api_get_opportunity_types_call,
         fixtures.API_SALES_OPPORTUNITY_TYPES,
         'opportunity_type',
+    )
+
+
+class TestSyncScheduleEntriesCommand(AbstractBaseSyncTest, TestCase):
+    args = (
+        mocks.schedule_api_get_schedule_entries_call,
+        fixtures.API_SCHEDULE_ENTRIES,
+        'schedule_entry'
+    )
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_boards()
+        fixture_utils.init_board_statuses()
+        fixture_utils.init_companies()
+        fixture_utils.init_locations()
+        fixture_utils.init_teams()
+        fixture_utils.init_members()
+        fixture_utils.init_priorities()
+        fixture_utils.init_projects()
+        fixture_utils.init_schedule_types()
+        fixture_utils.init_schedule_statuses()
+        fixture_utils.init_tickets()
+
+
+class TestSyncScheduleTypesCommand(AbstractBaseSyncTest, TestCase):
+    args = (
+        mocks.schedule_api_get_schedule_types_call,
+        fixtures.API_SCHEDULE_TYPE_LIST,
+        'schedule_type'
+    )
+
+
+class TestSyncScheduleStatusesCommand(AbstractBaseSyncTest, TestCase):
+    args = (
+        mocks.schedule_api_get_schedule_statuses_call,
+        fixtures.API_SCHEDULE_STATUS_LIST,
+        'schedule_status'
     )
 
 
@@ -211,6 +251,9 @@ class TestSyncAllCommand(TestCase):
             TestSyncOpportunityTypesCommand,
             TestSyncOpportunityCommand,
             TestSyncActivityCommand,
+            TestSyncScheduleTypesCommand,
+            TestSyncScheduleStatusesCommand,
+            TestSyncScheduleEntriesCommand
         ]
 
         self.test_args = []
@@ -273,6 +316,9 @@ class TestSyncAllCommand(TestCase):
             'opportunity_status': models.OpportunityStatus,
             'opportunity_type': models.OpportunityType,
             'activity': models.Activity,
+            'schedule_entry': models.ScheduleEntry,
+            'schedule_type': models.ScheduleType,
+            'schedule_status': models.ScheduleStatus,
         }
 
         self.test_sync()
