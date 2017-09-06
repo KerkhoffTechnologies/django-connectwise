@@ -483,7 +483,7 @@ class Opportunity(TimeStampedModel):
         'Member',
         blank=True, null=True,
         related_name='opportunity_secondary')
-    type = models.ForeignKey('OpportunityType', blank=True, null=True)
+    opportunity_type = models.ForeignKey('OpportunityType', blank=True, null=True)
 
     def __str__(self):
         return self.name
