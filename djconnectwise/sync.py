@@ -23,6 +23,14 @@ MIN_URL_LENGTH = 1980
 logger = logging.getLogger(__name__)
 
 
+class InvalidObjectException(Exception):
+    """
+    If for any reason an object can't be created (for example, it references
+    an unknown foreign object, or is missing a required field), raise this
+    so that the synchronizer can catch it and continue with other records.
+    """
+
+
 def log_sync_job(f):
     def wrapper(*args, **kwargs):
         sync_instance = args[0]
@@ -181,8 +189,6 @@ class Synchronizer:
         # to sync, to find stale records for deletion.
         synced_ids = set()
         for record in self.get():
-            # When a ScheduleEntry references a ticket that can't be found or
-            # does not exist, log the error.  Entry is not saved.
             try:
                 with transaction.atomic():
                     _, created = self.update_or_create_instance(record)
@@ -192,16 +198,8 @@ class Synchronizer:
                     updated_count += 1
             except IntegrityError as e:
                 logger.warning('IntegrityError: {}'.format(e.__cause__))
-            except ObjectDoesNotExist as e:
-                logger.warning(
-                    'ObjectDoesNotExist: {} {} id {}. '
-                    'objectId {}'.format(
-                        e.args,
-                        self.model_class.__name__,
-                        record['id'],
-                        record['objectId'],
-                    )
-                )
+            except InvalidObjectException as e:
+                logger.warning('{}'.format(e))
 
             synced_ids.add(record['id'])
 
@@ -436,7 +434,6 @@ class ScheduleEntriesSynchronizer(Synchronizer):
     # api_conditions = ['doneFlag = False']
 
     related_meta = {
-        'member': (models.Member, 'member'),
         'where': (models.Location, 'where'),
         'status': (models.ScheduleStatus, 'status'),
         'type': (models.ScheduleType, 'schedule_type')
@@ -446,6 +443,22 @@ class ScheduleEntriesSynchronizer(Synchronizer):
         instance.id = json_data['id']
         instance.name = json_data.get('name')
         instance.done_flag = json_data['doneFlag']
+
+        # Handle member- there are cases where no member field is provided,
+        # which we consider invalid.
+        try:
+            self._assign_relation(
+                instance,
+                json_data,
+                'member',
+                models.Member,
+                'member',
+            )
+        except ValueError:
+            raise InvalidObjectException(
+                'Unable to find member for schedule entry {}- skipping.'
+                .format(instance.id)
+            )
 
         # handle dates
         expected_date_start = json_data.get('dateStart')
@@ -459,12 +472,14 @@ class ScheduleEntriesSynchronizer(Synchronizer):
         # handle foreign keys
         for json_field, value in self.related_meta.items():
             model_class, field_name = value
-            self._assign_relation(instance,
-                                  json_data,
-                                  json_field,
-                                  model_class,
-                                  field_name)
-        # _assign relation expects a dict. objectId is an integer. Handle it
+            self._assign_relation(
+                instance,
+                json_data,
+                json_field,
+                model_class,
+                field_name
+            )
+        # _assign_relation expects a dict. objectId is an integer. Handle it
         # as a special situation.
         ticket_class = models.Ticket
         activity_class = models.Activity
@@ -476,28 +491,10 @@ class ScheduleEntriesSynchronizer(Synchronizer):
         try:
             related_ticket = ticket_class.objects.get(pk=uid)
         except ObjectDoesNotExist:
-            # logger.info(
-            #     'ObjectDoesNotExist: {} {} id {} '
-            #     'referencing objectId {}'.format(
-            #         e.args[0],
-            #         self.model_class.__name__,
-            #         json_data['id'],
-            #         uid,
-            #     )
-            # )
             pass
         try:
             related_activity = activity_class.objects.get(pk=uid)
         except ObjectDoesNotExist:
-            # logger.info(
-            #     'ObjectDoesNotExist: {} {} id {} '
-            #     'referencing objectId {}'.format(
-            #         e.args[0],
-            #         self.model_class.__name__,
-            #         json_data['id'],
-            #         uid,
-            #     )
-            # )
             pass
 
         if related_ticket and not related_activity:
@@ -802,18 +799,17 @@ class TicketSynchronizer(Synchronizer):
         return instance
 
     def _manage_member_assignments(self, ticket):
+        # Reset board/ticket assignment in case the assigned resources
+        # have changed since last sync.
+        models.ScheduleEntry.objects.filter(ticket_object=ticket).delete()
+
         if not ticket.resources:
-            models.ScheduleEntry.objects.filter(ticket_object=ticket).delete()
             return
 
         ticket_assignments = {}
         usernames = [
             u.strip() for u in ticket.resources.split(',')
         ]
-        # Reset board/ticket assignment in case the assigned resources
-        # have changed since last sync.
-        models.ScheduleEntry.objects.filter(
-            ticket_object=ticket).delete()
         for username in usernames:
             try:
                 member = models.Member.objects.get(identifier=username)
