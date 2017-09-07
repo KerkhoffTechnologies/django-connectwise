@@ -483,7 +483,13 @@ class ScheduleEntriesSynchronizer(Synchronizer):
         # as a special situation.
         ticket_class = models.Ticket
         activity_class = models.Activity
-        uid = json_data['objectId']
+        try:
+            uid = json_data['objectId']
+        except KeyError:
+            raise InvalidObjectException(
+                'Schedule entry {} has no objectId key to find its target'
+                '- skipping.'.format(instance.id)
+            )
 
         # objectId could be an Activity or a Ticket. Check for each case.
         related_ticket = None
