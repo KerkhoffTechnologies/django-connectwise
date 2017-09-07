@@ -785,6 +785,7 @@ class TicketSynchronizer(Synchronizer):
 
         instance.save()
 
+        self._manage_member_assignments(instance)
         logger.info('Syncing ticket {}'.format(json_data_id))
         action = created and 'Created' or 'Updated'
 
@@ -799,6 +800,46 @@ class TicketSynchronizer(Synchronizer):
         logger.info(log_info)
 
         return instance
+
+    def _manage_member_assignments(self, ticket):
+        if not ticket.resources:
+            models.ScheduleEntry.objects.filter(ticket_object=ticket).delete()
+            return
+
+        ticket_assignments = {}
+        usernames = [
+            u.strip() for u in ticket.resources.split(',')
+        ]
+        # Reset board/ticket assignment in case the assigned resources
+        # have changed since last sync.
+        models.ScheduleEntry.objects.filter(
+            ticket_object=ticket).delete()
+        for username in usernames:
+            try:
+                member = models.Member.objects.get(identifier=username)
+                assignment = models.ScheduleEntry()
+                assignment.member = member
+                assignment.ticket_object = ticket
+                ticket_assignments[(username, ticket.id,)] = \
+                    assignment
+                msg = 'Member ticket assignment: ' \
+                      'ticket {}, member {}'.format(ticket.id, username)
+                logger.info(msg)
+            except models.Member.DoesNotExist:
+                logger.warning(
+                    'Failed to locate member with username {} for ticket '
+                    '{} assignment.'.format(username, ticket.id)
+                )
+
+        if ticket_assignments:
+            logger.info(
+                'Saving {} ticket assignments'.format(
+                    len(ticket_assignments)
+                )
+            )
+            models.ScheduleEntry.objects.bulk_create(
+                list(ticket_assignments.values())
+            )
 
     def get(self):
         """Buffer and return all pages of results."""
