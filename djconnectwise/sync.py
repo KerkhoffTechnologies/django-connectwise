@@ -943,6 +943,8 @@ class OpportunitySynchronizer(Synchronizer):
     """
     client_class = api.SalesAPIClient
     model_class = models.Opportunity
+    api_conditions = []
+    open_statuses = []
     related_meta = {
         'type': (models.OpportunityType, 'type'),
         'stage': (models.OpportunityStage, 'stage'),
@@ -952,6 +954,20 @@ class OpportunitySynchronizer(Synchronizer):
         'company': (models.Company, 'company'),
         'closedBy': (models.Member, 'closed_by')
     }
+
+    def __init__(self):
+        super().__init__()
+        # only synchronize Opportunities that do not have an OpportunityStatus
+        # with the closedFlag=True
+        open_statuses = list(
+            models.OpportunityStatus.objects.
+            filter(closed_flag=False).
+            values_list('id', flat=True)
+        )
+        if open_statuses:
+            # Only do this if we know of at least one open status.
+            for status in open_statuses:
+                self.api_conditions.append('status/Id=' + str(status))
 
     def _update_or_create_child(self, model_class, json_data):
         child_name = json_data['name']
@@ -1015,6 +1031,7 @@ class OpportunitySynchronizer(Synchronizer):
         return instance
 
     def get_page(self, *args, **kwargs):
+        kwargs['conditions'] = self.api_conditions
         return self.client.get_opportunities(*args, **kwargs)
 
     def get_single(self, opportunity_id):

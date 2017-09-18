@@ -398,6 +398,10 @@ class SalesAPIClient(ConnectWiseAPIClient):
         return self.fetch_resource(endpoint_url)
 
     def get_opportunities(self, *args, **kwargs):
+        if 'conditions' in kwargs:
+            kwargs['params'] = {
+                'conditions': self.prepare_conditions(kwargs['conditions'])
+            }
         return self.fetch_resource(self.ENDPOINT_OPPORTUNITIES,
                                    should_page=True,
                                    *args, **kwargs)
