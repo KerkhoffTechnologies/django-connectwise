@@ -946,7 +946,7 @@ class OpportunitySynchronizer(Synchronizer):
     api_conditions = []
     open_statuses = []
     related_meta = {
-        'type': (models.OpportunityType, 'type'),
+        'type': (models.OpportunityType, 'opportunity_type'),
         'stage': (models.OpportunityStage, 'stage'),
         'status': (models.OpportunityStatus, 'status'),
         'primarySalesRep': (models.Member, 'primary_sales_rep'),

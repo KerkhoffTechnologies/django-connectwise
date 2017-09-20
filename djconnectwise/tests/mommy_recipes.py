@@ -1,7 +1,7 @@
 from itertools import cycle
 
 from model_mommy.recipe import Recipe, seq
-from djconnectwise.models import ConnectWiseBoard, BoardStatus, \
+from djconnectwise.models import ConnectWiseBoard, \
     TicketPriority, Ticket, Company, Member, Project
 
 import names

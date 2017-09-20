@@ -549,12 +549,16 @@ API_SYSTEM_CALLBACK_ENTRY = {
 }
 
 
+API_SALES_OPPORTUNITY_TYPE = {
+    'id': 2,
+    'description': 'Application Development',
+    'inactiveFlag': False,
+    '_info': {'lastUpdated': '2002-03-15T19:16:52Z', 'updatedBy': 'Arnie'}
+}
+
+
 API_SALES_OPPORTUNITY_TYPES = [
-    {'id': 2, 
-     'description': 'Application Development', 
-     'inactiveFlag': False, 
-     '_info': {'lastUpdated': '2002-03-15T19:16:52Z', 'updatedBy': 'Arnie'}
-     }
+    API_SALES_OPPORTUNITY_TYPE
 ]
 
     
@@ -601,6 +605,7 @@ API_SALES_OPPORTUNITY_STATUSES = [
    'name': 'No decision',
    'wonFlag': False}
 ]
+
 
 API_SALES_OPPORTUNITY = {
     '_info': {'lastUpdated': '2016-10-12T19:24:07Z',
@@ -663,9 +668,8 @@ API_SALES_OPPORTUNITY = {
                 'id': 11,
                 'name': 'State'},
     'totalSalesTax': 0.0,
-    'type': {'_info': {'type_href': 'https://some-host.com/v4_6_release/apis/3.0/sales/opportunities/types/2'},
-             'id': 2,
-             'name': 'Application Development'}}
+    'type': API_SALES_OPPORTUNITY_TYPE,
+}
 
 API_SALES_OPPORTUNITIES = [
     API_SALES_OPPORTUNITY,
