@@ -83,6 +83,13 @@ class OpportunityStatusAdmin(admin.ModelAdmin):
     search_fields = ['name']
 
 
+@admin.register(models.Opportunity)
+class OpportunityAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'stage', 'status', 'opportunity_type')
+    list_filter = ('stage', 'status', 'opportunity_type')
+    search_fields = ['name']
+
+
 @admin.register(models.ScheduleType)
 class ScheduleTypeAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'identifier')

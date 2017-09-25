@@ -293,6 +293,9 @@ class ScheduleType(models.Model):
 class ScheduleStatus(models.Model):
     name = models.CharField(max_length=30)
 
+    class Meta:
+        verbose_name_plural = 'Schedule statuses'
+
     def __str__(self):
         return self.name
 
@@ -311,7 +314,7 @@ class ScheduleEntry(models.Model):
     schedule_type = models.ForeignKey('ScheduleType', blank=True, null=True)
 
     class Meta:
-        verbose_name_plural = 'Schedule Entries'
+        verbose_name_plural = 'Schedule entries'
         ordering = ('name', )
 
     def __str__(self):
@@ -423,6 +426,9 @@ class Project(TimeStampedModel):
 class OpportunityStage(TimeStampedModel):
     name = models.CharField(max_length=50)
 
+    class Meta:
+        ordering = ('name', )
+
     def __str__(self):
         return self.name
 
@@ -437,12 +443,19 @@ class OpportunityStatus(TimeStampedModel):
     closed_flag = models.BooleanField(default=False)
     inactive_flag = models.BooleanField(default=False)
 
+    class Meta:
+        ordering = ('name', )
+        verbose_name_plural = 'Opportunity statuses'
+
     def __str__(self):
         return self.name
 
 
 class OpportunityPriority(TimeStampedModel):
     name = models.CharField(max_length=50)
+
+    class Meta:
+        ordering = ('name', )
 
     def __str__(self):
         return self.name
@@ -451,6 +464,9 @@ class OpportunityPriority(TimeStampedModel):
 class OpportunityType(TimeStampedModel):
     description = models.CharField(max_length=50)
     inactive_flag = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ('description', )
 
     def __str__(self):
         return self.description
@@ -485,6 +501,10 @@ class Opportunity(TimeStampedModel):
         related_name='opportunity_secondary')
     opportunity_type = models.ForeignKey('OpportunityType',
                                          blank=True, null=True)
+
+    class Meta:
+        ordering = ('name', )
+        verbose_name_plural = 'Opportunities'
 
     def __str__(self):
         return self.name
