@@ -457,34 +457,34 @@ class OpportunityType(TimeStampedModel):
 
 
 class Opportunity(TimeStampedModel):
-    name = models.CharField(max_length=100)
+    business_unit_id = models.IntegerField()
+    closed_date = models.DateTimeField(blank=True, null=True)
+    customer_po = models.CharField(max_length=100, blank=True, null=True)
+    date_became_lead = models.DateTimeField(blank=True, null=True)
     expected_close_date = models.DateField()
+    location_id = models.IntegerField()
+    name = models.CharField(max_length=100)
     notes = models.TextField(blank=True, null=True)
+    pipeline_change_date = models.DateTimeField(blank=True, null=True)
     source = models.CharField(max_length=100, blank=True, null=True)
 
-    location_id = models.IntegerField()
-    business_unit_id = models.IntegerField()
-    customer_po = models.CharField(max_length=100, blank=True, null=True)
-    pipeline_change_date = models.DateTimeField(blank=True, null=True)
-    date_became_lead = models.DateTimeField(blank=True, null=True)
-    closed_date = models.DateTimeField(blank=True, null=True)
-
-    type = models.ForeignKey('OpportunityType', blank=True, null=True)
-    stage = models.ForeignKey('OpportunityStage')
-    status = models.ForeignKey('OpportunityStatus', blank=True, null=True)
-    priority = models.ForeignKey('OpportunityPriority')
+    closed_by = models.ForeignKey('Member',
+                                  blank=True, null=True,
+                                  related_name='opportunity_closed_by')
+    company = models.ForeignKey('Company', blank=True, null=True,
+                                related_name='company_opportunities')
     primary_sales_rep = models.ForeignKey('Member',
                                           blank=True, null=True,
                                           related_name='opportunity_primary')
+    priority = models.ForeignKey('OpportunityPriority')
+    stage = models.ForeignKey('OpportunityStage')
+    status = models.ForeignKey('OpportunityStatus', blank=True, null=True)
     secondary_sales_rep = models.ForeignKey(
         'Member',
         blank=True, null=True,
         related_name='opportunity_secondary')
-
-    company = models.ForeignKey('Company', blank=True, null=True)
-    closed_by = models.ForeignKey('Member',
-                                  blank=True, null=True,
-                                  related_name='opportunity_closed_by')
+    opportunity_type = models.ForeignKey('OpportunityType',
+                                         blank=True, null=True)
 
     def __str__(self):
         return self.name
@@ -529,59 +529,59 @@ class Ticket(TimeStampedModel):
         ('ProjectIssue', "Project Issue"),
     )
 
-    closed_flag = models.NullBooleanField(blank=True, null=True)
-    type = models.CharField(blank=True, null=True, max_length=250)
-    sub_type = models.CharField(blank=True, null=True, max_length=250)
-    sub_type_item = models.CharField(blank=True, null=True, max_length=250)
-    source = models.CharField(blank=True, null=True, max_length=250)
-    summary = models.CharField(blank=True, null=True, max_length=250)
-    entered_date_utc = models.DateTimeField(blank=True, null=True)
-    last_updated_utc = models.DateTimeField(blank=True, null=True)
-    resources = models.CharField(blank=True, null=True, max_length=250)
-    parent_ticket_id = models.IntegerField(blank=True, null=True)
-    has_child_ticket = models.NullBooleanField()
-    required_date_utc = models.DateTimeField(blank=True, null=True)
-    closed_date_utc = models.DateTimeField(blank=True, null=True)
-    site_name = models.CharField(blank=True, null=True, max_length=250)
-    budget_hours = models.DecimalField(
-        blank=True, null=True, decimal_places=2, max_digits=6)
     actual_hours = models.DecimalField(
         blank=True, null=True, decimal_places=2, max_digits=6)
-    approved = models.NullBooleanField(blank=True, null=True)
-    closed_by = models.CharField(blank=True, null=True, max_length=250)
-    resolve_mins = models.IntegerField(blank=True, null=True)
-    res_plan_mins = models.IntegerField(blank=True, null=True)
-    respond_mins = models.IntegerField(blank=True, null=True)
-    updated_by = models.CharField(blank=True, null=True, max_length=250)
-    record_type = models.CharField(blank=True, null=True,
-                                   max_length=250, choices=RECORD_TYPES,
-                                   db_index=True)
     agreement_id = models.IntegerField(blank=True, null=True)
-    severity = models.CharField(blank=True, null=True, max_length=250)
-    impact = models.CharField(blank=True, null=True, max_length=250)
+    api_text = models.TextField(blank=True, null=True)
+    approved = models.NullBooleanField(blank=True, null=True)
+    budget_hours = models.DecimalField(
+        blank=True, null=True, decimal_places=2, max_digits=6)
+    closed_by = models.CharField(blank=True, null=True, max_length=250)
+    closed_date_utc = models.DateTimeField(blank=True, null=True)
+    closed_flag = models.NullBooleanField(blank=True, null=True)
+    customer_updated = models.BooleanField(default=False)
     date_resolved_utc = models.DateTimeField(blank=True, null=True)
     date_resplan_utc = models.DateTimeField(blank=True, null=True)
     date_responded_utc = models.DateTimeField(blank=True, null=True)
+    entered_date_utc = models.DateTimeField(blank=True, null=True)
+    has_child_ticket = models.NullBooleanField()
+    impact = models.CharField(blank=True, null=True, max_length=250)
     is_in_sla = models.NullBooleanField(blank=True, null=True)
-    api_text = models.TextField(blank=True, null=True)
-    customer_updated = models.BooleanField(default=False)
+    last_updated_utc = models.DateTimeField(blank=True, null=True)
+    parent_ticket_id = models.IntegerField(blank=True, null=True)
+    record_type = models.CharField(blank=True, null=True,
+                                   max_length=250, choices=RECORD_TYPES,
+                                   db_index=True)
+    required_date_utc = models.DateTimeField(blank=True, null=True)
+    respond_mins = models.IntegerField(blank=True, null=True)
+    resolve_mins = models.IntegerField(blank=True, null=True)
+    resources = models.CharField(blank=True, null=True, max_length=250)
+    res_plan_mins = models.IntegerField(blank=True, null=True)
+    severity = models.CharField(blank=True, null=True, max_length=250)
+    site_name = models.CharField(blank=True, null=True, max_length=250)
+    source = models.CharField(blank=True, null=True, max_length=250)
+    sub_type = models.CharField(blank=True, null=True, max_length=250)
+    sub_type_item = models.CharField(blank=True, null=True, max_length=250)
+    summary = models.CharField(blank=True, null=True, max_length=250)
+    type = models.CharField(blank=True, null=True, max_length=250)
+    updated_by = models.CharField(blank=True, null=True, max_length=250)
 
     board = models.ForeignKey('ConnectwiseBoard', blank=True, null=True)
-    owner = models.ForeignKey('Member', blank=True, null=True)
-    priority = models.ForeignKey('TicketPriority', blank=True, null=True)
-    status = models.ForeignKey(
-        'BoardStatus', blank=True, null=True, related_name='status_tickets')
     company = models.ForeignKey(
         'Company', blank=True, null=True, related_name='company_tickets')
     location = models.ForeignKey(
         'Location', blank=True, null=True, related_name='location_tickets')
-    team = models.ForeignKey(
-        'Team', blank=True, null=True, related_name='team_tickets')
-    project = models.ForeignKey(
-        'Project', blank=True, null=True, related_name='project_tickets')
     members = models.ManyToManyField(
         'Member', through='ScheduleEntry',
         related_name='member_tickets')
+    owner = models.ForeignKey('Member', blank=True, null=True)
+    priority = models.ForeignKey('TicketPriority', blank=True, null=True)
+    project = models.ForeignKey(
+        'Project', blank=True, null=True, related_name='project_tickets')
+    status = models.ForeignKey(
+        'BoardStatus', blank=True, null=True, related_name='status_tickets')
+    team = models.ForeignKey(
+        'Team', blank=True, null=True, related_name='team_tickets')
 
     class Meta:
         verbose_name = 'Ticket'
