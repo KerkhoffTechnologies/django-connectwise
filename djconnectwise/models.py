@@ -434,9 +434,6 @@ class OpportunityStage(TimeStampedModel):
 
 
 class OpportunityStatus(TimeStampedModel):
-    class Meta:
-        verbose_name_plural = "Opportunity Statuses"
-
     name = models.CharField(max_length=30)
     won_flag = models.BooleanField(default=False)
     lost_flag = models.BooleanField(default=False)
