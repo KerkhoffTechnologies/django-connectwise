@@ -228,8 +228,12 @@ class BoardChildSynchronizer(Synchronizer):
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
         instance.name = json_data['name']
-        instance.board = models.ConnectWiseBoard.objects.get(
-            id=json_data['boardId'])
+        try:
+            board_id = json_data['board']['id']
+        except KeyError:
+            # Must be 2017.5 or earlier
+            board_id = json_data['boardId']
+        instance.board = models.ConnectWiseBoard.objects.get(id=board_id)
         return instance
 
     def client_call(self, board_id):
