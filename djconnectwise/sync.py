@@ -14,6 +14,7 @@ from djconnectwise import api
 from djconnectwise import models
 from djconnectwise.utils import get_hash, get_filename_extension
 from djconnectwise.utils import RequestSettings
+import os
 
 
 DEFAULT_AVATAR_EXTENSION = 'jpg'
@@ -269,7 +270,6 @@ class BatchConditionMixin:
             else:
                 min_size = size
                 size = math.floor((max_size+min_size)/2)
-            print(url_len, size, min_size, max_size)
             if min_size == 1 and max_size == 1:
                 # The URL cannot be made short enough. This ought never to
                 # happen in production.
@@ -850,7 +850,8 @@ class TicketSynchronizer(BatchConditionMixin, Synchronizer):
 
         instance.save()
 
-        self._manage_member_assignments(instance)
+        if os.environ.get('MEMBER_ASSIGNMENTS', 'YES') == 'YES':
+            self._manage_member_assignments(instance)
         logger.info('Syncing ticket {}'.format(json_data_id))
         action = created and 'Created' or 'Updated'
 
