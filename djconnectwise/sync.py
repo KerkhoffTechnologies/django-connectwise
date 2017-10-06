@@ -17,8 +17,8 @@ from djconnectwise.utils import RequestSettings
 
 
 DEFAULT_AVATAR_EXTENSION = 'jpg'
-MAX_URL_LENGTH = 2000
-MIN_URL_LENGTH = 1980
+MAX_URL_LENGTH = 350 # 2000
+MIN_URL_LENGTH = 100 # 1980
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +29,7 @@ class InvalidObjectException(Exception):
     an unknown foreign object, or is missing a required field), raise this
     so that the synchronizer can catch it and continue with other records.
     """
+    pass
 
 
 def log_sync_job(f):
@@ -93,8 +94,14 @@ class Synchronizer:
         )
         return set(ids)
 
-    def get(self):
-        """Buffer and return all pages of results."""
+    def get(self, conditions=None):
+        """
+        Buffer and return all pages of results.
+
+        If conditions is supplied in the call, then use only those conditions
+        while fetching pages of records. If it's omitted, then use
+        self.api_conditions.
+        """
         records = []
         page = 1
         while True:
@@ -102,7 +109,8 @@ class Synchronizer:
                 'Fetching {} records, batch {}'.format(self.model_class, page)
             )
             page_records = self.get_page(
-                page=page, page_size=self.batch_size
+                page=page, page_size=self.batch_size,
+                conditions=conditions or self.api_conditions
             )
             records += page_records
             page += 1
@@ -209,6 +217,72 @@ class Synchronizer:
         return created_count, updated_count, deleted_count
 
 
+class BatchConditionMixin:
+    """
+    Yo I heard you like pages, so I put pages in your pages!
+
+    This mixin has methods for Synchronizers that have to page their pagers.
+    For example, syncing the tickets in a set of statuses- there can be
+    too many statuses to fit all their IDs in one URL, given the max URL
+    size of approximately 2000 characters. So we split the statuses into
+    groups that get the URL close to 2000 characters, and get those results
+    in pages. And then get the next set of statuses in pages, and so on.
+    """
+    def get_batch_condition(self, conditions):
+        raise NotImplementedError
+
+    def get(self, conditions=None):
+        """Buffer and return all pages of results."""
+        unfetched_conditions = deepcopy(self.batch_condition_list)
+        records = []
+        while unfetched_conditions:
+            # While there are still items left in the list there are still
+            # batches left to be fetched.
+            optimal_size = self.get_optimal_size(unfetched_conditions)
+            batch_conditions = unfetched_conditions[:optimal_size]
+            del unfetched_conditions[:optimal_size]
+            batch_conditon = self.get_batch_condition(batch_conditions)
+            batch_conditions = deepcopy(self.api_conditions)
+            batch_conditions.append(batch_conditon)
+            records += super().get(batch_conditions)
+        return records
+
+    def get_optimal_size(self, condition_list):
+        if not condition_list:
+            # Return none if empty list
+            return None
+        size = len(condition_list)
+        if self.url_length(condition_list, size) < MAX_URL_LENGTH:
+            # If we can fit all of the statuses in the first batch, return
+            return size
+
+        max_size = size
+        min_size = 1
+        while True:
+            url_len = self.url_length(condition_list, size)
+            if url_len < MAX_URL_LENGTH and url_len > MIN_URL_LENGTH:
+                break
+            elif url_len > MAX_URL_LENGTH:
+                max_size = size
+                size = math.floor((max_size+min_size)/2)
+            else:
+                min_size = size
+                size = math.floor((max_size+min_size)/2)
+            if min_size == 1 and max_size == 1:
+                # The URL cannot be made short enough. This ought never to
+                # happen in production.
+                break
+        return size
+
+    @staticmethod
+    def url_length(condition_list, size):
+        # We add the approximate amount of characters for the URL that we
+        # know will be there every time (200) plus a little more to ensure we
+        # don't undercut it (300), and add size, because for the amount of
+        # conditions, there will be just as many commas separating them
+        return sum(len(str(i)) for i in condition_list[:size]) + 300 + size
+
+
 class BoardSynchronizer(Synchronizer):
     client_class = api.ServiceAPIClient
     model_class = models.ConnectWiseBoard
@@ -294,10 +368,6 @@ class TeamSynchronizer(BoardChildSynchronizer):
 
 
 class CompanySynchronizer(Synchronizer):
-    """
-    Coordinates retrieval and demarshalling of ConnectWise JSON
-    Company instances.
-    """
     client_class = api.CompanyAPIClient
     model_class = models.Company
     api_conditions = ['deletedFlag=False']
@@ -338,7 +408,6 @@ class CompanySynchronizer(Synchronizer):
         return company
 
     def get_page(self, *args, **kwargs):
-        kwargs['conditions'] = self.api_conditions
         return self.client.get_companies(*args, **kwargs)
 
     def get_single(self, company_id):
@@ -351,10 +420,6 @@ class CompanySynchronizer(Synchronizer):
 
 
 class CompanyStatusSynchronizer(Synchronizer):
-    """
-    Coordinates retrieval and demarshalling of ConnectWise JSON
-    CompanyStatus instances.
-    """
     client_class = api.CompanyAPIClient
     model_class = models.CompanyStatus
 
@@ -381,10 +446,6 @@ class CompanyStatusSynchronizer(Synchronizer):
 
 
 class ActivitySynchronizer(Synchronizer):
-    """
-    Coordinates retrieval and demarshalling of ConnectWise JSON Activity
-    instances.
-    """
     client_class = api.SalesAPIClient
     model_class = models.Activity
 
@@ -421,7 +482,6 @@ class ActivitySynchronizer(Synchronizer):
         return instance
 
     def get_page(self, *args, **kwargs):
-        kwargs['conditions'] = self.api_conditions
         return self.client.get_activities(*args, **kwargs)
 
     def get_single(self, activity_id):
@@ -429,13 +489,8 @@ class ActivitySynchronizer(Synchronizer):
 
 
 class ScheduleEntriesSynchronizer(Synchronizer):
-    """
-    Coordinates retrieval and demarshalling of ConnectWise JSON
-    ScheduleEntries instances.
-    """
     client_class = api.ScheduleAPIClient
     model_class = models.ScheduleEntry
-    # api_conditions = ['doneFlag = False']
 
     related_meta = {
         'where': (models.Location, 'where'),
@@ -527,7 +582,6 @@ class ScheduleEntriesSynchronizer(Synchronizer):
         return instance
 
     def get_page(self, *args, **kwargs):
-        # kwargs['conditions'] = self.api_conditions
         return self.client.get_schedule_entries(*args, **kwargs)
 
     def get_single(self, entry_id):
@@ -535,10 +589,6 @@ class ScheduleEntriesSynchronizer(Synchronizer):
 
 
 class ScheduleStatusSynchronizer(Synchronizer):
-    """
-    Coordinates retrieval and demarshalling of ConnectWise JSON
-    ScheduleStatus instances.
-    """
     client_class = api.ScheduleAPIClient
     model_class = models.ScheduleStatus
 
@@ -553,10 +603,6 @@ class ScheduleStatusSynchronizer(Synchronizer):
 
 
 class ScheduleTypeSychronizer(Synchronizer):
-    """
-    Coordinates retrieval and demarshalling of ConnectWise JSON
-    ScheduleType instances.
-    """
     client_class = api.ScheduleAPIClient
     model_class = models.ScheduleType
 
@@ -572,10 +618,6 @@ class ScheduleTypeSychronizer(Synchronizer):
 
 
 class LocationSynchronizer(Synchronizer):
-    """
-    Coordinates retrieval and demarshalling of ConnectWise JSON
-    Location instances.
-    """
     client_class = api.ServiceAPIClient
     model_class = models.Location
 
@@ -714,16 +756,11 @@ class MemberSynchronizer(Synchronizer):
         return super().sync(reset=reset)
 
 
-class TicketSynchronizer(Synchronizer):
-    """
-    Coordinates retrieval and demarshalling of ConnectWise JSON
-    objects to the local counterparts.
-    """
-
+class TicketSynchronizer(BatchConditionMixin, Synchronizer):
     client_class = api.ServiceAPIClient
     model_class = models.Ticket
     api_conditions = ['closedFlag=False']
-    board_status_set = []
+    batch_condition_list = []
     child_synchronizers = (
         CompanySynchronizer,
         BoardStatusSynchronizer,
@@ -756,7 +793,7 @@ class TicketSynchronizer(Synchronizer):
         )
         if open_statuses:
             # Only do this if we know of at least one open status.
-            self.board_status_set = open_statuses
+            self.batch_condition_list = open_statuses
 
     def _assign_field_data(self, instance, json_data):
         created = instance.id is None
@@ -847,78 +884,10 @@ class TicketSynchronizer(Synchronizer):
                 list(ticket_assignments.values())
             )
 
-    def get(self):
-        """Buffer and return all pages of results."""
-        unfetched_statuses = deepcopy(self.board_status_set)
-        records = []
-        batch = 1
-        while unfetched_statuses:
-            # While there are still statuses left in the list there are still
-            # batches left to be processed
-            page = 1
-            optimal_size = self.get_optimal_size(unfetched_statuses)
-            batched_statuses = unfetched_statuses[:optimal_size]
-            logger.debug("Batch size is {}.".format(optimal_size))
-            logger.debug(
-                "Fetching tickets with these statuses: {}".format(
-                    batched_statuses
-                )
-            )
-            status_batch = 'status/id in ({})'.format(
-                ','.join([str(i) for i in batched_statuses])
-            )
-            batch_conditions = deepcopy(self.api_conditions)
-            batch_conditions.append(status_batch)
-            del unfetched_statuses[:optimal_size]
-            while True:
-                logger.info(
-                    'Fetching {} records, batch {}, page {}'.
-                    format(self.model_class, batch, page)
-                )
-                page_records = self.get_page(
-                    page=page,
-                    page_size=self.batch_size,
-                    conditions=batch_conditions
-                )
-                records += page_records
-                page += 1
-                if len(page_records) < self.batch_size:
-                    # This page wasn't full, so there's no more records after
-                    # this page.
-                    break
-            batch += 1
-        return records
-
-    def get_optimal_size(self, status_list):
-        size = len(status_list)
-        byte_count = self.url_length(status_list, size)
-        if not status_list:
-            # Return none if empty list
-            return None
-        elif byte_count < MAX_URL_LENGTH:
-            # If we can fit all of the statuses in the first batch, return
-            return size
-
-        max_size = size
-        min_size = 1
-        while True:
-            byte_count = self.url_length(status_list, size)
-            if byte_count < MAX_URL_LENGTH and byte_count > MIN_URL_LENGTH:
-                break
-            elif byte_count > MAX_URL_LENGTH:
-                max_size = size
-                size = math.floor((max_size+min_size)/2)
-            else:
-                min_size = size
-                size = math.floor((max_size+min_size)/2)
-        return size
-
-    def url_length(self, status_list, size):
-        # We add the approximate amount of characters for the url that we
-        # know will be there every time (200) plus a little more to ensure we
-        # don't undercut it (300), and add size, because for the amount of
-        # status numbers, there will be just as many commas separating them
-        return sum(len(str(i)) for i in status_list[:size]) + 300 + size
+    def get_batch_condition(self, conditions):
+        return 'status/id in ({})'.format(
+            ','.join([str(i) for i in conditions])
+        )
 
     def get_page(self, *args, **kwargs):
         return self.client.get_tickets(*args, **kwargs)
@@ -941,14 +910,9 @@ class TicketSynchronizer(Synchronizer):
 
 
 class OpportunitySynchronizer(Synchronizer):
-    """
-    Coordinates retrieval and demarshalling of ConnectWise JSON
-    Opportunity instances.
-    """
     client_class = api.SalesAPIClient
     model_class = models.Opportunity
     api_conditions = []
-    open_statuses = []
     related_meta = {
         'type': (models.OpportunityType, 'opportunity_type'),
         'stage': (models.OpportunityStage, 'stage'),
@@ -971,7 +935,7 @@ class OpportunitySynchronizer(Synchronizer):
         if open_statuses:
             # Only do this if we know of at least one open status.
             for status in open_statuses:
-                self.api_conditions.append('status/Id=' + str(status))
+                self.api_conditions.append('status/id=' + str(status))
 
     def _update_or_create_child(self, model_class, json_data):
         child_name = json_data['name']
@@ -1035,7 +999,6 @@ class OpportunitySynchronizer(Synchronizer):
         return instance
 
     def get_page(self, *args, **kwargs):
-        kwargs['conditions'] = self.api_conditions
         return self.client.get_opportunities(*args, **kwargs)
 
     def get_single(self, opportunity_id):
@@ -1043,10 +1006,6 @@ class OpportunitySynchronizer(Synchronizer):
 
 
 class OpportunityStatusSynchronizer(Synchronizer):
-    """
-    Coordinates retrieval and demarshalling of ConnectWise JSON
-    OpportunityStatus instances.
-    """
     client_class = api.SalesAPIClient
     model_class = models.OpportunityStatus
 
@@ -1064,10 +1023,6 @@ class OpportunityStatusSynchronizer(Synchronizer):
 
 
 class OpportunityTypeSynchronizer(Synchronizer):
-    """
-    Coordinates retrieval and demarshalling of ConnectWise JSON
-    OpportunityType instances.
-    """
     client_class = api.SalesAPIClient
     model_class = models.OpportunityType
 
