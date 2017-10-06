@@ -433,12 +433,31 @@ class OpportunityStage(TimeStampedModel):
         return self.name
 
 
+class AvailableOpportunityStatusManager(models.Manager):
+    """
+    Return only Opportunity Statuses whose inactive field is False.
+    """
+    def get_queryset(self):
+        return super().get_queryset().filter(
+            closed_flag=False,
+        )
+
+
+class OpportunityStatusManager(models.Manager):
+    """Return all Opportunity statuses."""
+    def get_queryset(self):
+        return super().get_queryset().all()
+
+
 class OpportunityStatus(TimeStampedModel):
     name = models.CharField(max_length=30)
     won_flag = models.BooleanField(default=False)
     lost_flag = models.BooleanField(default=False)
     closed_flag = models.BooleanField(default=False)
     inactive_flag = models.BooleanField(default=False)
+
+    objects = OpportunityStatusManager()
+    available_objects = AvailableOpportunityStatusManager()
 
     class Meta:
         ordering = ('name', )
