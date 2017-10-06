@@ -17,8 +17,8 @@ from djconnectwise.utils import RequestSettings
 
 
 DEFAULT_AVATAR_EXTENSION = 'jpg'
-MAX_URL_LENGTH = 350 # 2000
-MIN_URL_LENGTH = 100 # 1980
+MAX_URL_LENGTH = 2000
+MIN_URL_LENGTH = 1980
 
 logger = logging.getLogger(__name__)
 

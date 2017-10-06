@@ -201,15 +201,16 @@ class ConnectWiseAPIClient(object):
                 endpoint = self._endpoint(endpoint_url)
                 logger.debug('Making GET request to {}'.format(endpoint))
 
-                if 'conditions' in params:
-                    logger.debug('Conditions: {}'.format(
-                        params['conditions']))
-                    conditions_str = "conditions=" + params['conditions']
+                conditions_str = ''
+                conditions = params.get('conditions')
+                if conditions:
+                    logger.debug('Conditions: {}'.format(conditions))
+                    conditions_str = 'conditions={}'.format(
+                        self.prepare_conditions(conditions)
+                    )
                     # URL encode needed characters
                     conditions_str = conditions_str.replace("+", "%2B")
                     conditions_str = conditions_str.replace(" ", "+")
-                else:
-                    conditions_str = ""
 
                 if should_page:
                     params['pageSize'] = kwargs.get('page_size',
@@ -330,10 +331,6 @@ class CompanyAPIClient(ConnectWiseAPIClient):
         return self.fetch_resource(endpoint_url)
 
     def get_companies(self, *args, **kwargs):
-        if 'conditions' in kwargs:
-            kwargs['params'] = {
-                'conditions': self.prepare_conditions(kwargs['conditions'])
-            }
         return self.fetch_resource(self.ENDPOINT_COMPANIES, should_page=True,
                                    *args, **kwargs)
 
@@ -360,10 +357,6 @@ class ScheduleAPIClient(ConnectWiseAPIClient):
                                    *args, **kwargs)
 
     def get_schedule_entries(self, *args, **kwargs):
-        if 'conditions' in kwargs:
-            kwargs['params'] = {
-                'conditions': self.prepare_conditions(kwargs['conditions'])
-            }
         return self.fetch_resource(self.ENDPOINT_ENTRIES,
                                    should_page=True,
                                    *args, **kwargs)
@@ -398,10 +391,6 @@ class SalesAPIClient(ConnectWiseAPIClient):
         return self.fetch_resource(endpoint_url)
 
     def get_opportunities(self, *args, **kwargs):
-        if 'conditions' in kwargs:
-            kwargs['params'] = {
-                'conditions': self.prepare_conditions(kwargs['conditions'])
-            }
         return self.fetch_resource(self.ENDPOINT_OPPORTUNITIES,
                                    should_page=True,
                                    *args, **kwargs)
@@ -596,10 +585,6 @@ class ServiceAPIClient(ConnectWiseAPIClient):
         return self.fetch_resource(endpoint_url)
 
     def get_tickets(self, *args, **kwargs):
-        if 'conditions' in kwargs:
-            kwargs['params'] = {
-                'conditions': self.prepare_conditions(kwargs['conditions'])
-            }
         return self.fetch_resource(self.ENDPOINT_TICKETS, should_page=True,
                                    *args, **kwargs)
 
@@ -634,10 +619,6 @@ class ServiceAPIClient(ConnectWiseAPIClient):
         Returns the status types associated with the specified board.
         """
         endpoint_url = '{}/{}/statuses'.format(self.ENDPOINT_BOARDS, board_id)
-        if 'conditions' in kwargs:
-            kwargs['params'] = {
-                'conditions': self.prepare_conditions(kwargs['conditions'])
-            }
         return self.fetch_resource(endpoint_url, should_page=True,
                                    *args, **kwargs)
 

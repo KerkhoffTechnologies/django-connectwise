@@ -79,6 +79,33 @@ class SynchronizerTestMixin:
         self._assert_fields(changed, new_json)
 
 
+class TestBatchConditionMixin(TestCase):
+    def test_get_optimal_size(self):
+        synchronizer = sync.BatchConditionMixin()
+        size = synchronizer.get_optimal_size([31, 35, 43, 52, 58])
+
+        self.assertEqual(size, 5)
+
+        sync.MAX_URL_LENGTH = 310
+        sync.MIN_URL_LENGTH = 305
+
+        size = synchronizer.get_optimal_size(
+            [1, 2, 3, 43434, 54562, 54568, 65643]
+        )
+        self.assertEqual(size, 3)
+
+        size = synchronizer.get_optimal_size(
+            [442434, 53462, 552468, 63443]
+        )
+        self.assertEqual(size, 1)
+
+        size = synchronizer.get_optimal_size([1])
+        self.assertEqual(size, 1)
+
+        size = synchronizer.get_optimal_size([])
+        self.assertIsNone(size)
+
+
 class TestCompanySynchronizer(TestCase, SynchronizerTestMixin):
     synchronizer_class = sync.CompanySynchronizer
     model_class = Company
@@ -621,41 +648,12 @@ class TestTicketSynchronizer(TestCase):
         method_name = 'djconnectwise.api.ServiceAPIClient.get_tickets'
         mock_call, _patch = mocks.create_mock_call(method_name, fixture_list)
         synchronizer = sync.TicketSynchronizer()
-        synchronizer.board_status_set.extend(
+        synchronizer.batch_condition_list.extend(
             [234234, 345345, 234213, 2344523, 345645]
         )
         created_count, updated_count, _ = synchronizer.sync()
 
         self.assertEqual(mock_call.call_count, 2)
-
-    def test_get_optimal_size(self):
-        synchronizer = sync.TicketSynchronizer()
-        size = synchronizer.get_optimal_size([31, 35, 43, 52, 58])
-
-        self.assertEqual(size, 5)
-
-        sync.MAX_URL_LENGTH = 310
-        sync.MIN_URL_LENGTH = 305
-
-        size = synchronizer.get_optimal_size(
-            [1, 2, 3, 43434, 54562, 54568, 65643]
-        )
-
-        self.assertEqual(size, 3)
-
-        size = synchronizer.get_optimal_size(
-            [442434, 53462, 552468, 63443]
-        )
-
-        self.assertEqual(size, 1)
-
-        size = synchronizer.get_optimal_size([1])
-
-        self.assertEqual(size, 1)
-
-        size = synchronizer.get_optimal_size([])
-
-        self.assertIsNone(size)
 
     def test_delete_stale_tickets(self):
         """Local ticket should be deleted if omitted from sync"""
