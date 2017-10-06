@@ -956,8 +956,11 @@ class OpportunitySynchronizer(Synchronizer):
         )
         if open_statuses:
             # Only do this if we know of at least one open status.
-            for status in open_statuses:
-                self.api_conditions.append('status/id=' + str(status))
+            self.api_conditions.append(
+                'status/id in ({})'.format(
+                    ','.join([str(i) for i in open_statuses])
+                )
+            )
 
     def _update_or_create_child(self, model_class, json_data):
         child_name = json_data['name']
