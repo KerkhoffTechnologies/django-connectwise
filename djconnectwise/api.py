@@ -202,7 +202,7 @@ class ConnectWiseAPIClient(object):
                 logger.debug('Making GET request to {}'.format(endpoint))
 
                 conditions_str = ''
-                conditions = params.get('conditions')
+                conditions = kwargs.get('conditions')
                 if conditions:
                     logger.debug('Conditions: {}'.format(conditions))
                     conditions_str = 'conditions={}'.format(

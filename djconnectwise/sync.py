@@ -108,9 +108,10 @@ class Synchronizer:
             logger.info(
                 'Fetching {} records, batch {}'.format(self.model_class, page)
             )
+            page_conditions = conditions or self.api_conditions
             page_records = self.get_page(
                 page=page, page_size=self.batch_size,
-                conditions=conditions or self.api_conditions
+                conditions=page_conditions
             )
             records += page_records
             page += 1
@@ -244,7 +245,7 @@ class BatchConditionMixin:
             batch_conditon = self.get_batch_condition(batch_conditions)
             batch_conditions = deepcopy(self.api_conditions)
             batch_conditions.append(batch_conditon)
-            records += super().get(batch_conditions)
+            records += super().get(conditions=batch_conditions)
         return records
 
     def get_optimal_size(self, condition_list):
@@ -260,7 +261,7 @@ class BatchConditionMixin:
         min_size = 1
         while True:
             url_len = self.url_length(condition_list, size)
-            if url_len < MAX_URL_LENGTH and url_len > MIN_URL_LENGTH:
+            if url_len <= MAX_URL_LENGTH and url_len > MIN_URL_LENGTH:
                 break
             elif url_len > MAX_URL_LENGTH:
                 max_size = size
@@ -268,6 +269,7 @@ class BatchConditionMixin:
             else:
                 min_size = size
                 size = math.floor((max_size+min_size)/2)
+            print(url_len, size, min_size, max_size)
             if min_size == 1 and max_size == 1:
                 # The URL cannot be made short enough. This ought never to
                 # happen in production.
@@ -488,15 +490,34 @@ class ActivitySynchronizer(Synchronizer):
         return self.client.get_single_activity(activity_id)
 
 
-class ScheduleEntriesSynchronizer(Synchronizer):
+class ScheduleEntriesSynchronizer(BatchConditionMixin, Synchronizer):
     client_class = api.ScheduleAPIClient
     model_class = models.ScheduleEntry
+    api_conditions = ["type/identifier='S' or type/identifier='O'"]
+    batch_condition_list = []
 
     related_meta = {
         'where': (models.Location, 'where'),
         'status': (models.ScheduleStatus, 'status'),
         'type': (models.ScheduleType, 'schedule_type')
     }
+
+    def __init__(self):
+        super().__init__()
+        # Only get schedule entries for tickets or opportunities that we
+        # already have in the DB.
+        ticket_ids = set(
+            models.Ticket.objects.values_list('id', flat=True)
+        )
+        opportunity_ids = set(
+            models.Opportunity.objects.values_list('id', flat=True)
+        )
+        self.batch_condition_list = list(ticket_ids | opportunity_ids)
+
+    def get_batch_condition(self, conditions):
+        return 'objectId in ({})'.format(
+            ','.join([str(i) for i in conditions])
+        )
 
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
