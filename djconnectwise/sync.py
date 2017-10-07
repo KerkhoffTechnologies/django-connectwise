@@ -59,6 +59,14 @@ def log_sync_job(f):
     return wrapper
 
 
+class SyncResults:
+    """Track results of a sync job."""
+    created_count = 0
+    updated_count = 0
+    deleted_count = 0
+    synced_ids = set()
+
+
 class Synchronizer:
     lookup_key = 'id'
     api_conditions = []
@@ -95,7 +103,7 @@ class Synchronizer:
         )
         return set(ids)
 
-    def get(self, conditions=None):
+    def get(self, results, conditions=None):
         """
         Buffer and return all pages of results.
 
@@ -103,7 +111,6 @@ class Synchronizer:
         while fetching pages of records. If it's omitted, then use
         self.api_conditions.
         """
-        records = []
         page = 1
         while True:
             logger.info(
@@ -112,15 +119,34 @@ class Synchronizer:
             page_conditions = conditions or self.api_conditions
             page_records = self.get_page(
                 page=page, page_size=self.batch_size,
-                conditions=page_conditions
+                conditions=page_conditions,
             )
-            records += page_records
+            self.persist_page(page_records, results)
             page += 1
             if len(page_records) < self.batch_size:
                 # This page wasn't full, so there's no more records after
                 # this page.
                 break
-        return records
+        return results
+
+    def persist_page(self, records, results):
+        """Persist one page of records to DB."""
+        for record in records:
+            try:
+                with transaction.atomic():
+                    _, created = self.update_or_create_instance(record)
+                if created:
+                    results.created_count += 1
+                else:
+                    results.updated_count += 1
+            except IntegrityError as e:
+                logger.warning('IntegrityError: {}'.format(e.__cause__))
+            except InvalidObjectException as e:
+                logger.warning('{}'.format(e))
+
+            results.synced_ids.add(record['id'])
+
+        return results
 
     def get_page(self, *args, **kwargs):
         raise NotImplementedError
@@ -192,31 +218,18 @@ class Synchronizer:
 
     @log_sync_job
     def sync(self, reset=False):
-        created_count = 0
-        updated_count = 0
-        deleted_count = 0
+        results = SyncResults()
         initial_ids = self._instance_ids()  # Set of IDs of all records prior
         # to sync, to find stale records for deletion.
-        synced_ids = set()
-        for record in self.get():
-            try:
-                with transaction.atomic():
-                    _, created = self.update_or_create_instance(record)
-                if created:
-                    created_count += 1
-                else:
-                    updated_count += 1
-            except IntegrityError as e:
-                logger.warning('IntegrityError: {}'.format(e.__cause__))
-            except InvalidObjectException as e:
-                logger.warning('{}'.format(e))
-
-            synced_ids.add(record['id'])
+        results = self.get(results)
 
         if reset:
-            deleted_count = self.prune_stale_records(initial_ids, synced_ids)
+            results.deleted_count = self.prune_stale_records(
+                initial_ids, results.synced_ids
+            )
 
-        return created_count, updated_count, deleted_count
+        return results.created_count, results.updated_count, \
+               results.deleted_count
 
 
 class BatchConditionMixin:
@@ -233,10 +246,9 @@ class BatchConditionMixin:
     def get_batch_condition(self, conditions):
         raise NotImplementedError
 
-    def get(self, conditions=None):
+    def get(self, results, conditions=None):
         """Buffer and return all pages of results."""
         unfetched_conditions = deepcopy(self.batch_condition_list)
-        records = []
         while unfetched_conditions:
             # While there are still items left in the list there are still
             # batches left to be fetched.
@@ -246,8 +258,8 @@ class BatchConditionMixin:
             batch_conditon = self.get_batch_condition(batch_conditions)
             batch_conditions = deepcopy(self.api_conditions)
             batch_conditions.append(batch_conditon)
-            records += super().get(conditions=batch_conditions)
-        return records
+            results = super().get(results, conditions=batch_conditions)
+        return results
 
     def get_optimal_size(self, condition_list):
         if not condition_list:
