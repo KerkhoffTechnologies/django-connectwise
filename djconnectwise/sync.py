@@ -61,10 +61,11 @@ def log_sync_job(f):
 
 class SyncResults:
     """Track results of a sync job."""
-    created_count = 0
-    updated_count = 0
-    deleted_count = 0
-    synced_ids = set()
+    def __init__(self):
+        self.created_count = 0
+        self.updated_count = 0
+        self.deleted_count = 0
+        self.synced_ids = set()
 
 
 class Synchronizer:
@@ -229,7 +230,7 @@ class Synchronizer:
             )
 
         return results.created_count, results.updated_count, \
-               results.deleted_count
+            results.deleted_count
 
 
 class BatchConditionMixin:
