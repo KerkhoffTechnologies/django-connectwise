@@ -506,7 +506,10 @@ class ActivitySynchronizer(Synchronizer):
 class ScheduleEntriesSynchronizer(BatchConditionMixin, Synchronizer):
     client_class = api.ScheduleAPIClient
     model_class = models.ScheduleEntry
-    api_conditions = ["type/identifier='S' or type/identifier='O'"]
+    api_conditions = [
+        "(type/identifier='S' or type/identifier='O')",
+        "doneFlag=false",
+    ]
     batch_condition_list = []
 
     related_meta = {

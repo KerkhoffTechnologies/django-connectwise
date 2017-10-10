@@ -41,8 +41,8 @@ class Command(BaseCommand):
                 _('Schedule Type')),
             ('schedule_status', sync.ScheduleStatusSynchronizer,
                 _('Schedule Status')),
-            # ('schedule_entry', sync.ScheduleEntriesSynchronizer,
-            #     _('Schedule Entry')),
+            ('schedule_entry', sync.ScheduleEntriesSynchronizer,
+                _('Schedule Entry')),
         )
         self.synchronizer_map = OrderedDict()
         for name, synchronizer, obj_name in synchronizers:
