@@ -30,7 +30,7 @@ lint: ## check style with flake8
 test: clean lint
 	python setup.py test
 
-sdist: test
+sdist: clean
 	python setup.py sdist
 
 upload: sdist
