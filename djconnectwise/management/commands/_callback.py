@@ -38,7 +38,7 @@ class Command(BaseCommand):
             else:
                 handler_class().delete()
         else:
-            msg = _('Invalid Callback, choose one of the following: \n{}')
+            msg = _('Invalid Callback; choose one of the following: \n{}')
             options_txt = ', '.join(self.handler_map.keys())
             msg = msg.format(options_txt)
             raise CommandError(msg)

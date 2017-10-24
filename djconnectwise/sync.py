@@ -14,7 +14,6 @@ from djconnectwise import api
 from djconnectwise import models
 from djconnectwise.utils import get_hash, get_filename_extension
 from djconnectwise.utils import RequestSettings
-import os
 
 
 DEFAULT_AVATAR_EXTENSION = 'jpg'
@@ -866,8 +865,6 @@ class TicketSynchronizer(BatchConditionMixin, Synchronizer):
 
         instance.save()
 
-        if os.environ.get('MEMBER_ASSIGNMENTS', 'YES') == 'YES':
-            self._manage_member_assignments(instance)
         logger.info('Syncing ticket {}'.format(json_data_id))
         action = created and 'Created' or 'Updated'
 
@@ -883,7 +880,15 @@ class TicketSynchronizer(BatchConditionMixin, Synchronizer):
 
         return instance
 
-    def _manage_member_assignments(self, ticket):
+    def manage_member_assignments(self, ticket):
+        # TODO: remove this when we sync directly with ScheduleEntries
+        # after a ticket callback has fired. We still make use of this
+        # during ticket callbacks to avoid the case where a ticket is added
+        # and a callback is fired, but we ignore the resources field and don't
+        # get any schedule entries until the next scheduled schedule entry
+        # sync. This would make tickets appear unassigned when they actually
+        # have have technicians assigned.
+
         # Reset board/ticket assignment in case the assigned resources
         # have changed since last sync.
         models.ScheduleEntry.objects.filter(ticket_object=ticket).delete()
@@ -932,6 +937,11 @@ class TicketSynchronizer(BatchConditionMixin, Synchronizer):
 
     def get_single(self, ticket_id):
         return self.client.get_ticket(ticket_id)
+
+    def fetch_sync_by_id(self, instance_id):
+        instance = super().fetch_sync_by_id(instance_id)
+        self.manage_member_assignments(instance)
+        return instance
 
     def sync(self, reset=True):
         sync_job_qset = models.SyncJob.objects.filter(
