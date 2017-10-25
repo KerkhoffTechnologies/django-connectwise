@@ -13,6 +13,8 @@ class Command(BaseCommand):
         for c in handler.get_callbacks():
             self.stdout.write('ID: {}'.format(c['id']))
             self.stdout.write('URL: {}'.format(c['url']))
-            self.stdout.write('DESCRIPTION: {}'.format(c['description']))
+            self.stdout.write('DESCRIPTION: {}'.format(
+                c.get('description', ''))
+            )
             self.stdout.write('TYPE: {}'.format(c['type']))
             self.stdout.write('-----------------------------------------')
