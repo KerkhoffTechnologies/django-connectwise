@@ -204,6 +204,21 @@ class TestScheduleEntriesSynchronizer(TestCase, SynchronizerTestMixin):
                             name)
         self._assert_fields(changed, new_json)
 
+    def test_schedule_object_assignment(self):
+        self._sync(self.fixture)
+
+        json_data = self.fixture[0]
+
+        schedule_entry = self.model_class.objects.get(id=json_data['id'])
+
+        self.assertEqual(schedule_entry.schedule_type.identifier, "S")
+
+        json_data = self.fixture[1]
+
+        schedule_entry = self.model_class.objects.get(id=json_data['id'])
+
+        self.assertEqual(schedule_entry.schedule_type.identifier, "C")
+
     def _assert_fields(self, instance, json_data):
         self.assertEqual(instance.id, json_data['id'])
         self.assertEqual(instance.name, json_data['name'])
