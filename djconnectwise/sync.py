@@ -586,34 +586,13 @@ class ScheduleEntriesSynchronizer(BatchConditionMixin, Synchronizer):
                 '- skipping.'.format(instance.id)
             )
 
-        # objectId could be an Activity or a Ticket. Check for each case.
-        related_ticket = None
-        related_activity = None
-        try:
-            related_ticket = ticket_class.objects.get(pk=uid)
-        except ObjectDoesNotExist:
-            pass
-        try:
-            related_activity = activity_class.objects.get(pk=uid)
-        except ObjectDoesNotExist:
-            pass
-
-        if related_ticket and not related_activity:
+        if json_data['type']['identifier'] == "S":
             if json_data['doneFlag']:
                 setattr(instance, 'ticket_object', None)
             else:
                 setattr(instance, 'ticket_object', related_ticket)
-        elif related_activity and not related_ticket:
+        elif json_data['type']['identifier'] == "O":
             setattr(instance, 'activity_object', related_activity)
-
-        if related_ticket and related_activity:
-            ticket_resources = related_ticket.resources
-            schedule_member = json_data['member']['identifier']
-            if ticket_resources is not None:
-                if schedule_member in ticket_resources:
-                    setattr(instance, 'ticket_object', related_ticket)
-                else:
-                    setattr(instance, 'activity_object', related_activity)
 
         return instance
 
