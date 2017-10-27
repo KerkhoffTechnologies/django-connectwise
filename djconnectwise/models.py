@@ -320,6 +320,28 @@ class ScheduleEntry(models.Model):
     def __str__(self):
         return self.name
 
+    # @staticmethod
+    # def create_entry(objectId, member, schedule_type):
+    #     """
+    #     Send POST request to ConnectWise to create a new entry and then
+    #     create it in the local database from the response
+    #     """
+    #     schedule_synchronizer = ScheduleEntriesSynchronizer()
+    #     schedule_client = api.ScheduleAPIClient()
+    #     # new_entry_json = schedule_client.post_schedule_entry(
+    #     #     objectId, member, schedule_type)
+    #     # self.objects.create(
+    #     #     name=new_entry_json.
+    #     # )
+    #     return None
+
+    def delete_entry(self):
+        """
+        Send Delete request to ConnectWise for this entry
+        """
+        schedule_client = api.ScheduleAPIClient()
+        return schedule_client.delete_schedule_entry(self.id)
+
 
 class AvailableBoardTeamManager(models.Manager):
     """Return only teams whose ConnectWise board is active."""
