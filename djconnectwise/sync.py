@@ -628,7 +628,6 @@ class ScheduleEntriesSynchronizer(BatchConditionMixin, Synchronizer):
         Send POST request to ConnectWise to create a new entry and then
         create it in the local database from the response
         """
-        schedule_synchronizer = ScheduleEntriesSynchronizer()
         schedule_client = api.ScheduleAPIClient()
         instance = schedule_client.post_schedule_entry(
             objectId, member, schedule_type)
