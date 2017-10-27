@@ -587,12 +587,31 @@ class ScheduleEntriesSynchronizer(BatchConditionMixin, Synchronizer):
             )
 
         if json_data['type']['identifier'] == "S":
-            if json_data['doneFlag']:
-                setattr(instance, 'ticket_object', None)
-            else:
-                setattr(instance, 'ticket_object', related_ticket)
-        elif json_data['type']['identifier'] == "O":
-            setattr(instance, 'activity_object', related_activity)
+            try:
+                related_ticket = ticket_class.objects.get(pk=uid)
+                if json_data['doneFlag']:
+                    setattr(instance, 'ticket_object', None)
+                else:
+                    setattr(instance, 'ticket_object', related_ticket)
+            except ObjectDoesNotExist as e:
+                logger.warning(
+                    'Ticket not found for {}.'.format(instance.id) +
+                    ' ObjectDoesNotExist Exception: {}.'.format(e)
+                )
+        elif json_data['type']['identifier'] == "C":
+            try:
+                related_activity = activity_class.objects.get(pk=uid)
+                setattr(instance, 'activity_object', related_activity)
+            except ObjectDoesNotExist as e:
+                logger.warning(
+                    'Activity not found for {}.'.format(instance.id) +
+                    ' ObjectDoesNotExist Exception: {}.'.format(e)
+                )
+        else:
+            raise InvalidObjectException(
+                'Invalid ScheduleEntry type for schedule entry {}- skipping.'
+                .format(instance.id)
+            )
 
         return instance
 

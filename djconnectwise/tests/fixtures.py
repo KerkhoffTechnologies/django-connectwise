@@ -176,10 +176,10 @@ API_PROJECT = {
 API_PROJECT_LIST = [API_PROJECT]
 
 API_SERVICE_LOCATION = {
-    'id': 1, 
-    'name': 'On-Site', 
-    'where': None, 
-    'defaultFlag': True, 
+    'id': 1,
+    'name': 'On-Site',
+    'where': None,
+    'defaultFlag': True,
     '_info': {'lastUpdated': '2001-06-05T16:53:55Z', 'updatedBy': 'SumGuy'}
 }
 
@@ -207,7 +207,7 @@ API_SERVICE_PRIORITY_LIMITED = {
 API_SERVICE_PRIORITY_LIST = [API_SERVICE_PRIORITY_LIMITED, API_SERVICE_PRIORITY]
 
 
-API_SERVICE_TEAM_LIST = [   
+API_SERVICE_TEAM_LIST = [
     {'_info': {'lastUpdated': '2017-02-14T18:21:15Z', 'updatedBy': 'User1'},
      'boardId': 1,
      'businessUnitId': 10,
@@ -565,7 +565,7 @@ API_SALES_OPPORTUNITY_TYPES = [
     API_SALES_OPPORTUNITY_TYPE
 ]
 
-    
+
 API_SALES_OPPORTUNITY_STATUSES = [
   {'_info':
          {'lastUpdated': '2000-12-28T19:35:17Z', 'updatedBy': None},
@@ -688,7 +688,7 @@ API_SALES_ACTIVITY = {
         '_info': {
             'type_href': 'https://connectwise.kerkhofftech.ca/v4_6_release/apis/3.0/sales/activities/types/3'
         }
-    }, 
+    },
     'company': API_COMPANY,
     'contact': {
         'id': 20,
@@ -757,10 +757,10 @@ API_COMPANY_INFO = {
     'IsCloud': True
 }
 
-API_SCHEDULE_TYPE = {
-    'id': 2,
-    'name': 'Vacation',
-    'identifier': 'V',
+API_SCHEDULE_SALES_TYPE = {
+    'id': 1,
+    'name': 'Sales',
+    'identifier': 'C',
     'chargeCode': None,
     'where': API_SERVICE_LOCATION,
     'systemFlag': False,
@@ -770,7 +770,23 @@ API_SCHEDULE_TYPE = {
     }
 }
 
-API_SCHEDULE_TYPE_LIST = [API_SCHEDULE_TYPE]
+API_SCHEDULE_SERVICE_TYPE = {
+    'id': 4,
+    'name': 'Service',
+    'identifier': 'S',
+    'chargeCode': None,
+    'where': API_SERVICE_LOCATION,
+    'systemFlag': False,
+    '_info': {
+        'lastUpdated': '2002-01-23T19:47:30Z',
+        'updatedBy': 'JBelanger'
+    }
+}
+
+API_SCHEDULE_TYPE_LIST = [
+    API_SCHEDULE_SALES_TYPE,
+    API_SCHEDULE_SERVICE_TYPE
+]
 
 API_SCHEDULE_STATUS = {
     'id': 2,
@@ -799,7 +815,7 @@ API_SCHEDULE_ENTRY_FOR_TICKET = {
         '_info': None
     },
     'status': API_SCHEDULE_STATUS,
-    'type': API_SCHEDULE_TYPE,
+    'type': API_SCHEDULE_SERVICE_TYPE,
     'span': None,
     'doneFlag': False,
     'acknowledgedFlag': False,
@@ -836,7 +852,7 @@ API_SCHEDULE_ENTRY_FOR_ACTIVITY = {
         'name': '10 minutes'
     },
     'status': API_SCHEDULE_STATUS,
-    'type': API_SCHEDULE_TYPE,
+    'type': API_SCHEDULE_SALES_TYPE,
     'doneFlag': True,
     'acknowledgedFlag': True,
     'ownerFlag': False,
