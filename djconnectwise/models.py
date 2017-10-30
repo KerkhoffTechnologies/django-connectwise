@@ -54,6 +54,10 @@ class CallBackEntry(models.Model):
     member = models.ForeignKey('Member')
     inactive_flag = models.BooleanField(default=False)
 
+    class Meta:
+        verbose_name = 'Callback entry'
+        verbose_name_plural = 'Callback entries'
+
     def __str__(self):
         return self.url
 
@@ -275,6 +279,9 @@ class CompanyStatus(models.Model):
     cancel_open_tracks_flag = models.BooleanField()
     track_id = models.PositiveSmallIntegerField(blank=True, null=True)
 
+    class Meta:
+        verbose_name_plural = 'Company statuses'
+
     def __str__(self):
         return self.name
 
@@ -472,6 +479,7 @@ class OpportunityPriority(TimeStampedModel):
 
     class Meta:
         ordering = ('name', )
+        verbose_name_plural = 'opportunity priorities'
 
     def __str__(self):
         return self.name
