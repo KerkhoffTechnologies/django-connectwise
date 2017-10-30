@@ -586,34 +586,32 @@ class ScheduleEntriesSynchronizer(BatchConditionMixin, Synchronizer):
                 '- skipping.'.format(instance.id)
             )
 
-        # objectId could be an Activity or a Ticket. Check for each case.
-        related_ticket = None
-        related_activity = None
-        try:
-            related_ticket = ticket_class.objects.get(pk=uid)
-        except ObjectDoesNotExist:
-            pass
-        try:
-            related_activity = activity_class.objects.get(pk=uid)
-        except ObjectDoesNotExist:
-            pass
-
-        if related_ticket and not related_activity:
-            if json_data['doneFlag']:
-                setattr(instance, 'ticket_object', None)
-            else:
-                setattr(instance, 'ticket_object', related_ticket)
-        elif related_activity and not related_ticket:
-            setattr(instance, 'activity_object', related_activity)
-
-        if related_ticket and related_activity:
-            ticket_resources = related_ticket.resources
-            schedule_member = json_data['member']['identifier']
-            if ticket_resources is not None:
-                if schedule_member in ticket_resources:
-                    setattr(instance, 'ticket_object', related_ticket)
+        if json_data['type']['identifier'] == "S":
+            try:
+                related_ticket = ticket_class.objects.get(pk=uid)
+                if json_data['doneFlag']:
+                    setattr(instance, 'ticket_object', None)
                 else:
-                    setattr(instance, 'activity_object', related_activity)
+                    setattr(instance, 'ticket_object', related_ticket)
+            except ObjectDoesNotExist as e:
+                logger.warning(
+                    'Ticket not found for {}.'.format(instance.id) +
+                    ' ObjectDoesNotExist Exception: {}.'.format(e)
+                )
+        elif json_data['type']['identifier'] == "C":
+            try:
+                related_activity = activity_class.objects.get(pk=uid)
+                setattr(instance, 'activity_object', related_activity)
+            except ObjectDoesNotExist as e:
+                logger.warning(
+                    'Activity not found for {}.'.format(instance.id) +
+                    ' ObjectDoesNotExist Exception: {}.'.format(e)
+                )
+        else:
+            raise InvalidObjectException(
+                'Invalid ScheduleEntry type for schedule entry {}- skipping.'
+                .format(instance.id)
+            )
 
         return instance
 
