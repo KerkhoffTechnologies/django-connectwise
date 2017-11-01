@@ -105,7 +105,7 @@ class Synchronizer:
 
     def get(self, results, conditions=None):
         """
-        Buffer and return all pages of results.
+        For all pages of results, save each page of results to the DB.
 
         If conditions is supplied in the call, then use only those conditions
         while fetching pages of records. If it's omitted, then use
