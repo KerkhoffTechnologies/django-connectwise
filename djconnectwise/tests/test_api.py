@@ -1,6 +1,7 @@
 import responses
 import requests
 from urllib.parse import urljoin
+from types import SimpleNamespace
 # import json
 from datetime import datetime, date, time
 
@@ -352,6 +353,27 @@ class TestScheduleAPIClient(BaseAPITestCase):
         result = self.client.get_schedule_entry(entry_id)
         self.assertEqual(result, fixtures.API_SCHEDULE_ENTRY_FOR_TICKET)
         self.assert_request_should_page(False)
+
+    @responses.activate
+    def test_post_schedule_entry(self):
+
+        endpoint_url = '{}/{}'.format(
+            self.endpoint,
+            self.client.ENDPOINT_ENTRIES)
+
+        resource = SimpleNamespace()
+        resource.id = 176
+        resource.identifier = 'User1'
+
+        scheduleType = SimpleNamespace()
+        scheduleType.id = 4
+        scheduleType.identifier = 'S'
+
+        #test_id =
+        # WIP
+
+    @responses.activate
+    def test_delete_schedule_entry(self):
 
 
 class TestFetchAPICodebase(TestCase):
