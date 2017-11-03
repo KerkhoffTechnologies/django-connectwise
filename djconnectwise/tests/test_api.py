@@ -356,24 +356,37 @@ class TestScheduleAPIClient(BaseAPITestCase):
 
     @responses.activate
     def test_post_schedule_entry(self):
+        member = SimpleNamespace()
+        member.id = 176
+        member.identifier = 'User1'
+        schedule_type = SimpleNamespace()
+        schedule_type.id = 4
+        schedule_type.identifier = 'S'
+        object_id = 69
 
-        endpoint_url = '{}/{}'.format(
-            self.endpoint,
-            self.client.ENDPOINT_ENTRIES)
+        method_name = 'djconnectwise.api.ConnectWiseAPIClient.request'
+        mock_call, _patch = mk.create_mock_call(
+            method_name,
+            fixtures.API_SCHEDULE_ENTRY_FOR_TICKET)
+        self.client = api.ScheduleAPIClient()
 
-        resource = SimpleNamespace()
-        resource.id = 176
-        resource.identifier = 'User1'
-
-        scheduleType = SimpleNamespace()
-        scheduleType.id = 4
-        scheduleType.identifier = 'S'
-
-        #test_id =
-        # WIP
+        self.client.post_schedule_entry(
+            objectId=object_id,
+            scheduleType=schedule_type,
+            resource=member)
+        self.assertEqual(mock_call.call_count, 1)
 
     @responses.activate
     def test_delete_schedule_entry(self):
+        object_id = 69
+        method_name = 'requests.request'
+        mock_call, _patch = mk.create_mock_call(
+            method_name,
+            "200 OK")
+
+        self.client = api.ScheduleAPIClient()
+        self.client.delete_schedule_entry(object_id)
+        self.assertEqual(mock_call.call_count, 1)
 
 
 class TestFetchAPICodebase(TestCase):
