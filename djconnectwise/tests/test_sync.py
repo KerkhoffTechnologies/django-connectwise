@@ -1,6 +1,5 @@
 from copy import deepcopy
 from unittest import TestCase
-import pytz
 
 from dateutil.parser import parse
 from djconnectwise.models import Activity
@@ -440,8 +439,8 @@ class TestOpportunitySynchronizer(TestCase, SynchronizerTestMixin):
     def _assert_fields(self, instance, json_data):
         self.assertEqual(instance.id, json_data['id'])
         self.assertEqual(instance.name, json_data['name'])
-        # self.assertEqual(instance.expected_close_date,
-        #                  parse(json_data['expectedCloseDate']).date())
+        self.assertEqual(instance.expected_close_date,
+                         parse(json_data['expectedCloseDate']).date())
         self.assertEqual(instance.pipeline_change_date,
                          parse(json_data['pipelineChangeDate']))
         self.assertEqual(instance.date_became_lead,
@@ -706,18 +705,27 @@ class TestActivitySynchronizer(TestCase, SynchronizerTestMixin):
     def call_api(self, return_data):
         return mocks.sales_api_get_activities_call(return_data)
 
+    def _get_datetime(self, instance, date_field):
+        date_field = instance.get(date_field)
+        if date_field:
+            date_field = parse(date_field, default=parse('00:00Z'))
+
+        return date_field
+
     def _assert_fields(self, activity, api_activity):
         self.assertEqual(activity.name, api_activity['name'])
         self.assertEqual(activity.notes, api_activity['notes'])
-        dateStartUnaware = parse(api_activity['dateStart'])
-        dateStart = dateStartUnaware.replace(tzinfo=pytz.UTC)
         self.assertEqual(activity.date_start,
-                         parse(api_activity['dateStart']))
+                         self._get_datetime(api_activity, 'dateStart')
+                         )
         self.assertEqual(activity.date_end,
-                         parse(api_activity.get('dateEnd')))
-        self.assertEqual(activity.assign_to, api_activity['assignTo'])
-        self.assertEqual(activity.opportunity, api_activity['opportunity'])
-        self.assertEqual(activity.ticket, api_activity['ticket'])
+                         self._get_datetime(api_activity, 'dateEnd')
+                         )
+        self.assertEqual(activity.assign_to_id, api_activity['assignTo']['id'])
+        self.assertEqual(activity.opportunity_id,
+                         api_activity['opportunity']['id'])
+        if api_activity['ticket'] is not None:
+            self.assertEqual(activity.ticket_id, api_activity['ticket']['id'])
 
 
 class TestSyncSettings(TestCase):
