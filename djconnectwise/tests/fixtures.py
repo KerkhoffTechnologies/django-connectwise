@@ -707,11 +707,11 @@ API_SALES_ACTIVITY = {
         }
     },
     'opportunity': API_SALES_OPPORTUNITY,
-    'ticket': API_SERVICE_TICKET,
+    'ticket': None,
     'agreement': None,
     'campaign': None,
     'notes': 'Stage Change from 1.Prospect to 2.Qualification',
-    'dateStart': '2005-11-30',
+    'dateStart': '2016-03-06',
     # 'dateEnd': None,                  # ConnectWise 2017.5 removed null values
     'assignedBy': {
         'id': 196,
@@ -734,7 +734,7 @@ API_SALES_ACTIVITY = {
         'name': '0 minutes',
         '_info': None
     },
-    'where': None,
+    'where': None,'2015-11-30T19:53:52Z'
     'notifyFlag': False,
     'mobileGuid': '3a5828b8-a72c-4130-898b-b5aafbf98e46',
     '_info': {

@@ -464,7 +464,6 @@ class ActivitySynchronizer(Synchronizer):
     model_class = models.Activity
 
     related_meta = {
-        'assignTo': (models.Member, 'assign_to'),
         'opportunity': (models.Opportunity, 'opportunity'),
         'ticket': (models.Ticket, 'ticket')
     }
@@ -473,6 +472,20 @@ class ActivitySynchronizer(Synchronizer):
         instance.id = json_data['id']
         instance.name = json_data['name']
         instance.notes = json_data.get('notes')
+
+        # Handle cases where no member field is provided or exists,
+        # which we consider invalid.
+        try:
+            relation_json = json_data.get('assignTo')
+            if relation_json:
+                uid = relation_json['id']
+                related_instance = models.Member.objects.get(pk=uid)
+                setattr(instance, 'assign_to', related_instance)
+        except ObjectDoesNotExist as e:
+            raise InvalidObjectException(
+                'Unable to find member for Activity entry {}- skipping.'
+                .format(instance.id)
+            )
 
         # handle dates
         date_start = json_data.get('dateStart')

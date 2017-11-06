@@ -1,7 +1,9 @@
 from copy import deepcopy
 from unittest import TestCase
+import pytz
 
 from dateutil.parser import parse
+from djconnectwise.models import Activity
 from djconnectwise.models import BoardStatus
 from djconnectwise.models import Company, CompanyStatus
 from djconnectwise.models import ConnectWiseBoard
@@ -426,6 +428,7 @@ class TestOpportunitySynchronizer(TestCase, SynchronizerTestMixin):
         self.synchronizer = self.synchronizer_class()
         mocks.sales_api_get_opportunity_types_call(
             fixtures.API_SALES_OPPORTUNITY_TYPES)
+        fixture_utils.init_activities()
         fixture_utils.init_opportunity_statuses()
         fixture_utils.init_opportunity_types()
         fixture_utils.init_members()
@@ -684,6 +687,37 @@ class TestTicketSynchronizer(TestCase):
         synchronizer.sync(reset=True)
         self.assertEqual(ticket_qset.count(), 0)
         _patch.stop()
+
+
+class TestActivitySynchronizer(TestCase, SynchronizerTestMixin):
+    synchronizer_class = sync.ActivitySynchronizer
+    model_class = Activity
+    fixture = fixtures.API_SALES_ACTIVITIES
+
+    def setUp(self):
+        fixture_utils.init_members()
+        fixture_utils.init_tickets()
+        fixture_utils.init_opportunities()
+        fixture_utils.init_activities()
+        mocks.sales_api_get_activities_call(
+            fixtures.API_SALES_ACTIVITIES)
+        sync.ActivitySynchronizer().sync()
+
+    def call_api(self, return_data):
+        return mocks.sales_api_get_activities_call(return_data)
+
+    def _assert_fields(self, activity, api_activity):
+        self.assertEqual(activity.name, api_activity['name'])
+        self.assertEqual(activity.notes, api_activity['notes'])
+        dateStartUnaware = parse(api_activity['dateStart'])
+        dateStart = dateStartUnaware.replace(tzinfo=pytz.UTC)
+        self.assertEqual(activity.date_start,
+                         parse(api_activity['dateStart']))
+        self.assertEqual(activity.date_end,
+                         parse(api_activity.get('dateEnd')))
+        self.assertEqual(activity.assign_to, api_activity['assignTo'])
+        self.assertEqual(activity.opportunity, api_activity['opportunity'])
+        self.assertEqual(activity.ticket, api_activity['ticket'])
 
 
 class TestSyncSettings(TestCase):
