@@ -172,6 +172,7 @@ class TestScheduleEntriesSynchronizer(TestCase, SynchronizerTestMixin):
         fixture_utils.init_members()
         fixture_utils.init_opportunity_statuses()
         fixture_utils.init_opportunity_types()
+        fixture_utils.init_opportunities()
         fixture_utils.init_teams()
         fixture_utils.init_board_statuses()
         fixture_utils.init_schedule_statuses()
@@ -696,6 +697,8 @@ class TestActivitySynchronizer(TestCase, SynchronizerTestMixin):
     def setUp(self):
         fixture_utils.init_members()
         fixture_utils.init_tickets()
+        fixture_utils.init_companies()
+        fixture_utils.init_opportunity_types()
         fixture_utils.init_opportunities()
         fixture_utils.init_activities()
         mocks.sales_api_get_activities_call(
@@ -726,6 +729,25 @@ class TestActivitySynchronizer(TestCase, SynchronizerTestMixin):
                          api_activity['opportunity']['id'])
         if api_activity['ticket'] is not None:
             self.assertEqual(activity.ticket_id, api_activity['ticket']['id'])
+
+    def test_sync_null_member_activity(self):
+        null_member_activity = deepcopy(fixtures.API_SALES_ACTIVITY)
+        null_member_activity['id'] = 999
+        null_member_activity['assignTo'] = None
+        activity_list = [null_member_activity]
+
+        method_name = 'djconnectwise.api.SalesAPIClient.get_activities'
+        mock_call, _patch = mocks.create_mock_call(method_name, activity_list)
+        synchronizer = sync.ActivitySynchronizer()
+
+        created_count, updated_count, deleted_count = \
+            synchronizer.sync(reset=True)
+
+        # The existing Activity (#47) should be deleted and
+        # null_member_activity should not be added to the db
+        self.assertEqual(created_count, 0)
+        self.assertEqual(updated_count, 0)
+        self.assertEqual(deleted_count, 1)
 
 
 class TestSyncSettings(TestCase):

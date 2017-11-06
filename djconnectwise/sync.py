@@ -476,12 +476,14 @@ class ActivitySynchronizer(Synchronizer):
         # Handle cases where no member field is provided or exists,
         # which we consider invalid.
         try:
-            relation_json = json_data.get('assignTo')
-            if relation_json:
-                uid = relation_json['id']
-                related_instance = models.Member.objects.get(pk=uid)
-                setattr(instance, 'assign_to', related_instance)
-        except ObjectDoesNotExist:
+            self._assign_relation(
+                instance,
+                json_data,
+                'assignTo',
+                models.Member,
+                'assign_to',
+            )
+        except ValueError:
             raise InvalidObjectException(
                 'Unable to find member for Activity entry {}- skipping.'
                 .format(instance.id)
