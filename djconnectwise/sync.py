@@ -464,7 +464,6 @@ class ActivitySynchronizer(Synchronizer):
     model_class = models.Activity
 
     related_meta = {
-        'assignTo': (models.Member, 'assign_to'),
         'opportunity': (models.Opportunity, 'opportunity'),
         'ticket': (models.Ticket, 'ticket')
     }
@@ -474,15 +473,33 @@ class ActivitySynchronizer(Synchronizer):
         instance.name = json_data['name']
         instance.notes = json_data.get('notes')
 
-        # handle dates
+        # Handle cases where no member field is provided or exists,
+        # which we consider invalid.
+        try:
+            self._assign_relation(
+                instance,
+                json_data,
+                'assignTo',
+                models.Member,
+                'assign_to',
+            )
+        except ValueError:
+            raise InvalidObjectException(
+                'Unable to find member for Activity entry {}- skipping.'
+                .format(instance.id)
+            )
+
+        # handle dates.  Assume UTC timezone when not defined
+        # (according to ConnectWise FAQ: "What DateTimes are supported?")
         date_start = json_data.get('dateStart')
         if date_start:
-            instance.date_start = parse(date_start)
+            instance.date_start = parse(date_start, default=parse('00:00Z'))
 
         date_end = json_data.get('dateEnd')
         if date_end:
-            instance.date_end = parse(date_end)
+            instance.date_end = parse(date_end, default=parse('00:00Z'))
 
+        # assign foreign keys
         for json_field, value in self.related_meta.items():
             model_class, field_name = value
             self._assign_relation(
