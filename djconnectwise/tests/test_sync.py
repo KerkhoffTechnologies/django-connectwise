@@ -354,7 +354,7 @@ class TestBoardSynchronizer(TestCase, SynchronizerTestMixin):
 
     def _assert_fields(self, instance, json_data):
         self.assertEqual(instance.name, json_data['name'])
-        self.assertEqual(instance.inactive, json_data['inactive'])
+        self.assertEqual(instance.inactive, json_data['inactiveFlag'])
 
 
 class TestBoardStatusSynchronizer(TestCase, SynchronizerTestMixin):
