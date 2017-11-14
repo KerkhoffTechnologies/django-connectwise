@@ -304,7 +304,12 @@ class BoardSynchronizer(Synchronizer):
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
         instance.name = json_data['name']
-        instance.inactive = json_data.get('inactive')
+        if 'inactiveFlag' in json_data:
+            # This is the new CW way
+            instance.inactive = json_data.get('inactiveFlag')
+        else:
+            # This is old, but keep for backwards-compatibility
+            instance.inactive = json_data.get('inactive')
         return instance
 
     def get_page(self, *args, **kwargs):

@@ -5,7 +5,7 @@ API_BOARD = {
     'name': 'Service A',
     'locationId': 1,
     'businessUnitId': 10,
-    'inactive': False,
+    'inactiveFlag': False,
     'projectFlag': False
 }
 
