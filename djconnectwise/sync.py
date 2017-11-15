@@ -76,26 +76,49 @@ class Synchronizer:
         request_settings = RequestSettings().get_settings()
         self.batch_size = request_settings['batch_size']
 
+    @staticmethod
+    def _assign_null_relation(instance, model_field):
+        """
+        Set the FK to null, but handle issues like the FK being non-null.
+
+        This can happen because ConnectWise gives us records that point to
+        non-existant records- such as activities whose assignTo fields point
+        to deleted members.
+        """
+        try:
+            setattr(instance, model_field, None)
+        except ValueError:
+            # The model_field may have been non-null.
+            raise InvalidObjectException(
+                "Unable to set field {} on {} to null, as it's required.".
+                format(model_field, instance)
+            )
+
     def _assign_relation(self, instance, json_data,
                          json_field, model_class, model_field):
+        """
+        Look up the given foreign relation, and set it to the given
+        field on the instance.
+        """
         relation_json = json_data.get(json_field)
-        if relation_json:
-            try:
-                uid = relation_json['id']
-                related_instance = model_class.objects.get(pk=uid)
-                setattr(instance, model_field, related_instance)
-            except model_class.DoesNotExist:
-                logger.warning(
-                    'Failed to find {} {} for {} {}.'.format(
-                        json_field,
-                        uid,
-                        type(instance),
-                        instance.id
-                    )
+        if relation_json is None:
+            self._assign_null_relation(instance, model_field)
+            return
+
+        try:
+            uid = relation_json['id']
+            related_instance = model_class.objects.get(pk=uid)
+            setattr(instance, model_field, related_instance)
+        except model_class.DoesNotExist:
+            logger.warning(
+                'Failed to find {} {} for {} {}.'.format(
+                    json_field,
+                    uid,
+                    type(instance),
+                    instance.id
                 )
-        else:
-            # clear any existing value in the related instance
-            setattr(instance, model_field, None)
+            )
+            self._assign_null_relation(instance, model_field)
 
     def _instance_ids(self):
         ids = self.model_class.objects.all().values_list(
@@ -470,29 +493,14 @@ class ActivitySynchronizer(Synchronizer):
 
     related_meta = {
         'opportunity': (models.Opportunity, 'opportunity'),
-        'ticket': (models.Ticket, 'ticket')
+        'ticket': (models.Ticket, 'ticket'),
+        'assignTo': (models.Member, 'assign_to'),
     }
 
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
         instance.name = json_data['name']
         instance.notes = json_data.get('notes')
-
-        # Handle cases where no member field is provided or exists,
-        # which we consider invalid.
-        try:
-            self._assign_relation(
-                instance,
-                json_data,
-                'assignTo',
-                models.Member,
-                'assign_to',
-            )
-        except ValueError:
-            raise InvalidObjectException(
-                'Unable to find member for Activity entry {}- skipping.'
-                .format(instance.id)
-            )
 
         # handle dates.  Assume UTC timezone when not defined
         # (according to ConnectWise FAQ: "What DateTimes are supported?")
@@ -504,7 +512,7 @@ class ActivitySynchronizer(Synchronizer):
         if date_end:
             instance.date_end = parse(date_end, default=parse('00:00Z'))
 
-        # assign foreign keys
+        # Assign foreign keys
         for json_field, value in self.related_meta.items():
             model_class, field_name = value
             self._assign_relation(
@@ -536,7 +544,8 @@ class ScheduleEntriesSynchronizer(BatchConditionMixin, Synchronizer):
     related_meta = {
         'where': (models.Location, 'where'),
         'status': (models.ScheduleStatus, 'status'),
-        'type': (models.ScheduleType, 'schedule_type')
+        'type': (models.ScheduleType, 'schedule_type'),
+        'member': (models.Member, 'member')
     }
 
     def __init__(self):
@@ -563,17 +572,9 @@ class ScheduleEntriesSynchronizer(BatchConditionMixin, Synchronizer):
 
         # Handle member- there are cases where no member field is provided,
         # which we consider invalid.
-        try:
-            self._assign_relation(
-                instance,
-                json_data,
-                'member',
-                models.Member,
-                'member',
-            )
-        except ValueError:
+        if 'member' not in json_data:
             raise InvalidObjectException(
-                'Unable to find member for schedule entry {}- skipping.'
+                'Schedule entry {} has no member field- skipping.'
                 .format(instance.id)
             )
 
@@ -742,6 +743,11 @@ class MemberSynchronizer(Synchronizer):
         instance.last_name = json_data.get('lastName')
         instance.identifier = json_data.get('identifier')
         instance.office_email = json_data.get('officeEmail')
+        if instance.office_email is None:
+            raise InvalidObjectException(
+                'Office email of user {} is null- skipping.'
+                .format(instance.identifier)
+            )
         instance.license_class = json_data.get('licenseClass')
         instance.inactive = json_data.get('inactiveFlag')
         return instance
@@ -1051,6 +1057,13 @@ class OpportunitySynchronizer(Synchronizer):
         if closed_date:
             instance.closed_date = parse(closed_date)
 
+        instance.priority = self._update_or_create_child(
+            models.OpportunityPriority, json_data['priority']
+        )
+        instance.stage = self._update_or_create_child(
+            models.OpportunityStage, json_data['stage']
+        )
+
         # handle foreign keys
         for json_field, value in self.related_meta.items():
             model_class, field_name = value
@@ -1059,13 +1072,6 @@ class OpportunitySynchronizer(Synchronizer):
                                   json_field,
                                   model_class,
                                   field_name)
-
-        instance.priority = self._update_or_create_child(
-            models.OpportunityPriority, json_data['priority']
-        )
-        instance.stage = self._update_or_create_child(
-            models.OpportunityStage, json_data['stage']
-        )
 
         return instance
 

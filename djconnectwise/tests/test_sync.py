@@ -733,7 +733,8 @@ class TestActivitySynchronizer(TestCase, SynchronizerTestMixin):
     def test_sync_null_member_activity(self):
         null_member_activity = deepcopy(fixtures.API_SALES_ACTIVITY)
         null_member_activity['id'] = 999
-        null_member_activity['assignTo'] = None
+        null_member_activity['assignTo'] = {'id': 99999}  # Member that does
+        # not exist
         activity_list = [null_member_activity]
 
         method_name = 'djconnectwise.api.SalesAPIClient.get_activities'
