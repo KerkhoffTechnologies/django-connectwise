@@ -863,11 +863,9 @@ class TicketSynchronizer(BatchConditionMixin, Synchronizer):
         original_status = not created and instance.status or None
 
         json_data_id = json_data['id']
-        instance.api_text = str(json_data)
         instance.id = json_data['id']
         instance.summary = json_data['summary']
         instance.closed_flag = json_data.get('closedFlag')
-        instance.type = json_data.get('type')
         instance.entered_date_utc = json_data.get('dateEntered')
         instance.last_updated_utc = json_data.get('_info').get('lastUpdated')
         instance.required_date_utc = json_data.get('requiredDate')

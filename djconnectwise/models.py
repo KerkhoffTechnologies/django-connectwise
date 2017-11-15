@@ -576,7 +576,6 @@ class Ticket(TimeStampedModel):
     actual_hours = models.DecimalField(
         blank=True, null=True, decimal_places=2, max_digits=6)
     agreement_id = models.IntegerField(blank=True, null=True)
-    api_text = models.TextField(blank=True, null=True)
     approved = models.NullBooleanField(blank=True, null=True)
     budget_hours = models.DecimalField(
         blank=True, null=True, decimal_places=2, max_digits=6)
@@ -607,7 +606,6 @@ class Ticket(TimeStampedModel):
     sub_type = models.CharField(blank=True, null=True, max_length=250)
     sub_type_item = models.CharField(blank=True, null=True, max_length=250)
     summary = models.CharField(blank=True, null=True, max_length=250)
-    type = models.CharField(blank=True, null=True, max_length=250)
     updated_by = models.CharField(blank=True, null=True, max_length=250)
 
     board = models.ForeignKey('ConnectwiseBoard', blank=True, null=True)
