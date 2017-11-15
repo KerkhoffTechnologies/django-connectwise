@@ -578,7 +578,6 @@ class TestTicketSynchronizer(TestCase):
     def _assert_sync(self, instance, json_data):
         self.assertEqual(instance.summary, json_data['summary'])
         self.assertEqual(instance.closed_flag, json_data.get('closedFlag'))
-        self.assertEqual(instance.type, json_data.get('type'))
         self.assertEqual(instance.entered_date_utc,
                          parse(json_data.get('dateEntered')))
         self.assertEqual(instance.last_updated_utc,
@@ -622,8 +621,10 @@ class TestTicketSynchronizer(TestCase):
                          json_data['status']['id'])
 
     def test_sync_ticket(self):
-        """Test to ensure ticket synchronizer saves an
-        CW Ticket instance locally"""
+        """
+        Test to ensure ticket synchronizer saves a CW Ticket instance
+        locally.
+        """
         synchronizer = sync.TicketSynchronizer()
         synchronizer.sync()
         self.assertGreater(Ticket.objects.all().count(), 0)
