@@ -131,12 +131,18 @@ class OpportunityAdmin(admin.ModelAdmin):
     search_fields = ['name']
 
 
+class ScheduleEntryInline(admin.StackedInline):
+    model = models.ScheduleEntry
+
 @admin.register(models.Ticket)
 class TicketAdmin(admin.ModelAdmin):
     list_display = ('id', 'summary', 'status', 'record_type',)
-
     list_filter = ('status', 'record_type')
     search_fields = ['id', 'summary', 'company__name']
+
+    inlines = [
+        ScheduleEntryInline
+    ]
 
 
 @admin.register(models.Activity)
