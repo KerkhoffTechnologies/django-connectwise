@@ -134,6 +134,7 @@ class OpportunityAdmin(admin.ModelAdmin):
 class ScheduleEntryInline(admin.StackedInline):
     model = models.ScheduleEntry
 
+
 @admin.register(models.Ticket)
 class TicketAdmin(admin.ModelAdmin):
     list_display = ('id', 'summary', 'status', 'record_type',)
