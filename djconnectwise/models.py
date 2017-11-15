@@ -68,17 +68,11 @@ class AvailableConnectWiseBoardManager(models.Manager):
         return super().get_queryset().filter(inactive=False)
 
 
-class ConnectWiseBoardManager(models.Manager):
-    """Return all ConnectWise boards."""
-    def get_queryset(self):
-        return super().get_queryset().all()
-
-
 class ConnectWiseBoard(TimeStampedModel):
     name = models.CharField(max_length=255)
     inactive = models.BooleanField(default=False)
 
-    objects = ConnectWiseBoardManager()
+    objects = models.Manager()
     available_objects = AvailableConnectWiseBoardManager()
 
     class Meta:
@@ -122,12 +116,6 @@ class AvailableBoardStatusManager(models.Manager):
         )
 
 
-class BoardStatusManager(models.Manager):
-    """Return all ConnectWise board statuses."""
-    def get_queryset(self):
-        return super().get_queryset().all()
-
-
 class BoardStatus(TimeStampedModel):
     """
     Used for looking up the status/board id combination
@@ -141,7 +129,7 @@ class BoardStatus(TimeStampedModel):
     closed_status = models.BooleanField()
     board = models.ForeignKey('ConnectWiseBoard')
 
-    objects = BoardStatusManager()
+    objects = models.Manager()
     available_objects = AvailableBoardStatusManager()
 
     class Meta:
@@ -169,12 +157,6 @@ class RegularMemberManager(models.Manager):
         return super().get_queryset().exclude(license_class='A')
 
 
-class MemberManager(models.Manager):
-    """Return all members."""
-    def get_queryset(self):
-        return super().get_queryset().all()
-
-
 class Member(TimeStampedModel):
     LICENSE_CLASSES = (
         ('F', 'Full license'),
@@ -196,7 +178,7 @@ class Member(TimeStampedModel):
         choices=LICENSE_CLASSES, db_index=True
     )
 
-    objects = MemberManager()
+    objects = models.Manager()
     regular_objects = RegularMemberManager()
 
     class Meta:
@@ -219,12 +201,6 @@ class AvailableCompanyManager(models.Manager):
     """Return only companies whose deleted_flag isn't true."""
     def get_queryset(self):
         return super().get_queryset().filter(deleted_flag=False)
-
-
-class CompanyManager(models.Manager):
-    """Return all companies."""
-    def get_queryset(self):
-        return super().get_queryset().all()
 
 
 class Company(TimeStampedModel):
@@ -250,7 +226,7 @@ class Company(TimeStampedModel):
     deleted_flag = models.BooleanField(default=False)
     status = models.ForeignKey('CompanyStatus', blank=True, null=True)
 
-    objects = CompanyManager()
+    objects = models.Manager()
     available_objects = AvailableCompanyManager()
 
     class Meta:
@@ -334,18 +310,12 @@ class AvailableBoardTeamManager(models.Manager):
         return super().get_queryset().filter(board__inactive=False)
 
 
-class BoardTeamManager(models.Manager):
-    """Return all ConnectWise board teams."""
-    def get_queryset(self):
-        return super().get_queryset().all()
-
-
 class Team(TimeStampedModel):
     name = models.CharField(max_length=30)
     board = models.ForeignKey('ConnectWiseBoard')
     members = models.ManyToManyField('Member')
 
-    objects = BoardTeamManager()
+    objects = models.Manager()
     available_objects = AvailableBoardTeamManager()
 
     def __str__(self):
@@ -408,19 +378,13 @@ class AvailableProjectManager(models.Manager):
         return super().get_queryset().exclude(status_name='Closed')
 
 
-class ProjectManager(models.Manager):
-    """Return all projects."""
-    def get_queryset(self):
-        return super().get_queryset().all()
-
-
 class Project(TimeStampedModel):
     name = models.CharField(max_length=200)
     # Project statuses aren't available as a first-class object in the API, so
     # just keep the name here for simplicity.
     status_name = models.CharField(max_length=200, blank=True, null=True)
 
-    objects = ProjectManager()
+    objects = models.Manager()
     available_objects = AvailableProjectManager()
 
     class Meta:
@@ -450,12 +414,6 @@ class AvailableOpportunityStatusManager(models.Manager):
         )
 
 
-class OpportunityStatusManager(models.Manager):
-    """Return all Opportunity statuses."""
-    def get_queryset(self):
-        return super().get_queryset().all()
-
-
 class OpportunityStatus(TimeStampedModel):
     name = models.CharField(max_length=30)
     won_flag = models.BooleanField(default=False)
@@ -463,7 +421,7 @@ class OpportunityStatus(TimeStampedModel):
     closed_flag = models.BooleanField(default=False)
     inactive_flag = models.BooleanField(default=False)
 
-    objects = OpportunityStatusManager()
+    objects = models.Manager()
     available_objects = AvailableOpportunityStatusManager()
 
     class Meta:
