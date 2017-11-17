@@ -749,7 +749,7 @@ API_SALES_ACTIVITIES = [
 ]
 
 API_COMPANY_INFO = {
-    'CompanyName': 'ConnectWise',
+    'CompanyName': 'foobar',
     'Codebase': 'v2017_3/',
     'VersionCode': 'v2017.3',
     'VersionNumber': 'v4.6.47174',

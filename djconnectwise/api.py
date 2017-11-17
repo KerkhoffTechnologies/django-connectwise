@@ -46,10 +46,12 @@ logger = logging.getLogger(__name__)
 
 
 class CompanyInfoManager:
-    COMPANYINFO_PATH = '/login/companyinfo/connectwise'
+    COMPANYINFO_ENDPOINT = '{}/login/companyinfo/{}'
 
-    def get_company_info(self, server_url):
-        company_endpoint = '{0}{1}'.format(server_url, self.COMPANYINFO_PATH)
+    def get_company_info(self, server_url, company_id):
+        company_endpoint = self.COMPANYINFO_ENDPOINT.format(
+            server_url, company_id
+        )
 
         try:
             logger.debug('Making GET request to {}'.format(company_endpoint))
@@ -65,7 +67,7 @@ class CompanyInfoManager:
                 )
             )
 
-    def fetch_api_codebase(self, server_url, force_fetch=True):
+    def fetch_api_codebase(self, server_url, company_id, force_fetch=True):
         """
         Returns the Codebase value for the hosted Connectwise instance
         at the supplied URL. The Codebase is retrieved from the cache
@@ -84,7 +86,9 @@ class CompanyInfoManager:
                 )
             )
             if not codebase_from_cache or force_fetch:
-                company_info_json = self.get_company_info(server_url)
+                company_info_json = self.get_company_info(
+                    server_url, company_id
+                )
                 codebase_from_api = company_info_json['Codebase']
 
                 codebase_updated = codebase_from_cache != codebase_from_api
@@ -138,6 +142,7 @@ class ConnectWiseAPIClient(object):
             raise ValueError('API not specified')
 
         self.info_manager = CompanyInfoManager()
+        self.company_id = company_id
         self.api_public_key = api_public_key
         self.api_private_key = api_private_key
         self.server_url = server_url
@@ -164,7 +169,7 @@ class ConnectWiseAPIClient(object):
     def build_api_base_url(self, force_fetch):
         api_codebase, codebase_updated = \
             self.info_manager.fetch_api_codebase(
-                self.server_url, force_fetch=force_fetch
+                self.server_url, self.company_id, force_fetch=force_fetch
             )
 
         self.api_base_url = '{0}/{1}apis/3.0/{2}/'.format(
