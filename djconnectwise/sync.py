@@ -6,7 +6,6 @@ import math
 
 from django.core.files.base import ContentFile
 from django.core.exceptions import ObjectDoesNotExist
-from django.db import IntegrityError
 from django.db import transaction
 from django.utils import timezone
 
@@ -162,8 +161,6 @@ class Synchronizer:
                     results.created_count += 1
                 else:
                     results.updated_count += 1
-            except IntegrityError as e:
-                logger.warning('IntegrityError: {}'.format(e.__cause__))
             except InvalidObjectException as e:
                 logger.warning('{}'.format(e))
 
