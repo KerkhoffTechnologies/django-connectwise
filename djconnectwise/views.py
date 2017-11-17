@@ -7,7 +7,6 @@ from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
 from django import forms
 from django.views.generic import View
-from django.db import IntegrityError
 
 from . import models
 from djconnectwise import sync
@@ -94,15 +93,6 @@ class CallBackView(views.CsrfExemptMixin,
             # when the next periodic sync job runs.
             logger.error(
                 'API call failed in model {} ID {} callback: '
-                '{}'.format(model_class, entity_id, e)
-            )
-        except IntegrityError as e:
-            # We may have gotten two callbacks at the same time, where the
-            # first callback has succeeded and the second has failed here due
-            # to creating a record with an existing PK.
-            logger.warning(
-                'Failed to add or update model {} ID {} in callback '
-                '(possibly due to duplicate callbacks): '
                 '{}'.format(model_class, entity_id, e)
             )
 
