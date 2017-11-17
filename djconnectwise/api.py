@@ -365,6 +365,33 @@ class ScheduleAPIClient(ConnectWiseAPIClient):
         endpoint_url = '{}/{}'.format(self.ENDPOINT_ENTRIES, entry_id)
         return self.fetch_resource(endpoint_url)
 
+    def post_schedule_entry(self, *args, **kwargs):
+        endpoint_url = self._endpoint(self.ENDPOINT_ENTRIES)
+
+        body = {
+                    "objectId": kwargs.get("objectId"),
+                    "member": {
+                        "id": kwargs.get("resource").id,
+                        "identifier": kwargs.get("resource").identifier,
+                        "name": str(kwargs.get("resource")),
+                    },
+                    "type": {
+                        "id": kwargs.get("scheduleType").id,
+                        "identifier": kwargs.get("scheduleType").identifier,
+                    }
+                }
+        return self.request('post', endpoint_url, body)
+
+    def delete_schedule_entry(self, entry_id):
+        endpoint_url = self._endpoint(
+            '{}/{}'.format(self.ENDPOINT_ENTRIES, entry_id))
+        return requests.request(
+            'delete',
+            endpoint_url,
+            auth=self.auth,
+            timeout=self.timeout,
+        )
+
 
 class SalesAPIClient(ConnectWiseAPIClient):
     API = 'sales'
