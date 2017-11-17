@@ -29,7 +29,7 @@ class ConnectWiseBoardAdmin(admin.ModelAdmin):
 
 @admin.register(models.BoardStatus)
 class BoardStatusAdmin(admin.ModelAdmin):
-    list_display = ('id', 'board', 'name')
+    list_display = ('id', 'board', 'name', 'closed_status')
     search_fields = ['name', 'board__name']
 
 
