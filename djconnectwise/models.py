@@ -303,6 +303,13 @@ class ScheduleEntry(models.Model):
     def __str__(self):
         return self.name
 
+    def delete_entry(self):
+        """
+        Send Delete request to ConnectWise for this entry
+        """
+        schedule_client = api.ScheduleAPIClient()
+        return schedule_client.delete_schedule_entry(self.id)
+
 
 class AvailableBoardTeamManager(models.Manager):
     """Return only teams whose ConnectWise board is active."""
