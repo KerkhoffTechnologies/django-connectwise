@@ -57,7 +57,14 @@ class CompanyInfoManager:
             logger.debug('Making GET request to {}'.format(company_endpoint))
             response = requests.get(company_endpoint)
             if 200 <= response.status_code < 300:
-                return response.json()
+                resp_json = response.json()
+                if resp_json is None:
+                    # CW returns None if company ID is unknown.
+                    raise ConnectWiseAPIError(
+                        'Null response received- company ID may be unknown.'
+                    )
+                else:
+                    return resp_json
             else:
                 raise ConnectWiseAPIError(response.content)
         except requests.RequestException as e:
