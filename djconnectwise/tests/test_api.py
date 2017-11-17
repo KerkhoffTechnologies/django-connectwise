@@ -1,8 +1,6 @@
 import responses
 import requests
-from urllib.parse import urljoin
 from types import SimpleNamespace
-# import json
 from datetime import datetime, date, time
 
 from django.core.cache import cache
@@ -391,36 +389,46 @@ class TestScheduleAPIClient(BaseAPITestCase):
 
 class TestFetchAPICodebase(TestCase):
     HOST = 'https://na.myconnectwise.net'
+    COMPANY_ID = 'foobar'
 
     def setUp(self):
         self.manager = CompanyInfoManager()
 
-    def _some_end_point(self):
-        return urljoin(self.HOST, 'some-endpoint')
+    def _companyinfo_endpoint(self):
+        return api.CompanyInfoManager.COMPANYINFO_ENDPOINT.format(
+            self.HOST,
+            self.COMPANY_ID
+        )
 
     def test_fetch_api_codebase_bad_url(self):
-        api_codebase, updated = self.manager.fetch_api_codebase('')
+        api_codebase, updated = self.manager.fetch_api_codebase(
+            '',
+            'bad-company-id'
+        )
         self.assertEqual(api_codebase,
                          api.DEFAULT_CW_API_CODEBASE)
 
     @responses.activate
     def test_fetch_api_company_info_endpoint_unavailable(self):
-        mk.get(urljoin(self.HOST, api.CompanyInfoManager.COMPANYINFO_PATH),
+        mk.get(self._companyinfo_endpoint(),
                fixtures.API_COMPANY_INFO,
-               status=503)
+               status=503
+               )
         cache.clear()
         with self.assertRaises(ConnectWiseAPIError):
-            endpoint = self._some_end_point()
-            api_codebase, updated = self.manager.fetch_api_codebase(endpoint)
+            api_codebase, updated = self.manager.fetch_api_codebase(
+                self.HOST,
+                self.COMPANY_ID
+            )
 
     @responses.activate
     def test_fetch_api_codebase_added_to_cache(self):
         cache.clear()
-        mk.get(urljoin(self.HOST, api.CompanyInfoManager.COMPANYINFO_PATH),
-               fixtures.API_COMPANY_INFO)
+        mk.get(self._companyinfo_endpoint(), fixtures.API_COMPANY_INFO)
 
         api_codebase, updated = self.manager.fetch_api_codebase(
             self.HOST,
+            self.COMPANY_ID
         )
 
         self.assertEqual(api_codebase, fixtures.API_COMPANY_INFO['Codebase'])
@@ -432,7 +440,7 @@ class TestFetchAPICodebase(TestCase):
         mock_get_call, _patch = \
             mk.company_info_get_company_info_call(fixtures.API_COMPANY_INFO)
         api_codebase, updated = self.manager.fetch_api_codebase(
-            self._some_end_point())
+            self.HOST, self.COMPANY_ID)
         self.assertEqual(api_codebase, cache.get('api_codebase'))
         _patch.stop()
 
