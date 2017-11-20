@@ -190,13 +190,14 @@ class TestSystemAPIClient(BaseAPITestCase):
         self.assert_request_should_page(True)
 
     @responses.activate
-    def test_get_member_image_by_identifier(self):
+    def test_get_member_image_by_photo_id(self):
         member = fixtures.API_MEMBER
         # Requests will fake returning this as the filename
         avatar = mk.get_member_avatar()
         avatar_filename = 'AnonymousMember.png'
         endpoint = self.client._endpoint(
-            self.client.ENDPOINT_MEMBERS_IMAGE.format(member['identifier']))
+            self.client.ENDPOINT_MEMBERS_IMAGE.format(member['photo']['id'],
+                                                      member['identifier']))
         mk.get_raw(
             endpoint,
             avatar,
@@ -207,7 +208,8 @@ class TestSystemAPIClient(BaseAPITestCase):
         )
 
         result_filename, result_avatar = self.client \
-            .get_member_image_by_photo_id(member['identifier'])
+            .get_member_image_by_photo_id(member['photo']['id'],
+                                          member['identifier'])
 
         self.assertEqual(result_filename, avatar_filename)
         self.assertEqual(result_avatar, avatar)

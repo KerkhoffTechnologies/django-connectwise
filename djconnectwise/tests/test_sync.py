@@ -383,7 +383,7 @@ class TestMemberSynchronization(TestCase):
         self.identifier = 'User1'
         self.synchronizer = sync.MemberSynchronizer()
         mocks.system_api_get_members_call([fixtures.API_MEMBER])
-        mocks.system_api_get_member_image_by_identifier_call(
+        mocks.system_api_get_member_image_by_photo_id_call(
             (mocks.CW_MEMBER_IMAGE_FILENAME, mocks.get_member_avatar()))
 
     def _assert_member_fields(self, local_member, api_member):
@@ -416,6 +416,15 @@ class TestMemberSynchronization(TestCase):
         api_member = fixtures.API_MEMBER
         self._assert_member_fields(local_member, api_member)
         assert_sync_job(Member)
+
+    def test_sync_member_with_no_photo(self):
+        local_member = Member.objects.all().first()
+        api_member = fixtures.API_MEMBER
+        api_member.pop('photo')
+        self.synchronizer.sync()
+        self._assert_member_fields(local_member, api_member)
+        local_avatar = local_member.avatar
+        self.assertFalse(local_avatar)
 
 
 class TestOpportunitySynchronizer(TestCase, SynchronizerTestMixin):
@@ -554,7 +563,7 @@ class TestTicketSynchronizer(TestCase):
     def setUp(self):
         super().setUp()
         mocks.system_api_get_members_call(fixtures.API_MEMBER_LIST)
-        mocks.system_api_get_member_image_by_identifier_call(
+        mocks.system_api_get_member_image_by_photo_id_call(
             (mocks.CW_MEMBER_IMAGE_FILENAME, mocks.get_member_avatar()))
         mocks.service_api_tickets_call()
 
