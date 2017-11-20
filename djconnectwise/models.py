@@ -169,6 +169,8 @@ class Member(TimeStampedModel):
     last_name = models.CharField(max_length=30, blank=False)
     office_email = models.EmailField(max_length=250)
     inactive = models.BooleanField(default=False)
+    # CW 2017.6 (or thereabouts) removed the image endpoint and now has 'photo'
+    # as a Member field. We will sync and call it the avatar.
     avatar = ThumbnailerImageField(
         null=True, blank=True,
         verbose_name=_('Member Avatar'), help_text=_('Member Avatar')

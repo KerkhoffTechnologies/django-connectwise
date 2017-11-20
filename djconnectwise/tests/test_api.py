@@ -207,7 +207,7 @@ class TestSystemAPIClient(BaseAPITestCase):
         )
 
         result_filename, result_avatar = self.client \
-            .get_member_image_by_identifier(member['identifier'])
+            .get_member_image_by_photo_id(member['identifier'])
 
         self.assertEqual(result_filename, avatar_filename)
         self.assertEqual(result_avatar, avatar)

@@ -794,6 +794,8 @@ class MemberSynchronizer(Synchronizer):
         """
         instance, created = super().update_or_create_instance(api_instance)
         username = instance.identifier
+        if api_instance.get('photo'):
+            photo_id = api_instance['photo']['id']
 
         # Only update the avatar if the member profile
         # was updated since last sync.
@@ -807,7 +809,7 @@ class MemberSynchronizer(Synchronizer):
                 'Fetching avatar for member {}.'.format(username)
             )
             (attachment_filename, avatar) = self.client \
-                .get_member_image_by_identifier(username)
+                .get_member_image_by_photo_id(photo_id, username)
             if attachment_filename and avatar:
                 self._save_avatar(instance, avatar, attachment_filename)
                 instance.save()

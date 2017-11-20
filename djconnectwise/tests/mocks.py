@@ -179,7 +179,7 @@ def system_api_get_members_call(return_value):
 
 def system_api_get_member_image_by_identifier_call(return_value):
     method_name = 'djconnectwise.api.SystemAPIClient.' \
-                  + 'get_member_image_by_identifier'
+                  + 'get_member_image_by_photo_id'
 
     return create_mock_call(method_name, return_value)
 
