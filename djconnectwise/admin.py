@@ -79,8 +79,9 @@ class ScheduleEntryAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'expected_date_start', 'expected_date_end',
                     'done_flag', 'ticket_object', 'activity_object', 'member',
                     'where', 'status', 'schedule_type')
-    list_filter = ('name', 'member', 'where', 'status')
-    search_fields = ['name', 'ticket_object', 'activity_object', 'member']
+    list_filter = ('where', 'status', 'schedule_type')
+    search_fields = ['name', 'ticket_object__id',
+                     'activity_object__id', 'member__identifier']
 
 
 @admin.register(models.Team)
