@@ -803,22 +803,18 @@ class MemberSynchronizer(Synchronizer):
         if self.last_sync_job_time:
             member_stale = member_last_updated > self.last_sync_job_time
 
-        try:
-            if api_instance.get('photo'):
-                photo_id = api_instance['photo']['id']
-            if (not self.last_sync_job_time or member_stale or created) \
-                    and photo_id:
-                logger.info(
-                    'Fetching avatar for member {}.'.format(username)
-                )
-                (attachment_filename, avatar) = self.client \
-                    .get_member_image_by_photo_id(photo_id, username)
-                if attachment_filename and avatar:
-                    self._save_avatar(instance, avatar, attachment_filename)
-                    instance.save()
-
-        except Exception as e:
-            print('photo not assigned to {}: {}'.format(username, e.__cause__))
+        if api_instance.get('photo'):
+            photo_id = api_instance['photo']['id']
+        if (not self.last_sync_job_time or member_stale or created) \
+                and photo_id:
+            logger.info(
+                'Fetching avatar for member {}.'.format(username)
+            )
+            (attachment_filename, avatar) = self.client \
+                .get_member_image_by_photo_id(photo_id, username)
+            if attachment_filename and avatar:
+                self._save_avatar(instance, avatar, attachment_filename)
+                instance.save()
 
         return instance, created
 
