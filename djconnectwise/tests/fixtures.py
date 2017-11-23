@@ -306,8 +306,8 @@ API_MEMBER = {
         'name': 'pexels-photo-119705-square-resized.jpg',
         '_info': {
             'filename': 'pexels-photo-119705-square-resized.jpg',
-            'document_href': 'https://connectwise.kerkhofftech.ca/v4_6_release/apis/3.0/system/documents/267',
-            'documentDownload_href': 'https://connectwise.kerkhofftech.ca/v4_6_release/apis/3.0/system/documents/267/download'
+            'document_href': 'https://example.com/v4_6_release/apis/3.0/system/documents/267',
+            'documentDownload_href': 'https://example.com/v4_6_release/apis/3.0/system/documents/267/download'
         }
     },
     'projectDefaultBoard': None,
@@ -693,7 +693,7 @@ API_SALES_ACTIVITY = {
         'id': 3,
         'name': 'Historical Entry',
         '_info': {
-            'type_href': 'https://connectwise.kerkhofftech.ca/v4_6_release/apis/3.0/sales/activities/types/3'
+            'type_href': 'https://example.com/v4_6_release/apis/3.0/sales/activities/types/3'
         }
     },
     'company': API_COMPANY,
@@ -701,7 +701,7 @@ API_SALES_ACTIVITY = {
         'id': 20,
         'name': 'Flin Storts',
         '_info': {
-            'contact_href': 'https://connectwise.kerkhofftech.ca/v4_6_release/apis/3.0/company/contacts/20'
+            'contact_href': 'https://example.com/v4_6_release/apis/3.0/company/contacts/20'
         }
     },
     'phoneNumber': '8139888241',
@@ -710,7 +710,7 @@ API_SALES_ACTIVITY = {
         'id': 4,
         'name': '1-High',
         '_info': {
-            'status_href': 'https://connectwise.kerkhofftech.ca/v4_6_release/apis/3.0/sales/activities/statuses/4'
+            'status_href': 'https://example.com/v4_6_release/apis/3.0/sales/activities/statuses/4'
         }
     },
     'opportunity': API_SALES_OPPORTUNITY,
@@ -725,7 +725,7 @@ API_SALES_ACTIVITY = {
         'identifier': 'User20',
         'name': 'Training User20',
         '_info': {
-            'member_href': 'https://connectwise.kerkhofftech.ca/v4_6_release/apis/3.0/system/members/196'
+            'member_href': 'https://example.com/v4_6_release/apis/3.0/system/members/196'
         }
     },
     'assignTo': API_MEMBER,
@@ -733,7 +733,7 @@ API_SALES_ACTIVITY = {
         'id': 1,
         'name': 'Tentative',
         '_info': {
-            'status_href': 'https://connectwise.kerkhofftech.ca/v4_6_release/apis/3.0/schedule/statuses/1'
+            'status_href': 'https://example.com/v4_6_release/apis/3.0/schedule/statuses/1'
         }
     },
     'reminder': {
@@ -848,7 +848,7 @@ API_SCHEDULE_ENTRY_FOR_ACTIVITY = {
         'identifier': 'User1',
         'name': 'Peter Thompson (User1)',
         '_info': {
-            'member_href': 'https://connectwise.kerkhofftech.ca/v4_6_release/apis/3.0/system/members/176'
+            'member_href': 'https://example.com/v4_6_release/apis/3.0/system/members/176'
         }
     },
     'where': API_SERVICE_LOCATION,
