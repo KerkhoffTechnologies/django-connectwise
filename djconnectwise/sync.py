@@ -805,8 +805,14 @@ class MemberSynchronizer(Synchronizer):
 
         if api_instance.get('photo'):
             photo_id = api_instance['photo']['id']
-        if (not self.last_sync_job_time or member_stale or created) \
-                and photo_id:
+        # Fetch the image when:
+        # CW tells us where the image is AND one of the following is true:
+        # * there's no previous member sync job record
+        # * our member record is stale
+        # * the member was created
+        # * the member's avatar doesn't already exist
+        if (not self.last_sync_job_time or member_stale or created or
+                not bool(instance.avatar)) and photo_id:
             logger.info(
                 'Fetching avatar for member {}.'.format(username)
             )
