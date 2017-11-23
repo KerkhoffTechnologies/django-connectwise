@@ -1,5 +1,6 @@
 from copy import deepcopy
 from unittest import TestCase
+from django.test import TransactionTestCase
 
 from dateutil.parser import parse
 from djconnectwise.models import Activity
@@ -377,12 +378,12 @@ class TestBoardStatusSynchronizer(TestCase, SynchronizerTestMixin):
         return mocks.service_api_get_statuses_call(return_data)
 
 
-class TestMemberSynchronization(TestCase):
+class TestMemberSynchronization(TransactionTestCase):
 
     def setUp(self):
         self.identifier = 'User1'
-        self.synchronizer = sync.MemberSynchronizer()
         mocks.system_api_get_members_call([fixtures.API_MEMBER])
+        self.synchronizer = sync.MemberSynchronizer()
         mocks.system_api_get_member_image_by_photo_id_call(
             (mocks.CW_MEMBER_IMAGE_FILENAME, mocks.get_member_avatar()))
 
@@ -391,11 +392,7 @@ class TestMemberSynchronization(TestCase):
         self.assertEqual(local_member.last_name, api_member['lastName'])
         self.assertEqual(local_member.office_email, api_member['officeEmail'])
 
-    def _clear_members(self):
-        Member.objects.all().delete()
-
     def test_sync_member_update(self):
-        self._clear_members()
         member = Member()
         member.id = 176
         member.identifier = self.identifier
@@ -403,14 +400,12 @@ class TestMemberSynchronization(TestCase):
         member.last_name = 'some stale last name'
         member.office_email = 'some@stale.com'
         member.save()
-
         self.synchronizer.sync()
         local_member = Member.objects.get(identifier=self.identifier)
         api_member = fixtures.API_MEMBER
         self._assert_member_fields(local_member, api_member)
 
     def test_sync_member_create(self):
-        self._clear_members()
         self.synchronizer.sync()
         local_member = Member.objects.all().first()
         api_member = fixtures.API_MEMBER
@@ -418,11 +413,13 @@ class TestMemberSynchronization(TestCase):
         assert_sync_job(Member)
 
     def test_sync_member_with_no_photo(self):
-        local_member = Member.objects.all().first()
-        api_member = fixtures.API_MEMBER
-        api_member.pop('photo')
+        member_without_photo = deepcopy(fixtures.API_MEMBER)
+        member_without_photo.pop('photo')
+        mocks.system_api_get_members_call([member_without_photo])
+        self.synchronizer = sync.MemberSynchronizer()
         self.synchronizer.sync()
-        self._assert_member_fields(local_member, api_member)
+        local_member = Member.objects.get(identifier=self.identifier)
+        self._assert_member_fields(local_member, member_without_photo)
         local_avatar = local_member.avatar
         self.assertFalse(local_avatar)
 
