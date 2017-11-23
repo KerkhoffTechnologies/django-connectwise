@@ -221,7 +221,7 @@ class TestSyncActivityCommand(AbstractBaseSyncTest, TestCase):
     def setUp(self):
         super(). setUp()
         fixture_utils.init_companies()
-        mocks.system_api_get_member_image_by_identifier_call(
+        mocks.system_api_get_member_image_by_photo_id_call(
             (mocks.CW_MEMBER_IMAGE_FILENAME, mocks.get_member_avatar()))
         fixture_utils.init_members()
         fixture_utils.init_opportunity_statuses()
@@ -237,7 +237,7 @@ class TestSyncAllCommand(TestCase):
     def setUp(self):
         super().setUp()
         mocks.system_api_get_members_call([fixtures.API_MEMBER])
-        mocks.system_api_get_member_image_by_identifier_call(
+        mocks.system_api_get_member_image_by_photo_id_call(
             (mocks.CW_MEMBER_IMAGE_FILENAME, mocks.get_member_avatar()))
         mocks.company_api_by_id_call(fixtures.API_COMPANY)
         mocks.service_api_tickets_call()

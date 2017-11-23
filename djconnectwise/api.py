@@ -471,7 +471,7 @@ class SystemAPIClient(ConnectWiseAPIClient):
 
     # endpoints
     ENDPOINT_MEMBERS = 'members/'
-    ENDPOINT_MEMBERS_IMAGE = 'members/{}/image'
+    ENDPOINT_MEMBERS_IMAGE = 'documents/{}/download'
     ENDPOINT_MEMBERS_COUNT = 'members/count'
     ENDPOINT_CALLBACKS = 'callbacks/'
     ENDPOINT_INFO = 'info/'
@@ -557,13 +557,16 @@ class SystemAPIClient(ConnectWiseAPIClient):
     def get_member_by_identifier(self, identifier):
         return self.fetch_resource('members/{0}'.format(identifier))
 
-    def get_member_image_by_identifier(self, identifier):
+    def get_member_image_by_photo_id(self, photo_id, username):
         """
         Return a (filename, content) tuple.
+
+        This requires this permission:
+        Companies => Manage Documents => Inquire Level: All
         """
         try:
             endpoint = self._endpoint(
-                self.ENDPOINT_MEMBERS_IMAGE.format(identifier)
+                self.ENDPOINT_MEMBERS_IMAGE.format(photo_id)
             )
             logger.debug('Making GET request to {}'.format(endpoint))
             response = requests.get(
@@ -579,14 +582,14 @@ class SystemAPIClient(ConnectWiseAPIClient):
             headers = response.headers
             content_disposition_header = headers.get('Content-Disposition',
                                                      default='')
-            msg = "Got member '{}' image; size {} bytes " \
-                "and content-disposition header '{}'"
-
-            logger.info(msg.format(
-                identifier,
-                len(response.content),
-                content_disposition_header
-            ))
+            logger.info(
+                "Got member '{}' image; size {} bytes and "
+                "content-disposition header '{}'".format(
+                    username,
+                    len(response.content),
+                    content_disposition_header
+                )
+            )
             attachment_filename = self._attachment_filename(
                 content_disposition_header)
             return attachment_filename, response.content
