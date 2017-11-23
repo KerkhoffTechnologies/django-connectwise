@@ -301,6 +301,15 @@ API_MEMBER = {
     'officeEmail': 'test@test.com',
     'officeExtension': None,
     'officePhone': '555-121-2121',
+    'photo': {
+        'id': 267,
+        'name': 'pexels-photo-119705-square-resized.jpg',
+        '_info': {
+            'filename': 'pexels-photo-119705-square-resized.jpg',
+            'document_href': 'https://connectwise.kerkhofftech.ca/v4_6_release/apis/3.0/system/documents/267',
+            'documentDownload_href': 'https://connectwise.kerkhofftech.ca/v4_6_release/apis/3.0/system/documents/267/download'
+        }
+    },
     'projectDefaultBoard': None,
     'projectDefaultDepartmentId': None,
     'projectDefaultLocationId': None,
@@ -373,8 +382,6 @@ API_MEMBER = {
     '_info': {
         'lastUpdated': '2015-08-24T19:50:10Z',
         'updatedBy': 'User1',
-        'image_href': 'https://some-host.com/v4_6_release/apis/3.0/' +
-        'system/members/176/image?lastModified=2015-08-24T19:50:10Z'
     }
 }
 

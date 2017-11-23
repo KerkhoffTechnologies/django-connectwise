@@ -471,7 +471,7 @@ class SystemAPIClient(ConnectWiseAPIClient):
 
     # endpoints
     ENDPOINT_MEMBERS = 'members/'
-    ENDPOINT_MEMBERS_IMAGE = 'members/{}/image'
+    ENDPOINT_MEMBERS_IMAGE = 'documents/{}/download'
     ENDPOINT_MEMBERS_COUNT = 'members/count'
     ENDPOINT_CALLBACKS = 'callbacks/'
     ENDPOINT_INFO = 'info/'
@@ -557,13 +557,13 @@ class SystemAPIClient(ConnectWiseAPIClient):
     def get_member_by_identifier(self, identifier):
         return self.fetch_resource('members/{0}'.format(identifier))
 
-    def get_member_image_by_identifier(self, identifier):
+    def get_member_image_by_photo_id(self, photo_id, username):
         """
         Return a (filename, content) tuple.
         """
         try:
             endpoint = self._endpoint(
-                self.ENDPOINT_MEMBERS_IMAGE.format(identifier)
+                self.ENDPOINT_MEMBERS_IMAGE.format(photo_id)
             )
             logger.debug('Making GET request to {}'.format(endpoint))
             response = requests.get(
@@ -580,10 +580,10 @@ class SystemAPIClient(ConnectWiseAPIClient):
             content_disposition_header = headers.get('Content-Disposition',
                                                      default='')
             msg = "Got member '{}' image; size {} bytes " \
-                "and content-disposition header '{}'"
+                  "and content-disposition header '{}'"
 
             logger.info(msg.format(
-                identifier,
+                username,
                 len(response.content),
                 content_disposition_header
             ))
