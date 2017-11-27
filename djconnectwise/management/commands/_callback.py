@@ -32,7 +32,6 @@ class Command(BaseCommand):
         handler_class = self.handler_map.get(obj_name)
 
         if handler_class:
-
             if self.ACTION == 'create':
                 handler_class().create()
             else:

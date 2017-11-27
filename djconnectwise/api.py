@@ -1,5 +1,6 @@
 import logging
 import re
+import json
 
 import requests
 from retrying import retry
@@ -272,8 +273,27 @@ class ConnectWiseAPIClient(object):
 
             elif 400 <= response.status_code < 499:
                 self._log_failed(response)
-                raise ConnectWiseAPIClientError(response.content)
-
+                try:
+                    raise ConnectWiseAPIClientError(response.content)
+                except ConnectWiseAPIClientError as e:
+                    # decode the bytes encoded error to a string
+                    error = e.args[0].decode("utf-8")
+                    error = error.replace('\r\n', '')
+                    try:
+                        error = json.loads(error)
+                        print('{} {}: {}'.format(response.status_code,
+                                                 error['code'],
+                                                 error['message']))
+                    except json.decoder.JSONDecodeError:
+                        # JSON decoding failed
+                        print('An error occurred: {} {}'.format(
+                            response.status_code,
+                            error))
+                    except KeyError:
+                        # 'code' or 'message' was not found in the error
+                        print('An error occurred: {} {}'.format(
+                            response.status_code,
+                            error))
             else:
                 self._log_failed(response)
                 raise ConnectWiseAPIError(response.content)
