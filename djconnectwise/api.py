@@ -22,6 +22,15 @@ class ConnectWiseAPIClientError(ConnectWiseAPIError):
     pass
 
 
+class ConnectWiseAPIServerError(ConnectWiseAPIError):
+    """
+    Raise this to indicate a Server Error
+    https://developer.connectwise.com/Manage/Developer_Guide#HTTP_Response_Codes
+    500 class of http status codes.
+    """
+    pass
+
+
 class ConnectWiseRecordNotFoundError(ConnectWiseAPIClientError):
     """The record was not found."""
     pass
@@ -315,6 +324,9 @@ class ConnectWiseAPIClient(object):
 
         if 200 <= response.status_code < 300:
             return response.json()
+        elif response.status_code == 500:
+            self._log_failed(response)
+            raise ConnectWiseAPIServerError(response.content)
         else:
             self._log_failed(response)
             raise ConnectWiseAPIError(response.content)
