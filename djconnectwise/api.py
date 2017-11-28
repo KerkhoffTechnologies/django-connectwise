@@ -183,6 +183,26 @@ class ConnectWiseAPIClient(object):
         logger.error('Failed API call: {0} - {1} - {2}'.format(
             response.url, response.status_code, response.content))
 
+    def _prepare_error_response(self, response):
+        error = response.content.decode("utf-8")
+        # decode the bytes encoded error to a string
+        # error = error.args[0].decode("utf-8")
+        error = error.replace('\r\n', '')
+        try:
+            error = json.loads(error)
+            msg = '{}  {}: {}'.format(response.status_code,
+                                      error['code'],
+                                      error['message'])
+        except json.decoder.JSONDecodeError:
+            # JSON decoding failed
+            msg = 'An error occurred: {} {}'.format(response.status_code,
+                                                    error)
+        except KeyError:
+            # 'code' or 'message' was not found in the error
+            msg = 'An error occurred: {} {}'.format(response.status_code,
+                                                    error)
+        return msg
+
     def build_api_base_url(self, force_fetch):
         api_codebase, codebase_updated = \
             self.info_manager.fetch_api_codebase(
@@ -282,30 +302,16 @@ class ConnectWiseAPIClient(object):
 
             elif 400 <= response.status_code < 499:
                 self._log_failed(response)
-                try:
-                    raise ConnectWiseAPIClientError(response.content)
-                except ConnectWiseAPIClientError as e:
-                    # decode the bytes encoded error to a string
-                    error = e.args[0].decode("utf-8")
-                    error = error.replace('\r\n', '')
-                    try:
-                        error = json.loads(error)
-                        print('{} {}: {}'.format(response.status_code,
-                                                 error['code'],
-                                                 error['message']))
-                    except json.decoder.JSONDecodeError:
-                        # JSON decoding failed
-                        print('An error occurred: {} {}'.format(
-                            response.status_code,
-                            error))
-                    except KeyError:
-                        # 'code' or 'message' was not found in the error
-                        print('An error occurred: {} {}'.format(
-                            response.status_code,
-                            error))
+                raise ConnectWiseAPIClientError(
+                    self._prepare_error_response(response))
+            elif response.status_code == 500:
+                self._log_failed(response)
+                raise ConnectWiseAPIServerError(
+                    self._prepare_error_response(response.content))
             else:
                 self._log_failed(response)
-                raise ConnectWiseAPIError(response.content)
+                raise ConnectWiseAPIError(
+                    self._prepare_error_response(response))
 
         if not retry_counter:
             retry_counter = {'count': 0}
@@ -321,7 +327,7 @@ class ConnectWiseAPIClient(object):
         """
         return '({})'.format(' and '.join(conditions))
 
-    def request(self, method, endpoint_url, body):
+    def request(self, method, endpoint_url, body=None):
         """
         Issue the given type of request to the specified REST endpoint.
         """
@@ -344,9 +350,18 @@ class ConnectWiseAPIClient(object):
 
         if 200 <= response.status_code < 300:
             return response.json()
+        elif response.status_code == 404:
+            msg = 'Resource not found: {}'.format(response.url)
+            logger.warning(msg)
+            raise ConnectWiseRecordNotFoundError(msg)
+        elif 400 <= response.status_code < 499:
+            self._log_failed(response)
+            raise ConnectWiseAPIClientError(
+                self._prepare_error_response(response))
         elif response.status_code == 500:
             self._log_failed(response)
-            raise ConnectWiseAPIServerError(response.content)
+            raise ConnectWiseAPIServerError(
+                self._prepare_error_response(response))
         else:
             self._log_failed(response)
             raise ConnectWiseAPIError(response.content)
@@ -529,11 +544,9 @@ class SystemAPIClient(ConnectWiseAPIClient):
                 '{}{}'.format(self.ENDPOINT_CALLBACKS, entry_id)
             )
             logger.debug('Making DELETE request to {}'.format(endpoint))
-            response = requests.request(
+            response = self.request(
                 'delete',
                 endpoint,
-                auth=self.auth,
-                timeout=self.timeout,
             )
         except requests.RequestException as e:
             logger.error('Request failed: DELETE {}: {}'.format(endpoint, e))

@@ -1,5 +1,6 @@
 from django.core.management.base import BaseCommand, CommandError
 from djconnectwise import callback
+from djconnectwise.api import ConnectWiseAPIError
 
 from collections import OrderedDict
 
@@ -32,10 +33,13 @@ class Command(BaseCommand):
         handler_class = self.handler_map.get(obj_name)
 
         if handler_class:
-            if self.ACTION == 'create':
-                handler_class().create()
-            else:
-                handler_class().delete()
+            try:
+                if self.ACTION == 'create':
+                    handler_class().create()
+                else:
+                    handler_class().delete()
+            except ConnectWiseAPIError as e:
+                raise CommandError(e)
         else:
             msg = _('Invalid Callback; choose one of the following: \n{}')
             options_txt = ', '.join(self.handler_map.keys())
