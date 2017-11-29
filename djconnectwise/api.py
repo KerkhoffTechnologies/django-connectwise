@@ -572,6 +572,14 @@ class SystemAPIClient(ConnectWiseAPIClient):
 
         if 200 <= response.status_code < 300:
             return response.json()
+        elif 400 <= response.status_code < 499:
+            self._log_failed(response)
+            raise ConnectWiseAPIClientError(
+                self._prepare_error_response(response))
+        elif response.status_code == 500:
+            self._log_failed(response)
+            raise ConnectWiseAPIServerError(
+                self._prepare_error_response(response))
         else:
             self._log_failed(response)
             raise ConnectWiseAPIError(response.content)
