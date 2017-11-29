@@ -190,9 +190,7 @@ class ConnectWiseAPIClient(object):
         error = error.replace('\r\n', '')
         try:
             error = json.loads(error)
-            msg = '{}  {}: {}'.format(response.status_code,
-                                      error['code'],
-                                      error['message'])
+            msg = '{}'.format(error['message'])
         except json.decoder.JSONDecodeError:
             # JSON decoding failed
             msg = 'An error occurred: {} {}'.format(response.status_code,
@@ -307,7 +305,7 @@ class ConnectWiseAPIClient(object):
             elif response.status_code == 500:
                 self._log_failed(response)
                 raise ConnectWiseAPIServerError(
-                    self._prepare_error_response(response.content))
+                    self._prepare_error_response(response))
             else:
                 self._log_failed(response)
                 raise ConnectWiseAPIError(
@@ -364,7 +362,7 @@ class ConnectWiseAPIClient(object):
                 self._prepare_error_response(response))
         else:
             self._log_failed(response)
-            raise ConnectWiseAPIError(response.content)
+            raise ConnectWiseAPIError(response)
 
 
 class ProjectAPIClient(ConnectWiseAPIClient):

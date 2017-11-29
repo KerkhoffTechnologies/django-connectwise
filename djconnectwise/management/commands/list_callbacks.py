@@ -1,16 +1,22 @@
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from djconnectwise.callback import TicketCallBackHandler
+from djconnectwise.api import ConnectWiseAPIError
 
 
 class Command(BaseCommand):
-    help = 'Lists existing callbacks on target connectwise system.'
+    help = 'Lists existing callbacks on target ConnectWise system.'
 
     def handle(self, *args, **options):
         handler = TicketCallBackHandler()
         self.stdout.write('Callback List')
         self.stdout.write('-----------------------------------------')
 
-        for c in handler.get_callbacks():
+        try:
+            callbacks = handler.get_callbacks()
+        except ConnectWiseAPIError as e:
+            raise CommandError(e)
+
+        for c in callbacks:
             self.stdout.write('ID: {}'.format(c['id']))
             self.stdout.write('URL: {}'.format(c['url']))
             self.stdout.write('DESCRIPTION: {}'.format(
