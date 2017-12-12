@@ -18,6 +18,8 @@ class Command(BaseCommand):
         # using kwargs in Python 3.6. But we need Python 3.5 compatibility for
         # now.
         # See https://www.python.org/dev/peps/pep-0468/.
+        # ActivitySynchronizer is omitted here because it typically takes
+        # a long time and activities aren't a common use.
         synchronizers = (
             ('member', sync.MemberSynchronizer, _('Member')),
             ('board', sync.BoardSynchronizer, _('Board')),
@@ -36,7 +38,6 @@ class Command(BaseCommand):
             ('opportunity', sync.OpportunitySynchronizer,
                 _('Opportunity')),
             ('ticket', sync.TicketSynchronizer, _('Ticket')),
-            ('activity', sync.ActivitySynchronizer, _('Activity')),
             ('schedule_type', sync.ScheduleTypeSychronizer,
                 _('Schedule Type')),
             ('schedule_status', sync.ScheduleStatusSynchronizer,
