@@ -1,4 +1,5 @@
 import io
+import unittest
 
 from django.core.management import call_command
 from django.test import TestCase
@@ -211,6 +212,7 @@ class TestSyncScheduleStatusesCommand(AbstractBaseSyncTest, TestCase):
     )
 
 
+@unittest.skip("Activities sync is temporarily removed- see issue #484")
 class TestSyncActivityCommand(AbstractBaseSyncTest, TestCase):
     args = (
         mocks.sales_api_get_activities_call,
@@ -253,7 +255,7 @@ class TestSyncAllCommand(TestCase):
             TestSyncOpportunityStatusesCommand,
             TestSyncOpportunityTypesCommand,
             TestSyncOpportunityCommand,
-            TestSyncActivityCommand,
+            # TestSyncActivityCommand,
             TestSyncScheduleTypesCommand,
             TestSyncScheduleStatusesCommand,
             TestSyncScheduleEntriesCommand
@@ -318,7 +320,7 @@ class TestSyncAllCommand(TestCase):
             'opportunity': models.Opportunity,
             'opportunity_status': models.OpportunityStatus,
             'opportunity_type': models.OpportunityType,
-            'activity': models.Activity,
+            # 'activity': models.Activity,
             'schedule_entry': models.ScheduleEntry,
             'schedule_type': models.ScheduleType,
             'schedule_status': models.ScheduleStatus,
