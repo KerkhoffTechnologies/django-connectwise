@@ -691,7 +691,7 @@ class TestTicketSynchronizer(TestCase):
         method_name = 'djconnectwise.api.ServiceAPIClient.get_tickets'
         mock_call, _patch = mocks.create_mock_call(method_name, [])
         synchronizer = sync.TicketSynchronizer()
-        synchronizer.sync(reset=True)
+        synchronizer.sync(full=True)
         self.assertEqual(ticket_qset.count(), 0)
         _patch.stop()
 
@@ -749,7 +749,7 @@ class TestActivitySynchronizer(TestCase, SynchronizerTestMixin):
         synchronizer = sync.ActivitySynchronizer()
 
         created_count, updated_count, deleted_count = \
-            synchronizer.sync(reset=True)
+            synchronizer.sync(full=True)
 
         # The existing Activity (#47) should be deleted and
         # null_member_activity should not be added to the db
