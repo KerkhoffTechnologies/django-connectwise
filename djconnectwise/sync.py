@@ -237,13 +237,13 @@ class Synchronizer:
         return deleted_count
 
     @log_sync_job
-    def sync(self, reset=False):
+    def sync(self, full=False):
         results = SyncResults()
         initial_ids = self._instance_ids()  # Set of IDs of all records prior
         # to sync, to find stale records for deletion.
         results = self.get(results)
 
-        if reset:
+        if full:
             results.deleted_count = self.prune_stale_records(
                 initial_ids, results.synced_ids
             )
@@ -824,14 +824,14 @@ class MemberSynchronizer(Synchronizer):
 
         return instance, created
 
-    def sync(self, reset=True):
+    def sync(self, full=True):
         sync_job_qset = models.SyncJob.objects.filter(
             entity_name=self.model_class.__name__
         )
         if sync_job_qset.exists():
             self.last_sync_job_time = sync_job_qset.last().start_time
 
-        return super().sync(reset=reset)
+        return super().sync(full=full)
 
 
 class TicketSynchronizer(BatchConditionMixin, Synchronizer):
@@ -983,18 +983,18 @@ class TicketSynchronizer(BatchConditionMixin, Synchronizer):
         self.manage_member_assignments(instance)
         return instance
 
-    def sync(self, reset=True):
+    def sync(self, full=True):
         sync_job_qset = models.SyncJob.objects.filter(
             entity_name=self.model_class.__name__
         )
 
-        if sync_job_qset.exists() and not reset:
+        if sync_job_qset.exists() and not full:
             last_sync_job_time = sync_job_qset.last().start_time.isoformat()
             self.api_conditions.append(
                 "lastUpdated>[{0}]".format(last_sync_job_time)
             )
 
-        return super().sync(reset=reset)
+        return super().sync(full=full)
 
 
 class OpportunitySynchronizer(Synchronizer):
