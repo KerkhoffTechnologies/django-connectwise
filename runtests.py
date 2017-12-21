@@ -13,6 +13,7 @@ tmp_media = tempfile.TemporaryDirectory()
 
 settings.configure(
     DEBUG=True,
+    ALLOWED_HOSTS=('testserver',),
     INSTALLED_APPS=(  # Including django.contrib apps prevents warnings during
         # tests.
         'djconnectwise',

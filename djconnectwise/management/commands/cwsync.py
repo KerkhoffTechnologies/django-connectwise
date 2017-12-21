@@ -51,21 +51,21 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument(OPTION_NAME, nargs='?', type=str)
-        parser.add_argument('--reset',
+        parser.add_argument('--full',
                             action='store_true',
-                            dest='reset',
+                            dest='full',
                             default=False)
 
-    def sync_by_class(self, sync_class, obj_name, reset=False):
+    def sync_by_class(self, sync_class, obj_name, full=False):
         synchronizer = sync_class()
 
         created_count, updated_count, deleted_count = synchronizer.sync(
-            reset=reset)
+            full=full)
 
         msg = _('{} Sync Summary - Created: {}, Updated: {}')
         fmt_msg = msg.format(obj_name, created_count, updated_count)
 
-        if reset:
+        if full:
             msg = _('{} Sync Summary - Created: {}, Updated: {}, Deleted: {}')
             fmt_msg = msg.format(obj_name, created_count, updated_count,
                                  deleted_count)
@@ -75,7 +75,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         sync_classes = []
         connectwise_object_arg = options[OPTION_NAME]
-        reset_option = options.get('reset', False)
+        full_option = options.get('full', False)
 
         if connectwise_object_arg:
             object_arg = connectwise_object_arg
@@ -97,7 +97,7 @@ class Command(BaseCommand):
 
         num_synchronizers = len(self.synchronizer_map)
         has_ticket_sync = 'ticket' in self.synchronizer_map
-        if reset_option and num_synchronizers and has_ticket_sync:
+        if full_option and num_synchronizers and has_ticket_sync:
             sync_classes = list(sync_classes)
             sync_classes.reverse()
             # need to move ticket synchronizer to the tail of the list
@@ -105,7 +105,7 @@ class Command(BaseCommand):
 
         for sync_class, obj_name in sync_classes:
             try:
-                self.sync_by_class(sync_class, obj_name, reset=reset_option)
+                self.sync_by_class(sync_class, obj_name, full=full_option)
 
             except api.ConnectWiseAPIError as e:
                 msg = 'Failed to sync {}: {}'.format(obj_name, e)

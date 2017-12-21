@@ -19,7 +19,7 @@ def sync_summary(class_name, created_count):
     )
 
 
-def sync_reset_summary(class_name, deleted_count):
+def full_sync_summary(class_name, deleted_count):
     return '{} Sync Summary - Created: 0, Updated: 0, Deleted: {}'.format(
         class_name, deleted_count
     )
@@ -31,13 +31,13 @@ def slug_to_title(slug):
 
 class AbstractBaseSyncTest(object):
 
-    def _test_sync(self, mock_call, return_value, cw_object, reset=False):
+    def _test_sync(self, mock_call, return_value, cw_object, full=False):
         mock_call(return_value)
         out = io.StringIO()
 
         args = ['cwsync', cw_object]
-        if reset:
-            args.append('--reset')
+        if full:
+            args.append('--full')
 
         call_command(*args, stdout=out)
         return out
@@ -50,7 +50,7 @@ class AbstractBaseSyncTest(object):
         obj_title = self._title_for_cw_object(self.args[-1])
         self.assertIn(obj_title, out.getvalue().strip())
 
-    def test_sync_reset(self):
+    def test_full_sync(self):
         self.test_sync()
         mock_call, return_value, cw_object = self.args
         args = [
@@ -59,7 +59,7 @@ class AbstractBaseSyncTest(object):
             cw_object
         ]
 
-        out = self._test_sync(*args, reset=True)
+        out = self._test_sync(*args, full=True)
         obj_label = self._title_for_cw_object(cw_object)
         msg_tmpl = '{} Sync Summary - Created: 0, Updated: 0, Deleted: {}'
         msg = msg_tmpl.format(obj_label, len(return_value))
@@ -268,12 +268,12 @@ class TestSyncAllCommand(TestCase):
             apicall, fixture, cw_object = test_case.args
             apicall(fixture)
 
-    def _test_sync(self, reset=False):
+    def _test_sync(self, full=False):
         out = io.StringIO()
         args = ['cwsync']
 
-        if reset:
-            args.append('--reset')
+        if full:
+            args.append('--full')
 
         call_command(*args, stdout=out)
 
@@ -304,7 +304,7 @@ class TestSyncAllCommand(TestCase):
         self.assertEqual(models.Ticket.objects.all().count(),
                          len([fixtures.API_SERVICE_TICKET]))
 
-    def test_sync_reset(self):
+    def test_full_sync(self):
         """Test sync all objects command."""
         cw_object_map = {
             'member': models.Member,
@@ -332,10 +332,10 @@ class TestSyncAllCommand(TestCase):
         fixture_utils.init_board_statuses()
         fixture_utils.init_teams()
 
-        pre_reset_counts = {}
+        pre_full_sync_counts = {}
 
         for key, clazz in cw_object_map.items():
-            pre_reset_counts[key] = clazz.objects.all().count()
+            pre_full_sync_counts[key] = clazz.objects.all().count()
 
         mocks.system_api_get_members_call([])
         mocks.company_api_by_id_call([])
@@ -343,11 +343,11 @@ class TestSyncAllCommand(TestCase):
         for apicall, _, _ in self.test_args:
             apicall([])
 
-        output = self._test_sync(reset=True)
+        output = self._test_sync(full=True)
 
         for apicall, fixture, cw_object in self.test_args:
-            summary = sync_reset_summary(slug_to_title(cw_object),
-                                         pre_reset_counts[cw_object])
+            summary = full_sync_summary(slug_to_title(cw_object),
+                                        pre_full_sync_counts[cw_object])
             self.assertIn(summary, output)
 
 
