@@ -215,6 +215,9 @@ API_SALES_PROJECT_STATUSES = [
 API_PROJECT = {
     'id': 5,
     'name': 'Financial System Implementation',
+    'actualHours': 8.03,
+    'budgetHours': 91.5,
+    'scheduledHours': 13.95,
     '_info': {
         'project_href': 'https://some-host.com/v4_6_release/apis/3.0/project/projects/5'
     },

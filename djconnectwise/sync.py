@@ -744,7 +744,9 @@ class ProjectSynchronizer(Synchronizer):
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
         instance.name = json_data['name']
-        instance.status_name = json_data['status']['name']
+        instance.actual_hours = json_data.get('actualHours')
+        instance.budget_hours = json_data.get('budgetHours')
+        instance.scheduled_hours = json_data.get('scheduledHours')
 
         # handle foreign keys
         for json_field, value in self.related_meta.items():

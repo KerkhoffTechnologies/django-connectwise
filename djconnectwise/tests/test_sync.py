@@ -294,8 +294,20 @@ class TestProjectSynchronizer(TestCase, SynchronizerTestMixin):
         return mocks.project_api_get_projects_call(return_data)
 
     def _assert_fields(self, instance, json_data):
-        assert instance.name == json_data['name']
-        assert instance.id == json_data['id']
+        self.assertEqual(instance.id, json_data['id'])
+        self.assertEqual(instance.name, json_data['name'])
+        self.assertAlmostEqual(
+            float(instance.actual_hours),
+            json_data['actualHours']
+        )
+        self.assertAlmostEqual(
+            float(instance.budget_hours),
+            json_data['budgetHours']
+        )
+        self.assertAlmostEqual(
+            float(instance.scheduled_hours),
+            json_data['scheduledHours']
+        )
 
 
 class TestTeamSynchronizer(TestCase, SynchronizerTestMixin):

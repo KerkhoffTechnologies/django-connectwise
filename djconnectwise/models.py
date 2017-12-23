@@ -405,6 +405,13 @@ class AvailableProjectManager(models.Manager):
 
 class Project(TimeStampedModel):
     name = models.CharField(max_length=200)
+    actual_hours = models.DecimalField(
+        blank=True, null=True, decimal_places=2, max_digits=6)
+    budget_hours = models.DecimalField(
+        blank=True, null=True, decimal_places=2, max_digits=6)
+    scheduled_hours = models.DecimalField(
+        blank=True, null=True, decimal_places=2, max_digits=6)
+
     status = models.ForeignKey('ProjectStatus', blank=True, null=True)
 
     objects = models.Manager()
