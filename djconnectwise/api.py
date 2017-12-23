@@ -368,6 +368,7 @@ class ConnectWiseAPIClient(object):
 class ProjectAPIClient(ConnectWiseAPIClient):
     API = 'project'
     ENDPOINT_PROJECTS = 'projects/'
+    ENDPOINT_PROJECT_STATUSES = 'statuses/'
 
     def get_project(self, project_id):
         endpoint_url = '{}/{}'.format(self.ENDPOINT_PROJECTS, project_id)
@@ -375,6 +376,11 @@ class ProjectAPIClient(ConnectWiseAPIClient):
 
     def get_projects(self, *args, **kwargs):
         return self.fetch_resource(self.ENDPOINT_PROJECTS, should_page=True,
+                                   *args, **kwargs)
+
+    def get_project_statuses(self, *args, **kwargs):
+        return self.fetch_resource(self.ENDPOINT_PROJECT_STATUSES,
+                                   should_page=True,
                                    *args, **kwargs)
 
 

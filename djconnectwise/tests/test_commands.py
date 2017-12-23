@@ -119,6 +119,14 @@ class TestSyncPrioritiesCommand(AbstractBaseSyncTest, TestCase):
     )
 
 
+class TestSyncProjectStatusesCommand(AbstractBaseSyncTest, TestCase):
+    args = (
+        mocks.projects_api_get_project_statuses_call,
+        fixtures.API_SALES_PROJECT_STATUSES,
+        'project_status',
+    )
+
+
 class TestSyncProjectsCommand(AbstractBaseSyncTest, TestCase):
 
     args = (
@@ -248,6 +256,7 @@ class TestSyncAllCommand(TestCase):
             TestSyncCompaniesCommand,
             TestSyncLocationsCommand,
             TestSyncPrioritiesCommand,
+            TestSyncProjectStatusesCommand,
             TestSyncProjectsCommand,
             TestSyncTeamsCommand,
             TestSyncBoardsStatusesCommand,
@@ -310,6 +319,7 @@ class TestSyncAllCommand(TestCase):
             'member': models.Member,
             'board': models.ConnectWiseBoard,
             'priority': models.TicketPriority,
+            'project_status': models.ProjectStatus,
             'project': models.Project,
             'board_status': models.BoardStatus,
             'company_status': models.CompanyStatus,

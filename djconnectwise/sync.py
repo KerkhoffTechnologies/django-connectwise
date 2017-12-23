@@ -718,14 +718,43 @@ class PrioritySynchronizer(Synchronizer):
         return self.client.get_priorities(*args, **kwargs)
 
 
+class ProjectStatusSynchronizer(Synchronizer):
+    client_class = api.ProjectAPIClient
+    model_class = models.ProjectStatus
+
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data['id']
+        instance.name = json_data['name']
+        instance.default_flag = json_data.get('defaultFlag')
+        instance.inactive_flag = json_data.get('inactiveFlag')
+        instance.closed_flag = json_data.get('closedFlag')
+        return instance
+
+    def get_page(self, *args, **kwargs):
+        return self.client.get_project_statuses(*args, **kwargs)
+
+
 class ProjectSynchronizer(Synchronizer):
     client_class = api.ProjectAPIClient
     model_class = models.Project
+    related_meta = {
+        'status': (models.ProjectStatus, 'status'),
+    }
 
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
         instance.name = json_data['name']
         instance.status_name = json_data['status']['name']
+
+        # handle foreign keys
+        for json_field, value in self.related_meta.items():
+            model_class, field_name = value
+            self._assign_relation(instance,
+                                  json_data,
+                                  json_field,
+                                  model_class,
+                                  field_name)
+
         return instance
 
     def get_page(self, *args, **kwargs):

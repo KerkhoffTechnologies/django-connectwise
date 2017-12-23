@@ -379,17 +379,33 @@ class TicketPriority(TimeStampedModel):
         self._color = color
 
 
+class ProjectStatus(TimeStampedModel):
+    name = models.CharField(max_length=30)
+    default_flag = models.BooleanField(default=False)
+    inactive_flag = models.BooleanField(default=False)
+    closed_flag = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ('name', )
+        verbose_name_plural = 'Project statuses'
+
+    def __str__(self):
+        return self.name
+
+
 class AvailableProjectManager(models.Manager):
-    """Return only projects whose status isn't "Closed"."""
+    """
+    Return only projects whose status closed field is False.
+    """
     def get_queryset(self):
-        return super().get_queryset().exclude(status_name='Closed')
+        return super().get_queryset().filter(
+            status__closed_flag=False,
+        )
 
 
 class Project(TimeStampedModel):
     name = models.CharField(max_length=200)
-    # Project statuses aren't available as a first-class object in the API, so
-    # just keep the name here for simplicity.
-    status_name = models.CharField(max_length=200, blank=True, null=True)
+    status = models.ForeignKey('ProjectStatus', blank=True, null=True)
 
     objects = models.Manager()
     available_objects = AvailableProjectManager()
@@ -413,7 +429,7 @@ class OpportunityStage(TimeStampedModel):
 
 class AvailableOpportunityStatusManager(models.Manager):
     """
-    Return only Opportunity Statuses whose inactive field is False.
+    Return only Opportunity Statuses whose closed field is False.
     """
     def get_queryset(self):
         return super().get_queryset().filter(

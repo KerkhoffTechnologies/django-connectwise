@@ -12,7 +12,7 @@ from djconnectwise.models import Member
 from djconnectwise.models import Opportunity
 from djconnectwise.models import OpportunityStatus
 from djconnectwise.models import OpportunityType
-from djconnectwise.models import Project
+from djconnectwise.models import Project, ProjectStatus
 from djconnectwise.models import ScheduleEntry
 from djconnectwise.models import ScheduleStatus
 from djconnectwise.models import ScheduleType
@@ -267,6 +267,22 @@ class TestScheduleStatusSynchronizer(TestCase, SynchronizerTestMixin):
     def _assert_fields(self, instance, json_data):
         self.assertEqual(instance.id, json_data['id'])
         self.assertEqual(instance.name, json_data['name'])
+
+
+class TestProjectStatusSynchronizer(TestCase, SynchronizerTestMixin):
+    synchronizer_class = sync.ProjectStatusSynchronizer
+    model_class = ProjectStatus
+    fixture = fixtures.API_SALES_PROJECT_STATUSES
+
+    def call_api(self, return_data):
+        return mocks.projects_api_get_project_statuses_call(return_data)
+
+    def _assert_fields(self, instance, json_data):
+        self.assertEqual(instance.id, json_data['id'])
+        self.assertEqual(instance.name, json_data['name'])
+        self.assertEqual(instance.default_flag, json_data['defaultFlag'])
+        self.assertEqual(instance.inactive_flag, json_data['inactiveFlag'])
+        self.assertEqual(instance.closed_flag, json_data['closedFlag'])
 
 
 class TestProjectSynchronizer(TestCase, SynchronizerTestMixin):
