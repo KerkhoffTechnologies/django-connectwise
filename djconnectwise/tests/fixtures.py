@@ -161,9 +161,63 @@ API_COMPANY = {
 
 API_COMPANY_LIST = [API_COMPANY]
 
+API_SALES_PROJECT_STATUSES = [
+    {
+        "id": 1,
+        "name": "Open",
+        "defaultFlag": True,
+        "inactiveFlag": False,
+        "noTimeFlag": False,
+        "closedFlag": False,
+        "_info": {
+            "lastUpdated": "2001-01-08T18:05:13Z",
+            "updatedBy": None
+        }
+    },
+    {
+        "id": 2,
+        "name": "Closed",
+        "defaultFlag": False,
+        "inactiveFlag": False,
+        "noTimeFlag": True,
+        "closedFlag": True,
+        "_info": {
+            "lastUpdated": "2001-01-08T18:05:21Z",
+            "updatedBy": None
+        }
+    },
+    {
+        "id": 3,
+        "name": "On-Hold",
+        "defaultFlag": False,
+        "inactiveFlag": False,
+        "noTimeFlag": True,
+        "closedFlag": False,
+        "_info": {
+            "lastUpdated": "2001-01-08T18:05:40Z",
+            "updatedBy": None
+        }
+    },
+    {
+        "id": 6,
+        "name": ">Closed",
+        "defaultFlag": False,
+        "inactiveFlag": False,
+        "noTimeFlag": True,
+        "closedFlag": True,
+        "_info": {
+            "lastUpdated": "2017-08-30T19:25:43Z",
+            "updatedBy": "User1"
+        }
+    }
+]
+
 API_PROJECT = {
     'id': 5,
     'name': 'Financial System Implementation',
+    'actualHours': 8.03,
+    'budgetHours': 91.5,
+    'scheduledHours': 13.95,
     '_info': {
         'project_href': 'https://some-host.com/v4_6_release/apis/3.0/project/projects/5'
     },

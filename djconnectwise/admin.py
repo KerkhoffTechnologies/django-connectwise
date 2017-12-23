@@ -95,10 +95,18 @@ class TicketPriorityAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'sort', 'color')
 
 
+@admin.register(models.ProjectStatus)
+class ProjectStatusAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'default_flag', 'inactive_flag',
+                    'closed_flag')
+    list_filter = ('default_flag', 'inactive_flag', 'closed_flag',)
+    search_fields = ['name']
+
+
 @admin.register(models.Project)
 class ProjectAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'status_name')
-    list_filter = ('name', 'status_name')
+    list_display = ('id', 'name', 'status', )
+    list_filter = ('status', )
     search_fields = ['name']
 
 
