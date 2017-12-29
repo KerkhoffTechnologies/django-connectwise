@@ -321,6 +321,10 @@ class BoardSynchronizer(Synchronizer):
     client_class = api.ServiceAPIClient
     model_class = models.ConnectWiseBoard
 
+    def __init__(self):
+        self.api_conditions = []
+        super().__init__()
+
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
         instance.name = json_data['name']
@@ -337,6 +341,10 @@ class BoardSynchronizer(Synchronizer):
 
 
 class BoardChildSynchronizer(Synchronizer):
+
+    def __init__(self):
+        self.api_conditions = []
+        super().__init__()
 
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
@@ -389,6 +397,10 @@ class BoardStatusSynchronizer(BoardChildSynchronizer):
 class TeamSynchronizer(BoardChildSynchronizer):
     client_class = api.ServiceAPIClient
     model_class = models.Team
+
+    def __init__(self):
+        self.api_conditions = []
+        super().__init__()
 
     def _assign_field_data(self, instance, json_data):
         instance = super(TeamSynchronizer, self)._assign_field_data(
@@ -468,6 +480,10 @@ class CompanyStatusSynchronizer(Synchronizer):
     client_class = api.CompanyAPIClient
     model_class = models.CompanyStatus
 
+    def __init__(self):
+        self.api_conditions = []
+        super().__init__()
+
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
         instance.name = json_data['name']
@@ -499,6 +515,10 @@ class ActivitySynchronizer(Synchronizer):
         'ticket': (models.Ticket, 'ticket'),
         'assignTo': (models.Member, 'assign_to'),
     }
+
+    def __init__(self):
+        self.api_conditions = []
+        super().__init__()
 
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
@@ -661,6 +681,10 @@ class ScheduleStatusSynchronizer(Synchronizer):
     client_class = api.ScheduleAPIClient
     model_class = models.ScheduleStatus
 
+    def __init__(self):
+        self.api_conditions = []
+        super().__init__()
+
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
         instance.name = json_data['name']
@@ -674,6 +698,10 @@ class ScheduleStatusSynchronizer(Synchronizer):
 class ScheduleTypeSychronizer(Synchronizer):
     client_class = api.ScheduleAPIClient
     model_class = models.ScheduleType
+
+    def __init__(self):
+        self.api_conditions = []
+        super().__init__()
 
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
@@ -689,6 +717,10 @@ class ScheduleTypeSychronizer(Synchronizer):
 class LocationSynchronizer(Synchronizer):
     client_class = api.ServiceAPIClient
     model_class = models.Location
+
+    def __init__(self):
+        self.api_conditions = []
+        super().__init__()
 
     def _assign_field_data(self, location, location_json):
         """
@@ -707,6 +739,10 @@ class LocationSynchronizer(Synchronizer):
 class PrioritySynchronizer(Synchronizer):
     client_class = api.ServiceAPIClient
     model_class = models.TicketPriority
+
+    def __init__(self):
+        self.api_conditions = []
+        super().__init__()
 
     def _assign_field_data(self, ticket_priority, api_priority):
         ticket_priority.id = api_priority['id']
@@ -728,6 +764,10 @@ class ProjectSynchronizer(Synchronizer):
     client_class = api.ProjectAPIClient
     model_class = models.Project
 
+    def __init__(self):
+        self.api_conditions = []
+        super().__init__()
+
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
         instance.name = json_data['name']
@@ -746,6 +786,7 @@ class MemberSynchronizer(Synchronizer):
     model_class = models.Member
 
     def __init__(self, *args, **kwargs):
+        self.api_conditions = []
         self.last_sync_job_time = None
         super().__init__(*args, **kwargs)
 
@@ -1106,6 +1147,10 @@ class OpportunityStatusSynchronizer(Synchronizer):
     client_class = api.SalesAPIClient
     model_class = models.OpportunityStatus
 
+    def __init__(self):
+        self.api_conditions = []
+        super().__init__()
+
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
         instance.name = json_data['name']
@@ -1122,6 +1167,10 @@ class OpportunityStatusSynchronizer(Synchronizer):
 class OpportunityTypeSynchronizer(Synchronizer):
     client_class = api.SalesAPIClient
     model_class = models.OpportunityType
+
+    def __init__(self):
+        self.api_conditions = []
+        super().__init__()
 
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
