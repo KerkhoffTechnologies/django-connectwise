@@ -764,6 +764,10 @@ class ProjectStatusSynchronizer(Synchronizer):
     client_class = api.ProjectAPIClient
     model_class = models.ProjectStatus
 
+    def __init__(self):
+        self.api_conditions = []
+        super().__init__()
+
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
         instance.name = json_data['name']
