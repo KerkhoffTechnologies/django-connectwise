@@ -4,7 +4,7 @@ django-connectwise
 Django app for working with ConnectWise. Defines models (tickets,
 members, companies, etc.) and callbacks.
 
-As of January 2017, this project is highly volatile. Expect lots of
+As of January 2018, this project is highly volatile. Expect lots of
 changes.
 
 Requirements
