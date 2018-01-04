@@ -284,7 +284,7 @@ class ScheduleStatus(models.Model):
 
 
 class ScheduleEntry(models.Model):
-    name = models.CharField(max_length=250)
+    name = models.CharField(max_length=250, blank=True, null=True)
     expected_date_start = models.DateTimeField(blank=True, null=True)
     expected_date_end = models.DateTimeField(blank=True, null=True)
     done_flag = models.BooleanField(default=False)
@@ -301,7 +301,7 @@ class ScheduleEntry(models.Model):
         ordering = ('name', )
 
     def __str__(self):
-        return self.name
+        return self.name or ''
 
     def delete_entry(self):
         """
