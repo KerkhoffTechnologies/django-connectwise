@@ -9,6 +9,7 @@ import django
 
 from djconnectwise.api import SystemAPIClient
 from djconnectwise.models import CallBackEntry
+from djconnectwise.utils import RequestSettings
 
 
 logger = logging.getLogger(__name__)
@@ -20,6 +21,9 @@ class CallBackHandler:
 
     def __init__(self, *args, **kwargs):
         self.system_client = SystemAPIClient()
+
+        request_settings = RequestSettings().get_settings()
+        self.batch_size = request_settings['batch_size']
 
         if not self.CALLBACK_ID:
             raise NotImplementedError('CALLBACK_ID must be assigned a value')
@@ -107,7 +111,22 @@ class CallBackHandler:
         Returns a list of dict callback entries that
         are registered with the target system.
         """
-        return self.system_client.get_callbacks()
+        results = []
+        page = 1
+        while True:
+            logger.info(
+                'Fetching callback records, batch {}'.format(page)
+            )
+            page_records = self.system_client.get_callbacks(
+                page=page, page_size=self.batch_size,
+            )
+            results += page_records
+            page += 1
+            if len(page_records) < self.batch_size:
+                # This page wasn't full, so there's no more records after
+                # this page.
+                break
+        return results
 
     def delete(self):
         """
