@@ -68,9 +68,9 @@ class SyncResults:
 
 class Synchronizer:
     lookup_key = 'id'
-    api_conditions = []
 
     def __init__(self, *args, **kwargs):
+        self.api_conditions = []
         self.client = self.client_class()
         request_settings = RequestSettings().get_settings()
         self.batch_size = request_settings['batch_size']
@@ -365,7 +365,10 @@ class BoardChildSynchronizer(Synchronizer):
 class BoardStatusSynchronizer(BoardChildSynchronizer):
     client_class = api.ServiceAPIClient
     model_class = models.BoardStatus
-    api_conditions = ['inactive=False']
+
+    def __init__(self):
+        self.api_conditions = ['inactive=False']
+        super().__init__()
 
     def _assign_field_data(self, instance, json_data):
         instance = super(BoardStatusSynchronizer, self)._assign_field_data(
@@ -409,7 +412,10 @@ class TeamSynchronizer(BoardChildSynchronizer):
 class CompanySynchronizer(Synchronizer):
     client_class = api.CompanyAPIClient
     model_class = models.Company
-    api_conditions = ['deletedFlag=False']
+
+    def __init__(self):
+        self.api_conditions = ['deletedFlag=False']
+        super().__init__()
 
     def _assign_field_data(self, company, company_json):
         """
@@ -532,10 +538,6 @@ class ActivitySynchronizer(Synchronizer):
 class ScheduleEntriesSynchronizer(BatchConditionMixin, Synchronizer):
     client_class = api.ScheduleAPIClient
     model_class = models.ScheduleEntry
-    api_conditions = [
-        "(type/identifier='S' or type/identifier='O')",
-        "doneFlag=false",
-    ]
     batch_condition_list = []
 
     related_meta = {
@@ -546,6 +548,10 @@ class ScheduleEntriesSynchronizer(BatchConditionMixin, Synchronizer):
     }
 
     def __init__(self):
+        self.api_conditions = [
+            "(type/identifier='S' or type/identifier='O')",
+            "doneFlag=false",
+        ]
         super().__init__()
         # Only get schedule entries for tickets or opportunities that we
         # already have in the DB.
@@ -868,7 +874,6 @@ class MemberSynchronizer(Synchronizer):
 class TicketSynchronizer(BatchConditionMixin, Synchronizer):
     client_class = api.ServiceAPIClient
     model_class = models.Ticket
-    api_conditions = ['closedFlag=False']
     batch_condition_list = []
     child_synchronizers = (
         CompanySynchronizer,
@@ -889,6 +894,7 @@ class TicketSynchronizer(BatchConditionMixin, Synchronizer):
     }
 
     def __init__(self):
+        self.api_conditions = ['closedFlag=False']
         super().__init__()
         # To get all open tickets, we can simply supply a `closedFlag=False`
         # condition for on-premise ConnectWise. But for hosted ConnectWise,
@@ -1031,7 +1037,6 @@ class TicketSynchronizer(BatchConditionMixin, Synchronizer):
 class OpportunitySynchronizer(Synchronizer):
     client_class = api.SalesAPIClient
     model_class = models.Opportunity
-    api_conditions = []
     related_meta = {
         'type': (models.OpportunityType, 'opportunity_type'),
         'stage': (models.OpportunityStage, 'stage'),
