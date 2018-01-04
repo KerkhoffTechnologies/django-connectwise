@@ -346,7 +346,9 @@ class ConnectWiseAPIClient(object):
             )
             raise ConnectWiseAPIError('{}'.format(e))
 
-        if 200 <= response.status_code < 300:
+        if response.status_code == 204:  # No content
+            return None
+        elif 200 <= response.status_code < 300:
             return response.json()
         elif response.status_code == 404:
             msg = 'Resource not found: {}'.format(response.url)
