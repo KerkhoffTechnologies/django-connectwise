@@ -558,7 +558,6 @@ class SystemAPIClient(ConnectWiseAPIClient):
             logger.error('Request failed: DELETE {}: {}'.format(endpoint, e))
             raise ConnectWiseAPIError('{}'.format(e))
 
-        response.raise_for_status()
         return response
 
     def create_callback(self, callback_entry):
