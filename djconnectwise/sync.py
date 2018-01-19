@@ -238,6 +238,15 @@ class Synchronizer:
 
     @log_sync_job
     def sync(self, full=False):
+        sync_job_qset = models.SyncJob.objects.filter(
+            entity_name=self.model_class.__name__
+        )
+
+        if sync_job_qset.exists() and not full:
+            last_sync_job_time = sync_job_qset.last().start_time.isoformat()
+            self.api_conditions.append(
+                "lastUpdated>[{0}]".format(last_sync_job_time)
+            )
         results = SyncResults()
         initial_ids = self._instance_ids()  # Set of IDs of all records prior
         # to sync, to find stale records for deletion.
@@ -861,15 +870,6 @@ class MemberSynchronizer(Synchronizer):
 
         return instance, created
 
-    def sync(self, full=True):
-        sync_job_qset = models.SyncJob.objects.filter(
-            entity_name=self.model_class.__name__
-        )
-        if sync_job_qset.exists():
-            self.last_sync_job_time = sync_job_qset.last().start_time
-
-        return super().sync(full=full)
-
 
 class TicketSynchronizer(BatchConditionMixin, Synchronizer):
     client_class = api.ServiceAPIClient
@@ -1019,19 +1019,6 @@ class TicketSynchronizer(BatchConditionMixin, Synchronizer):
         instance = super().fetch_sync_by_id(instance_id)
         self.manage_member_assignments(instance)
         return instance
-
-    def sync(self, full=True):
-        sync_job_qset = models.SyncJob.objects.filter(
-            entity_name=self.model_class.__name__
-        )
-
-        if sync_job_qset.exists() and not full:
-            last_sync_job_time = sync_job_qset.last().start_time.isoformat()
-            self.api_conditions.append(
-                "lastUpdated>[{0}]".format(last_sync_job_time)
-            )
-
-        return super().sync(full=full)
 
 
 class OpportunitySynchronizer(Synchronizer):
