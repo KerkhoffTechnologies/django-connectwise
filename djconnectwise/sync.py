@@ -37,6 +37,10 @@ def log_sync_job(f):
         created_count = updated_count = deleted_count = 0
         sync_job = models.SyncJob()
         sync_job.start_time = timezone.now()
+        if kwargs.get('full'):
+            sync_job.sync_type = 'full'
+        else:
+            sync_job.sync_type = 'partial'
 
         try:
             created_count, updated_count, deleted_count = f(*args, **kwargs)

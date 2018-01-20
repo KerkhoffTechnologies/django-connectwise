@@ -31,6 +31,7 @@ class SyncJob(models.Model):
     deleted = models.PositiveIntegerField(null=True)
     success = models.NullBooleanField()
     message = models.TextField(blank=True, null=True)
+    sync_type = models.TextField(default='full')
 
 
 class CallBackEntry(models.Model):
