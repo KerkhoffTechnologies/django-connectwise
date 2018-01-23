@@ -14,6 +14,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='syncjob',
             name='sync_type',
-            field=models.TextField(default='full'),
+            field=models.CharField(max_length=32, default='full'),
         ),
     ]
