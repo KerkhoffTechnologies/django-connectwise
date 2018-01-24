@@ -810,6 +810,7 @@ class TestSyncSettings(TestCase):
 class MockSynchronizer:
     error_message = 'One heck of an error'
     model_class = Ticket
+    full = False
 
     @log_sync_job
     def sync(self):
@@ -834,6 +835,7 @@ class TestSyncJob(TestCase):
                          sync_job.entity_name)
         self.assertEqual(message, sync_job.message)
         self.assertEqual(sync_job.success, success)
+        self.assertEqual(sync_job.sync_type, "partial")
 
     def test_sync_successful(self):
         created, updated, deleted = self.synchronizer.sync()

@@ -9,7 +9,7 @@ from . import models
 class SyncJobAdmin(admin.ModelAdmin):
     list_display = (
         'id', 'start_time', 'end_time', 'entity_name', 'success', 'added',
-        'updated', 'deleted'
+        'updated', 'deleted', 'sync_type'
     )
     list_filter = ('entity_name', )
 
