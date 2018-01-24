@@ -37,6 +37,10 @@ def log_sync_job(f):
         created_count = updated_count = deleted_count = 0
         sync_job = models.SyncJob()
         sync_job.start_time = timezone.now()
+        if sync_instance.full:
+            sync_job.sync_type = 'full'
+        else:
+            sync_job.sync_type = 'partial'
 
         try:
             created_count, updated_count, deleted_count = f(*args, **kwargs)
@@ -69,11 +73,12 @@ class SyncResults:
 class Synchronizer:
     lookup_key = 'id'
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, full=False, *args, **kwargs):
         self.api_conditions = []
         self.client = self.client_class()
         request_settings = RequestSettings().get_settings()
         self.batch_size = request_settings['batch_size']
+        self.full = full
 
     @staticmethod
     def _assign_null_relation(instance, model_field):
@@ -237,13 +242,22 @@ class Synchronizer:
         return deleted_count
 
     @log_sync_job
-    def sync(self, full=False):
+    def sync(self):
+        sync_job_qset = models.SyncJob.objects.filter(
+            entity_name=self.model_class.__name__
+        )
+
+        if sync_job_qset.exists() and not self.full:
+            last_sync_job_time = sync_job_qset.last().start_time.isoformat()
+            self.api_conditions.append(
+                "lastUpdated>[{0}]".format(last_sync_job_time)
+            )
         results = SyncResults()
         initial_ids = self._instance_ids()  # Set of IDs of all records prior
         # to sync, to find stale records for deletion.
-        results = self.get(results)
+        results = self.get(results, )
 
-        if full:
+        if self.full:
             results.deleted_count = self.prune_stale_records(
                 initial_ids, results.synced_ids
             )
@@ -366,9 +380,9 @@ class BoardStatusSynchronizer(BoardChildSynchronizer):
     client_class = api.ServiceAPIClient
     model_class = models.BoardStatus
 
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         self.api_conditions = ['inactive=False']
-        super().__init__()
+        super().__init__(*args, **kwargs)
 
     def _assign_field_data(self, instance, json_data):
         instance = super(BoardStatusSynchronizer, self)._assign_field_data(
@@ -413,9 +427,9 @@ class CompanySynchronizer(Synchronizer):
     client_class = api.CompanyAPIClient
     model_class = models.Company
 
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         self.api_conditions = ['deletedFlag=False']
-        super().__init__()
+        super().__init__(*args, **kwargs)
 
     def _assign_field_data(self, company, company_json):
         """
@@ -547,12 +561,12 @@ class ScheduleEntriesSynchronizer(BatchConditionMixin, Synchronizer):
         'member': (models.Member, 'member')
     }
 
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         self.api_conditions = [
             "(type/identifier='S' or type/identifier='O')",
             "doneFlag=false",
         ]
-        super().__init__()
+        super().__init__(*args, **kwargs)
         # Only get schedule entries for tickets or opportunities that we
         # already have in the DB.
         ticket_ids = set(
@@ -844,12 +858,16 @@ class MemberSynchronizer(Synchronizer):
             photo_id = api_instance['photo']['id']
         # Fetch the image when:
         # CW tells us where the image is AND one of the following is true:
+        # * this is a full sync
         # * there's no previous member sync job record
+        # * the member's avatar doesn't already exist
         # * our member record is stale
         # * the member was created
-        # * the member's avatar doesn't already exist
-        if (not self.last_sync_job_time or member_stale or created or
-                not bool(instance.avatar)) and photo_id:
+        if photo_id and (self.full or
+                         not self.last_sync_job_time or
+                         not bool(instance.avatar) or
+                         member_stale or
+                         created):
             logger.info(
                 'Fetching avatar for member {}.'.format(username)
             )
@@ -860,15 +878,6 @@ class MemberSynchronizer(Synchronizer):
                 instance.save()
 
         return instance, created
-
-    def sync(self, full=True):
-        sync_job_qset = models.SyncJob.objects.filter(
-            entity_name=self.model_class.__name__
-        )
-        if sync_job_qset.exists():
-            self.last_sync_job_time = sync_job_qset.last().start_time
-
-        return super().sync(full=full)
 
 
 class TicketSynchronizer(BatchConditionMixin, Synchronizer):
@@ -893,9 +902,9 @@ class TicketSynchronizer(BatchConditionMixin, Synchronizer):
         'owner': (models.Member, 'owner')
     }
 
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         self.api_conditions = ['closedFlag=False']
-        super().__init__()
+        super().__init__(*args, **kwargs)
         # To get all open tickets, we can simply supply a `closedFlag=False`
         # condition for on-premise ConnectWise. But for hosted ConnectWise,
         # this results in timeouts for requests, so we also need to add a
@@ -1020,19 +1029,6 @@ class TicketSynchronizer(BatchConditionMixin, Synchronizer):
         self.manage_member_assignments(instance)
         return instance
 
-    def sync(self, full=True):
-        sync_job_qset = models.SyncJob.objects.filter(
-            entity_name=self.model_class.__name__
-        )
-
-        if sync_job_qset.exists() and not full:
-            last_sync_job_time = sync_job_qset.last().start_time.isoformat()
-            self.api_conditions.append(
-                "lastUpdated>[{0}]".format(last_sync_job_time)
-            )
-
-        return super().sync(full=full)
-
 
 class OpportunitySynchronizer(Synchronizer):
     client_class = api.SalesAPIClient
@@ -1047,8 +1043,8 @@ class OpportunitySynchronizer(Synchronizer):
         'closedBy': (models.Member, 'closed_by')
     }
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         # only synchronize Opportunities that do not have an OpportunityStatus
         # with the closedFlag=True
         open_statuses = list(

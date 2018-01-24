@@ -31,12 +31,13 @@ def slug_to_title(slug):
 
 class AbstractBaseSyncTest(object):
 
-    def _test_sync(self, mock_call, return_value, cw_object, full=False):
+    def _test_sync(self, mock_call, return_value, cw_object,
+                   full_option=False):
         mock_call(return_value)
         out = io.StringIO()
 
         args = ['cwsync', cw_object]
-        if full:
+        if full_option:
             args.append('--full')
 
         call_command(*args, stdout=out)
@@ -59,7 +60,7 @@ class AbstractBaseSyncTest(object):
             cw_object
         ]
 
-        out = self._test_sync(*args, full=True)
+        out = self._test_sync(*args, full_option=True)
         obj_label = self._title_for_cw_object(cw_object)
         msg_tmpl = '{} Sync Summary - Created: 0, Updated: 0, Deleted: {}'
         msg = msg_tmpl.format(obj_label, len(return_value))
@@ -277,11 +278,11 @@ class TestSyncAllCommand(TestCase):
             apicall, fixture, cw_object = test_case.args
             apicall(fixture)
 
-    def _test_sync(self, full=False):
+    def _test_sync(self, full_option=False):
         out = io.StringIO()
         args = ['cwsync']
 
-        if full:
+        if full_option:
             args.append('--full')
 
         call_command(*args, stdout=out)
@@ -353,7 +354,7 @@ class TestSyncAllCommand(TestCase):
         for apicall, _, _ in self.test_args:
             apicall([])
 
-        output = self._test_sync(full=True)
+        output = self._test_sync(full_option=True)
 
         for apicall, fixture, cw_object in self.test_args:
             summary = full_sync_summary(slug_to_title(cw_object),

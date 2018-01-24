@@ -58,16 +58,15 @@ class Command(BaseCommand):
                             dest='full',
                             default=False)
 
-    def sync_by_class(self, sync_class, obj_name, full=False):
-        synchronizer = sync_class()
+    def sync_by_class(self, sync_class, obj_name, full_option=False):
+        synchronizer = sync_class(full=full_option)
 
-        created_count, updated_count, deleted_count = synchronizer.sync(
-            full=full)
+        created_count, updated_count, deleted_count = synchronizer.sync()
 
         msg = _('{} Sync Summary - Created: {}, Updated: {}')
         fmt_msg = msg.format(obj_name, created_count, updated_count)
 
-        if full:
+        if full_option:
             msg = _('{} Sync Summary - Created: {}, Updated: {}, Deleted: {}')
             fmt_msg = msg.format(obj_name, created_count, updated_count,
                                  deleted_count)
@@ -107,7 +106,8 @@ class Command(BaseCommand):
 
         for sync_class, obj_name in sync_classes:
             try:
-                self.sync_by_class(sync_class, obj_name, full=full_option)
+                self.sync_by_class(sync_class, obj_name,
+                                   full_option=full_option)
 
             except api.ConnectWiseAPIError as e:
                 msg = 'Failed to sync {}: {}'.format(obj_name, e)

@@ -718,8 +718,8 @@ class TestTicketSynchronizer(TestCase):
 
         method_name = 'djconnectwise.api.ServiceAPIClient.get_tickets'
         mock_call, _patch = mocks.create_mock_call(method_name, [])
-        synchronizer = sync.TicketSynchronizer()
-        synchronizer.sync(full=True)
+        synchronizer = sync.TicketSynchronizer(full=True)
+        synchronizer.sync()
         self.assertEqual(ticket_qset.count(), 0)
         _patch.stop()
 
@@ -774,10 +774,10 @@ class TestActivitySynchronizer(TestCase, SynchronizerTestMixin):
 
         method_name = 'djconnectwise.api.SalesAPIClient.get_activities'
         mock_call, _patch = mocks.create_mock_call(method_name, activity_list)
-        synchronizer = sync.ActivitySynchronizer()
+        synchronizer = sync.ActivitySynchronizer(full=True)
 
         created_count, updated_count, deleted_count = \
-            synchronizer.sync(full=True)
+            synchronizer.sync()
 
         # The existing Activity (#47) should be deleted and
         # null_member_activity should not be added to the db
@@ -810,6 +810,7 @@ class TestSyncSettings(TestCase):
 class MockSynchronizer:
     error_message = 'One heck of an error'
     model_class = Ticket
+    full = False
 
     @log_sync_job
     def sync(self):
@@ -834,6 +835,7 @@ class TestSyncJob(TestCase):
                          sync_job.entity_name)
         self.assertEqual(message, sync_job.message)
         self.assertEqual(sync_job.success, success)
+        self.assertEqual(sync_job.sync_type, "partial")
 
     def test_sync_successful(self):
         created, updated, deleted = self.synchronizer.sync()
