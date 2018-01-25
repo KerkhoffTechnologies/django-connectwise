@@ -9,8 +9,8 @@ logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
-    help = _('Remove old sync job entries. Defaults to 4 weeks, but ' +
-             'the cutoff date can be customized with the "days" option.')
+    help = str(_('Remove old sync job entries. Defaults to 4 weeks, but \
+           the cutoff date can be customized with the "days" option.'))
 
     def add_arguments(self, parser):
         parser.add_argument('--days',

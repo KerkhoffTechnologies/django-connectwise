@@ -2,9 +2,11 @@ from django.core.management.base import BaseCommand, CommandError
 from djconnectwise.callback import TicketCallBackHandler
 from djconnectwise.api import ConnectWiseAPIError
 
+from django.utils.translation import ugettext_lazy as _
+
 
 class Command(BaseCommand):
-    help = 'Lists existing callbacks on target ConnectWise system.'
+    help = str(_('Lists existing callbacks on target ConnectWise system.'))
 
     def handle(self, *args, **options):
         handler = TicketCallBackHandler()
