@@ -289,9 +289,9 @@ class BatchConditionMixin:
             optimal_size = self.get_optimal_size(unfetched_conditions)
             batch_conditions = unfetched_conditions[:optimal_size]
             del unfetched_conditions[:optimal_size]
-            batch_conditon = self.get_batch_condition(batch_conditions)
+            batch_condition = self.get_batch_condition(batch_conditions)
             batch_conditions = deepcopy(self.api_conditions)
-            batch_conditions.append(batch_conditon)
+            batch_conditions.append(batch_condition)
             results = super().get(results, conditions=batch_conditions)
         return results
 
