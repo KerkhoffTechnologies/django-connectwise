@@ -1,6 +1,6 @@
 from itertools import cycle
 
-from model_mommy.recipe import Recipe, seq
+from model_mommy.recipe import Recipe, seq, foreign_key
 from djconnectwise.models import ConnectWiseBoard, \
     TicketPriority, Ticket, Company, Member, Project
 
@@ -18,6 +18,7 @@ member = Recipe(Member,
 
 project = Recipe(Project,
     name=seq('Project #'),
+    manager=foreign_key(member),
 )
 
 company = Recipe(Company,

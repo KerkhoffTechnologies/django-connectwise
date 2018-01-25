@@ -167,6 +167,7 @@ class TestScheduleEntriesSynchronizer(TestCase, SynchronizerTestMixin):
         # self.synchronizer = self.synchronizer_class()
         fixture_utils.init_boards()
         fixture_utils.init_companies()
+        fixture_utils.init_project_statuses()
         fixture_utils.init_projects()
         fixture_utils.init_locations()
         fixture_utils.init_priorities()
@@ -180,9 +181,6 @@ class TestScheduleEntriesSynchronizer(TestCase, SynchronizerTestMixin):
         fixture_utils.init_schedule_types()
         fixture_utils.init_tickets()
         fixture_utils.init_activities()
-        # mocks.schedule_api_get_schedule_entries_call(
-        #     fixtures.API_SCHEDULE_ENTRIES)
-        # sync.ScheduleEntriesSynchronizer().sync()
 
     def call_api(self, return_data):
         return mocks.schedule_api_get_schedule_entries_call(return_data)
@@ -290,12 +288,18 @@ class TestProjectSynchronizer(TestCase, SynchronizerTestMixin):
     model_class = Project
     fixture = fixtures.API_PROJECT_LIST
 
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_project_statuses()
+        fixture_utils.init_members()
+
     def call_api(self, return_data):
         return mocks.project_api_get_projects_call(return_data)
 
     def _assert_fields(self, instance, json_data):
         self.assertEqual(instance.id, json_data['id'])
         self.assertEqual(instance.name, json_data['name'])
+        self.assertEqual(instance.manager_id, json_data['manager']['id'])
         self.assertAlmostEqual(
             float(instance.actual_hours),
             json_data['actualHours']

@@ -218,12 +218,21 @@ API_PROJECT = {
     'actualHours': 8.03,
     'budgetHours': 91.5,
     'scheduledHours': 13.95,
-    '_info': {
-        'project_href': 'https://some-host.com/v4_6_release/apis/3.0/project/projects/5'
+    'manager': {
+        'id': 176,
+        'identifier': 'User1',
+        'name': 'User1',
+        '_info': {
+            'member_href': 'https://some-host.com/v4_6_release/apis/3.0/system/members/176'
+        }
     },
     'status': {
         'id': 1,
         'name': 'Open',
+    },
+    '_info': {
+        'project_href': 'https://some-host.com/v4_6_release/apis/3.0/project/projects/5',
+        'lastUpdated': '2005-05-26T14:39:26Z',
     },
 }
 
@@ -300,7 +309,9 @@ API_SERVICE_TEAM_LIST = [
      'teamLeader': {'_info': {'member_href': 'https://some-host.com/v4_6_release/apis/3.0/system/members/189'},
                     'id': 189,
                     'identifier': 'User13',
-                    'name': 'Training User13'}}]
+                    'name': 'Training User13'}
+     }
+]
 
 API_MEMBER = {
     'adminFlag': False,

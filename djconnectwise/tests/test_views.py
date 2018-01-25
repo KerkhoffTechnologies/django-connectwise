@@ -140,11 +140,13 @@ class TestProjectCallBackView(BaseTestCallBackView):
         self.assertEqual(instance.name, entity['name'])
 
     def test_add(self):
+        fixture_utils.init_project_statuses()
         self.assertEqual(Project.objects.count(), 0)
         mocks.project_api_get_project_call(fixtures.API_PROJECT)
         self._test_added(CallBackEntry.PROJECT, fixtures.API_PROJECT)
 
     def test_update(self):
+        fixture_utils.init_project_statuses()
         fixture_utils.init_projects()
         self.assertEqual(Project.objects.count(), 1)
         # Change the name of the local record to make our test meaningful.
@@ -156,6 +158,7 @@ class TestProjectCallBackView(BaseTestCallBackView):
         self._test_update(CallBackEntry.PROJECT, fixtures.API_PROJECT)
 
     def test_delete(self):
+        fixture_utils.init_project_statuses()
         fixture_utils.init_projects()
         self.assertEqual(Project.objects.count(), 1)
 
