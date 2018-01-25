@@ -759,6 +759,7 @@ class ProjectSynchronizer(Synchronizer):
     model_class = models.Project
     related_meta = {
         'status': (models.ProjectStatus, 'status'),
+        'manager': (models.Member, 'manager')
     }
 
     def _assign_field_data(self, instance, json_data):
