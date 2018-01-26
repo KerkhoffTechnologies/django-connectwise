@@ -1,4 +1,5 @@
 from django.core.management.base import BaseCommand, CommandError
+from django.db import DatabaseError
 from django.utils.translation import ugettext_lazy as _
 from datetime import datetime, timedelta
 import logging
@@ -21,7 +22,7 @@ class Command(BaseCommand):
                                  'logs to keep', )
 
     def handle(self, *args, **options):
-        days_option = options.get('days', 28)
+        days_option = options['days']
 
         verbosity = int(options['verbosity'])
         if verbosity == 1:
@@ -31,16 +32,16 @@ class Command(BaseCommand):
 
         cutoff_date = datetime.now() - timedelta(days=days_option)
         old_entries = SyncJob.objects.exclude(start_time__gt=cutoff_date)
+
         count = old_entries.count()
 
         try:
-
             old_entries.delete()
-
-        except CommandError as e:
-            logger.error(e)
-        finally:
             msg = '{} sync jobs older than {} were deleted'
             logger.info(msg.format(
                 count, cutoff_date.isoformat(' '))
             )
+        except DatabaseError as e:
+            logger.error(e.__cause__)
+            raise CommandError('A database error occurred when deleting old \
+                               sync job entries')
