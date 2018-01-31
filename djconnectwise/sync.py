@@ -549,7 +549,7 @@ class ActivitySynchronizer(Synchronizer):
         return self.client.get_single_activity(activity_id)
 
 
-class SalesProbabilitesSyncchronizer(Synchronizer):
+class SalesProbabilitiesSynchronizer(Synchronizer):
     client_class = api.SalesAPIClient
     model_class = models.SalesProbabilities
 
