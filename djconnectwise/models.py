@@ -495,6 +495,8 @@ class Opportunity(TimeStampedModel):
     name = models.CharField(max_length=100)
     notes = models.TextField(blank=True, null=True)
     pipeline_change_date = models.DateTimeField(blank=True, null=True)
+    probability = models.ForeignKey('SalesProbabilities', blank=True, null=True,
+                                    related_name='probability')
     source = models.CharField(max_length=100, blank=True, null=True)
 
     closed_by = models.ForeignKey('Member',
@@ -724,3 +726,10 @@ class Activity(TimeStampedModel):
 
     def get_identifier(self):
         return self.name
+
+
+class SalesProbabilities(TimeStampedModel):
+    probability = models.IntegerField()
+
+    def __str__(self):
+        return self.probability
