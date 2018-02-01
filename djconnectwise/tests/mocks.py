@@ -77,9 +77,9 @@ def sales_api_get_opportunity_types_call(return_value, raised=None):
     return create_mock_call(method_name, return_value, side_effect=raised)
 
 
-def sales_api_get_sales_probabilites_call(return_value, raised=None):
+def sales_api_get_sales_probabilities_call(return_value, raised=None):
     method_name = 'djconnectwise.api.SalesAPIClient.get_probabilities'
-    return create_mock_call(method_name, return_value,side_effect=raised)
+    return create_mock_call(method_name, return_value, side_effect=raised)
 
 
 def schedule_api_get_schedule_types_call(return_value, raised=None):

@@ -702,6 +702,18 @@ API_SALES_OPPORTUNITY_TYPES = [
 ]
 
 
+API_SALES_PROBABILITY = {
+    'id': 5,
+    'probability': 50,
+    '_info': {
+        'lastUpdated': '2010-06-19T15:50:07Z',
+        'updatedBy': 'abellini'
+    }
+}
+
+API_SALES_PROBABILITY_LIST = [API_SALES_PROBABILITY]
+
+
 API_SALES_OPPORTUNITY_STATUSES = [
   {'_info':
          {'lastUpdated': '2000-12-28T19:35:17Z', 'updatedBy': None},
@@ -784,7 +796,7 @@ API_SALES_OPPORTUNITY = {
     'pipelineChangeDate': '2005-12-23T19:16:21Z',
     'primarySalesRep': API_MEMBER,
     'priority': {'_info': None, 'id': 7, 'name': 'Clear Flag'},
-    'probability': {'_info': None, 'id': 6, 'name': '60'},
+    'probability': API_SALES_PROBABILITY,
     'rating': {'_info': {'rating_href': 'https://some-host.com/v4_6_release/apis/3.0/sales/opportunities/ratings/4'},
                'id': 4,
                'name': 'Hot'},
@@ -814,18 +826,6 @@ API_SALES_OPPORTUNITY = {
 API_SALES_OPPORTUNITIES = [
     API_SALES_OPPORTUNITY,
 ]
-
-
-API_SALES_PROBABILITY = {
-        "id": 5,
-        "probability": 50,
-        "_info": {
-            "lastUpdated": "2010-06-19T15:50:07Z",
-            "updatedBy": "abellini"
-        }
-    },
-
-API_SALES_PROBABILITY_LIST = [API_SALES_PROBABILITY]
 
 
 API_SALES_ACTIVITY = {

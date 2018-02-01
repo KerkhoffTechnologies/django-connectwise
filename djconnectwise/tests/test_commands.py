@@ -129,12 +129,15 @@ class TestSyncProjectStatusesCommand(AbstractBaseSyncTest, TestCase):
 
 
 class TestSyncProjectsCommand(AbstractBaseSyncTest, TestCase):
-
     args = (
         mocks.project_api_get_projects_call,
         fixtures.API_PROJECT_LIST,
         'project',
     )
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_project_statuses()
 
 
 class TestSyncBoardsStatusesCommand(AbstractBaseSyncTest, TestCase):
@@ -180,6 +183,14 @@ class TestSyncOpportunityTypesCommand(AbstractBaseSyncTest, TestCase):
         mocks.sales_api_get_opportunity_types_call,
         fixtures.API_SALES_OPPORTUNITY_TYPES,
         'opportunity_type',
+    )
+
+
+class TestSyncSalesProbabilitiesCommand(AbstractBaseSyncTest, TestCase):
+    args = (
+        mocks.sales_api_get_sales_probabilities_call,
+        fixtures.API_SALES_PROBABILITY_LIST,
+        'sales_probabilities'
     )
 
 
@@ -265,6 +276,7 @@ class TestSyncAllCommand(TestCase):
             TestSyncOpportunityStatusesCommand,
             TestSyncOpportunityTypesCommand,
             TestSyncOpportunityCommand,
+            TestSyncSalesProbabilitiesCommand,
             # TestSyncActivityCommand,
             TestSyncScheduleTypesCommand,
             TestSyncScheduleStatusesCommand,
@@ -331,6 +343,7 @@ class TestSyncAllCommand(TestCase):
             'opportunity': models.Opportunity,
             'opportunity_status': models.OpportunityStatus,
             'opportunity_type': models.OpportunityType,
+            'sales_probabilities': models.SalesProbabilities,
             # 'activity': models.Activity,
             'schedule_entry': models.ScheduleEntry,
             'schedule_type': models.ScheduleType,
