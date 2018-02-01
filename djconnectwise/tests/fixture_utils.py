@@ -49,7 +49,7 @@ def init_priorities():
 
 def init_project_statuses():
     mocks.projects_api_get_project_statuses_call(
-        fixtures.API_SALES_PROJECT_STATUSES)
+        fixtures.API_PROJECT_STATUSES)
     synchronizer = sync.ProjectStatusSynchronizer()
     return synchronizer.sync()
 
