@@ -270,7 +270,7 @@ class TestScheduleStatusSynchronizer(TestCase, SynchronizerTestMixin):
 class TestProjectStatusSynchronizer(TestCase, SynchronizerTestMixin):
     synchronizer_class = sync.ProjectStatusSynchronizer
     model_class = ProjectStatus
-    fixture = fixtures.API_SALES_PROJECT_STATUSES
+    fixture = fixtures.API_PROJECT_STATUSES
 
     def call_api(self, return_data):
         return mocks.projects_api_get_project_statuses_call(return_data)
