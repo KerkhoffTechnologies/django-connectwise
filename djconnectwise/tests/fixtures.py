@@ -815,6 +815,19 @@ API_SALES_OPPORTUNITIES = [
     API_SALES_OPPORTUNITY,
 ]
 
+
+API_SALES_PROBABILITY = {
+        "id": 5,
+        "probability": 50,
+        "_info": {
+            "lastUpdated": "2010-06-19T15:50:07Z",
+            "updatedBy": "abellini"
+        }
+    },
+
+API_SALES_PROBABILITY_LIST = [API_SALES_PROBABILITY]
+
+
 API_SALES_ACTIVITY = {
     'id': 47,
     'name': 'Stage Change from 1.Prospect to 2.Qualification',
