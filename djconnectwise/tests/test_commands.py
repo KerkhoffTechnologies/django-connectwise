@@ -123,7 +123,7 @@ class TestSyncPrioritiesCommand(AbstractBaseSyncTest, TestCase):
 class TestSyncProjectStatusesCommand(AbstractBaseSyncTest, TestCase):
     args = (
         mocks.projects_api_get_project_statuses_call,
-        fixtures.API_PROJECT_STATUSES,
+        fixtures.API_SALES_PROJECT_STATUSES,
         'project_status',
     )
 
