@@ -3,5 +3,5 @@ from . import _callback
 
 
 class Command(_callback.Command):
-    help = _('Deletes the callback from the target connectwise system.')
+    help = str(_('Deletes the callback from the target connectwise system.'))
     ACTION = 'delete'

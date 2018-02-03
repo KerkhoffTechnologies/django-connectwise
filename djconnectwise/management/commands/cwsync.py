@@ -9,7 +9,7 @@ OPTION_NAME = 'connectwise_object'
 
 
 class Command(BaseCommand):
-    help = _('Synchronize the specified object with the Connectwise API')
+    help = str(_('Synchronize the specified object with the Connectwise API'))
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

@@ -11,7 +11,7 @@ OPTION_NAME = 'callback'
 
 
 class Command(BaseCommand):
-    help = _('Registers the callback with the target connectwise system.')
+    help = str(_('Registers the callback with the target connectwise system.'))
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

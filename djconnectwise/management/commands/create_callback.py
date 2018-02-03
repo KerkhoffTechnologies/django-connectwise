@@ -4,5 +4,5 @@ from . import _callback
 
 
 class Command(_callback.Command):
-    help = _('Registers the callback with the target connectwise system.')
+    help = str(_('Registers the callback with the target connectwise system.'))
     ACTION = 'create'
