@@ -414,6 +414,8 @@ class Project(TimeStampedModel):
         blank=True, null=True, decimal_places=2, max_digits=6)
 
     status = models.ForeignKey('ProjectStatus', blank=True, null=True)
+    manager = models.ForeignKey('Member', blank=True, null=True,
+                                related_name='project_manager')
 
     objects = models.Manager()
     available_objects = AvailableProjectManager()

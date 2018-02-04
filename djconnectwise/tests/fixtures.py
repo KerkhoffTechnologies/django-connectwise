@@ -54,253 +54,111 @@ API_COMPANY_STATUS_LIST = [API_COMPANY_STATUS]
 
 
 API_COMPANY = {
-    "id": 2,
-    "identifier": "YourCompany",
-    "name": "TestCompany",
-    "status": API_COMPANY_STATUS,
-    "type": {
-        "id": 5,
-        "name": "Partner",
-        "_info": {
-            "type_href": "https: //some-host.com/v4_6_release/" +
-                         "apis/3.0/company/companies/types/5"
+    'id': 2,
+    'identifier': 'YourCompany',
+    'name': 'TestCompany',
+    'status': API_COMPANY_STATUS,
+    'type': {
+        'id': 5,
+        'name': 'Partner',
+        '_info': {
+            'type_href': 'https: //some-host.com/v4_6_release/' +
+                         'apis/3.0/company/companies/types/5'
         }
     },
-    "addressLine1": None,
-    "addressLine2": None,
-    "city": None,
-    "state": None,
-    "zip": None,
-    "country": None,
-    "phoneNumber": "1450994900",
-    "faxNumber": "",
-    "website": "www.YourCompany.com",
-    "territoryId": 38,
-    "marketId": 23,
-    "accountNumber": "",
-    "defaultContact": {
-        "id": 77,
-        "name": "Bob Dobbs",
-        "_info": {
-            "contact_href": "https: //some-host.com/v4_6_release/" +
-                            "apis/3.0/company/contacts/77"
+    'addressLine1': None,
+    'addressLine2': None,
+    'city': None,
+    'state': None,
+    'zip': None,
+    'country': None,
+    'phoneNumber': '1450994900',
+    'faxNumber': '',
+    'website': 'www.YourCompany.com',
+    'territoryId': 38,
+    'marketId': 23,
+    'accountNumber': '',
+    'defaultContact': {
+        'id': 77,
+        'name': 'Bob Dobbs',
+        '_info': {
+            'contact_href': 'https: //some-host.com/v4_6_release/' +
+                            'apis/3.0/company/contacts/77'
         }
     },
-    "dateAcquired": "2002-08-20T18: 04: 26Z",
-    "sicCode": None,
-    "parentCompany": None,
-    "annualRevenue": 0.0,
-    "numberOfEmployees": None,
-    "ownershipType": None,
-    "timeZone": {
-        "id": 1,
-        "name": "US Eastern",
-        "_info": None
+    'dateAcquired': '2002-08-20T18: 04: 26Z',
+    'sicCode': None,
+    'parentCompany': None,
+    'annualRevenue': 0.0,
+    'numberOfEmployees': None,
+    'ownershipType': None,
+    'timeZone': {
+        'id': 1,
+        'name': 'US Eastern',
+        '_info': None
     },
-    "leadSource": None,
-    "leadFlag": False,
-    "unsubscribeFlag": False,
-    "calendarId": None,
-    "userDefinedField1": None,
-    "userDefinedField2": None,
-    "userDefinedField3": None,
-    "userDefinedField4": None,
-    "userDefinedField5": None,
-    "userDefinedField6": None,
-    "userDefinedField7": None,
-    "userDefinedField8": None,
-    "userDefinedField9": None,
-    "userDefinedField10": None,
-    "vendorIdentifier": None,
-    "taxIdentifier": None,
-    "taxCode": {
-        "id": 11,
-        "name": "State",
-        "_info": {
-            "taxCode_href": "https: //some-host.com/v4_6_release/apis/3.0/finance/taxCodes/11"
+    'leadSource': None,
+    'leadFlag': False,
+    'unsubscribeFlag': False,
+    'calendarId': None,
+    'userDefinedField1': None,
+    'userDefinedField2': None,
+    'userDefinedField3': None,
+    'userDefinedField4': None,
+    'userDefinedField5': None,
+    'userDefinedField6': None,
+    'userDefinedField7': None,
+    'userDefinedField8': None,
+    'userDefinedField9': None,
+    'userDefinedField10': None,
+    'vendorIdentifier': None,
+    'taxIdentifier': None,
+    'taxCode': {
+        'id': 11,
+        'name': 'State',
+        '_info': {
+            'taxCode_href': 'https: //some-host.com/v4_6_release/apis/3.0/finance/taxCodes/11'
         }
     },
-    "billingTerms": {
-        "id": 2,
-        "name": "Net 10 days",
-        "_info": None
+    'billingTerms': {
+        'id': 2,
+        'name': 'Net 10 days',
+        '_info': None
     },
-    "invoiceTemplate": None,
-    "pricingSchedule": None,
-    "companyEntityType": None,
-    "billToCompany": {
-        "id": 2,
-        "identifier": "YourCompany",
-        "name": "TestCompany",
-        "_info": {
-            "company_href": "https: //some-host.com/v4_6_release/apis/3.0/company/companies/2"
+    'invoiceTemplate': None,
+    'pricingSchedule': None,
+    'companyEntityType': None,
+    'billToCompany': {
+        'id': 2,
+        'identifier': 'YourCompany',
+        'name': 'TestCompany',
+        '_info': {
+            'company_href': 'https: //some-host.com/v4_6_release/apis/3.0/company/companies/2'
         }
     },
-    "billingSite": None,
-    "billingContact": None,
-    "invoiceDeliveryMethod": {
-        "id": 1,
-        "name": "Mail",
-        "_info": None
+    'billingSite': None,
+    'billingContact': None,
+    'invoiceDeliveryMethod': {
+        'id': 1,
+        'name': 'Mail',
+        '_info': None
     },
-    "invoiceToEmailAddress": None,
-    "invoiceCCEmailAddress": None,
-    "deletedFlag": False,
-    "dateDeleted": None,
-    "deletedBy": None,
-    "mobileGuid": "4d48fc9e-2e9a-43a6-a85d-f1996723459f",
-    "currency": None,
-    "territoryManager": None,
-    "_info": {
-        "lastUpdated": "2015-12-24T22: 08: 22Z",
-        "updatedBy": "omnicorp"
+    'invoiceToEmailAddress': None,
+    'invoiceCCEmailAddress': None,
+    'deletedFlag': False,
+    'dateDeleted': None,
+    'deletedBy': None,
+    'mobileGuid': '4d48fc9e-2e9a-43a6-a85d-f1996723459f',
+    'currency': None,
+    'territoryManager': None,
+    '_info': {
+        'lastUpdated': '2015-12-24T22: 08: 22Z',
+        'updatedBy': 'omnicorp'
     },
-    "customFields": None,
-    'deletedFlag': False
+    'customFields': None,
 }
 
 API_COMPANY_LIST = [API_COMPANY]
-
-API_SALES_PROJECT_STATUSES = [
-    {
-        "id": 1,
-        "name": "Open",
-        "defaultFlag": True,
-        "inactiveFlag": False,
-        "noTimeFlag": False,
-        "closedFlag": False,
-        "_info": {
-            "lastUpdated": "2001-01-08T18:05:13Z",
-            "updatedBy": None
-        }
-    },
-    {
-        "id": 2,
-        "name": "Closed",
-        "defaultFlag": False,
-        "inactiveFlag": False,
-        "noTimeFlag": True,
-        "closedFlag": True,
-        "_info": {
-            "lastUpdated": "2001-01-08T18:05:21Z",
-            "updatedBy": None
-        }
-    },
-    {
-        "id": 3,
-        "name": "On-Hold",
-        "defaultFlag": False,
-        "inactiveFlag": False,
-        "noTimeFlag": True,
-        "closedFlag": False,
-        "_info": {
-            "lastUpdated": "2001-01-08T18:05:40Z",
-            "updatedBy": None
-        }
-    },
-    {
-        "id": 6,
-        "name": ">Closed",
-        "defaultFlag": False,
-        "inactiveFlag": False,
-        "noTimeFlag": True,
-        "closedFlag": True,
-        "_info": {
-            "lastUpdated": "2017-08-30T19:25:43Z",
-            "updatedBy": "User1"
-        }
-    }
-]
-
-API_PROJECT = {
-    'id': 5,
-    'name': 'Financial System Implementation',
-    'actualHours': 8.03,
-    'budgetHours': 91.5,
-    'scheduledHours': 13.95,
-    '_info': {
-        'project_href': 'https://some-host.com/v4_6_release/apis/3.0/project/projects/5'
-    },
-    'status': {
-        'id': 1,
-        'name': 'Open',
-    },
-}
-
-API_PROJECT_LIST = [API_PROJECT]
-
-API_SERVICE_LOCATION = {
-    'id': 1,
-    'name': 'On-Site',
-    'where': None,
-    'defaultFlag': True,
-    '_info': {'lastUpdated': '2001-06-05T16:53:55Z', 'updatedBy': 'SumGuy'}
-}
-
-API_SERVICE_LOCATION_LIST = [API_SERVICE_LOCATION]
-
-
-API_SERVICE_PRIORITY = {
-    'id': 4,
-    'name': 'Priority 3 - Normal Response',
-    'sortOrder': 6,
-    'color': 'blue',
-    '_info': {
-        'priority_href': 'https://some-host.com/v4_6_release/apis/3.0/service/priorities/4',
-        'image_href': 'https://some-host.com/v4_6_release/'
-            'apis/3.0/service/priorities/4/image?lm=2005-05-27T14:58:21Z'
-    }
-}
-# Under unknown circumstances, a CW instance might just give id and name
-# fields.
-API_SERVICE_PRIORITY_LIMITED = {
-    'id': 5,
-    'name': 'Priority 2 - Quick Response',
-}
-
-API_SERVICE_PRIORITY_LIST = [API_SERVICE_PRIORITY_LIMITED, API_SERVICE_PRIORITY]
-
-
-API_SERVICE_TEAM_LIST = [
-    {'_info': {'lastUpdated': '2017-02-14T18:21:15Z', 'updatedBy': 'User1'},
-     'boardId': 1,
-     'businessUnitId': 10,
-     'defaultFlag': True,
-     'id': 25,
-     'locationId': 2,
-     'members': [179, 176, 181, 183, 185],
-     'name': 'Windows Team',
-     'notifyOnTicketDelete': False,
-     'teamLeader': {'_info': {'member_href': 'https://some-host.com/v4_6_release/apis/3.0/system/members/186'},
-                    'id': 186,
-                    'identifier': 'User10',
-                    'name': 'Training User10'}},
-    {'_info': {'lastUpdated': '2017-02-14T18:20:31Z', 'updatedBy': 'User1'},
-     'boardId': 1,
-     'businessUnitId': 10,
-     'defaultFlag': False,
-     'id': 26,
-     'locationId': 2,
-     'members': [202, 191, 189, 193, 195],
-     'name': 'Network Team',
-     'notifyOnTicketDelete': False,
-     'teamLeader': {'_info': {'member_href': 'https://some-host.com/v4_6_release/apis/3.0/system/members/186'},
-                    'id': 186,
-                    'identifier': 'User10',
-                    'name': 'Training User10'}},
-    {'_info': {'lastUpdated': '2017-02-14T18:20:13Z', 'updatedBy': 'User1'},
-     'boardId': 1,
-     'businessUnitId': 10,
-     'defaultFlag': False,
-     'id': 27,
-     'locationId': 2,
-     'members': [180, 178, 187, 186, 182, 184],
-     'name': 'Linux Team',
-     'notifyOnTicketDelete': False,
-     'teamLeader': {'_info': {'member_href': 'https://some-host.com/v4_6_release/apis/3.0/system/members/189'},
-                    'id': 189,
-                    'identifier': 'User13',
-                    'name': 'Training User13'}}]
 
 API_MEMBER = {
     'adminFlag': False,
@@ -438,6 +296,231 @@ API_MEMBER = {
         'updatedBy': 'User1',
     }
 }
+
+API_MEMBER_LIST = [API_MEMBER]
+
+
+API_MEMBER_COUNT = {
+    'count': len(API_MEMBER_LIST)
+}
+
+API_PROJECT_STATUSES = [
+    {
+        'id': 1,
+        'name': 'Open',
+        'defaultFlag': True,
+        'inactiveFlag': False,
+        'noTimeFlag': False,
+        'closedFlag': False,
+        '_info': {
+            'lastUpdated': '2001-01-08T18:05:13Z',
+            'updatedBy': None
+        }
+    },
+    {
+        'id': 2,
+        'name': 'Closed',
+        'defaultFlag': False,
+        'inactiveFlag': False,
+        'noTimeFlag': True,
+        'closedFlag': True,
+        '_info': {
+            'lastUpdated': '2001-01-08T18:05:21Z',
+            'updatedBy': None
+        }
+    },
+    {
+        'id': 3,
+        'name': 'On-Hold',
+        'defaultFlag': False,
+        'inactiveFlag': False,
+        'noTimeFlag': True,
+        'closedFlag': False,
+        '_info': {
+            'lastUpdated': '2001-01-08T18:05:40Z',
+            'updatedBy': None
+        }
+    },
+    {
+        'id': 6,
+        'name': '>Closed',
+        'defaultFlag': False,
+        'inactiveFlag': False,
+        'noTimeFlag': True,
+        'closedFlag': True,
+        '_info': {
+            'lastUpdated': '2017-08-30T19:25:43Z',
+            'updatedBy': 'User1'
+        }
+    }
+]
+
+
+API_PROJECT = {
+    'id': 5,
+    '_info': {
+        'lastUpdated': '2005-05-27T17:30:19Z',
+        'updatedBy': 'User10'
+    },
+    'actualEnd': '2005-08-24T00:00:00Z',
+    'actualHours': 8.03,
+    'actualStart': '2005-08-24T00:00:00Z',
+    'billExpenses': 'Billable',
+    'billingAmount': 0,
+    'billingAttention': '',
+    'billingMethod': 'ActualRates',
+    'billingRateType': 'WorkRole',
+    'billProducts': 'Billable',
+    'billProjectAfterClosedFlag': False,
+    'billTime': 'Billable',
+    'billUnapprovedTimeAndExpense': False,
+    'board': API_BOARD,
+    'budgetAnalysis': 'ActualHours',
+    'budgetFlag': False,
+    'budgetHours': 91.5,
+    'businessUnitId': 10,
+    'company': API_COMPANY,
+    'contact': {
+        'id': 70,
+        'name': 'Gregg Kegle',
+        '_info': {
+            'contact_href': 'https://some-host.com/v4_6_release/apis/3.0/company/contacts/70'
+        }
+    },
+    'customerPO': '',
+    'description': '\n',
+    'currency': {
+        'id': 7,
+        'symbol': '$',
+        'isoCode': 'USD',
+        'name': 'US Dollars',
+        '_info': {
+            'currency_href': 'https://some-host.com/v4_6_release/apis/3.0/finance/currencies/7'
+        }
+    },
+    'downpayment': 0,
+    'estimatedEnd': '2005-12-30T00:00:00Z',
+    'estimatedExpenseRevenue': 0,
+    'estimatedHours': 0,
+    'estimatedProductRevenue': 0,
+    'estimatedStart': '2005-05-02T00:00:00Z',
+    'estimatedTimeRevenue': 0,
+    'expenseApprover': API_MEMBER,
+    'includeDependenciesFlag': False,
+    'includeEstimatesFlag': False,
+    'locationId': 2,
+    'manager': API_MEMBER,
+    'name': 'Financial System Implementation',
+    'restrictDownPaymentFlag': False,
+    'scheduledHours': 13.95,
+    'shipToCompany': API_COMPANY,
+    'shipToSite': {
+        'id': 28,
+        'name': 'Main',
+        '_info': {
+            'site_href': 'https://some-host.com/v4_6_release/apis/3.0/company/companies/24/sites/28'
+        }
+    },
+    'site': {
+        'id': 28,
+        'name': 'Main',
+        '_info': {
+            'site_href': 'https://some-host.com/v4_6_release/apis/3.0/company/companies/24/sites/28'
+        }
+    },
+    'status': API_PROJECT_STATUSES[0],
+    'timeApprover': API_MEMBER,
+    'type': {
+        'id': 8,
+        'name': 'Implementations'
+    },
+    'doNotDisplayInPortalFlag': False,
+    'estimatedTimeCost': 0,
+    'estimatedExpenseCost': 0,
+    'estimatedProductCost': 0
+}
+
+API_PROJECT_LIST = [API_PROJECT]
+
+API_SERVICE_LOCATION = {
+    'id': 1,
+    'name': 'On-Site',
+    'where': None,
+    'defaultFlag': True,
+    '_info': {'lastUpdated': '2001-06-05T16:53:55Z', 'updatedBy': 'SumGuy'}
+}
+
+API_SERVICE_LOCATION_LIST = [API_SERVICE_LOCATION]
+
+
+API_SERVICE_PRIORITY = {
+    'id': 4,
+    'name': 'Priority 3 - Normal Response',
+    'sortOrder': 6,
+    'color': 'blue',
+    '_info': {
+        'priority_href': 'https://some-host.com/v4_6_release/apis/3.0/service/priorities/4',
+        'image_href': 'https://some-host.com/v4_6_release/'
+            'apis/3.0/service/priorities/4/image?lm=2005-05-27T14:58:21Z'
+    }
+}
+# Under unknown circumstances, a CW instance might just give id and name
+# fields.
+API_SERVICE_PRIORITY_LIMITED = {
+    'id': 5,
+    'name': 'Priority 2 - Quick Response',
+}
+
+
+API_SERVICE_PRIORITY_LIST = [API_SERVICE_PRIORITY_LIMITED, API_SERVICE_PRIORITY]
+
+
+API_SERVICE_TEAM_LIST = [
+    {
+        '_info': {'lastUpdated': '2017-02-14T18:21:15Z', 'updatedBy': 'User1'},
+        'boardId': 1,
+        'businessUnitId': 10,
+        'defaultFlag': True,
+        'id': 25,
+        'locationId': 2,
+        'members': [179, 176, 181, 183, 185],
+        'name': 'Windows Team',
+        'notifyOnTicketDelete': False,
+        'teamLeader': {'_info': {'member_href': 'https://some-host.com/v4_6_release/apis/3.0/system/members/186'},
+                       'id': 186,
+                       'identifier': 'User10',
+                       'name': 'Training User10'}},
+    {
+        '_info': {'lastUpdated': '2017-02-14T18:20:31Z', 'updatedBy': 'User1'},
+        'boardId': 1,
+        'businessUnitId': 10,
+        'defaultFlag': False,
+        'id': 26,
+        'locationId': 2,
+        'members': [202, 191, 189, 193, 195],
+        'name': 'Network Team',
+        'notifyOnTicketDelete': False,
+        'teamLeader': {'_info': {'member_href': 'https://some-host.com/v4_6_release/apis/3.0/system/members/186'},
+                       'id': 186,
+                       'identifier': 'User10',
+                       'name': 'Training User10'}},
+    {
+        '_info': {'lastUpdated': '2017-02-14T18:20:13Z', 'updatedBy': 'User1'},
+        'boardId': 1,
+        'businessUnitId': 10,
+        'defaultFlag': False,
+        'id': 27,
+        'locationId': 2,
+        'members': [180, 178, 187, 186, 182, 184],
+        'name': 'Linux Team',
+        'notifyOnTicketDelete': False,
+        'teamLeader': {'_info': {'member_href': 'https://some-host.com/v4_6_release/apis/3.0/system/members/189'},
+                       'id': 189,
+                       'identifier': 'User13',
+                       'name': 'Training User13'}
+    }
+]
+
 
 API_SERVICE_TICKET = {
     'id': 69,
@@ -593,24 +676,16 @@ API_CW_VERSION = {
 }
 
 
-API_MEMBER_LIST = [API_MEMBER]
-
-
-API_MEMBER_COUNT = {
-    'count': len(API_MEMBER_LIST)
-}
-
-
 API_SYSTEM_CALLBACK_ENTRY = {
-    "id": 0,
-    "description": "maxLength = 100",
-    "url": settings.DJCONNECTWISE_TEST_DOMAIN,
-    "objectId": 0,
-    "type": "Sample string",
-    "level": "Sample string",
-    "memberId": API_MEMBER['id'],
-    "inactiveFlag": False,
-    "_info ": {"lastUpdated": "", "updatedBy": ""}
+    'id': 0,
+    'description': 'maxLength = 100',
+    'url': settings.DJCONNECTWISE_TEST_DOMAIN,
+    'objectId': 0,
+    'type': 'Sample string',
+    'level': 'Sample string',
+    'memberId': API_MEMBER['id'],
+    'inactiveFlag': False,
+    '_info ': {'lastUpdated': '', 'updatedBy': ''}
 }
 
 
