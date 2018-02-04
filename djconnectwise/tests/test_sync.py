@@ -469,6 +469,7 @@ class TestOpportunitySynchronizer(TestCase, SynchronizerTestMixin):
         fixture_utils.init_activities()
         fixture_utils.init_opportunity_statuses()
         fixture_utils.init_opportunity_types()
+        fixture_utils.init_sales_probabilities()
         fixture_utils.init_members()
         fixture_utils.init_companies()
 
