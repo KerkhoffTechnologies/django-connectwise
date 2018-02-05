@@ -466,6 +466,7 @@ class SalesAPIClient(ConnectWiseAPIClient):
     ENDPOINT_OPPORTUNITY_TYPES = \
         '{}/types'.format(ENDPOINT_OPPORTUNITIES)
     ENDPOINT_ACTIVITIES = 'activities'
+    ENDPOINT_PROBABILITIES = 'probabilities'
 
     def by_id(self, opportunity_id):
         endpoint_url = '{}/{}'.format(
@@ -481,6 +482,11 @@ class SalesAPIClient(ConnectWiseAPIClient):
         endpoint_url = '{}/{}'.format(
             self.ENDPOINT_ACTIVITIES, activity_id)
         return self.fetch_resource(endpoint_url)
+
+    def get_probabilities(self, *args, **kwargs):
+        return self.fetch_resource(self.ENDPOINT_PROBABILITIES,
+                                   should_page=True,
+                                   *args, **kwargs)
 
     def get_opportunities(self, *args, **kwargs):
         return self.fetch_resource(self.ENDPOINT_OPPORTUNITIES,

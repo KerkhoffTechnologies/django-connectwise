@@ -549,6 +549,18 @@ class ActivitySynchronizer(Synchronizer):
         return self.client.get_single_activity(activity_id)
 
 
+class SalesProbabilitySynchronizer(Synchronizer):
+    client_class = api.SalesAPIClient
+    model_class = models.SalesProbability
+
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data['id']
+        instance.probability = json_data['probability']
+
+    def get_page(self, *args, **kwargs):
+        return self.client.get_probabilities(*args, **kwargs)
+
+
 class ScheduleEntriesSynchronizer(BatchConditionMixin, Synchronizer):
     client_class = api.ScheduleAPIClient
     model_class = models.ScheduleEntry
@@ -1038,6 +1050,7 @@ class OpportunitySynchronizer(Synchronizer):
         'type': (models.OpportunityType, 'opportunity_type'),
         'stage': (models.OpportunityStage, 'stage'),
         'status': (models.OpportunityStatus, 'status'),
+        'probability': (models.SalesProbability, 'probability'),
         'primarySalesRep': (models.Member, 'primary_sales_rep'),
         'secondarySalesRep': (models.Member, 'secondary_sales_rep'),
         'company': (models.Company, 'company'),

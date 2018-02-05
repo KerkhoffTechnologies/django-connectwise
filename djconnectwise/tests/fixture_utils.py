@@ -79,6 +79,13 @@ def init_opportunity_statuses():
     return synchronizer.sync()
 
 
+def init_sales_probabilities():
+    mocks.sales_api_get_sales_probabilities_call(
+        fixtures.API_SALES_PROBABILITY_LIST)
+    synchronizer = sync.SalesProbabilitySynchronizer()
+    return synchronizer.sync()
+
+
 def init_opportunity_types():
     mocks.sales_api_get_opportunity_types_call(
         fixtures.API_SALES_OPPORTUNITY_TYPES)

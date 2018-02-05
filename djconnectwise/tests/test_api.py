@@ -496,6 +496,16 @@ class TestSalesAPIClient(BaseAPITestCase):
         self.assert_request_should_page(True)
 
     @responses.activate
+    def test_get_sales_probabilities(self):
+        endpoint = self.client._endpoint(
+            self.client.ENDPOINT_PROBABILITIES)
+
+        mk.get(endpoint, fixtures.API_SALES_PROBABILITY_LIST)
+        result = self.client.get_probabilities()
+        self.assertEqual(result, fixtures.API_SALES_PROBABILITY_LIST)
+        self.assert_request_should_page(True)
+
+    @responses.activate
     def test_get_activities(self):
         endpoint = self.client._endpoint(
             self.client.ENDPOINT_ACTIVITIES)

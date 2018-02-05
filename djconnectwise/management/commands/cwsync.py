@@ -37,6 +37,8 @@ class Command(BaseCommand):
                 _('Opportunity Status')),
             ('opportunity_type', sync.OpportunityTypeSynchronizer,
                 _('Opportunity Type')),
+            ('sales_probability', sync.SalesProbabilitySynchronizer,
+                _('Sales Probability')),
             ('opportunity', sync.OpportunitySynchronizer,
                 _('Opportunity')),
             ('ticket', sync.TicketSynchronizer, _('Ticket')),
