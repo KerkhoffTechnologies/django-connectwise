@@ -190,7 +190,7 @@ class TestSyncSalesProbabilitiesCommand(AbstractBaseSyncTest, TestCase):
     args = (
         mocks.sales_api_get_sales_probabilities_call,
         fixtures.API_SALES_PROBABILITY_LIST,
-        'sales_probabilities'
+        'sales_probability'
     )
 
 
@@ -343,7 +343,7 @@ class TestSyncAllCommand(TestCase):
             'opportunity': models.Opportunity,
             'opportunity_status': models.OpportunityStatus,
             'opportunity_type': models.OpportunityType,
-            'sales_probabilities': models.SalesProbabilities,
+            'sales_probability': models.SalesProbability,
             # 'activity': models.Activity,
             'schedule_entry': models.ScheduleEntry,
             'schedule_type': models.ScheduleType,

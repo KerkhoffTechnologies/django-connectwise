@@ -165,3 +165,8 @@ class ActivityAdmin(admin.ModelAdmin):
     formfield_overrides = {
         db_models.CharField: {'widget': TextInput(attrs={'size': '40'})}
     }
+
+
+@admin.register(models.SalesProbability)
+class SalesProbabilityAdmin(admin.ModelAdmin):
+    list_display = ('id', 'probability',)
