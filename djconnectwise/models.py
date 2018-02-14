@@ -363,7 +363,9 @@ class TicketPriority(TimeStampedModel):
         matches the common format ("Priority X - ..."), then return
         something sensible based on values seen in the wild.
         """
-        if self._color:
+        if self._color == "Custom":
+            return self.DEFAULT_COLOR
+        elif self._color:
             return self._color
         else:
             prio_number = None
