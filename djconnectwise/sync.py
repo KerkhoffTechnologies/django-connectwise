@@ -897,12 +897,6 @@ class TicketSynchronizer(BatchConditionMixin, Synchronizer):
     client_class = api.ServiceAPIClient
     model_class = models.Ticket
     batch_condition_list = []
-    child_synchronizers = (
-        CompanySynchronizer,
-        BoardStatusSynchronizer,
-        PrioritySynchronizer,
-        LocationSynchronizer
-    )
 
     related_meta = {
         'team': (models.Team, 'team'),
