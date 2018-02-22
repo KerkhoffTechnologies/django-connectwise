@@ -83,10 +83,7 @@ class CallBackView(views.CsrfExemptMixin,
         synchronizer = sync_class()
 
         try:
-            if action == CALLBACK_DELETED:
-                synchronizer.fetch_delete_by_id(entity_id)
-            else:
-                synchronizer.fetch_sync_by_id(entity_id)
+            self.handle(entity_id, action, callback_type, synchronizer)
         except ConnectWiseAPIError as e:
             # Something bad happened when talking to the API. There's not
             # much we can do, so just log it. We should get synced back up
@@ -98,6 +95,16 @@ class CallBackView(views.CsrfExemptMixin,
 
         # We need not return anything to ConnectWise
         return HttpResponse(status=204)
+
+    def handle(self, entity_id, action, callback_type, synchronizer):
+        """
+        Do the interesting stuff here, so that it can be overridden in
+        a child class if needed.
+        """
+        if action == CALLBACK_DELETED:
+            synchronizer.fetch_delete_by_id(entity_id)
+        else:
+            synchronizer.fetch_sync_by_id(entity_id)
 
 
 class CallBackForm(forms.Form):
