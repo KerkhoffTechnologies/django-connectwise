@@ -11,6 +11,14 @@ import tempfile
 DEBUG = True
 tmp_media = tempfile.TemporaryDirectory()
 
+
+def djconnectwise_configuration():
+    return {
+        'callback_url': '/?id=',
+        'callback_host': 'http://localhost',
+    }
+
+
 settings.configure(
     DEBUG=True,
     ALLOWED_HOSTS=('testserver',),
@@ -20,7 +28,6 @@ settings.configure(
         'easy_thumbnails',
         'django.contrib.contenttypes',
         'django.contrib.auth',
-        'django.contrib.sites',
         'django.contrib.sessions',
     ),
     CONNECTWISE_SERVER_URL='https://localhost',
@@ -44,14 +51,13 @@ settings.configure(
     USE_TZ=True,  # Prevent 'ValueError: SQLite backend does not support
     # timezone-aware datetimes when USE_TZ is False.'
     ROOT_URLCONF='djconnectwise.tests.urls',
-    DJCONNECTWISE_CALLBACK_PROTOCOL='http' if DEBUG else 'https',
-    DJCONNECTWISE_TEST_DOMAIN='localhost',
     CACHES={
         'default': {
             'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
             'LOCATION': 'unique-snowflake',
         }
-    }
+    },
+    DJCONNECTWISE_CONF_CALLABLE=djconnectwise_configuration,
 )
 
 

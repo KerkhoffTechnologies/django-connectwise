@@ -12,7 +12,7 @@ from django.utils import timezone
 from djconnectwise import api
 from djconnectwise import models
 from djconnectwise.utils import get_hash, get_filename_extension
-from djconnectwise.utils import RequestSettings
+from djconnectwise.utils import DjconnectwiseSettings
 
 
 DEFAULT_AVATAR_EXTENSION = 'jpg'
@@ -76,7 +76,7 @@ class Synchronizer:
     def __init__(self, full=False, *args, **kwargs):
         self.api_conditions = []
         self.client = self.client_class()
-        request_settings = RequestSettings().get_settings()
+        request_settings = DjconnectwiseSettings().get_settings()
         self.batch_size = request_settings['batch_size']
         self.full = full
 

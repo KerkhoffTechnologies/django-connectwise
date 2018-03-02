@@ -537,7 +537,7 @@ class TestAPISettings(TestCase):
         self.assertEqual(client.timeout, 30.0)
 
     def test_dynamic_batch_size(self):
-        method_name = 'djconnectwise.utils.RequestSettings.get_settings'
+        method_name = 'djconnectwise.utils.DjconnectwiseSettings.get_settings'
         request_settings = {
             'batch_size': 10,
             'timeout': 10.0,
