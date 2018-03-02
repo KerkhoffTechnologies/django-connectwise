@@ -679,7 +679,7 @@ API_CW_VERSION = {
 API_SYSTEM_CALLBACK_ENTRY = {
     'id': 0,
     'description': 'maxLength = 100',
-    'url': settings.DJCONNECTWISE_TEST_DOMAIN,
+    'url': 'http://localhost',
     'objectId': 0,
     'type': 'Sample string',
     'level': 'Sample string',

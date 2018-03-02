@@ -35,7 +35,7 @@ def get_filename_extension(filename):
     return m.group(1) if m else None
 
 
-class RequestSettings:
+class DjconnectwiseSettings:
     def get_settings(self):
         # Make some defaults
         request_settings = {
@@ -45,6 +45,6 @@ class RequestSettings:
         }
 
         if hasattr(settings, 'DJCONNECTWISE_CONF_CALLABLE'):
-            request_settings = settings.DJCONNECTWISE_CONF_CALLABLE()
+            request_settings.update(settings.DJCONNECTWISE_CONF_CALLABLE())
 
         return request_settings

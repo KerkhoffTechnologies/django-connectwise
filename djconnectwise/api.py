@@ -7,7 +7,7 @@ from retrying import retry
 
 from django.conf import settings
 from django.core.cache import cache
-from djconnectwise.utils import RequestSettings
+from djconnectwise.utils import DjconnectwiseSettings
 
 
 class ConnectWiseAPIError(Exception):
@@ -168,7 +168,7 @@ class ConnectWiseAPIClient(object):
             '{0}'.format(self.api_private_key),
         )
 
-        self.request_settings = RequestSettings().get_settings()
+        self.request_settings = DjconnectwiseSettings().get_settings()
         self.timeout = self.request_settings['timeout']
         self.api_base_url = None  # This will be set to the base URL for this
         # particular API-
