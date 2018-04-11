@@ -327,9 +327,11 @@ class TimeEntry(models.Model):
     )
 
     charge_to_type = models.CharField(blank=False, null=False,
-                                      choices=CHARGE_TYPES, db_index=True)
+                                      choices=CHARGE_TYPES, db_index=True,
+                                      max_length=250)
     billable_option = models.CharField(blank=False, null=False,
-                                       choices=BILL_TYPES, db_index=True)
+                                       choices=BILL_TYPES, db_index=True,
+                                       max_length=250)
 
     charge_to_id = models.ForeignKey(
         'Ticket', blank=False, null=False)

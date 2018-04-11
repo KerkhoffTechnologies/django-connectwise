@@ -1016,3 +1016,24 @@ API_SCHEDULE_ENTRY_FOR_ACTIVITY = {
 
 API_SCHEDULE_ENTRIES = [API_SCHEDULE_ENTRY_FOR_TICKET,
                         API_SCHEDULE_ENTRY_FOR_ACTIVITY]
+
+API_TIME_ENTRY = {
+    "id": 2,
+    "company": API_COMPANY,
+    "chargeToId": 69,
+    "chargeToType": "ServiceTicket",
+    "member": API_MEMBER,
+    "timeStart": "2005-05-16T08:00:00Z",
+    "timeEnd": "2005-05-16T10:00:00Z",
+    "actualHours": 2,
+    "billableOption": "Billable",
+    "notes": "server was infected with the Code Red worm.  It has been patched and rebooted.",
+    "status": "Billed",
+    "_info": {
+        "lastUpdated": "2015-10-17T18:33:20Z",
+        "updatedBy": "CONVERSION",
+        "chargeToMobileGuid": "3b9552a5-e8ef-4a68-8124-bbd2c7baf112"
+        }
+}
+
+API_TIME_ENTRY_LIST = [API_TIME_ENTRY]

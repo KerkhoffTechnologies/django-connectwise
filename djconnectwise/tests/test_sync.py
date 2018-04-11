@@ -20,6 +20,7 @@ from djconnectwise.models import SyncJob
 from djconnectwise.models import Team
 from djconnectwise.models import Ticket
 from djconnectwise.models import TicketPriority
+# from djconnectwise.models import TimeEntry
 
 from . import fixtures
 from . import fixture_utils

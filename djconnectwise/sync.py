@@ -712,8 +712,8 @@ class ScheduleTypeSychronizer(Synchronizer):
         return self.client.get_schedule_types(*args, **kwargs)
 
 
-class TimeEntriesSynchronizer(BatchConditionMixin, Synchronizer):
-    client_class api.TimeAPIClient
+class TimeEntrySynchronizer(BatchConditionMixin, Synchronizer):
+    client_class = api.TimeAPIClient
     model_class = models.TimeEntry
     batch_condition_list = []
 
@@ -734,10 +734,15 @@ class TimeEntriesSynchronizer(BatchConditionMixin, Synchronizer):
         )
         self.batch_condition_list = list(ticket_ids)
 
+    def get_batch_condition(self, conditions):
+        return 'chargeToId in ({})'.format(
+            ','.join([str(i) for i in conditions])
+        )
+
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
         instance.charge_to_type = json_data['chargeToType']
-        instance.billable_option = json_data['billableOption']
+        instance.billable_option = json_data.get('billableOption')
         instance.notes = json_data.get('notes')
         instance.internal_notes = json_data.get('internalNotes')
 
@@ -774,7 +779,7 @@ class TimeEntriesSynchronizer(BatchConditionMixin, Synchronizer):
         # as this may be VERY different in the near future, because
         # charge_to_id would be converted to a GenericForeignKey
         # and would be handled differently
-        ticket_class = models.ticket_class
+        ticket_class = models.Ticket
         try:
             charge_id = json_data['chargeToId']
         except KeyError:
@@ -794,7 +799,6 @@ class TimeEntriesSynchronizer(BatchConditionMixin, Synchronizer):
 
     def get_page(self, *args, **kwargs):
         return self.client.get_time_entries(*args, **kwargs)
-
 
 
 class LocationSynchronizer(Synchronizer):
