@@ -458,6 +458,16 @@ class ScheduleAPIClient(ConnectWiseAPIClient):
         )
 
 
+class TimeAPIClient(ConnectWiseAPIClient):
+    API = 'time'
+    ENDPOINT_ENTRIES = 'entries'
+
+    def get_time_entries(self, *args, **kwargs):
+        return self.fetch_resource(self.ENDPOINT_ENTRIES,
+                                   should_page=True,
+                                   *args, **kwargs)
+
+
 class SalesAPIClient(ConnectWiseAPIClient):
     API = 'sales'
     ENDPOINT_OPPORTUNITIES = 'opportunities'

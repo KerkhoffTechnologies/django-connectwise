@@ -312,6 +312,40 @@ class ScheduleEntry(models.Model):
         return schedule_client.delete_schedule_entry(self.id)
 
 
+class TimeEntry(models.Model):
+    CHARGE_TYPES = (
+        ('ServiceTicket', "Service Ticket"),
+        ('ProjectTicket', "Project Ticket"),
+        ('ChargeCode', "Charge Code"),
+        ('Activity', "Activity")
+    )
+    BILL_TYPES = (
+        ('Billable', "Billable"),
+        ('DoNotBill', "Do Not Bill"),
+        ('NoCharge', "No Charge"),
+        ('NoDefault', "No Default")
+    )
+
+    charge_to_type = models.CharField(blank=False, null=False,
+                                      choices=CHARGE_TYPES, db_index=True)
+    billable_option = models.CharField(blank=False, null=False,
+                                       choices=BILL_TYPES, db_index=True)
+
+    charge_to_id = models.ForeignKey(
+        'Ticket', blank=False, null=False)
+    company = models.ForeignKey(
+        'Company', blank=False, null=False)
+    member = models.ForeignKey('Member', blank=True, null=True)
+    time_start = models.DateTimeField(blank=True, null=True)
+    time_end = models.DateTimeField(blank=True, null=True)
+    hours_deduct = models.DecimalField(
+        blank=True, null=True, decimal_places=2, max_digits=6)
+    actual_hours = models.DecimalField(
+        blank=True, null=True, decimal_places=2, max_digits=6)
+    notes = models.TextField(blank=True, null=True, max_length=2000)
+    internal_notes = models.TextField(blank=True, null=True, max_length=2000)
+
+
 class AvailableBoardTeamManager(models.Manager):
     """Return only teams whose ConnectWise board is active."""
     def get_queryset(self):
