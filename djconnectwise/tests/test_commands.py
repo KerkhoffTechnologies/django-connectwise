@@ -203,6 +203,8 @@ class TestSyncTimeEntriesCommand(AbstractBaseSyncTest, TestCase):
 
     def setUp(self):
         super().setUp()
+        fixture_utils.init_boards()
+        fixture_utils.init_board_statuses()
         fixture_utils.init_tickets()
         fixture_utils.init_companies()
         fixture_utils.init_members()
