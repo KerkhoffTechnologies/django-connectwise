@@ -18,6 +18,7 @@ from djconnectwise.models import ScheduleStatus
 from djconnectwise.models import ScheduleType
 from djconnectwise.models import SyncJob
 from djconnectwise.models import Team
+from djconnectwise.models import ServiceNote
 from djconnectwise.models import Ticket
 from djconnectwise.models import TicketPriority
 
@@ -408,6 +409,57 @@ class TestBoardStatusSynchronizer(TestCase, SynchronizerTestMixin):
 
     def call_api(self, return_data):
         return mocks.service_api_get_statuses_call(return_data)
+
+
+class TestServiceNoteSynchronizer(TestCase, SynchronizerTestMixin):
+    synchronizer_class = sync.ServiceNoteSynchronizer
+    model_class = ServiceNote
+    fixture = fixtures.API_SERVICE_NOTE_LIST
+
+    def _assert_fields(self, instance, json_data):
+        self.assertEqual(instance.id, json_data['id'])
+        self.assertEqual(instance.ticket.id, json_data['ticketId'])
+        self.assertEqual(instance.text, json_data['text'])
+        self.assertEqual(instance.detail_description_flag,
+                         json_data['detailDescriptionFlag'])
+        self.assertEqual(instance.internal_analysis_flag,
+                         json_data['detailAnalysisFlag'])
+        self.assertEqual(instance.resolution_flag, json_data['resolutionFlag'])
+        self.assertEqual(instance.member.identifier,
+                         json_data['member'].identifier)
+        self.assertEqual(instance.date_created,
+                         parse(self.json_data['dateCreated']))
+        self.assertEqual(instance.created_by, json_data['createdBy'])
+        self.assertEqual(instance.internal_flag, json_data['interalFlag'])
+        self.assertEqual(instance.external_flag, json_data['external_flag'])
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_service_notes()
+        fixture_utils.init_tickets()
+
+    def call_api(self, return_data):
+        return mocks.service_api_get_notes_call(return_data)
+
+    def test_sync_update(self):
+        self._sync(self.fixture)
+
+        json_data = self.fixture[0]
+
+        instance_id = json_data['id']
+        original = self.model_class.objects.get(id=instance_id)
+
+        flag = 'False'
+        new_json = deepcopy(self.fixture[0])
+        new_json['detailDescriptionFlag'] = flag
+        new_json_list = [new_json]
+
+        self._sync(new_json_list)
+
+        changed = self.model_class.objects.get(id=instance_id)
+        self.assertNotEqual(original.detail_description_flag,
+                            flag)
+        self._assert_fields(changed, new_json)
 
 
 class TestMemberSynchronization(TransactionTestCase):

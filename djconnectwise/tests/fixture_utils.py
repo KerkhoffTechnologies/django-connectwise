@@ -41,6 +41,12 @@ def init_tickets():
     return synchronizer.sync()
 
 
+def init_service_notes():
+    mocks.service_api_get_notes_call(fixtures.API_SERVICE_NOTE_LIST)
+    synchronizer = sync.ServiceNoteSynchronizer()
+    return synchronizer.sync()
+
+
 def init_priorities():
     mocks.service_api_get_priorities_call([fixtures.API_SERVICE_PRIORITY])
     synchronizer = sync.PrioritySynchronizer()

@@ -720,6 +720,14 @@ class ServiceAPIClient(ConnectWiseAPIClient):
         ]
         return self.request('patch', endpoint_url, body)
 
+    def get_notes(self, ticket_id, *args, **kwargs):
+        """
+        Returns the notes associated with the specific ticket.
+        """
+        endpoint_url = '{}/{}/notes'.format(self.ENDPOINT_TICKETS, ticket_id)
+        return self.fetch_resource(endpoint_url, should_page=True,
+                                   *args, **kwargs)
+
     def get_statuses(self, board_id, *args, **kwargs):
         """
         Returns the status types associated with the specified board.

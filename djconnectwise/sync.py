@@ -331,6 +331,66 @@ class BatchConditionMixin:
         return sum(len(str(i)) for i in condition_list[:size]) + 300 + size
 
 
+class ServiceNoteSynchronizer(Synchronizer):
+    client_class = api.ServiceAPIClient
+    model_class = models.ServiceNote
+
+    related_meta = {
+        'member': (models.Member, 'member')
+    }
+
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data['id']
+        instance.text = json_data.get('text')
+        instance.detail_description_flag = json_data.get(
+            'detailDescriptionFlag')
+        instance.internal_analysis_flag = json_data.get(
+            'internalAnalysisFlag')
+        instance.resolution_flag = json_data.get(
+            'resolutionFlag')
+        instance.created_by = json_data.get('createdBy')
+        instance.internal_flag = json_data.get('internalFlag')
+        instance.external_flag = json_data.get('externalFlag')
+
+        date_created = json_data.get('dateCreated')
+        if date_created:
+            instance.date_created = parse(date_created)
+
+        ticket_class = models.Ticket
+
+        try:
+            ticket_id = json_data.get('ticketId')
+            related_ticket = ticket_class.objects.get(pk=ticket_id)
+            setattr(instance, 'ticket', related_ticket)
+        except ObjectDoesNotExist as e:
+            logger.warning(
+                'Ticket not found for {}.'.format(instance.id) +
+                ' ObjectDoesNotExist Exception: {}.'.format(e)
+            )
+
+        for json_field, value in self.related_meta.items():
+            model_class, field_name = value
+            self._assign_relation(
+                instance,
+                json_data,
+                json_field,
+                model_class,
+                field_name
+            )
+
+    def client_call(self, ticket_id, *args, **kwargs):
+        return self.client.get_notes(ticket_id, *args, **kwargs)
+
+    def get_page(self, *args, **kwargs):
+        records = []
+        ticket_qs = models.Ticket.objects.all()
+
+        for ticket_id in ticket_qs.values_list('id', flat=True):
+            records += self.client_call(ticket_id, *args, **kwargs)
+
+        return records
+
+
 class BoardSynchronizer(Synchronizer):
     client_class = api.ServiceAPIClient
     model_class = models.ConnectWiseBoard
