@@ -326,15 +326,20 @@ class TimeEntry(models.Model):
         ('NoDefault', "No Default")
     )
 
-    charge_to_type = models.CharField(blank=False, null=False,
-                                      choices=CHARGE_TYPES, db_index=True,
+    class Meta:
+        verbose_name_plural = 'Time Entries'
+        ordering = ('id', )
+
+    def __str__(self):
+        return str(self.id) or ''
+
+    charge_to_type = models.CharField(choices=CHARGE_TYPES, db_index=True,
                                       max_length=250)
-    billable_option = models.CharField(blank=False, null=False,
-                                       choices=BILL_TYPES, db_index=True,
+    billable_option = models.CharField(choices=BILL_TYPES, db_index=True,
                                        max_length=250)
 
     charge_to_id = models.ForeignKey(
-        'Ticket', blank=False, null=False)
+        'Ticket', blank=True, null=True)
     company = models.ForeignKey(
         'Company', blank=False, null=False)
     member = models.ForeignKey('Member', blank=True, null=True)
