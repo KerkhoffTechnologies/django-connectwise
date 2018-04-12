@@ -20,7 +20,7 @@ from djconnectwise.models import SyncJob
 from djconnectwise.models import Team
 from djconnectwise.models import Ticket
 from djconnectwise.models import TicketPriority
-# from djconnectwise.models import TimeEntry
+from djconnectwise.models import TimeEntry
 
 from . import fixtures
 from . import fixture_utils
@@ -156,6 +156,64 @@ class TestCompanyStatusSynchronizer(TestCase, SynchronizerTestMixin):
                          json_data['customNoteFlag'])
         self.assertEqual(instance.cancel_open_tracks_flag,
                          json_data['cancelOpenTracksFlag'])
+
+
+class TestTimeEntrySynchronizer(TestCase, SynchronizerTestMixin):
+    synchronizer_class = sync.TimeEntrySynchronizer
+    model_class = TimeEntry
+    fixture = fixtures.API_TIME_ENTRY_LIST
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_boards()
+        fixture_utils.init_companies()
+        fixture_utils.init_project_statuses()
+        fixture_utils.init_projects()
+        fixture_utils.init_locations()
+        fixture_utils.init_priorities()
+        fixture_utils.init_members()
+        fixture_utils.init_opportunity_statuses()
+        fixture_utils.init_opportunity_types()
+        fixture_utils.init_opportunities()
+        fixture_utils.init_teams()
+        fixture_utils.init_board_statuses()
+        fixture_utils.init_schedule_statuses()
+        fixture_utils.init_schedule_types()
+        fixture_utils.init_tickets()
+        fixture_utils.init_activities()
+
+    def call_api(self, return_data):
+        return mocks.time_api_get_time_entries_call(return_data)
+
+    def test_sync_update(self):
+        self._sync(self.fixture)
+
+        json_data = self.fixture[0]
+
+        instance_id = json_data['id']
+        original = self.model_class.objects.get(id=instance_id)
+
+        start = '2003-10-06T14:48:18Z'
+        new_json = deepcopy(self.fixture[0])
+        new_json["timeStart"] = start
+        new_json_list = [new_json]
+
+        self._sync(new_json_list)
+
+        changed = self.model_class.objects.get(id=instance_id)
+        self.assertNotEqual(original.time_start,
+                            start)
+        self._assert_fields(changed, new_json)
+
+    def _assert_fields(self, instance, json_data):
+        self.assertEqual(instance.id, json_data['id'])
+        self.assertEqual(instance.charge_to_id.id, json_data['chargeToId'])
+        self.assertEqual(instance.charge_to_type, json_data['chargeToType'])
+        self.assertEqual(instance.time_start, parse(json_data['timeStart']))
+        self.assertEqual(instance.time_end, parse(json_data['timeEnd']))
+        self.assertEqual(instance.actual_hours, json_data['actualHours'])
+        self.assertEqual(instance.billable_option, json_data['billableOption'])
+        self.assertEqual(instance.notes, json_data['notes'])
 
 
 class TestScheduleEntriesSynchronizer(TestCase, SynchronizerTestMixin):
