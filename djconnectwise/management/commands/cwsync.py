@@ -42,6 +42,8 @@ class Command(BaseCommand):
             ('opportunity', sync.OpportunitySynchronizer,
                 _('Opportunity')),
             ('ticket', sync.TicketSynchronizer, _('Ticket')),
+            ('service_note', sync.ServiceNoteSynchronizer,
+                _('Service Note')),
             ('schedule_type', sync.ScheduleTypeSychronizer,
                 _('Schedule Type')),
             ('schedule_status', sync.ScheduleStatusSynchronizer,

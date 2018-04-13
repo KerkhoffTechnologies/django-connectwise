@@ -423,15 +423,15 @@ class TestServiceNoteSynchronizer(TestCase, SynchronizerTestMixin):
         self.assertEqual(instance.detail_description_flag,
                          json_data['detailDescriptionFlag'])
         self.assertEqual(instance.internal_analysis_flag,
-                         json_data['detailAnalysisFlag'])
+                         json_data['internalAnalysisFlag'])
         self.assertEqual(instance.resolution_flag, json_data['resolutionFlag'])
         self.assertEqual(instance.member.identifier,
-                         json_data['member'].identifier)
+                         json_data['member']['identifier'])
         self.assertEqual(instance.date_created,
-                         parse(self.json_data['dateCreated']))
+                         parse(json_data['dateCreated']))
         self.assertEqual(instance.created_by, json_data['createdBy'])
-        self.assertEqual(instance.internal_flag, json_data['interalFlag'])
-        self.assertEqual(instance.external_flag, json_data['external_flag'])
+        self.assertEqual(instance.internal_flag, json_data['internalFlag'])
+        self.assertEqual(instance.external_flag, json_data['externalFlag'])
 
     def setUp(self):
         super().setUp()
@@ -449,7 +449,7 @@ class TestServiceNoteSynchronizer(TestCase, SynchronizerTestMixin):
         instance_id = json_data['id']
         original = self.model_class.objects.get(id=instance_id)
 
-        flag = 'False'
+        flag = False
         new_json = deepcopy(self.fixture[0])
         new_json['detailDescriptionFlag'] = flag
         new_json_list = [new_json]
