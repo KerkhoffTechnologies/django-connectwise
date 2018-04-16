@@ -391,6 +391,39 @@ class ServiceNoteSynchronizer(Synchronizer):
         return records
 
 
+class OpportunityNoteSynchronizer(Synchronizer):
+    client_class = api.SalesAPIClient
+    model_class = models.OpportunityNote
+
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data['id']
+        instance.text = json_data.get('text')
+
+        opp_class = models.Opportunity
+
+        try:
+            opportunity_id = json_data.get('opportunityId')
+            related_opportunity = opp_class.objects.get(pk=opportunity_id)
+            setattr(instance, 'opportunity', related_opportunity)
+        except ObjectDoesNotExist as e:
+            logger.warning(
+                'Opportunity not found for {}.'.format(instance.id) +
+                ' ObjectDoesNotExist Exception: {}'.format(e)
+            )
+
+    def client_call(self, opportunity_id, *args, **kwargs):
+        return self.client.get_notes(opportunity_id, *args, **kwargs)
+
+    def get_page(self, *args, **kwargs):
+        records = []
+        opportunity_qs = models.Opportunity.objects.all()
+
+        for opportunity_id in opportunity_qs.values_list('id', flat=True):
+            records += self.client_call(opportunity_id, *args, **kwargs)
+
+        return records
+
+
 class BoardSynchronizer(Synchronizer):
     client_class = api.ServiceAPIClient
     model_class = models.ConnectWiseBoard

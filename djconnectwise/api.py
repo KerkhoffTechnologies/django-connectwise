@@ -503,6 +503,16 @@ class SalesAPIClient(ConnectWiseAPIClient):
                                    should_page=True,
                                    *args, **kwargs)
 
+    def get_notes(self, opportunity_id, *args, **kwargs):
+        """
+        Returns the notes associated with the specific opportunity.
+        """
+        endpoint_url = '{}/{}/notes'.format(self.ENDPOINT_OPPORTUNITIES,
+                                            opportunity_id
+                                            )
+        return self.fetch_resource(endpoint_url, should_page=True,
+                                   *args, **kwargs)
+
     def update_opportunity_stage(self, obj_id, stage):
         """
         Update the opportunities' stage on the server.

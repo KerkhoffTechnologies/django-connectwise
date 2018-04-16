@@ -47,6 +47,14 @@ def init_service_notes():
     return synchronizer.sync()
 
 
+def init_opportunity_notes():
+    mocks.sales_api_get_opportunity_notes_call(
+        fixtures.API_SALES_OPPORTUNITY_NOTE_LIST
+    )
+    synchronizer = sync.OpportunityNoteSynchronizer()
+    return synchronizer.sync()
+
+
 def init_priorities():
     mocks.service_api_get_priorities_call([fixtures.API_SERVICE_PRIORITY])
     synchronizer = sync.PrioritySynchronizer()

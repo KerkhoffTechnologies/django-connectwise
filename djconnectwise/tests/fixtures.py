@@ -326,6 +326,15 @@ API_SERVICE_NOTE_LIST = [
 ]
 
 
+API_SALES_OPPORTUNITY_NOTE_LIST = [
+    {
+         'id': 43,
+         'opportunityId': 2,
+         'text': "Some text on this note"
+    }
+]
+
+
 API_PROJECT_STATUSES = [
     {
         'id': 1,
