@@ -36,9 +36,9 @@ class BoardStatusAdmin(admin.ModelAdmin):
 @admin.register(models.ServiceNote)
 class ServiceNoteAdmin(admin.ModelAdmin):
     list_display = ('id', 'ticket', 'date_created', 'member', 'text',
-        'created_by', 'internal_flag', 'external_flag',
-        'detail_description_flag', 'internal_analysis_flag'
-    )
+                    'created_by', 'internal_flag', 'external_flag',
+                    'detail_description_flag', 'internal_analysis_flag'
+                    )
     search_fields = ['id', 'date_created', 'text', 'created_by']
 
 
