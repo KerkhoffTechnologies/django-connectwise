@@ -20,6 +20,7 @@ from djconnectwise.models import SyncJob
 from djconnectwise.models import Team
 from djconnectwise.models import Ticket
 from djconnectwise.models import TicketPriority
+from djconnectwise.models import CompanyType
 
 from . import fixtures
 from . import fixture_utils
@@ -117,6 +118,7 @@ class TestCompanySynchronizer(TestCase, SynchronizerTestMixin):
         mocks.company_api_get_company_statuses_call(
             fixtures.API_COMPANY_STATUS_LIST)
         sync.CompanyStatusSynchronizer().sync()
+        fixture_utils.init_company_types()
 
     def call_api(self, return_data):
         return mocks.company_api_get_call(return_data)
@@ -132,6 +134,7 @@ class TestCompanySynchronizer(TestCase, SynchronizerTestMixin):
         self.assertEqual(company.state_identifier, api_company['state'])
         self.assertEqual(company.zip, api_company['zip'])
         self.assertEqual(company.status.id, api_company['status']['id'])
+        self.assertEqual(company.company_type.id, api_company['type']['id'])
 
 
 class TestCompanyStatusSynchronizer(TestCase, SynchronizerTestMixin):
@@ -155,6 +158,20 @@ class TestCompanyStatusSynchronizer(TestCase, SynchronizerTestMixin):
                          json_data['customNoteFlag'])
         self.assertEqual(instance.cancel_open_tracks_flag,
                          json_data['cancelOpenTracksFlag'])
+
+
+class TestCompanyTypeSynchronizer(TestCase, SynchronizerTestMixin):
+    synchronizer_class = sync.CompanyTypeSynchronizer
+    model_class = CompanyType
+    fixture = fixtures.API_COMPANY_TYPES_LIST
+
+    def call_api(self, return_data):
+        return mocks.company_api_get_company_types_call(return_data)
+
+    def _assert_fields(self, instance, json_data):
+        self.assertEqual(instance.id, json_data['id'])
+        self.assertEqual(instance.name, json_data['name'])
+        self.assertEqual(instance.vendor_flag, json_data['vendorFlag'])
 
 
 class TestScheduleEntriesSynchronizer(TestCase, SynchronizerTestMixin):

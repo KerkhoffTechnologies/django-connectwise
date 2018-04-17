@@ -50,7 +50,7 @@ class MemberAdmin(admin.ModelAdmin):
 @admin.register(models.Company)
 class CompanyAdmin(admin.ModelAdmin):
     list_display = ('id', 'name',
-                    'identifier', 'type', 'status', 'deleted_flag')
+                    'identifier', 'company_type', 'status', 'deleted_flag')
     list_filter = ('status',)
     search_fields = ['name', 'identifier']
 
@@ -58,6 +58,12 @@ class CompanyAdmin(admin.ModelAdmin):
 @admin.register(models.CompanyStatus)
 class CompanyStatusAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'default_flag', 'inactive_flag')
+
+
+@admin.register(models.CompanyType)
+class CompanyTypeAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'vendor_flag')
+    search_fields = ['name']
 
 
 @admin.register(models.ScheduleType)

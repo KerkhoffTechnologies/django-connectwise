@@ -83,6 +83,14 @@ class TestSyncCompaniesCommand(AbstractBaseSyncTest, TestCase):
     )
 
 
+class TestSyncCompanyTypesCommand(AbstractBaseSyncTest, TestCase):
+    args = (
+        mocks.company_api_get_company_types_call,
+        fixtures.API_COMPANY_TYPES_LIST,
+        'company_type'
+    )
+
+
 class TestSyncTeamsCommand(AbstractBaseSyncTest, TestCase):
     args = (
         mocks.service_api_get_teams_call,
@@ -266,6 +274,7 @@ class TestSyncAllCommand(TestCase):
         sync_test_cases = [
             TestSyncCompanyStatusesCommand,
             TestSyncCompaniesCommand,
+            TestSyncCompanyTypesCommand,
             TestSyncLocationsCommand,
             TestSyncPrioritiesCommand,
             TestSyncProjectStatusesCommand,
@@ -336,6 +345,7 @@ class TestSyncAllCommand(TestCase):
             'project': models.Project,
             'board_status': models.BoardStatus,
             'company_status': models.CompanyStatus,
+            'company_type': models.CompanyType,
             'team': models.Team,
             'location': models.Location,
             'ticket': models.Ticket,
