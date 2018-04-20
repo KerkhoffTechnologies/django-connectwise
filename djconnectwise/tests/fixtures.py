@@ -12,19 +12,6 @@ API_BOARD = {
 API_BOARD_LIST = [API_BOARD]
 
 
-API_COMPANY_TYPES_LIST = [
-    {
-        'id': 5,
-        'name': 'Partner',
-        'vendorFlag': False,
-        '_info': {
-            'type_href': 'https: //some-host.com/v4_6_release/' +
-                         'apis/3.0/company/companies/types/5'
-        }
-    }
-]
-
-
 API_BOARD_STATUS_LIST = [
     {
         'id': 1,
@@ -65,6 +52,20 @@ API_COMPANY_STATUS = {
 
 
 API_COMPANY_STATUS_LIST = [API_COMPANY_STATUS]
+
+
+API_COMPANY_TYPES_LIST = [
+    {
+        'id': 5,
+        'name': 'Partner',
+        'defaultFlag': False,
+        'vendorFlag': False,
+        '_info': {
+            'lastUpdated': '2015-08-21T20:22:06Z',
+            'updatedBy': None
+        }
+    }
+]
 
 
 API_COMPANY = {
