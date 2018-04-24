@@ -31,6 +31,7 @@ class Command(BaseCommand):
             ('project', sync.ProjectSynchronizer, _('Project')),
             ('company_status', sync.CompanyStatusSynchronizer,
                 _('Company Status')),
+            ('company_type', sync.CompanyTypeSynchronizer, _('Company Type')),
             ('company', sync.CompanySynchronizer, _('Company')),
             ('location', sync.LocationSynchronizer, _('Location')),
             ('opportunity_status', sync.OpportunityStatusSynchronizer,

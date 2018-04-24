@@ -463,6 +463,20 @@ class CompanySynchronizer(Synchronizer):
                     'Failed to find CompanyStatus: {}'.format(
                         status_json['id']
                     ))
+
+        type_json = company_json.get('type')
+        if type_json:
+            try:
+                company_type = models.CompanyType.objects.get(
+                    pk=type_json['id'])
+                company.company_type = company_type
+            except models.CompanyType.DoesNotExist:
+                logger.warning(
+                    'Failed to find CompanyType: {}'.format(
+                        type_json['id']
+                    )
+                )
+
         company.save()
         return company
 
@@ -502,6 +516,19 @@ class CompanyStatusSynchronizer(Synchronizer):
 
     def get_page(self, *args, **kwargs):
         return self.client.get_company_statuses(*args, **kwargs)
+
+
+class CompanyTypeSynchronizer(Synchronizer):
+    client_class = api.CompanyAPIClient
+    model_class = models.CompanyType
+
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data['id']
+        instance.name = json_data.get('name')
+        instance.vendor_flag = json_data['vendorFlag']
+
+    def get_page(self, *args, **kwargs):
+        return self.client.get_company_types(*args, **kwargs)
 
 
 class ActivitySynchronizer(Synchronizer):

@@ -390,6 +390,7 @@ class CompanyAPIClient(ConnectWiseAPIClient):
     API = 'company'
     ENDPOINT_COMPANIES = 'companies'
     ENDPOINT_COMPANY_STATUSES = '{}/statuses'.format(ENDPOINT_COMPANIES)
+    ENDPOINT_COMPANY_TYPES = '{}/types'.format(ENDPOINT_COMPANIES)
 
     def by_id(self, company_id):
         endpoint_url = '{}/{}'.format(self.ENDPOINT_COMPANIES, company_id)
@@ -401,6 +402,11 @@ class CompanyAPIClient(ConnectWiseAPIClient):
 
     def get_company_statuses(self, *args, **kwargs):
         return self.fetch_resource(self.ENDPOINT_COMPANY_STATUSES,
+                                   should_page=True,
+                                   *args, **kwargs)
+
+    def get_company_types(self, *args, **kwargs):
+        return self.fetch_resource(self.ENDPOINT_COMPANY_TYPES,
                                    should_page=True,
                                    *args, **kwargs)
 
