@@ -381,8 +381,8 @@ class BoardStatusSynchronizer(BoardChildSynchronizer):
     model_class = models.BoardStatus
 
     def __init__(self, *args, **kwargs):
-        self.api_conditions = ['inactive=False']
         super().__init__(*args, **kwargs)
+        self.api_conditions = ['inactive=False']
 
     def _assign_field_data(self, instance, json_data):
         instance = super(BoardStatusSynchronizer, self)._assign_field_data(
@@ -428,8 +428,8 @@ class CompanySynchronizer(Synchronizer):
     model_class = models.Company
 
     def __init__(self, *args, **kwargs):
-        self.api_conditions = ['deletedFlag=False']
         super().__init__(*args, **kwargs)
+        self.api_conditions = ['deletedFlag=False']
 
     def _assign_field_data(self, company, company_json):
         """
@@ -601,11 +601,11 @@ class ScheduleEntriesSynchronizer(BatchConditionMixin, Synchronizer):
     }
 
     def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.api_conditions = [
             "(type/identifier='S' or type/identifier='O')",
             "doneFlag=false",
         ]
-        super().__init__(*args, **kwargs)
         # Only get schedule entries for tickets or opportunities that we
         # already have in the DB.
         ticket_ids = set(
@@ -920,8 +920,8 @@ class MemberSynchronizer(Synchronizer):
     model_class = models.Member
 
     def __init__(self, *args, **kwargs):
-        self.last_sync_job_time = None
         super().__init__(*args, **kwargs)
+        self.last_sync_job_time = None
 
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
@@ -1026,8 +1026,8 @@ class TicketSynchronizer(BatchConditionMixin, Synchronizer):
     }
 
     def __init__(self, *args, **kwargs):
-        self.api_conditions = ['closedFlag=False']
         super().__init__(*args, **kwargs)
+        self.api_conditions = ['closedFlag=False']
         # To get all open tickets, we can simply supply a `closedFlag=False`
         # condition for on-premise ConnectWise. But for hosted ConnectWise,
         # this results in timeouts for requests, so we also need to add a
