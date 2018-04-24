@@ -5,7 +5,7 @@ from django.test import TransactionTestCase
 from dateutil.parser import parse
 from djconnectwise.models import Activity
 from djconnectwise.models import BoardStatus
-from djconnectwise.models import Company, CompanyStatus
+from djconnectwise.models import Company, CompanyStatus, CompanyType
 from djconnectwise.models import ConnectWiseBoard
 from djconnectwise.models import Location
 from djconnectwise.models import Member
@@ -20,11 +20,7 @@ from djconnectwise.models import SyncJob
 from djconnectwise.models import Team
 from djconnectwise.models import Ticket
 from djconnectwise.models import TicketPriority
-<<<<<<< HEAD
 from djconnectwise.models import TimeEntry
-=======
-from djconnectwise.models import CompanyType
->>>>>>> c3cd39a1e402c45faacaafa44c13ed4cc1ecaba8
 
 from . import fixtures
 from . import fixture_utils
