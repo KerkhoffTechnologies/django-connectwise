@@ -66,6 +66,12 @@ def init_companies():
     return synchronizer.sync()
 
 
+def init_company_types():
+    mocks.company_api_get_company_types_call(fixtures.API_COMPANY_TYPES_LIST)
+    synchronizer = sync.CompanyTypeSynchronizer()
+    return synchronizer.sync()
+
+
 def init_locations():
     mocks.service_api_get_locations_call(fixtures.API_SERVICE_LOCATION_LIST)
     synchronizer = sync.LocationSynchronizer()

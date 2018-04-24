@@ -308,6 +308,16 @@ class TestCompanyAPIClient(BaseAPITestCase):
         self.assertEqual(result, fixtures.API_COMPANY_STATUS_LIST)
         self.assert_request_should_page(True)
 
+    @responses.activate
+    def test_get_company_types(self):
+        endpoint = self.client._endpoint(
+            self.client.ENDPOINT_COMPANY_TYPES)
+
+        mk.get(endpoint, fixtures.API_COMPANY_TYPES_LIST)
+        result = self.client.get_company_types()
+        self.assertEqual(result, fixtures.API_COMPANY_TYPES_LIST)
+        self.assert_request_should_page(True)
+
 
 class TestScheduleAPIClient(BaseAPITestCase):
 

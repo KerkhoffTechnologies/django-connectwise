@@ -216,7 +216,6 @@ class Company(TimeStampedModel):
     state_identifier = models.CharField(blank=True, null=True, max_length=250)
     zip = models.CharField(blank=True, null=True, max_length=250)
     country = models.CharField(blank=True, null=True, max_length=250)
-    type = models.CharField(blank=True, null=True, max_length=250)
     territory = models.CharField(blank=True, null=True, max_length=250)
     website = models.CharField(blank=True, null=True, max_length=250)
     market = models.CharField(blank=True, null=True, max_length=250)
@@ -226,6 +225,7 @@ class Company(TimeStampedModel):
     lastupdated = models.CharField(blank=True, null=True, max_length=250)
     deleted_flag = models.BooleanField(default=False)
     status = models.ForeignKey('CompanyStatus', blank=True, null=True)
+    company_type = models.ForeignKey('CompanyType', blank=True, null=True)
 
     objects = models.Manager()
     available_objects = AvailableCompanyManager()
@@ -258,6 +258,17 @@ class CompanyStatus(models.Model):
 
     class Meta:
         verbose_name_plural = 'Company statuses'
+
+    def __str__(self):
+        return self.name
+
+
+class CompanyType(models.Model):
+    name = models.CharField(max_length=50)
+    vendor_flag = models.BooleanField()
+
+    class Meta:
+        ordering = ('name', )
 
     def __str__(self):
         return self.name
