@@ -348,12 +348,6 @@ class TimeEntry(models.Model):
                                       max_length=250)
     billable_option = models.CharField(choices=BILL_TYPES, db_index=True,
                                        max_length=250)
-
-    charge_to_id = models.ForeignKey(
-        'Ticket', blank=True, null=True)
-    company = models.ForeignKey(
-        'Company', blank=False, null=False)
-    member = models.ForeignKey('Member', blank=True, null=True)
     time_start = models.DateTimeField(blank=True, null=True)
     time_end = models.DateTimeField(blank=True, null=True)
     hours_deduct = models.DecimalField(
@@ -362,6 +356,12 @@ class TimeEntry(models.Model):
         blank=True, null=True, decimal_places=2, max_digits=6)
     notes = models.TextField(blank=True, null=True, max_length=2000)
     internal_notes = models.TextField(blank=True, null=True, max_length=2000)
+
+    charge_to_id = models.ForeignKey(
+        'Ticket', blank=True, null=True)
+    company = models.ForeignKey(
+        'Company', blank=False, null=False)
+    member = models.ForeignKey('Member', blank=True, null=True)
 
 
 class AvailableBoardTeamManager(models.Manager):
