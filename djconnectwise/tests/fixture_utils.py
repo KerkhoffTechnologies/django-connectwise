@@ -132,3 +132,10 @@ def init_activities():
         fixtures.API_SALES_ACTIVITIES)
     synchronizer = sync.ActivitySynchronizer()
     return synchronizer.sync()
+
+
+def init_time_entries():
+    mocks.time_api_get_time_entries_call(
+        fixtures.API_TIME_ENTRY_LIST)
+    synchronizer = sync.TimeEntrySynchronizer()
+    return synchronizer.sync()

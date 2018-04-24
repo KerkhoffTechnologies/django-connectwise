@@ -90,6 +90,17 @@ class ScheduleEntryAdmin(admin.ModelAdmin):
                      'activity_object__id', 'member__identifier']
 
 
+@admin.register(models.TimeEntry)
+class TimeEntryAdmin(admin.ModelAdmin):
+    list_display = ('id', 'company', 'charge_to_id', 'charge_to_type',
+                    'member', 'billable_option', 'actual_hours',
+                    'time_start', 'time_end', 'hours_deduct', 'notes',
+                    'internal_notes')
+    list_filter = ('charge_to_id', 'member', 'charge_to_type')
+    search_fields = ['id', 'charge_to_id__id', 'member__identifier',
+                     'charge_to_type']
+
+
 @admin.register(models.Team)
 class TeamAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'board')

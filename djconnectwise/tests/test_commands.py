@@ -202,6 +202,22 @@ class TestSyncSalesProbabilitiesCommand(AbstractBaseSyncTest, TestCase):
     )
 
 
+class TestSyncTimeEntriesCommand(AbstractBaseSyncTest, TestCase):
+    args = (
+        mocks.time_api_get_time_entries_call,
+        fixtures.API_TIME_ENTRY_LIST,
+        'time_entry'
+    )
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_boards()
+        fixture_utils.init_board_statuses()
+        fixture_utils.init_tickets()
+        fixture_utils.init_companies()
+        fixture_utils.init_members()
+
+
 class TestSyncScheduleEntriesCommand(AbstractBaseSyncTest, TestCase):
     args = (
         mocks.schedule_api_get_schedule_entries_call,
@@ -289,7 +305,8 @@ class TestSyncAllCommand(TestCase):
             # TestSyncActivityCommand,
             TestSyncScheduleTypesCommand,
             TestSyncScheduleStatusesCommand,
-            TestSyncScheduleEntriesCommand
+            TestSyncScheduleEntriesCommand,
+            TestSyncTimeEntriesCommand
         ]
 
         self.test_args = []
@@ -358,6 +375,7 @@ class TestSyncAllCommand(TestCase):
             'schedule_entry': models.ScheduleEntry,
             'schedule_type': models.ScheduleType,
             'schedule_status': models.ScheduleStatus,
+            'time_entry': models.TimeEntry,
         }
 
         self.test_sync()
