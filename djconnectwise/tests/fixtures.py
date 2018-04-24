@@ -1026,21 +1026,70 @@ API_SCHEDULE_ENTRIES = [API_SCHEDULE_ENTRY_FOR_TICKET,
                         API_SCHEDULE_ENTRY_FOR_ACTIVITY]
 
 API_TIME_ENTRY = {
-    "id": 2,
-    "company": API_COMPANY,
-    "chargeToId": 69,
-    "chargeToType": "ServiceTicket",
-    "member": API_MEMBER,
-    "timeStart": "2005-05-16T08:00:00Z",
-    "timeEnd": "2005-05-16T10:00:00Z",
-    "actualHours": 2,
-    "billableOption": "Billable",
-    "notes": "server was infected with the Code Red worm.  It has been patched and rebooted.",
-    "status": "Billed",
-    "_info": {
-        "lastUpdated": "2015-10-17T18:33:20Z",
-        "updatedBy": "CONVERSION",
-        "chargeToMobileGuid": "3b9552a5-e8ef-4a68-8124-bbd2c7baf112"
+    'id': 2,
+    'company': API_COMPANY,
+    'chargeToId': 69,
+    'chargeToType': 'ServiceTicket',
+    'member': API_MEMBER,
+    'locationId': 2,
+    'businessUnitId': 10,
+    'workType': {
+        'id': 3,
+        'name': 'Regular',
+        '_info': {
+            'workType_href': 'https://connectwise.kerkhofftech.ca/v4_6_release/apis/3.0/system/workTypes/3'
+        }
+    },
+    'workRole': {
+        'id': 11,
+        'name': 'System Engineer',
+        '_info': {
+            'workRole_href': 'https://connectwise.kerkhofftech.ca/v4_6_release/apis/3.0/time/workRoles/11'
+        }
+    },
+    'agreement': {
+        'id': 3,
+        'name': 'Retainer Agreement for Big Design',
+        '_info': {
+            'agreement_href': 'https://connectwise.kerkhofftech.ca/v4_6_release/apis/3.0/finance/agreements/3'
+        }
+    },
+
+    'timeStart': '2005-05-16T08:00:00Z',
+    'timeEnd': '2005-05-16T10:00:00Z',
+    'actualHours': 2,
+    'billableOption': 'Billable',
+    'notes': 'server was infected with the Code Red worm.  It has been patched and rebooted.',
+    'addToDetailDescriptionFlag': False,
+    'addToInternalAnalysisFlag': False,
+    'addToResolutionFlag': False,
+    'emailResourceFlag': False,
+    'emailContactFlag': False,
+    'emailCcFlag': False,
+    'hoursBilled': 2,
+    'enteredBy': 'user10',
+    'dateEntered': '2005-05-16T08:00:00Z',
+    'invoice': {
+        'id': 4,
+        'identifier': '3',
+        '_info': {
+            'invoice_href': 'https://connectwise.kerkhofftech.ca/v4_6_release/apis/3.0/finance/invoices/4'
+        }
+    },
+    'mobileGuid': '6fd34162-0856-4bc1-80ae-c3dccd89357a',
+    'hourlyRate': 100,
+    'timeSheet': {
+        'id': 2,
+        'name': '2005-05-14 to 2005-05-20',
+        '_info': {
+            'timeSheet_href': 'https://connectwise.kerkhofftech.ca/v4_6_release/apis/3.0/time/sheets/2'
+        }
+    },
+    'status': 'Billed',
+    '_info': {
+        'lastUpdated': '2017-10-17T18:33:20Z',
+        'updatedBy': 'CONVERSION',
+        'chargeToMobileGuid': '3b9552a5-e8ef-4a68-8124-bbd2c7baf112'
         }
 }
 

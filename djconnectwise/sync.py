@@ -750,10 +750,10 @@ class TimeEntrySynchronizer(BatchConditionMixin, Synchronizer):
     }
 
     def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.api_conditions = [
             "(chargeToType='ServiceTicket' OR chargeToType='ProjectTicket')"
         ]
-        super().__init__(*args, **kwargs)
         # Only get time entries for tickets that are already in the DB
         # Possibly Activities also in the future
         ticket_ids = set(
