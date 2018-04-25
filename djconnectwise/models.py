@@ -354,7 +354,7 @@ class TimeEntry(models.Model):
         blank=True, null=True, decimal_places=2, max_digits=6)
     internal_notes = models.TextField(blank=True, null=True, max_length=2000)
     notes = models.TextField(blank=True, null=True, max_length=2000)
-    time_start = models.DateTimeField()
+    time_start = models.DateTimeField(blank=True, null=True)
     time_end = models.DateTimeField(blank=True, null=True)
 
     charge_to_id = models.ForeignKey(
