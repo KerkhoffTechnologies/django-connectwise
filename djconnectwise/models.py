@@ -141,41 +141,6 @@ class BoardStatus(TimeStampedModel):
         return '{}/{}'.format(self.board, self.name)
 
 
-class ServiceNote(TimeStampedModel):
-
-    text = models.TextField(blank=True, null=True, max_length=2000)
-    detail_description_flag = models.BooleanField(blank=True)
-    internal_analysis_flag = models.BooleanField(blank=True)
-    resolution_flag = models.BooleanField(blank=True)
-    date_created = models.DateTimeField(blank=True, null=True)
-    created_by = models.TextField(blank=True, null=True, max_length=250)
-    internal_flag = models.BooleanField(blank=True)
-    external_flag = models.BooleanField(blank=True)
-
-    ticket = models.ForeignKey('Ticket')
-    member = models.ForeignKey('Member', blank=True, null=True)
-
-    class Meta:
-        ordering = ('date_created', 'id')
-        verbose_name_plural = 'Notes'
-
-    def __str__(self):
-        return '{}: {}'.format(self.ticket, str(self.date_created))
-
-
-class OpportunityNote(TimeStampedModel):
-
-    text = models.TextField(blank=True, null=True, max_length=2000)
-    opportunity = models.ForeignKey('Opportunity')
-
-    class Meta:
-        ordering = ('id', )
-        verbose_name_plural = 'Opportunity Notes'
-
-    def __str__(self):
-        return '{}: {}'.format(self.opportunity, str(self.id))
-
-
 class Location(TimeStampedModel):
     name = models.CharField(max_length=30)
     where = models.CharField(max_length=100, blank=True, null=True)
@@ -251,7 +216,6 @@ class Company(TimeStampedModel):
     state_identifier = models.CharField(blank=True, null=True, max_length=250)
     zip = models.CharField(blank=True, null=True, max_length=250)
     country = models.CharField(blank=True, null=True, max_length=250)
-    type = models.CharField(blank=True, null=True, max_length=250)
     territory = models.CharField(blank=True, null=True, max_length=250)
     website = models.CharField(blank=True, null=True, max_length=250)
     market = models.CharField(blank=True, null=True, max_length=250)
@@ -261,6 +225,7 @@ class Company(TimeStampedModel):
     lastupdated = models.CharField(blank=True, null=True, max_length=250)
     deleted_flag = models.BooleanField(default=False)
     status = models.ForeignKey('CompanyStatus', blank=True, null=True)
+    company_type = models.ForeignKey('CompanyType', blank=True, null=True)
 
     objects = models.Manager()
     available_objects = AvailableCompanyManager()
@@ -293,6 +258,17 @@ class CompanyStatus(models.Model):
 
     class Meta:
         verbose_name_plural = 'Company statuses'
+
+    def __str__(self):
+        return self.name
+
+
+class CompanyType(models.Model):
+    name = models.CharField(max_length=50)
+    vendor_flag = models.BooleanField()
+
+    class Meta:
+        ordering = ('name', )
 
     def __str__(self):
         return self.name
@@ -345,6 +321,47 @@ class ScheduleEntry(models.Model):
         """
         schedule_client = api.ScheduleAPIClient()
         return schedule_client.delete_schedule_entry(self.id)
+
+
+class TimeEntry(models.Model):
+    CHARGE_TYPES = (
+        ('ServiceTicket', "Service Ticket"),
+        ('ProjectTicket', "Project Ticket"),
+        ('ChargeCode', "Charge Code"),
+        ('Activity', "Activity")
+    )
+    BILL_TYPES = (
+        ('Billable', "Billable"),
+        ('DoNotBill', "Do Not Bill"),
+        ('NoCharge', "No Charge"),
+        ('NoDefault', "No Default")
+    )
+
+    class Meta:
+        verbose_name_plural = 'Time Entries'
+        ordering = ('id', )
+
+    def __str__(self):
+        return str(self.id) or ''
+
+    actual_hours = models.DecimalField(
+        blank=True, null=True, decimal_places=2, max_digits=6)
+    billable_option = models.CharField(choices=BILL_TYPES, db_index=True,
+                                       max_length=250)
+    charge_to_type = models.CharField(choices=CHARGE_TYPES, db_index=True,
+                                      max_length=250)
+    hours_deduct = models.DecimalField(
+        blank=True, null=True, decimal_places=2, max_digits=6)
+    internal_notes = models.TextField(blank=True, null=True, max_length=2000)
+    notes = models.TextField(blank=True, null=True, max_length=2000)
+    time_start = models.DateTimeField(blank=True, null=True)
+    time_end = models.DateTimeField(blank=True, null=True)
+
+    charge_to_id = models.ForeignKey(
+        'Ticket', blank=True, null=True)
+    company = models.ForeignKey(
+        'Company', blank=False, null=False)
+    member = models.ForeignKey('Member', blank=True, null=True)
 
 
 class AvailableBoardTeamManager(models.Manager):
@@ -745,6 +762,41 @@ class Ticket(TimeStampedModel):
         self.status = closed_status
         self.closed_flag = True
         return self.save(*args, **kwargs)
+
+
+class ServiceNote(TimeStampedModel):
+
+    created_by = models.TextField(blank=True, null=True, max_length=250)
+    date_created = models.DateTimeField(blank=True, null=True)
+    detail_description_flag = models.BooleanField(blank=True)
+    external_flag = models.BooleanField(blank=True)
+    internal_analysis_flag = models.BooleanField(blank=True)
+    internal_flag = models.BooleanField(blank=True)
+    resolution_flag = models.BooleanField(blank=True)
+    text = models.TextField(blank=True, null=True, max_length=2000)
+
+    ticket = models.ForeignKey('Ticket')
+    member = models.ForeignKey('Member', blank=True, null=True)
+
+    class Meta:
+        ordering = ('date_created', 'id')
+        verbose_name_plural = 'Notes'
+
+    def __str__(self):
+        return 'Ticket {} note: {}'.format(self.ticket, str(self.date_created))
+
+
+class OpportunityNote(TimeStampedModel):
+
+    text = models.TextField(blank=True, null=True, max_length=2000)
+    opportunity = models.ForeignKey('Opportunity')
+
+    class Meta:
+        ordering = ('id', )
+        verbose_name_plural = 'Opportunity Notes'
+
+    def __str__(self):
+        return 'Opportunity {} note: {}'.format(self.opportunity, str(self.id))
 
 
 class Activity(TimeStampedModel):

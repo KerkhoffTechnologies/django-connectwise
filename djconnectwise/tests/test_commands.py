@@ -83,6 +83,14 @@ class TestSyncCompaniesCommand(AbstractBaseSyncTest, TestCase):
     )
 
 
+class TestSyncCompanyTypesCommand(AbstractBaseSyncTest, TestCase):
+    args = (
+        mocks.company_api_get_company_types_call,
+        fixtures.API_COMPANY_TYPES_LIST,
+        'company_type'
+    )
+
+
 class TestSyncTeamsCommand(AbstractBaseSyncTest, TestCase):
     args = (
         mocks.service_api_get_teams_call,
@@ -226,6 +234,22 @@ class TestSyncSalesProbabilitiesCommand(AbstractBaseSyncTest, TestCase):
     )
 
 
+class TestSyncTimeEntriesCommand(AbstractBaseSyncTest, TestCase):
+    args = (
+        mocks.time_api_get_time_entries_call,
+        fixtures.API_TIME_ENTRY_LIST,
+        'time_entry'
+    )
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_boards()
+        fixture_utils.init_board_statuses()
+        fixture_utils.init_tickets()
+        fixture_utils.init_companies()
+        fixture_utils.init_members()
+
+
 class TestSyncScheduleEntriesCommand(AbstractBaseSyncTest, TestCase):
     args = (
         mocks.schedule_api_get_schedule_entries_call,
@@ -298,6 +322,7 @@ class TestSyncAllCommand(TestCase):
         sync_test_cases = [
             TestSyncCompanyStatusesCommand,
             TestSyncCompaniesCommand,
+            TestSyncCompanyTypesCommand,
             TestSyncLocationsCommand,
             TestSyncPrioritiesCommand,
             TestSyncProjectStatusesCommand,
@@ -314,7 +339,8 @@ class TestSyncAllCommand(TestCase):
             # TestSyncActivityCommand,
             TestSyncScheduleTypesCommand,
             TestSyncScheduleStatusesCommand,
-            TestSyncScheduleEntriesCommand
+            TestSyncScheduleEntriesCommand,
+            TestSyncTimeEntriesCommand
         ]
 
         self.test_args = []
@@ -370,6 +396,7 @@ class TestSyncAllCommand(TestCase):
             'project': models.Project,
             'board_status': models.BoardStatus,
             'company_status': models.CompanyStatus,
+            'company_type': models.CompanyType,
             'team': models.Team,
             'location': models.Location,
             'ticket': models.Ticket,
@@ -384,6 +411,7 @@ class TestSyncAllCommand(TestCase):
             'schedule_entry': models.ScheduleEntry,
             'schedule_type': models.ScheduleType,
             'schedule_status': models.ScheduleStatus,
+            'time_entry': models.TimeEntry,
         }
 
         self.test_sync()

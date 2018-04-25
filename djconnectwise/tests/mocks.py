@@ -42,6 +42,11 @@ def company_api_get_company_statuses_call(return_value, raised=None):
     return create_mock_call(method_name, return_value, side_effect=raised)
 
 
+def company_api_get_company_types_call(return_value, raised=None):
+    method_name = 'djconnectwise.api.CompanyAPIClient.get_company_types'
+    return create_mock_call(method_name, return_value, side_effect=raised)
+
+
 def projects_api_get_project_statuses_call(return_value, raised=None):
     method_name = 'djconnectwise.api.ProjectAPIClient.get_project_statuses'
     return create_mock_call(method_name, return_value, side_effect=raised)
@@ -99,6 +104,11 @@ def schedule_api_get_schedule_entries_call(return_value, raised=None):
 
 def schedule_api_get_schedule_entry_call(return_value, raised=None):
     method_name = 'djconnectwise.api.ScheduleAPIClient.get_schedule_entry'
+    return create_mock_call(method_name, return_value, side_effect=raised)
+
+
+def time_api_get_time_entries_call(return_value, raised=None):
+    method_name = 'djconnectwise.api.TimeAPIClient.get_time_entries'
     return create_mock_call(method_name, return_value, side_effect=raised)
 
 

@@ -5,7 +5,7 @@ from django.test import TransactionTestCase
 from dateutil.parser import parse
 from djconnectwise.models import Activity
 from djconnectwise.models import BoardStatus
-from djconnectwise.models import Company, CompanyStatus
+from djconnectwise.models import Company, CompanyStatus, CompanyType
 from djconnectwise.models import ConnectWiseBoard
 from djconnectwise.models import Location
 from djconnectwise.models import Member
@@ -22,6 +22,7 @@ from djconnectwise.models import ServiceNote
 from djconnectwise.models import Ticket
 from djconnectwise.models import TicketPriority
 from djconnectwise.models import OpportunityNote
+from djconnectwise.models import TimeEntry
 
 from . import fixtures
 from . import fixture_utils
@@ -119,6 +120,7 @@ class TestCompanySynchronizer(TestCase, SynchronizerTestMixin):
         mocks.company_api_get_company_statuses_call(
             fixtures.API_COMPANY_STATUS_LIST)
         sync.CompanyStatusSynchronizer().sync()
+        fixture_utils.init_company_types()
 
     def call_api(self, return_data):
         return mocks.company_api_get_call(return_data)
@@ -134,6 +136,7 @@ class TestCompanySynchronizer(TestCase, SynchronizerTestMixin):
         self.assertEqual(company.state_identifier, api_company['state'])
         self.assertEqual(company.zip, api_company['zip'])
         self.assertEqual(company.status.id, api_company['status']['id'])
+        self.assertEqual(company.company_type.id, api_company['type']['id'])
 
 
 class TestCompanyStatusSynchronizer(TestCase, SynchronizerTestMixin):
@@ -157,6 +160,78 @@ class TestCompanyStatusSynchronizer(TestCase, SynchronizerTestMixin):
                          json_data['customNoteFlag'])
         self.assertEqual(instance.cancel_open_tracks_flag,
                          json_data['cancelOpenTracksFlag'])
+
+
+class TestTimeEntrySynchronizer(TestCase, SynchronizerTestMixin):
+    synchronizer_class = sync.TimeEntrySynchronizer
+    model_class = TimeEntry
+    fixture = fixtures.API_TIME_ENTRY_LIST
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_boards()
+        fixture_utils.init_companies()
+        fixture_utils.init_project_statuses()
+        fixture_utils.init_projects()
+        fixture_utils.init_locations()
+        fixture_utils.init_priorities()
+        fixture_utils.init_members()
+        fixture_utils.init_opportunity_statuses()
+        fixture_utils.init_opportunity_types()
+        fixture_utils.init_opportunities()
+        fixture_utils.init_teams()
+        fixture_utils.init_board_statuses()
+        fixture_utils.init_schedule_statuses()
+        fixture_utils.init_schedule_types()
+        fixture_utils.init_tickets()
+        fixture_utils.init_activities()
+
+    def call_api(self, return_data):
+        return mocks.time_api_get_time_entries_call(return_data)
+
+    def test_sync_update(self):
+        self._sync(self.fixture)
+
+        json_data = self.fixture[0]
+
+        instance_id = json_data['id']
+        original = self.model_class.objects.get(id=instance_id)
+
+        start = '2003-10-06T14:48:18Z'
+        new_json = deepcopy(self.fixture[0])
+        new_json["timeStart"] = start
+        new_json_list = [new_json]
+
+        self._sync(new_json_list)
+
+        changed = self.model_class.objects.get(id=instance_id)
+        self.assertNotEqual(original.time_start,
+                            start)
+        self._assert_fields(changed, new_json)
+
+    def _assert_fields(self, instance, json_data):
+        self.assertEqual(instance.id, json_data['id'])
+        self.assertEqual(instance.charge_to_id.id, json_data['chargeToId'])
+        self.assertEqual(instance.charge_to_type, json_data['chargeToType'])
+        self.assertEqual(instance.time_start, parse(json_data['timeStart']))
+        self.assertEqual(instance.time_end, parse(json_data['timeEnd']))
+        self.assertEqual(instance.actual_hours, json_data['actualHours'])
+        self.assertEqual(instance.billable_option, json_data['billableOption'])
+        self.assertEqual(instance.notes, json_data['notes'])
+
+
+class TestCompanyTypeSynchronizer(TestCase, SynchronizerTestMixin):
+    synchronizer_class = sync.CompanyTypeSynchronizer
+    model_class = CompanyType
+    fixture = fixtures.API_COMPANY_TYPES_LIST
+
+    def call_api(self, return_data):
+        return mocks.company_api_get_company_types_call(return_data)
+
+    def _assert_fields(self, instance, json_data):
+        self.assertEqual(instance.id, json_data['id'])
+        self.assertEqual(instance.name, json_data['name'])
+        self.assertEqual(instance.vendor_flag, json_data['vendorFlag'])
 
 
 class TestScheduleEntriesSynchronizer(TestCase, SynchronizerTestMixin):
