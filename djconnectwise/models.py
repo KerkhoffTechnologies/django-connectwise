@@ -141,28 +141,6 @@ class BoardStatus(TimeStampedModel):
         return '{}/{}'.format(self.board, self.name)
 
 
-class ServiceNote(TimeStampedModel):
-
-    text = models.TextField(blank=True, null=True, max_length=2000)
-    detail_description_flag = models.BooleanField(blank=True)
-    internal_analysis_flag = models.BooleanField(blank=True)
-    resolution_flag = models.BooleanField(blank=True)
-    date_created = models.DateTimeField(blank=True, null=True)
-    created_by = models.TextField(blank=True, null=True, max_length=250)
-    internal_flag = models.BooleanField(blank=True)
-    external_flag = models.BooleanField(blank=True)
-
-    ticket = models.ForeignKey('Ticket')
-    member = models.ForeignKey('Member', blank=True, null=True)
-
-    class Meta:
-        ordering = ('date_created', 'id')
-        verbose_name_plural = 'Notes'
-
-    def __str__(self):
-        return '{}: {}'.format(self.ticket, str(self.date_created))
-
-
 class Location(TimeStampedModel):
     name = models.CharField(max_length=30)
     where = models.CharField(max_length=100, blank=True, null=True)
@@ -784,6 +762,28 @@ class Ticket(TimeStampedModel):
         self.status = closed_status
         self.closed_flag = True
         return self.save(*args, **kwargs)
+
+
+class ServiceNote(TimeStampedModel):
+
+    created_by = models.TextField(blank=True, null=True, max_length=250)
+    date_created = models.DateTimeField(blank=True, null=True)
+    detail_description_flag = models.BooleanField(blank=True)
+    external_flag = models.BooleanField(blank=True)
+    internal_analysis_flag = models.BooleanField(blank=True)
+    internal_flag = models.BooleanField(blank=True)
+    resolution_flag = models.BooleanField(blank=True)
+    text = models.TextField(blank=True, null=True, max_length=2000)
+
+    ticket = models.ForeignKey('Ticket')
+    member = models.ForeignKey('Member', blank=True, null=True)
+
+    class Meta:
+        ordering = ('date_created', 'id')
+        verbose_name_plural = 'Notes'
+
+    def __str__(self):
+        return '{}: {}'.format(self.ticket, str(self.date_created))
 
 
 class Activity(TimeStampedModel):
