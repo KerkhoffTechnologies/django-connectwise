@@ -796,7 +796,8 @@ class OpportunityNote(TimeStampedModel):
         verbose_name_plural = 'Opportunity Notes'
 
     def __str__(self):
-        return 'Opportunity {} note: {}'.format(self.opportunity, str(self.id))
+        return 'id: {}, on Opportunity id:{}'.format(
+            str(self.id), self.opportunity.id)
 
 
 class Activity(TimeStampedModel):
