@@ -59,7 +59,7 @@ class MemberAdmin(admin.ModelAdmin):
 @admin.register(models.Company)
 class CompanyAdmin(admin.ModelAdmin):
     list_display = ('id', 'name',
-                    'identifier', 'type', 'status', 'deleted_flag')
+                    'identifier', 'company_type', 'status', 'deleted_flag')
     list_filter = ('status',)
     search_fields = ['name', 'identifier']
 
@@ -67,6 +67,12 @@ class CompanyAdmin(admin.ModelAdmin):
 @admin.register(models.CompanyStatus)
 class CompanyStatusAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'default_flag', 'inactive_flag')
+
+
+@admin.register(models.CompanyType)
+class CompanyTypeAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'vendor_flag')
+    search_fields = ['name']
 
 
 @admin.register(models.ScheduleType)
@@ -91,6 +97,17 @@ class ScheduleEntryAdmin(admin.ModelAdmin):
     list_filter = ('where', 'status', 'schedule_type')
     search_fields = ['name', 'ticket_object__id',
                      'activity_object__id', 'member__identifier']
+
+
+@admin.register(models.TimeEntry)
+class TimeEntryAdmin(admin.ModelAdmin):
+    list_display = ('id', 'company', 'charge_to_id', 'charge_to_type',
+                    'member', 'billable_option', 'actual_hours',
+                    'time_start', 'time_end', 'hours_deduct', 'notes',
+                    'internal_notes')
+    list_filter = ('charge_to_id', 'member', 'charge_to_type')
+    search_fields = ['id', 'charge_to_id__id', 'member__identifier',
+                     'charge_to_type']
 
 
 @admin.register(models.Team)

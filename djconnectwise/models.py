@@ -238,7 +238,6 @@ class Company(TimeStampedModel):
     state_identifier = models.CharField(blank=True, null=True, max_length=250)
     zip = models.CharField(blank=True, null=True, max_length=250)
     country = models.CharField(blank=True, null=True, max_length=250)
-    type = models.CharField(blank=True, null=True, max_length=250)
     territory = models.CharField(blank=True, null=True, max_length=250)
     website = models.CharField(blank=True, null=True, max_length=250)
     market = models.CharField(blank=True, null=True, max_length=250)
@@ -248,6 +247,7 @@ class Company(TimeStampedModel):
     lastupdated = models.CharField(blank=True, null=True, max_length=250)
     deleted_flag = models.BooleanField(default=False)
     status = models.ForeignKey('CompanyStatus', blank=True, null=True)
+    company_type = models.ForeignKey('CompanyType', blank=True, null=True)
 
     objects = models.Manager()
     available_objects = AvailableCompanyManager()
@@ -280,6 +280,17 @@ class CompanyStatus(models.Model):
 
     class Meta:
         verbose_name_plural = 'Company statuses'
+
+    def __str__(self):
+        return self.name
+
+
+class CompanyType(models.Model):
+    name = models.CharField(max_length=50)
+    vendor_flag = models.BooleanField()
+
+    class Meta:
+        ordering = ('name', )
 
     def __str__(self):
         return self.name
@@ -332,6 +343,47 @@ class ScheduleEntry(models.Model):
         """
         schedule_client = api.ScheduleAPIClient()
         return schedule_client.delete_schedule_entry(self.id)
+
+
+class TimeEntry(models.Model):
+    CHARGE_TYPES = (
+        ('ServiceTicket', "Service Ticket"),
+        ('ProjectTicket', "Project Ticket"),
+        ('ChargeCode', "Charge Code"),
+        ('Activity', "Activity")
+    )
+    BILL_TYPES = (
+        ('Billable', "Billable"),
+        ('DoNotBill', "Do Not Bill"),
+        ('NoCharge', "No Charge"),
+        ('NoDefault', "No Default")
+    )
+
+    class Meta:
+        verbose_name_plural = 'Time Entries'
+        ordering = ('id', )
+
+    def __str__(self):
+        return str(self.id) or ''
+
+    actual_hours = models.DecimalField(
+        blank=True, null=True, decimal_places=2, max_digits=6)
+    billable_option = models.CharField(choices=BILL_TYPES, db_index=True,
+                                       max_length=250)
+    charge_to_type = models.CharField(choices=CHARGE_TYPES, db_index=True,
+                                      max_length=250)
+    hours_deduct = models.DecimalField(
+        blank=True, null=True, decimal_places=2, max_digits=6)
+    internal_notes = models.TextField(blank=True, null=True, max_length=2000)
+    notes = models.TextField(blank=True, null=True, max_length=2000)
+    time_start = models.DateTimeField(blank=True, null=True)
+    time_end = models.DateTimeField(blank=True, null=True)
+
+    charge_to_id = models.ForeignKey(
+        'Ticket', blank=True, null=True)
+    company = models.ForeignKey(
+        'Company', blank=False, null=False)
+    member = models.ForeignKey('Member', blank=True, null=True)
 
 
 class AvailableBoardTeamManager(models.Manager):

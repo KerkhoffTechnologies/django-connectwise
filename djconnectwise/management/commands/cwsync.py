@@ -31,6 +31,7 @@ class Command(BaseCommand):
             ('project', sync.ProjectSynchronizer, _('Project')),
             ('company_status', sync.CompanyStatusSynchronizer,
                 _('Company Status')),
+            ('company_type', sync.CompanyTypeSynchronizer, _('Company Type')),
             ('company', sync.CompanySynchronizer, _('Company')),
             ('location', sync.LocationSynchronizer, _('Location')),
             ('opportunity_status', sync.OpportunityStatusSynchronizer,
@@ -50,6 +51,8 @@ class Command(BaseCommand):
                 _('Schedule Status')),
             ('schedule_entry', sync.ScheduleEntriesSynchronizer,
                 _('Schedule Entry')),
+            ('time_entry', sync.TimeEntrySynchronizer,
+                _('Time Entry'))
         )
         self.synchronizer_map = OrderedDict()
         for name, synchronizer, obj_name in synchronizers:

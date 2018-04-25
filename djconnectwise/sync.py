@@ -441,8 +441,8 @@ class BoardStatusSynchronizer(BoardChildSynchronizer):
     model_class = models.BoardStatus
 
     def __init__(self, *args, **kwargs):
-        self.api_conditions = ['inactive=False']
         super().__init__(*args, **kwargs)
+        self.api_conditions = ['inactive=False']
 
     def _assign_field_data(self, instance, json_data):
         instance = super(BoardStatusSynchronizer, self)._assign_field_data(
@@ -488,8 +488,8 @@ class CompanySynchronizer(Synchronizer):
     model_class = models.Company
 
     def __init__(self, *args, **kwargs):
-        self.api_conditions = ['deletedFlag=False']
         super().__init__(*args, **kwargs)
+        self.api_conditions = ['deletedFlag=False']
 
     def _assign_field_data(self, company, company_json):
         """
@@ -523,6 +523,20 @@ class CompanySynchronizer(Synchronizer):
                     'Failed to find CompanyStatus: {}'.format(
                         status_json['id']
                     ))
+
+        type_json = company_json.get('type')
+        if type_json:
+            try:
+                company_type = models.CompanyType.objects.get(
+                    pk=type_json['id'])
+                company.company_type = company_type
+            except models.CompanyType.DoesNotExist:
+                logger.warning(
+                    'Failed to find CompanyType: {}'.format(
+                        type_json['id']
+                    )
+                )
+
         company.save()
         return company
 
@@ -562,6 +576,19 @@ class CompanyStatusSynchronizer(Synchronizer):
 
     def get_page(self, *args, **kwargs):
         return self.client.get_company_statuses(*args, **kwargs)
+
+
+class CompanyTypeSynchronizer(Synchronizer):
+    client_class = api.CompanyAPIClient
+    model_class = models.CompanyType
+
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data['id']
+        instance.name = json_data.get('name')
+        instance.vendor_flag = json_data['vendorFlag']
+
+    def get_page(self, *args, **kwargs):
+        return self.client.get_company_types(*args, **kwargs)
 
 
 class ActivitySynchronizer(Synchronizer):
@@ -634,11 +661,11 @@ class ScheduleEntriesSynchronizer(BatchConditionMixin, Synchronizer):
     }
 
     def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.api_conditions = [
             "(type/identifier='S' or type/identifier='O')",
             "doneFlag=false",
         ]
-        super().__init__(*args, **kwargs)
         # Only get schedule entries for tickets or opportunities that we
         # already have in the DB.
         ticket_ids = set(
@@ -772,6 +799,95 @@ class ScheduleTypeSychronizer(Synchronizer):
         return self.client.get_schedule_types(*args, **kwargs)
 
 
+class TimeEntrySynchronizer(BatchConditionMixin, Synchronizer):
+    client_class = api.TimeAPIClient
+    model_class = models.TimeEntry
+    batch_condition_list = []
+
+    related_meta = {
+        'company': (models.Company, 'company'),
+        'member': (models.Member, 'member')
+    }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.api_conditions = [
+            "(chargeToType='ServiceTicket' OR chargeToType='ProjectTicket')"
+        ]
+        # Only get time entries for tickets that are already in the DB
+        # Possibly Activities also in the future
+        ticket_ids = set(
+            models.Ticket.objects.values_list('id', flat=True)
+        )
+        self.batch_condition_list = list(ticket_ids)
+
+    def get_batch_condition(self, conditions):
+        return 'chargeToId in ({})'.format(
+            ','.join([str(i) for i in conditions])
+        )
+
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data['id']
+        instance.charge_to_type = json_data['chargeToType']
+        instance.billable_option = json_data.get('billableOption')
+        instance.notes = json_data.get('notes')
+        instance.internal_notes = json_data.get('internalNotes')
+
+        time_start = json_data.get('timeStart')
+        if time_start:
+            instance.time_start = parse(time_start)
+
+        time_end = json_data.get('timeEnd')
+        if time_end:
+            instance.time_end = parse(time_end)
+
+        hours_deduct = json_data.get('hoursDeduct')
+        if hours_deduct:
+            instance.hours_deduct = hours_deduct
+
+        actual_hours = json_data.get('actualHours')
+        if actual_hours:
+            instance.actual_hours = actual_hours
+
+        for json_field, value in self.related_meta.items():
+            model_class, field_name = value
+            self._assign_relation(
+                instance,
+                json_data,
+                json_field,
+                model_class,
+                field_name
+            )
+
+        # Similar to Schedule Entries, chargeToId is stored as an int in
+        # ConnectWise, handled as special situation
+        # Not making a method to handle this in a similar way to Schedule
+        # entries and even with the similar code
+        # as this may be VERY different in the near future, because
+        # charge_to_id would be converted to a GenericForeignKey
+        # and would be handled differently
+        ticket_class = models.Ticket
+        try:
+            charge_id = json_data['chargeToId']
+        except KeyError:
+            raise InvalidObjectException(
+                'Time Entry {} has no chargeToId key to find its target'
+                '- skipping.'.format(instance.id)
+            )
+
+        try:
+            related_ticket = ticket_class.objects.get(pk=charge_id)
+            setattr(instance, 'charge_to_id', related_ticket)
+        except ObjectDoesNotExist as e:
+            logger.warning(
+                'Ticket not found for {}.'.format(instance.id) +
+                ' ObjectDoesNotExist Exception: {}.'.format(e)
+            )
+
+    def get_page(self, *args, **kwargs):
+        return self.client.get_time_entries(*args, **kwargs)
+
+
 class LocationSynchronizer(Synchronizer):
     client_class = api.ServiceAPIClient
     model_class = models.Location
@@ -864,8 +980,8 @@ class MemberSynchronizer(Synchronizer):
     model_class = models.Member
 
     def __init__(self, *args, **kwargs):
-        self.last_sync_job_time = None
         super().__init__(*args, **kwargs)
+        self.last_sync_job_time = None
 
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
@@ -970,8 +1086,8 @@ class TicketSynchronizer(BatchConditionMixin, Synchronizer):
     }
 
     def __init__(self, *args, **kwargs):
-        self.api_conditions = ['closedFlag=False']
         super().__init__(*args, **kwargs)
+        self.api_conditions = ['closedFlag=False']
         # To get all open tickets, we can simply supply a `closedFlag=False`
         # condition for on-premise ConnectWise. But for hosted ConnectWise,
         # this results in timeouts for requests, so we also need to add a
