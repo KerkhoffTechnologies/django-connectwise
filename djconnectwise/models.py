@@ -160,7 +160,7 @@ class ServiceNote(TimeStampedModel):
         verbose_name_plural = 'Notes'
 
     def __str__(self):
-        return '{}: {}'.format(self.ticket, str(self.date_created))
+        return 'Ticket {} note: {}'.format(self.ticket, str(self.date_created))
 
 
 class Location(TimeStampedModel):
