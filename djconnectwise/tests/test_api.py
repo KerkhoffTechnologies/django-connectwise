@@ -548,6 +548,20 @@ class TestSalesAPIClient(BaseAPITestCase):
         result = self.client.get_single_activity(instance_id)
         self.assertEqual(result, json_data)
 
+    @responses.activate
+    def test_get_opportunity_notes(self):
+        opportunity_id = fixtures.API_SALES_OPPORTUNITY['id']
+        endpoint_url = 'opportunities/{}/notes'.format(
+            opportunity_id)
+
+        endpoint_url = self.client._endpoint(endpoint_url)
+
+        mk.get(endpoint_url, fixtures.API_SALES_OPPORTUNITY_NOTE_LIST)
+
+        result = self.client.get_notes(opportunity_id)
+        self.assertEqual(result, fixtures.API_SALES_OPPORTUNITY_NOTE_LIST)
+        self.assert_request_should_page(True)
+
 
 class TestAPISettings(TestCase):
 

@@ -21,6 +21,7 @@ from djconnectwise.models import Team
 from djconnectwise.models import ServiceNote
 from djconnectwise.models import Ticket
 from djconnectwise.models import TicketPriority
+from djconnectwise.models import OpportunityNote
 from djconnectwise.models import TimeEntry
 
 from . import fixtures
@@ -534,6 +535,45 @@ class TestServiceNoteSynchronizer(TestCase, SynchronizerTestMixin):
         changed = self.model_class.objects.get(id=instance_id)
         self.assertNotEqual(original.detail_description_flag,
                             flag)
+        self._assert_fields(changed, new_json)
+
+
+class TestOpportunityNoteSynchronizer(TestCase, SynchronizerTestMixin):
+    synchronizer_class = sync.OpportunityNoteSynchronizer
+    model_class = OpportunityNote
+    fixture = fixtures.API_SALES_OPPORTUNITY_NOTE_LIST
+
+    def _assert_fields(self, instance, json_data):
+        self.assertEqual(instance.id, json_data['id'])
+        self.assertEqual(instance.text, json_data['text'])
+        self.assertEqual(instance.opportunity.id,
+                         json_data['opportunityId'])
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_opportunity_notes()
+        fixture_utils.init_opportunities()
+
+    def call_api(self, return_data):
+        return mocks.sales_api_get_opportunity_notes_call(return_data)
+
+    def test_sync_update(self):
+        self._sync(self.fixture)
+
+        json_data = self.fixture[0]
+
+        instance_id = json_data['id']
+        original = self.model_class.objects.get(id=instance_id)
+
+        text = "Different Text, not the same text, but new, better text."
+        new_json = deepcopy(self.fixture[0])
+        new_json['text'] = text
+        new_json_list = [new_json]
+
+        self._sync(new_json_list)
+
+        changed = self.model_class.objects.get(id=instance_id)
+        self.assertNotEqual(original.text, text)
         self._assert_fields(changed, new_json)
 
 

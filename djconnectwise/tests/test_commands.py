@@ -180,6 +180,21 @@ class TestSyncServiceNotesCommand(AbstractBaseSyncTest, TestCase):
         fixture_utils.init_tickets()
 
 
+class TestSyncOpportunityNotesCommand(AbstractBaseSyncTest, TestCase):
+    args = (
+        mocks.sales_api_get_opportunity_notes_call,
+        fixtures.API_SALES_OPPORTUNITY_NOTE_LIST,
+        'opportunity_note'
+    )
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_opportunity_statuses()
+        fixture_utils.init_opportunity_types()
+        fixture_utils.init_opportunities()
+        fixture_utils.init_opportunity_notes()
+
+
 class TestSyncOpportunityCommand(AbstractBaseSyncTest, TestCase):
     args = (
         mocks.sales_api_get_opportunities_call,
@@ -316,6 +331,7 @@ class TestSyncAllCommand(TestCase):
             TestSyncBoardsStatusesCommand,
             TestSyncBoardsCommand,
             TestSyncServiceNotesCommand,
+            TestSyncOpportunityNotesCommand,
             TestSyncOpportunityStatusesCommand,
             TestSyncOpportunityTypesCommand,
             TestSyncOpportunityCommand,
@@ -385,6 +401,7 @@ class TestSyncAllCommand(TestCase):
             'location': models.Location,
             'ticket': models.Ticket,
             'service_note': models.ServiceNote,
+            'opportunity_note': models.OpportunityNote,
             'company': models.Company,
             'opportunity': models.Opportunity,
             'opportunity_status': models.OpportunityStatus,

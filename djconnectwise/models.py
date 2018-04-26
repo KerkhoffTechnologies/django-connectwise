@@ -786,6 +786,20 @@ class ServiceNote(TimeStampedModel):
         return 'Ticket {} note: {}'.format(self.ticket, str(self.date_created))
 
 
+class OpportunityNote(TimeStampedModel):
+
+    text = models.TextField(blank=True, null=True, max_length=2000)
+    opportunity = models.ForeignKey('Opportunity')
+
+    class Meta:
+        ordering = ('id', )
+        verbose_name_plural = 'Opportunity Notes'
+
+    def __str__(self):
+        return 'id: {}, on Opportunity id:{}'.format(
+            str(self.id), self.opportunity.id)
+
+
 class Activity(TimeStampedModel):
     name = models.CharField(max_length=250)
     notes = models.TextField(blank=True, null=True, max_length=2000)

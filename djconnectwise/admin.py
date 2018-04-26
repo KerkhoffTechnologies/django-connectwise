@@ -42,6 +42,12 @@ class ServiceNoteAdmin(admin.ModelAdmin):
     search_fields = ['id', 'date_created', 'text', 'created_by']
 
 
+@admin.register(models.OpportunityNote)
+class OpportunityNoteAdmin(admin.ModelAdmin):
+    list_display = ('id', 'opportunity', 'text')
+    search_fields = ['id', 'text']
+
+
 @admin.register(models.Location)
 class LocationAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'where')
