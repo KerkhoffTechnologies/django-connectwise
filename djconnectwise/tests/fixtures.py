@@ -312,6 +312,28 @@ API_MEMBER_COUNT = {
     'count': len(API_MEMBER_LIST)
 }
 
+
+API_SERVICE_NOTE_LIST = [
+    {
+        'id': 3,
+        'ticketId': 69,
+        'text': 'Some Text On This Note',
+        'detailDescriptionFlag': True,
+        'internalAnalysisFlag': False,
+        'resolutionFlag': False,
+        'member': API_MEMBER,
+        'dateCreated': '2010-09-18T17:10:37Z',
+        'createdBy': 'helpdesk2',
+        'internalFlag': True,
+        'externalFlag': False,
+        '_info': {
+            'lastUpdated': '2010-09-18T17:10:37Z',
+            'updatedBy': 'helpdesk2'
+        }
+    }
+]
+
+
 API_PROJECT_STATUSES = [
     {
         'id': 1,

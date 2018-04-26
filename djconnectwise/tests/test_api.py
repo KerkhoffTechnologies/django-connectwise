@@ -133,6 +133,19 @@ class TestServiceAPIClient(BaseAPITestCase):
         self.assert_request_should_page(True)
 
     @responses.activate
+    def test_get_notes(self):
+        endpoint_url = 'tickets/{}/notes'.format(
+            fixtures.API_SERVICE_TICKET['id'])
+
+        endpoint_url = self.client._endpoint(endpoint_url)
+
+        mk.get(endpoint_url, fixtures.API_SERVICE_NOTE_LIST)
+
+        result = self.client.get_notes(fixtures.API_SERVICE_TICKET['id'])
+        self.assertEqual(result, fixtures.API_SERVICE_NOTE_LIST)
+        self.assert_request_should_page(True)
+
+    @responses.activate
     def test_get_priorities(self):
         endpoint_url = self.client._endpoint(self.client.ENDPOINT_PRIORITIES)
         mk.get(endpoint_url, fixtures.API_SERVICE_PRIORITY_LIST)

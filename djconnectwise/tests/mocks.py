@@ -182,6 +182,11 @@ def service_api_get_teams_call(return_value):
     return create_mock_call(method_name, return_value)
 
 
+def service_api_get_notes_call(return_value):
+    method_name = 'djconnectwise.api.ServiceAPIClient.get_notes'
+    return create_mock_call(method_name, return_value)
+
+
 def service_api_get_locations_call(return_value):
     method_name = 'djconnectwise.api.ServiceAPIClient.get_locations'
     return create_mock_call(method_name, return_value)
