@@ -339,7 +339,7 @@ class TimeEntry(models.Model):
 
     class Meta:
         verbose_name_plural = 'Time Entries'
-        ordering = ('id', )
+        ordering = ('-time_start', 'id')
 
     def __str__(self):
         return str(self.id) or ''
