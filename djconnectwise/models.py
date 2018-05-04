@@ -779,7 +779,7 @@ class ServiceNote(TimeStampedModel):
     member = models.ForeignKey('Member', blank=True, null=True)
 
     class Meta:
-        ordering = ('date_created', 'id')
+        ordering = ('-date_created', 'id')
         verbose_name_plural = 'Notes'
 
     def __str__(self):
