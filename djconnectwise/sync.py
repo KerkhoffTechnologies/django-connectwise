@@ -401,7 +401,7 @@ class OpportunityNoteSynchronizer(Synchronizer):
 
         opp_class = models.Opportunity
 
-        instance.date_created = timezone.now()
+        instance.date_created = json_data.get('_info').get('lastUpdated')
 
         try:
             opportunity_id = json_data.get('opportunityId')
