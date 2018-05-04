@@ -789,10 +789,11 @@ class ServiceNote(TimeStampedModel):
 class OpportunityNote(TimeStampedModel):
 
     text = models.TextField(blank=True, null=True, max_length=2000)
+    date_created = models.DateTimeField(blank=True, null=True)
     opportunity = models.ForeignKey('Opportunity')
 
     class Meta:
-        ordering = ('id', )
+        ordering = ('-date_created', 'id', )
         verbose_name_plural = 'Opportunity Notes'
 
     def __str__(self):
