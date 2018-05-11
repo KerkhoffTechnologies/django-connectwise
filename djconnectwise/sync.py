@@ -974,6 +974,8 @@ class TimeEntrySynchronizer(BatchConditionMixin, Synchronizer):
                 ' ObjectDoesNotExist Exception: {}.'.format(e)
             )
 
+        return instance
+
     def get_page(self, *args, **kwargs):
         return self.client.get_time_entries(*args, **kwargs)
 
