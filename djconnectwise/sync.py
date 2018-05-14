@@ -8,6 +8,7 @@ from django.core.files.base import ContentFile
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.utils import timezone
+from django.db.models import Q
 
 from djconnectwise import api
 from djconnectwise import models
@@ -124,10 +125,15 @@ class Synchronizer:
             )
             self._assign_null_relation(instance, model_field)
 
-    def _instance_ids(self):
-        ids = self.model_class.objects.all().values_list(
-            self.lookup_key, flat=True
-        )
+    def _instance_ids(self, filter_params=None):
+        if not filter_params:
+            ids = self.model_class.objects.all().values_list(
+                self.lookup_key, flat=True
+            )
+        else:
+            ids = self.model_class.objects.filter(filter_params).values_list(
+                self.lookup_key, flat=True
+            )
         return set(ids)
 
     def get(self, results, conditions=None):
@@ -265,6 +271,40 @@ class Synchronizer:
         return results.created_count, results.updated_count, \
             results.deleted_count
 
+    def callback_sync(self, filter_params):
+
+        results = SyncResults()
+
+        # Set of IDs of all records related to the parent object
+        # to sync, to find stale records for deletion, need to be careful
+        # to get the correct filter on the objects you want, or you will
+        # be deleting records you didn't intend to, and they wont be restored
+        # until their next scheduled sync
+        initial_ids = self._instance_ids(filter_params=filter_params)
+        results = self.get(results, )
+
+        # This should always be a full sync (unless something changes in
+        # the future and it doesn't need to delete anything)
+        results.deleted_count = self.prune_stale_records(
+            initial_ids, results.synced_ids
+        )
+
+        return results.created_count, results.updated_count, \
+            results.deleted_count
+
+    def sync_children(self, *args):
+        for synchronizer, filter_params in args:
+            created_count, updated_count, \
+                deleted_count = synchronizer.callback_sync(filter_params)
+            msg = '{} Child Sync - Created: {},'\
+                ' Updated: {}, Deleted: {}'.format(
+                    synchronizer.model_class.__name__,
+                    created_count,
+                    updated_count,
+                    deleted_count
+                )
+            logger.info(msg)
+
 
 class BatchConditionMixin:
     """
@@ -385,8 +425,23 @@ class ServiceNoteSynchronizer(Synchronizer):
         records = []
         ticket_qs = models.Ticket.objects.all()
 
-        for ticket_id in ticket_qs.values_list('id', flat=True):
+        # We are using the conditions here to specify getting a single
+        # tickets notes, and then overwriting it, because only a number
+        # was supplied, which cant acutally be used later on. When it is
+        # being synced by huey it will append a 'lastUpdated' condition
+        # after this point, so we are free to use conditions to select
+        # one ticket in this strange way without disrupting any other
+        # functionality.
+        # If in the future we DO want to add conditions, this will have to
+        # be modified. That may never happen though, so it is probably
+        # fine like this for the forseeable future.
+        if kwargs['conditions']:
+            ticket_id = kwargs['conditions'][0]
+            kwargs['conditions'] = []
             records += self.client_call(ticket_id, *args, **kwargs)
+        else:
+            for ticket_id in ticket_qs.values_list('id', flat=True):
+                records += self.client_call(ticket_id, *args, **kwargs)
 
         return records
 
@@ -919,6 +974,8 @@ class TimeEntrySynchronizer(BatchConditionMixin, Synchronizer):
                 ' ObjectDoesNotExist Exception: {}.'.format(e)
             )
 
+        return instance
+
     def get_page(self, *args, **kwargs):
         return self.client.get_time_entries(*args, **kwargs)
 
@@ -1184,52 +1241,23 @@ class TicketSynchronizer(BatchConditionMixin, Synchronizer):
 
         return instance
 
-    def manage_member_assignments(self, ticket):
-        # TODO: remove this when we sync directly with ScheduleEntries
-        # after a ticket callback has fired. We still make use of this
-        # during ticket callbacks to avoid the case where a ticket is added
-        # and a callback is fired, but we ignore the resources field and don't
-        # get any schedule entries until the next scheduled schedule entry
-        # sync. This would make tickets appear unassigned when they actually
-        # have have technicians assigned.
+    def sync_related(self, instance):
+        instance_id = instance.id
+        sync_classes = []
 
-        # Reset board/ticket assignment in case the assigned resources
-        # have changed since last sync.
-        models.ScheduleEntry.objects.filter(ticket_object=ticket).delete()
+        sched_sync = ScheduleEntriesSynchronizer()
+        sched_sync.batch_condition_list = [instance_id]
+        sync_classes.append((sched_sync, Q(ticket_object=instance)))
 
-        if not ticket.resources:
-            return
+        note_sync = ServiceNoteSynchronizer()
+        note_sync.api_conditions = [instance_id]
+        sync_classes.append((note_sync, Q(ticket=instance)))
 
-        ticket_assignments = {}
-        usernames = [
-            u.strip() for u in ticket.resources.split(',')
-        ]
-        for username in usernames:
-            try:
-                member = models.Member.objects.get(identifier=username)
-                assignment = models.ScheduleEntry()
-                assignment.member = member
-                assignment.ticket_object = ticket
-                ticket_assignments[(username, ticket.id,)] = \
-                    assignment
-                msg = 'Member ticket assignment: ' \
-                      'ticket {}, member {}'.format(ticket.id, username)
-                logger.info(msg)
-            except models.Member.DoesNotExist:
-                logger.warning(
-                    'Failed to locate member with username {} for ticket '
-                    '{} assignment.'.format(username, ticket.id)
-                )
+        time_sync = TimeEntrySynchronizer()
+        time_sync.batch_condition_list = [instance_id]
+        sync_classes.append((time_sync, Q(charge_to_id=instance)))
 
-        if ticket_assignments:
-            logger.info(
-                'Saving {} ticket assignments'.format(
-                    len(ticket_assignments)
-                )
-            )
-            models.ScheduleEntry.objects.bulk_create(
-                list(ticket_assignments.values())
-            )
+        self.sync_children(*sync_classes)
 
     def get_batch_condition(self, conditions):
         return 'status/id in ({})'.format(
@@ -1244,7 +1272,7 @@ class TicketSynchronizer(BatchConditionMixin, Synchronizer):
 
     def fetch_sync_by_id(self, instance_id):
         instance = super().fetch_sync_by_id(instance_id)
-        self.manage_member_assignments(instance)
+        self.sync_related(instance)
         return instance
 
 

@@ -2,6 +2,8 @@ from copy import deepcopy
 from unittest import TestCase
 from django.test import TransactionTestCase
 
+import datetime
+
 from dateutil.parser import parse
 from djconnectwise.models import Activity
 from djconnectwise.models import BoardStatus
@@ -169,22 +171,7 @@ class TestTimeEntrySynchronizer(TestCase, SynchronizerTestMixin):
 
     def setUp(self):
         super().setUp()
-        fixture_utils.init_boards()
-        fixture_utils.init_companies()
-        fixture_utils.init_project_statuses()
-        fixture_utils.init_projects()
-        fixture_utils.init_locations()
-        fixture_utils.init_priorities()
-        fixture_utils.init_members()
-        fixture_utils.init_opportunity_statuses()
-        fixture_utils.init_opportunity_types()
-        fixture_utils.init_opportunities()
-        fixture_utils.init_teams()
-        fixture_utils.init_board_statuses()
-        fixture_utils.init_schedule_statuses()
-        fixture_utils.init_schedule_types()
-        fixture_utils.init_tickets()
-        fixture_utils.init_activities()
+        fixture_utils.init_time_entries()
 
     def call_api(self, return_data):
         return mocks.time_api_get_time_entries_call(return_data)
@@ -839,6 +826,67 @@ class TestTicketSynchronizer(TestCase):
         instance = Ticket.objects.get(id=json_data['id'])
         self._assert_sync(instance, json_data)
         assert_sync_job(Ticket)
+
+    def test_sync_child_tickets(self):
+        """
+        Test to ensure that a ticket will sync related objects,
+        in its case schedule, note, and time entries
+        """
+        self._init_data()
+        fixture_utils.init_tickets()
+        fixture_utils.init_schedule_entries()
+        fixture_utils.init_time_entries()
+        fixture_utils.init_service_notes()
+        synchronizer = sync.TicketSynchronizer()
+
+        ticket = Ticket.objects.get(id=fixtures.API_SERVICE_TICKET['id'])
+
+        # Change some fields on all three child objects
+        updated_fixture = deepcopy(
+            fixtures.API_SCHEDULE_ENTRY_FOR_TICKET
+            )
+        updated_fixture['name'] = 'A new kind of name'
+        fixture_list = [updated_fixture]
+        fixture_list
+
+        method_name = 'djconnectwise.api.ScheduleAPIClient' \
+            '.get_schedule_entries'
+        mock_call, _patch = mocks.create_mock_call(
+            method_name, fixture_list
+        )
+
+        updated_fixture = deepcopy(fixtures.API_SERVICE_NOTE_LIST[0])
+        updated_fixture['text'] = 'Some new text'
+        fixture_list = [updated_fixture]
+
+        method_name = 'djconnectwise.api.ServiceAPIClient.get_notes'
+        mock_call, _patch = mocks.create_mock_call(method_name, fixture_list)
+
+        updated_fixture = deepcopy(fixtures.API_TIME_ENTRY)
+        updated_fixture['timeEnd'] = '2005-05-16T15:00:00Z'
+        fixture_list = [updated_fixture]
+
+        method_name = 'djconnectwise.api.TimeAPIClient.get_time_entries'
+        mock_call, _patch = mocks.create_mock_call(method_name, fixture_list)
+
+        # Trigger method called on callback
+        synchronizer.fetch_sync_by_id(ticket.id)
+
+        # Get the new Values from the db
+        updated_sched = ScheduleEntry.objects.filter(ticket_object=ticket)[0]
+
+        updated_note = ServiceNote.objects.filter(ticket=ticket)[0]
+
+        updated_time = TimeEntry.objects.filter(charge_to_id=ticket)[0]
+
+        # Confirm that they have all been updated
+        self.assertEqual('A new kind of name', updated_sched.name)
+        self.assertEqual('Some new text', updated_note.text)
+        self.assertEqual(
+            datetime.datetime(
+                2005, 5, 16, 15, 0, tzinfo=datetime.timezone.utc),
+            updated_time.time_end
+            )
 
     def test_sync_updated(self):
         self._init_data()

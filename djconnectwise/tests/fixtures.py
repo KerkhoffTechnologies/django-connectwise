@@ -338,7 +338,10 @@ API_SALES_OPPORTUNITY_NOTE_LIST = [
     {
          'id': 43,
          'opportunityId': 2,
-         'text': "Some text on this note"
+         'text': "Some text on this note",
+         '_info': {
+             'lastUpdated': '2015-12-24T22:08:22Z'
+         }
     }
 ]
 
