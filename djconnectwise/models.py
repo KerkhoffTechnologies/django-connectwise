@@ -542,7 +542,7 @@ class OpportunityType(TimeStampedModel):
 
 
 class Opportunity(TimeStampedModel):
-    business_unit_id = models.IntegerField()
+    business_unit_id = models.IntegerField(null=True)
     closed_date = models.DateTimeField(blank=True, null=True)
     customer_po = models.CharField(max_length=100, blank=True, null=True)
     date_became_lead = models.DateTimeField(blank=True, null=True)
