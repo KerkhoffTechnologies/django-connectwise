@@ -2,7 +2,7 @@ import json
 import copy
 from . import fixtures, fixture_utils, mocks
 
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.test import Client, TestCase
 
 from djconnectwise.models import CallBackEntry, Company, Ticket, Project

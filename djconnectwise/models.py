@@ -52,7 +52,7 @@ class CallBackEntry(models.Model):
     url = models.CharField(max_length=255)
     level = models.CharField(max_length=255)
     object_id = models.IntegerField()
-    member = models.ForeignKey('Member')
+    member = models.ForeignKey('Member', on_delete=models.CASCADE)
     inactive_flag = models.BooleanField(default=False)
 
     class Meta:
@@ -128,7 +128,7 @@ class BoardStatus(TimeStampedModel):
     display_on_board = models.BooleanField()
     inactive = models.BooleanField()
     closed_status = models.BooleanField()
-    board = models.ForeignKey('ConnectWiseBoard')
+    board = models.ForeignKey('ConnectWiseBoard', on_delete=models.CASCADE)
 
     objects = models.Manager()
     available_objects = AvailableBoardStatusManager()
@@ -224,8 +224,18 @@ class Company(TimeStampedModel):
     updatedby = models.CharField(blank=True, null=True, max_length=250)
     lastupdated = models.CharField(blank=True, null=True, max_length=250)
     deleted_flag = models.BooleanField(default=False)
-    status = models.ForeignKey('CompanyStatus', blank=True, null=True)
-    company_type = models.ForeignKey('CompanyType', blank=True, null=True)
+    status = models.ForeignKey(
+        'CompanyStatus',
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE
+        )
+    company_type = models.ForeignKey(
+        'CompanyType',
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE
+        )
 
     objects = models.Manager()
     available_objects = AvailableCompanyManager()
@@ -301,12 +311,37 @@ class ScheduleEntry(models.Model):
     expected_date_end = models.DateTimeField(blank=True, null=True)
     done_flag = models.BooleanField(default=False)
 
-    ticket_object = models.ForeignKey('Ticket', blank=True, null=True)
-    activity_object = models.ForeignKey('Activity', blank=True, null=True)
-    member = models.ForeignKey('Member')
-    where = models.ForeignKey('Location', blank=True, null=True)
-    status = models.ForeignKey('ScheduleStatus', blank=True, null=True)
-    schedule_type = models.ForeignKey('ScheduleType', blank=True, null=True)
+    ticket_object = models.ForeignKey(
+        'Ticket',
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE
+    )
+    activity_object = models.ForeignKey(
+        'Activity',
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE
+    )
+    member = models.ForeignKey('Member', on_delete=models.CASCADE)
+    where = models.ForeignKey(
+        'Location',
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL
+    )
+    status = models.ForeignKey(
+        'ScheduleStatus',
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL
+    )
+    schedule_type = models.ForeignKey(
+        'ScheduleType',
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL
+    )
 
     class Meta:
         verbose_name_plural = 'Schedule entries'
@@ -358,10 +393,11 @@ class TimeEntry(models.Model):
     time_end = models.DateTimeField(blank=True, null=True)
 
     charge_to_id = models.ForeignKey(
-        'Ticket', blank=True, null=True)
+        'Ticket', blank=True, null=True, on_delete=models.CASCADE)
     company = models.ForeignKey(
-        'Company', blank=False, null=False)
-    member = models.ForeignKey('Member', blank=True, null=True)
+        'Company', blank=False, null=False, on_delete=models.CASCADE)
+    member = models.ForeignKey(
+        'Member', blank=True, null=True, on_delete=models.CASCADE)
 
 
 class AvailableBoardTeamManager(models.Manager):
@@ -372,7 +408,7 @@ class AvailableBoardTeamManager(models.Manager):
 
 class Team(TimeStampedModel):
     name = models.CharField(max_length=30)
-    board = models.ForeignKey('ConnectWiseBoard')
+    board = models.ForeignKey('ConnectWiseBoard', on_delete=models.CASCADE)
     members = models.ManyToManyField('Member')
 
     objects = models.Manager()
@@ -467,9 +503,15 @@ class Project(TimeStampedModel):
     scheduled_hours = models.DecimalField(
         blank=True, null=True, decimal_places=2, max_digits=6)
 
-    status = models.ForeignKey('ProjectStatus', blank=True, null=True)
-    manager = models.ForeignKey('Member', blank=True, null=True,
-                                related_name='project_manager')
+    status = models.ForeignKey(
+        'ProjectStatus', blank=True, null=True, on_delete=models.SET_NULL)
+    manager = models.ForeignKey(
+        'Member',
+        blank=True,
+        null=True,
+        related_name='project_manager',
+        on_delete=models.SET_NULL
+    )
 
     objects = models.Manager()
     available_objects = AvailableProjectManager()
@@ -553,26 +595,34 @@ class Opportunity(TimeStampedModel):
     pipeline_change_date = models.DateTimeField(blank=True, null=True)
     probability = models.ForeignKey('SalesProbability',
                                     blank=True, null=True,
-                                    related_name='sales_probability')
+                                    related_name='sales_probability',
+                                    on_delete=models.SET_NULL)
     source = models.CharField(max_length=100, blank=True, null=True)
 
     closed_by = models.ForeignKey('Member',
                                   blank=True, null=True,
-                                  related_name='opportunity_closed_by')
+                                  related_name='opportunity_closed_by',
+                                  on_delete=models.SET_NULL)
     company = models.ForeignKey('Company', blank=True, null=True,
-                                related_name='company_opportunities')
+                                related_name='company_opportunities',
+                                on_delete=models.SET_NULL)
     primary_sales_rep = models.ForeignKey('Member',
                                           blank=True, null=True,
-                                          related_name='opportunity_primary')
-    priority = models.ForeignKey('OpportunityPriority')
-    stage = models.ForeignKey('OpportunityStage')
-    status = models.ForeignKey('OpportunityStatus', blank=True, null=True)
+                                          related_name='opportunity_primary',
+                                          on_delete=models.SET_NULL)
+    priority = models.ForeignKey('OpportunityPriority',
+                                 on_delete=models.CASCADE)
+    stage = models.ForeignKey('OpportunityStage', on_delete=models.CASCADE)
+    status = models.ForeignKey('OpportunityStatus', blank=True, null=True,
+                               on_delete=models.SET_NULL)
     secondary_sales_rep = models.ForeignKey(
         'Member',
         blank=True, null=True,
-        related_name='opportunity_secondary')
+        related_name='opportunity_secondary',
+        on_delete=models.SET_NULL)
     opportunity_type = models.ForeignKey('OpportunityType',
-                                         blank=True, null=True)
+                                         blank=True, null=True,
+                                         on_delete=models.SET_NULL)
 
     class Meta:
         ordering = ('name', )
@@ -656,22 +706,30 @@ class Ticket(TimeStampedModel):
     summary = models.CharField(blank=True, null=True, max_length=250)
     updated_by = models.CharField(blank=True, null=True, max_length=250)
 
-    board = models.ForeignKey('ConnectwiseBoard', blank=True, null=True)
+    board = models.ForeignKey(
+        'ConnectwiseBoard', blank=True, null=True, on_delete=models.CASCADE)
     company = models.ForeignKey(
-        'Company', blank=True, null=True, related_name='company_tickets')
+        'Company', blank=True, null=True, related_name='company_tickets',
+        on_delete=models.SET_NULL)
     location = models.ForeignKey(
-        'Location', blank=True, null=True, related_name='location_tickets')
+        'Location', blank=True, null=True, related_name='location_tickets',
+        on_delete=models.SET_NULL)
     members = models.ManyToManyField(
         'Member', through='ScheduleEntry',
         related_name='member_tickets')
-    owner = models.ForeignKey('Member', blank=True, null=True)
-    priority = models.ForeignKey('TicketPriority', blank=True, null=True)
+    owner = models.ForeignKey(
+        'Member', blank=True, null=True, on_delete=models.SET_NULL)
+    priority = models.ForeignKey(
+        'TicketPriority', blank=True, null=True, on_delete=models.SET_NULL)
     project = models.ForeignKey(
-        'Project', blank=True, null=True, related_name='project_tickets')
+        'Project', blank=True, null=True, related_name='project_tickets',
+        on_delete=models.CASCADE)
     status = models.ForeignKey(
-        'BoardStatus', blank=True, null=True, related_name='status_tickets')
+        'BoardStatus', blank=True, null=True, related_name='status_tickets',
+        on_delete=models.SET_NULL)
     team = models.ForeignKey(
-        'Team', blank=True, null=True, related_name='team_tickets')
+        'Team', blank=True, null=True, related_name='team_tickets',
+        on_delete=models.SET_NULL)
 
     class Meta:
         verbose_name = 'Ticket'
@@ -775,8 +833,9 @@ class ServiceNote(TimeStampedModel):
     resolution_flag = models.BooleanField(blank=True)
     text = models.TextField(blank=True, null=True, max_length=2000)
 
-    ticket = models.ForeignKey('Ticket')
-    member = models.ForeignKey('Member', blank=True, null=True)
+    ticket = models.ForeignKey('Ticket', on_delete=models.CASCADE)
+    member = models.ForeignKey(
+        'Member', blank=True, null=True, on_delete=models.SET_NULL)
 
     class Meta:
         ordering = ('-date_created', 'id')
@@ -790,7 +849,7 @@ class OpportunityNote(TimeStampedModel):
 
     text = models.TextField(blank=True, null=True, max_length=2000)
     date_created = models.DateTimeField(blank=True, null=True)
-    opportunity = models.ForeignKey('Opportunity')
+    opportunity = models.ForeignKey('Opportunity', on_delete=models.CASCADE)
 
     class Meta:
         ordering = ('-date_created', 'id', )
@@ -807,9 +866,11 @@ class Activity(TimeStampedModel):
     date_start = models.DateTimeField(blank=True, null=True)
     date_end = models.DateTimeField(blank=True, null=True)
 
-    assign_to = models.ForeignKey('Member', )
-    opportunity = models.ForeignKey('Opportunity', blank=True, null=True)
-    ticket = models.ForeignKey('Ticket', blank=True, null=True)
+    assign_to = models.ForeignKey('Member', on_delete=models.CASCADE)
+    opportunity = models.ForeignKey(
+        'Opportunity', blank=True, null=True, on_delete=models.CASCADE)
+    ticket = models.ForeignKey(
+        'Ticket', blank=True, null=True, on_delete=models.CASCADE)
 
     class Meta:
         verbose_name_plural = 'activities'
