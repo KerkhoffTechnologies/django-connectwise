@@ -14,6 +14,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='ticket',
             name='owner',
-            field=models.ForeignKey(blank=True, null=True, to='djconnectwise.Member'),
+            field=models.ForeignKey(blank=True, null=True, to='djconnectwise.Member', on_delete=models.SET_NULL),
         ),
     ]

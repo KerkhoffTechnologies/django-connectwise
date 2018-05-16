@@ -22,9 +22,9 @@ class Migration(migrations.Migration):
                 ('notes', models.TextField(blank=True, null=True, max_length=2000)),
                 ('date_start', models.DateTimeField(blank=True, null=True)),
                 ('date_end', models.DateTimeField(blank=True, null=True)),
-                ('assign_to', models.ForeignKey(to='djconnectwise.Member')),
-                ('opportunity', models.ForeignKey(null=True, blank=True, to='djconnectwise.Opportunity')),
-                ('ticket', models.ForeignKey(null=True, blank=True, to='djconnectwise.Ticket')),
+                ('assign_to', models.ForeignKey(to='djconnectwise.Member', on_delete=models.CASCADE)),
+                ('opportunity', models.ForeignKey(null=True, blank=True, to='djconnectwise.Opportunity', on_delete=models.CASCADE)),
+                ('ticket', models.ForeignKey(null=True, blank=True, to='djconnectwise.Ticket', on_delete=models.CASCADE)),
             ],
             options={
                 'verbose_name_plural': 'activities',
