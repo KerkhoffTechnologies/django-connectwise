@@ -5,6 +5,7 @@ from . import mocks
 
 from djconnectwise import callback
 from djconnectwise.models import CallBackEntry
+from django.db import transaction
 
 
 class TestCallBackHandler(TestCase):
@@ -45,20 +46,22 @@ class TestCallBackHandler(TestCase):
         mocks.system_api_delete_callback_call({})
         mocks.system_api_create_callback_call(fixture)
         mocks.system_api_get_callbacks_call([fixture])
-        entry = self.handler.create()
-        callback_qset = CallBackEntry.objects.all()
+
+        with transaction.atomic():
+            entry = self.handler.create()
+            callback_qset = CallBackEntry.objects.all()
         entries = list(callback_qset)
         self.assertEqual(len(entries), 1)
         self.assertEqual(entries[0], entry)
-
         self.handler.delete()
         self.assertEqual(entries[0], entry)
         self.assertEqual(CallBackEntry.objects.all().count(), 0)
 
     def test_create(self):
-        for handler in self.handlers:
-            self.handler = handler()
-            self._test_create_callback()
+        for i, handler in enumerate(self.handlers):
+            with transaction.atomic():
+                self.handler = handler()
+                self._test_create_callback()
 
     def test_delete(self):
         for handler in self.handlers:

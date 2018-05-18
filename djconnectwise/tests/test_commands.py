@@ -7,6 +7,8 @@ from django.test import TestCase
 from djconnectwise import models
 from djconnectwise import callback
 
+from django.db import transaction
+
 from . import mocks
 from . import fixtures
 from . import fixture_utils
@@ -483,15 +485,16 @@ class TestCallBackCommand(TestCase):
 
     def _test_command(self, action, command, no_output=False):
         for handler in self.handlers:
-            self.clean()
-            self.handler = handler()
-            fixture = self.get_fixture()
-            mocks.system_api_delete_callback_call({})
-            mocks.system_api_create_callback_call(fixture)
-            mocks.system_api_get_callbacks_call([fixture])
+            with transaction.atomic():
+                self.clean()
+                self.handler = handler()
+                fixture = self.get_fixture()
+                mocks.system_api_delete_callback_call({})
+                mocks.system_api_create_callback_call(fixture)
+                mocks.system_api_get_callbacks_call([fixture])
 
-            callback_type = handler.CALLBACK_TYPE
-            output = self.call(command, callback_type)
+                callback_type = handler.CALLBACK_TYPE
+                output = self.call(command, callback_type)
 
             if no_output:
                 self.assertEqual('', output)
