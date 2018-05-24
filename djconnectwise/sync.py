@@ -399,13 +399,13 @@ class ServiceNoteSynchronizer(Synchronizer):
         ticket_class = models.Ticket
 
         try:
-            ticket_id = json_data.get('ticketId')
+            ticket_id = json_data['ticketId']
             related_ticket = ticket_class.objects.get(pk=ticket_id)
             setattr(instance, 'ticket', related_ticket)
-        except ObjectDoesNotExist as e:
-            logger.warning(
-                'Ticket not found for {}.'.format(instance.id) +
-                ' ObjectDoesNotExist Exception: {}.'.format(e)
+        except KeyError:
+            raise InvalidObjectException(
+                'Service note {} has no ticketId key to find its target'
+                '- skipping.'.format(instance.id)
             )
 
         for json_field, value in self.related_meta.items():
