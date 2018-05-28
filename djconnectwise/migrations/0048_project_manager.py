@@ -14,6 +14,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='project',
             name='manager',
-            field=models.ForeignKey(blank=True, to='djconnectwise.Member', null=True, related_name='project_manager'),
+            field=models.ForeignKey(blank=True, to='djconnectwise.Member', null=True, related_name='project_manager', on_delete=models.SET_NULL),
         ),
     ]

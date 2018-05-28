@@ -26,8 +26,8 @@ class Migration(migrations.Migration):
                 ('created_by', models.TextField(null=True, blank=True, max_length=250)),
                 ('internal_flag', models.BooleanField()),
                 ('external_flag', models.BooleanField()),
-                ('member', models.ForeignKey(blank=True, null=True, to='djconnectwise.Member')),
-                ('ticket', models.ForeignKey(to='djconnectwise.Ticket')),
+                ('member', models.ForeignKey(blank=True, null=True, to='djconnectwise.Member', on_delete=models.SET_NULL)),
+                ('ticket', models.ForeignKey(to='djconnectwise.Ticket', on_delete=models.CASCADE)),
             ],
             options={
                 'ordering': ('date_created', 'id'),

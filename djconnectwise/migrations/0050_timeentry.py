@@ -23,9 +23,9 @@ class Migration(migrations.Migration):
                 ('actual_hours', models.DecimalField(decimal_places=2, null=True, blank=True, max_digits=6)),
                 ('notes', models.TextField(max_length=2000, null=True, blank=True)),
                 ('internal_notes', models.TextField(max_length=2000, null=True, blank=True)),
-                ('charge_to_id', models.ForeignKey(null=True, blank=True, to='djconnectwise.Ticket')),
-                ('company', models.ForeignKey(to='djconnectwise.Company')),
-                ('member', models.ForeignKey(null=True, blank=True, to='djconnectwise.Member')),
+                ('charge_to_id', models.ForeignKey(null=True, blank=True, to='djconnectwise.Ticket', on_delete=models.CASCADE)),
+                ('company', models.ForeignKey(to='djconnectwise.Company', on_delete=models.CASCADE)),
+                ('member', models.ForeignKey(null=True, blank=True, to='djconnectwise.Member', on_delete=models.CASCADE)),
             ],
             options={
                 'verbose_name_plural': 'Time Entries',

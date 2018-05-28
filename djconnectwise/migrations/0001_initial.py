@@ -143,7 +143,7 @@ class Migration(migrations.Migration):
                 ('created', django_extensions.db.fields.CreationDateTimeField(verbose_name='created', auto_now_add=True)),
                 ('modified', django_extensions.db.fields.ModificationDateTimeField(verbose_name='modified', auto_now=True)),
                 ('name', models.CharField(max_length=30)),
-                ('board', models.ForeignKey(to='djconnectwise.ConnectWiseBoard')),
+                ('board', models.ForeignKey(to='djconnectwise.ConnectWiseBoard', on_delete=models.CASCADE)),
                 ('members', models.ManyToManyField(to='djconnectwise.Member')),
             ],
             options={
@@ -187,9 +187,9 @@ class Migration(migrations.Migration):
                 ('date_responded_utc', models.DateTimeField(null=True, blank=True)),
                 ('is_in_sla', models.NullBooleanField()),
                 ('api_text', models.TextField(null=True, blank=True)),
-                ('board', models.ForeignKey(blank=True, to='djconnectwise.ConnectWiseBoard', null=True)),
-                ('company', models.ForeignKey(blank=True, to='djconnectwise.Company', null=True, related_name='company_tickets')),
-                ('location', models.ForeignKey(blank=True, to='djconnectwise.Location', null=True, related_name='location_tickets')),
+                ('board', models.ForeignKey(blank=True, to='djconnectwise.ConnectWiseBoard', null=True, on_delete=models.CASCADE)),
+                ('company', models.ForeignKey(blank=True, to='djconnectwise.Company', null=True, related_name='company_tickets', on_delete=models.SET_NULL)),
+                ('location', models.ForeignKey(blank=True, to='djconnectwise.Location', null=True, related_name='location_tickets', on_delete=models.SET_NULL)),
             ],
             options={
                 'verbose_name': 'Ticket',
@@ -203,8 +203,8 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('created', django_extensions.db.fields.CreationDateTimeField(verbose_name='created', auto_now_add=True)),
                 ('modified', django_extensions.db.fields.ModificationDateTimeField(verbose_name='modified', auto_now=True)),
-                ('member', models.ForeignKey(to='djconnectwise.Member')),
-                ('ticket', models.ForeignKey(to='djconnectwise.Ticket')),
+                ('member', models.ForeignKey(to='djconnectwise.Member', on_delete=models.CASCADE)),
+                ('ticket', models.ForeignKey(to='djconnectwise.Ticket', on_delete=models.CASCADE)),
             ],
             options={
                 'ordering': ('-modified', '-created'),
@@ -235,31 +235,31 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='ticket',
             name='priority',
-            field=models.ForeignKey(blank=True, to='djconnectwise.TicketPriority', null=True),
+            field=models.ForeignKey(blank=True, to='djconnectwise.TicketPriority', null=True, on_delete=models.SET_NULL),
         ),
         migrations.AddField(
             model_name='ticket',
             name='project',
-            field=models.ForeignKey(blank=True, to='djconnectwise.Project', null=True, related_name='project_tickets'),
+            field=models.ForeignKey(blank=True, to='djconnectwise.Project', null=True, related_name='project_tickets', on_delete=models.CASCADE),
         ),
         migrations.AddField(
             model_name='ticket',
             name='status',
-            field=models.ForeignKey(blank=True, to='djconnectwise.BoardStatus', null=True, related_name='status_tickets'),
+            field=models.ForeignKey(blank=True, to='djconnectwise.BoardStatus', null=True, related_name='status_tickets', on_delete=models.SET_NULL),
         ),
         migrations.AddField(
             model_name='ticket',
             name='team',
-            field=models.ForeignKey(blank=True, to='djconnectwise.Team', null=True, related_name='team_tickets'),
+            field=models.ForeignKey(blank=True, to='djconnectwise.Team', null=True, related_name='team_tickets', on_delete=models.SET_NULL),
         ),
         migrations.AddField(
             model_name='callbackentry',
             name='member',
-            field=models.ForeignKey(to='djconnectwise.Member'),
+            field=models.ForeignKey(to='djconnectwise.Member', on_delete=models.CASCADE),
         ),
         migrations.AddField(
             model_name='boardstatus',
             name='board',
-            field=models.ForeignKey(to='djconnectwise.ConnectWiseBoard'),
+            field=models.ForeignKey(to='djconnectwise.ConnectWiseBoard', on_delete=models.CASCADE),
         ),
     ]

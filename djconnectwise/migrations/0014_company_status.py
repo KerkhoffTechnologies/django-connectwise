@@ -14,6 +14,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='company',
             name='status',
-            field=models.ForeignKey(blank=True, null=True, to='djconnectwise.CompanyStatus'),
+            field=models.ForeignKey(blank=True, null=True, to='djconnectwise.CompanyStatus', on_delete=models.SET_NULL),
         ),
     ]

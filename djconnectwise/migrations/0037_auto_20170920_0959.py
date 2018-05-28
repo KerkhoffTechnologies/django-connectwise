@@ -19,7 +19,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='opportunity',
             name='company',
-            field=models.ForeignKey(to='djconnectwise.Company', related_name='company_opportunities', null=True, blank=True),
+            field=models.ForeignKey(to='djconnectwise.Company', related_name='company_opportunities', null=True, blank=True, on_delete=models.SET_NULL),
         ),
         migrations.AlterField(
             model_name='opportunity',

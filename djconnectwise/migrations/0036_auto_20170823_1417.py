@@ -19,8 +19,8 @@ class Migration(migrations.Migration):
                 ('expected_date_start', models.DateTimeField(null=True, blank=True)),
                 ('expected_date_end', models.DateTimeField(null=True, blank=True)),
                 ('done_flag', models.BooleanField(default=False)),
-                ('activity_object', models.ForeignKey(blank=True, null=True, to='djconnectwise.Activity')),
-                ('member', models.ForeignKey(to='djconnectwise.Member')),
+                ('activity_object', models.ForeignKey(blank=True, null=True, to='djconnectwise.Activity', on_delete=models.CASCADE)),
+                ('member', models.ForeignKey(to='djconnectwise.Member', on_delete=models.CASCADE)),
             ],
             options={
                 'ordering': ('name',),
@@ -64,21 +64,21 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='scheduleentry',
             name='schedule_type',
-            field=models.ForeignKey(blank=True, null=True, to='djconnectwise.ScheduleType'),
+            field=models.ForeignKey(blank=True, null=True, to='djconnectwise.ScheduleType', on_delete=models.SET_NULL),
         ),
         migrations.AddField(
             model_name='scheduleentry',
             name='status',
-            field=models.ForeignKey(blank=True, null=True, to='djconnectwise.ScheduleStatus'),
+            field=models.ForeignKey(blank=True, null=True, to='djconnectwise.ScheduleStatus', on_delete=models.SET_NULL),
         ),
         migrations.AddField(
             model_name='scheduleentry',
             name='ticket_object',
-            field=models.ForeignKey(blank=True, null=True, to='djconnectwise.Ticket'),
+            field=models.ForeignKey(blank=True, null=True, to='djconnectwise.Ticket', on_delete=models.CASCADE),
         ),
         migrations.AddField(
             model_name='scheduleentry',
             name='where',
-            field=models.ForeignKey(blank=True, null=True, to='djconnectwise.Location'),
+            field=models.ForeignKey(blank=True, null=True, to='djconnectwise.Location', on_delete=models.SET_NULL),
         ),
     ]

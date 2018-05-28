@@ -18,6 +18,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='project',
             name='status',
-            field=models.ForeignKey(to='djconnectwise.ProjectStatus', blank=True, null=True),
+            field=models.ForeignKey(to='djconnectwise.ProjectStatus', blank=True, null=True, on_delete=models.SET_NULL),
         ),
     ]

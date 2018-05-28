@@ -925,11 +925,11 @@ class TimeEntrySynchronizer(BatchConditionMixin, Synchronizer):
 
         time_start = json_data.get('timeStart')
         if time_start:
-            instance.time_start = parse(time_start)
+            instance.time_start = parse(time_start, default=parse('00:00Z'))
 
         time_end = json_data.get('timeEnd')
         if time_end:
-            instance.time_end = parse(time_end)
+            instance.time_end = parse(time_end, default=parse('00:00Z'))
 
         hours_deduct = json_data.get('hoursDeduct')
         if hours_deduct:

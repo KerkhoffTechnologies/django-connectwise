@@ -28,6 +28,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='opportunity',
             name='probability',
-            field=models.ForeignKey(null=True, to='djconnectwise.SalesProbability', blank=True, related_name='sales_probability'),
+            field=models.ForeignKey(null=True, to='djconnectwise.SalesProbability', blank=True, related_name='sales_probability', on_delete=models.CASCADE),
         ),
     ]
