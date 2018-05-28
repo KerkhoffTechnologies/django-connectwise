@@ -4,7 +4,7 @@
 from setuptools import setup, find_packages
 import djconnectwise
 
-LONG_DESCRIPTION = open('README.rst').read()
+LONG_DESCRIPTION = open('README.md').read()
 
 setup(
     name="django-connectwise",
@@ -13,6 +13,7 @@ setup(
                 'Defines models (tickets, members, companies, etc.) '
                 'and callbacks.',
     long_description=LONG_DESCRIPTION,
+    long_description_content_type='text/markdown',
     keywords='django connectwise rest api python',
     packages=find_packages(),
     author='Kerkhoff Technologies Inc.',
