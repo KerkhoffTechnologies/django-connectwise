@@ -76,6 +76,12 @@ To de-register your callbacks, use the `delete_callback` management command.
 
 ## Testing
 
+Prepare your environment:
+
+```
+pip install --upgrade -r requirements_test.txt
+```
+
 Try one of:
 
     ./runtests.py
