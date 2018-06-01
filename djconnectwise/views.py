@@ -56,8 +56,9 @@ class CallBackView(views.CsrfExemptMixin,
         ConnectWise docs for callback verification:
         https://developer.connectwise.com/Manage/Developer_Guide#Verifying_the_Callback_Source
         """
-        logger.debug('Callback encoding: {}'.format(request.encoding))
-        body = json.loads(request.body.decode(encoding='utf-8'))
+        body = json.loads(
+            request.body.decode(encoding='utf-8', errors='replace')
+        )
         logger.debug('Callback {}: {}'.format(
             request.META['QUERY_STRING'], body)
         )
