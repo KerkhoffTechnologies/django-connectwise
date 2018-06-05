@@ -373,7 +373,7 @@ class TimeEntry(models.Model):
     )
 
     class Meta:
-        verbose_name_plural = 'Time Entries'
+        verbose_name_plural = 'Time entries'
         ordering = ('-time_start', 'id')
 
     def __str__(self):
@@ -857,7 +857,7 @@ class OpportunityNote(TimeStampedModel):
 
     class Meta:
         ordering = ('-date_created', 'id', )
-        verbose_name_plural = 'Opportunity Notes'
+        verbose_name_plural = 'Opportunity notes'
 
     def __str__(self):
         return 'id: {}, on Opportunity id:{}'.format(
