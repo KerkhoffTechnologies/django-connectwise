@@ -439,7 +439,7 @@ class TicketPriority(TimeStampedModel):
 
     class Meta:
         verbose_name_plural = 'ticket priorities'
-        ordering = ('name', )
+        ordering = ('sort', 'name', )
 
     def __str__(self):
         return self.name
