@@ -414,6 +414,10 @@ class Team(TimeStampedModel):
     objects = models.Manager()
     available_objects = AvailableBoardTeamManager()
 
+    class Meta:
+        verbose_name_plural = 'Teams'
+        ordering = ('name', 'id')
+
     def __str__(self):
         return '{}/{}'.format(self.board, self.name)
 
