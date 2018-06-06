@@ -731,6 +731,12 @@ API_SYSTEM_CALLBACK_ENTRY = {
 }
 
 
+API_SYSTEM_TERRITORY = {
+    'id': 1,
+    'name': 'Some Territory'
+}
+
+
 API_SALES_OPPORTUNITY_TYPE = {
     'id': 2,
     'description': 'Application Development',

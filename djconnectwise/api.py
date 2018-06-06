@@ -560,6 +560,8 @@ class SystemAPIClient(ConnectWiseAPIClient):
     ENDPOINT_MEMBERS_COUNT = 'members/count'
     ENDPOINT_CALLBACKS = 'callbacks/'
     ENDPOINT_INFO = 'info/'
+    # Locations in the system API are actually territories
+    ENDPOINT_LOCATIONS = 'locations/'
 
     def get_connectwise_version(self):
         result = self.fetch_resource(self.ENDPOINT_INFO)
@@ -571,6 +573,9 @@ class SystemAPIClient(ConnectWiseAPIClient):
 
     def get_member_count(self):
         return self.fetch_resource(self.ENDPOINT_MEMBERS_COUNT)
+
+    def get_territories(self):
+        return self.fetch_resource(self.ENDPOINT_LOCATIONS)
 
     def get_callbacks(self, *args, **kwargs):
         return self.fetch_resource(self.ENDPOINT_CALLBACKS,
