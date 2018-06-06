@@ -25,6 +25,7 @@ from djconnectwise.models import Ticket
 from djconnectwise.models import TicketPriority
 from djconnectwise.models import OpportunityNote
 from djconnectwise.models import TimeEntry
+from djconnectwise.models import Territory
 
 from . import fixtures
 from . import fixture_utils
@@ -111,6 +112,42 @@ class TestBatchConditionMixin(TestCase):
 
         size = synchronizer.get_optimal_size([])
         self.assertIsNone(size)
+
+
+class TestTerritorySynchronizer(TestCase, SynchronizerTestMixin):
+    synchronizer_class = sync.TerritorySynchronizer
+    model_class = Territory
+    fixture = fixtures.API_SYSTEM_TERRITORY_LIST
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_territories()
+
+    def call_api(self, return_data):
+        return mocks.system_api_get_territories_call(return_data)
+
+    def test_sync_update(self):
+        self._sync(self.fixture)
+
+        json_data = self.fixture[0]
+
+        instance_id = json_data['id']
+        original = self.model_class.objects.get(id=instance_id)
+
+        name = 'A Different Territory'
+        new_json = deepcopy(json_data)
+        new_json['name'] = name
+        new_json_list = [new_json]
+
+        self._sync(new_json_list)
+
+        changed = self.model_class.objects.get(id=instance_id)
+        self.assertNotEqual(original.name, name)
+        self._assert_fields(changed, new_json)
+
+    def _assert_fields(self, instance, json_data):
+        self.assertEqual(instance.id, json_data['id'])
+        self.assertEqual(instance.name, json_data['name'])
 
 
 class TestCompanySynchronizer(TestCase, SynchronizerTestMixin):

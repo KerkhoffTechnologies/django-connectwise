@@ -574,8 +574,9 @@ class SystemAPIClient(ConnectWiseAPIClient):
     def get_member_count(self):
         return self.fetch_resource(self.ENDPOINT_MEMBERS_COUNT)
 
-    def get_territories(self):
-        return self.fetch_resource(self.ENDPOINT_LOCATIONS)
+    def get_territories(self, *args, **kwargs):
+        return self.fetch_resource(self.ENDPOINT_LOCATIONS,
+                                   should_page=True, *args, **kwargs)
 
     def get_callbacks(self, *args, **kwargs):
         return self.fetch_resource(self.ENDPOINT_CALLBACKS,

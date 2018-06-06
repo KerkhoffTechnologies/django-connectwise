@@ -216,7 +216,6 @@ class Company(TimeStampedModel):
     state_identifier = models.CharField(blank=True, null=True, max_length=250)
     zip = models.CharField(blank=True, null=True, max_length=250)
     country = models.CharField(blank=True, null=True, max_length=250)
-    territory = models.CharField(blank=True, null=True, max_length=250)
     website = models.CharField(blank=True, null=True, max_length=250)
     market = models.CharField(blank=True, null=True, max_length=250)
     defaultcontactid = models.IntegerField(blank=True, null=True)

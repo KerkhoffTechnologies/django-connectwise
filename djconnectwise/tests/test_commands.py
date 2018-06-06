@@ -77,6 +77,14 @@ class TestSyncCompanyStatusesCommand(AbstractBaseSyncTest, TestCase):
     )
 
 
+class TestSyncTerritoriesCommand(AbstractBaseSyncTest, TestCase):
+    args = (
+        mocks.system_api_get_territories_call,
+        fixtures.API_SYSTEM_TERRITORY_LIST,
+        'territory',
+    )
+
+
 class TestSyncCompaniesCommand(AbstractBaseSyncTest, TestCase):
     args = (
         mocks.company_api_get_call,
@@ -342,7 +350,8 @@ class TestSyncAllCommand(TestCase):
             TestSyncScheduleTypesCommand,
             TestSyncScheduleStatusesCommand,
             TestSyncScheduleEntriesCommand,
-            TestSyncTimeEntriesCommand
+            TestSyncTimeEntriesCommand,
+            TestSyncTerritoriesCommand,
         ]
 
         self.test_args = []
@@ -397,6 +406,7 @@ class TestSyncAllCommand(TestCase):
             'project_status': models.ProjectStatus,
             'project': models.Project,
             'board_status': models.BoardStatus,
+            'territory': models.Territory,
             'company_status': models.CompanyStatus,
             'company_type': models.CompanyType,
             'team': models.Team,

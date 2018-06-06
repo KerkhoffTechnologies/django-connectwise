@@ -62,6 +62,12 @@ class MemberAdmin(admin.ModelAdmin):
         return str(obj)
 
 
+@admin.register(models.Territory)
+class TerritoryAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name')
+    search_fields = ['id', 'name']
+
+
 @admin.register(models.Company)
 class CompanyAdmin(admin.ModelAdmin):
     list_display = ('id', 'name',
