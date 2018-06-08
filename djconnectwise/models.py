@@ -216,7 +216,6 @@ class Company(TimeStampedModel):
     state_identifier = models.CharField(blank=True, null=True, max_length=250)
     zip = models.CharField(blank=True, null=True, max_length=250)
     country = models.CharField(blank=True, null=True, max_length=250)
-    territory = models.CharField(blank=True, null=True, max_length=250)
     website = models.CharField(blank=True, null=True, max_length=250)
     market = models.CharField(blank=True, null=True, max_length=250)
     defaultcontactid = models.IntegerField(blank=True, null=True)
@@ -236,6 +235,12 @@ class Company(TimeStampedModel):
         null=True,
         on_delete=models.SET_NULL
         )
+    territory = models.ForeignKey(
+        'Territory',
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL
+    )
 
     objects = models.Manager()
     available_objects = AvailableCompanyManager()
@@ -356,6 +361,17 @@ class ScheduleEntry(models.Model):
         """
         schedule_client = api.ScheduleAPIClient()
         return schedule_client.delete_schedule_entry(self.id)
+
+
+class Territory(models.Model):
+    name = models.CharField(max_length=250, blank=True, null=True)
+
+    class Meta:
+        verbose_name_plural = 'Territories'
+        ordering = ('name', )
+
+    def __str__(self):
+        return self.name
 
 
 class TimeEntry(models.Model):
