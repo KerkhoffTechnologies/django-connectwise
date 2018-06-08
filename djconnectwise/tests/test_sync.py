@@ -156,6 +156,7 @@ class TestCompanySynchronizer(TestCase, SynchronizerTestMixin):
     fixture = fixtures.API_COMPANY_LIST
 
     def setUp(self):
+        fixture_utils.init_territories()
         mocks.company_api_get_company_statuses_call(
             fixtures.API_COMPANY_STATUS_LIST)
         sync.CompanyStatusSynchronizer().sync()
@@ -267,6 +268,7 @@ class TestScheduleEntriesSynchronizer(TestCase, SynchronizerTestMixin):
         super().setUp()
         # self.synchronizer = self.synchronizer_class()
         fixture_utils.init_boards()
+        fixture_utils.init_territories()
         fixture_utils.init_companies()
         fixture_utils.init_project_statuses()
         fixture_utils.init_projects()
@@ -662,6 +664,7 @@ class TestOpportunitySynchronizer(TestCase, SynchronizerTestMixin):
         fixture_utils.init_opportunity_types()
         fixture_utils.init_sales_probabilities()
         fixture_utils.init_members()
+        fixture_utils.init_territories()
         fixture_utils.init_companies()
 
     def call_api(self, return_data):
@@ -990,6 +993,7 @@ class TestActivitySynchronizer(TestCase, SynchronizerTestMixin):
     def setUp(self):
         fixture_utils.init_members()
         fixture_utils.init_tickets()
+        fixture_utils.init_territories()
         fixture_utils.init_companies()
         fixture_utils.init_opportunity_types()
         fixture_utils.init_opportunities()
