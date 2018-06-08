@@ -77,7 +77,19 @@ class TestSyncCompanyStatusesCommand(AbstractBaseSyncTest, TestCase):
     )
 
 
+class TestSyncTerritoriesCommand(AbstractBaseSyncTest, TestCase):
+    args = (
+        mocks.system_api_get_territories_call,
+        fixtures.API_SYSTEM_TERRITORY_LIST,
+        'territory',
+    )
+
+
 class TestSyncCompaniesCommand(AbstractBaseSyncTest, TestCase):
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_territories()
+
     args = (
         mocks.company_api_get_call,
         fixtures.API_COMPANY_LIST,
@@ -176,6 +188,7 @@ class TestSyncServiceNotesCommand(AbstractBaseSyncTest, TestCase):
         super().setUp()
         fixture_utils.init_service_notes()
         fixture_utils.init_members()
+        fixture_utils.init_territories()
         fixture_utils.init_companies()
         fixture_utils.init_boards()
         fixture_utils.init_board_statuses()
@@ -206,6 +219,7 @@ class TestSyncOpportunityCommand(AbstractBaseSyncTest, TestCase):
 
     def setUp(self):
         super().setUp()
+        fixture_utils.init_territories()
         fixture_utils.init_companies()
         fixture_utils.init_members()
         fixture_utils.init_opportunity_statuses()
@@ -248,6 +262,7 @@ class TestSyncTimeEntriesCommand(AbstractBaseSyncTest, TestCase):
         fixture_utils.init_boards()
         fixture_utils.init_board_statuses()
         fixture_utils.init_tickets()
+        fixture_utils.init_territories()
         fixture_utils.init_companies()
         fixture_utils.init_members()
 
@@ -263,6 +278,7 @@ class TestSyncScheduleEntriesCommand(AbstractBaseSyncTest, TestCase):
         super().setUp()
         fixture_utils.init_boards()
         fixture_utils.init_board_statuses()
+        fixture_utils.init_territories()
         fixture_utils.init_companies()
         fixture_utils.init_locations()
         fixture_utils.init_teams()
@@ -300,6 +316,7 @@ class TestSyncActivityCommand(AbstractBaseSyncTest, TestCase):
 
     def setUp(self):
         super(). setUp()
+        fixture_utils.init_territories()
         fixture_utils.init_companies()
         mocks.system_api_get_member_image_by_photo_id_call(
             (mocks.CW_MEMBER_IMAGE_FILENAME, mocks.get_member_avatar()))
@@ -342,7 +359,8 @@ class TestSyncAllCommand(TestCase):
             TestSyncScheduleTypesCommand,
             TestSyncScheduleStatusesCommand,
             TestSyncScheduleEntriesCommand,
-            TestSyncTimeEntriesCommand
+            TestSyncTimeEntriesCommand,
+            TestSyncTerritoriesCommand,
         ]
 
         self.test_args = []
@@ -397,6 +415,7 @@ class TestSyncAllCommand(TestCase):
             'project_status': models.ProjectStatus,
             'project': models.Project,
             'board_status': models.BoardStatus,
+            'territory': models.Territory,
             'company_status': models.CompanyStatus,
             'company_type': models.CompanyType,
             'team': models.Team,

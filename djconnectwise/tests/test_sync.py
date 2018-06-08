@@ -25,6 +25,7 @@ from djconnectwise.models import Ticket
 from djconnectwise.models import TicketPriority
 from djconnectwise.models import OpportunityNote
 from djconnectwise.models import TimeEntry
+from djconnectwise.models import Territory
 
 from . import fixtures
 from . import fixture_utils
@@ -113,12 +114,49 @@ class TestBatchConditionMixin(TestCase):
         self.assertIsNone(size)
 
 
+class TestTerritorySynchronizer(TestCase, SynchronizerTestMixin):
+    synchronizer_class = sync.TerritorySynchronizer
+    model_class = Territory
+    fixture = fixtures.API_SYSTEM_TERRITORY_LIST
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_territories()
+
+    def call_api(self, return_data):
+        return mocks.system_api_get_territories_call(return_data)
+
+    def test_sync_update(self):
+        self._sync(self.fixture)
+
+        json_data = self.fixture[0]
+
+        instance_id = json_data['id']
+        original = self.model_class.objects.get(id=instance_id)
+
+        name = 'A Different Territory'
+        new_json = deepcopy(json_data)
+        new_json['name'] = name
+        new_json_list = [new_json]
+
+        self._sync(new_json_list)
+
+        changed = self.model_class.objects.get(id=instance_id)
+        self.assertNotEqual(original.name, name)
+        self._assert_fields(changed, new_json)
+
+    def _assert_fields(self, instance, json_data):
+        self.assertEqual(instance.id, json_data['id'])
+        self.assertEqual(instance.name, json_data['name'])
+
+
 class TestCompanySynchronizer(TestCase, SynchronizerTestMixin):
     synchronizer_class = sync.CompanySynchronizer
     model_class = Company
     fixture = fixtures.API_COMPANY_LIST
 
     def setUp(self):
+        fixture_utils.init_territories()
         mocks.company_api_get_company_statuses_call(
             fixtures.API_COMPANY_STATUS_LIST)
         sync.CompanyStatusSynchronizer().sync()
@@ -230,6 +268,7 @@ class TestScheduleEntriesSynchronizer(TestCase, SynchronizerTestMixin):
         super().setUp()
         # self.synchronizer = self.synchronizer_class()
         fixture_utils.init_boards()
+        fixture_utils.init_territories()
         fixture_utils.init_companies()
         fixture_utils.init_project_statuses()
         fixture_utils.init_projects()
@@ -625,6 +664,7 @@ class TestOpportunitySynchronizer(TestCase, SynchronizerTestMixin):
         fixture_utils.init_opportunity_types()
         fixture_utils.init_sales_probabilities()
         fixture_utils.init_members()
+        fixture_utils.init_territories()
         fixture_utils.init_companies()
 
     def call_api(self, return_data):
@@ -953,6 +993,7 @@ class TestActivitySynchronizer(TestCase, SynchronizerTestMixin):
     def setUp(self):
         fixture_utils.init_members()
         fixture_utils.init_tickets()
+        fixture_utils.init_territories()
         fixture_utils.init_companies()
         fixture_utils.init_opportunity_types()
         fixture_utils.init_opportunities()

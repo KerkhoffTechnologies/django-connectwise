@@ -83,7 +83,7 @@ API_COMPANY = {
     'phoneNumber': '1450994900',
     'faxNumber': '',
     'website': 'www.YourCompany.com',
-    'territoryId': 38,
+    'territoryId': 1,
     'marketId': 23,
     'accountNumber': '',
     'defaultContact': {
@@ -729,6 +729,15 @@ API_SYSTEM_CALLBACK_ENTRY = {
     'inactiveFlag': False,
     '_info ': {'lastUpdated': '', 'updatedBy': ''}
 }
+
+
+API_SYSTEM_TERRITORY = {
+    'id': 1,
+    'name': 'Some Territory'
+}
+
+
+API_SYSTEM_TERRITORY_LIST = [API_SYSTEM_TERRITORY]
 
 
 API_SALES_OPPORTUNITY_TYPE = {

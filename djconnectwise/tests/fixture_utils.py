@@ -74,6 +74,12 @@ def init_projects():
     return synchronizer.sync()
 
 
+def init_territories():
+    mocks.system_api_get_territories_call(fixtures.API_SYSTEM_TERRITORY_LIST)
+    synchronizer = sync.TerritorySynchronizer()
+    return synchronizer.sync()
+
+
 def init_companies():
     mocks.company_api_get_call(fixtures.API_COMPANY_LIST)
     synchronizer = sync.CompanySynchronizer()

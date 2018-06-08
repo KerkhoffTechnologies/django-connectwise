@@ -627,6 +627,25 @@ class CompanySynchronizer(Synchronizer):
                     )
                 )
 
+        territory_id = company_json.get('territoryId')
+        if territory_id:
+            try:
+                company.territory = models.Territory.objects.get(
+                    pk=territory_id
+                )
+            except models.Territory.DoesNotExist:
+                logger.warning(
+                    'Failed to find Territory: {}'.format(
+                        territory_id
+                    )
+                )
+        else:
+            logger.warning(
+                'No Territory ID recieved in request for Company: {}'.format(
+                    company.id
+                )
+            )
+
         company.save()
         return company
 
@@ -887,6 +906,20 @@ class ScheduleTypeSychronizer(Synchronizer):
 
     def get_page(self, *args, **kwargs):
         return self.client.get_schedule_types(*args, **kwargs)
+
+
+class TerritorySynchronizer(Synchronizer):
+    client_class = api.SystemAPIClient
+    model_class = models.Territory
+
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data['id']
+        instance.name = json_data['name']
+
+        return instance
+
+    def get_page(self, *args, **kwargs):
+        return self.client.get_territories(*args, **kwargs)
 
 
 class TimeEntrySynchronizer(BatchConditionMixin, Synchronizer):
