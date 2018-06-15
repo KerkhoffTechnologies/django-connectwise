@@ -803,6 +803,15 @@ class ScheduleEntriesSynchronizer(BatchConditionMixin, Synchronizer):
                 .format(instance.id)
             )
 
+        try:
+            member_id = json_data['member']['id']
+            models.Member.objects.get(pk=member_id)
+        except ObjectDoesNotExist as e:
+            raise InvalidObjectException(
+                'Schedule entry {} can not find member: {}'
+                '- skipping.'.format(instance.id, member_id)
+            )
+
         # handle dates
         expected_date_start = json_data.get('dateStart')
         if expected_date_start:
