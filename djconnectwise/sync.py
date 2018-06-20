@@ -436,12 +436,17 @@ class ServiceNoteSynchronizer(Synchronizer):
         # be modified. That may never happen though, so it is probably
         # fine like this for the forseeable future.
         if kwargs['conditions']:
-            ticket_id = kwargs['conditions'][0]
-            kwargs['conditions'] = []
-            records += self.client_call(ticket_id, *args, **kwargs)
-        else:
-            for ticket_id in ticket_qs.values_list('id', flat=True):
+            try:
+                ticket_id = int(kwargs['conditions'][0])
+                kwargs['conditions'] = []
                 records += self.client_call(ticket_id, *args, **kwargs)
+
+                return records
+            except ValueError:
+                # Do nothing
+                pass
+        for ticket_id in ticket_qs.values_list('id', flat=True):
+            records += self.client_call(ticket_id, *args, **kwargs)
 
         return records
 
@@ -980,6 +985,18 @@ class TimeEntrySynchronizer(BatchConditionMixin, Synchronizer):
         actual_hours = json_data.get('actualHours')
         if actual_hours:
             instance.actual_hours = actual_hours
+
+        detail_description_flag = json_data.get('addToDetailDescriptionFlag')
+        if detail_description_flag:
+            instance.detail_description_flag = detail_description_flag
+
+        internal_analysis_flag = json_data.get('addToInternalAnalysisFlag')
+        if internal_analysis_flag:
+            instance.internal_analysis_flag = internal_analysis_flag
+
+        resolution_flag = json_data.get('addToResolutionFlag')
+        if resolution_flag:
+            instance.resolution_flag = resolution_flag
 
         for json_field, value in self.related_meta.items():
             model_class, field_name = value

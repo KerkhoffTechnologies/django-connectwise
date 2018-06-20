@@ -408,6 +408,10 @@ class TimeEntry(models.Model):
     time_start = models.DateTimeField(blank=True, null=True)
     time_end = models.DateTimeField(blank=True, null=True)
 
+    detail_description_flag = models.BooleanField(default=False)
+    internal_analysis_flag = models.BooleanField(default=False)
+    resolution_flag = models.BooleanField(default=False)
+
     charge_to_id = models.ForeignKey(
         'Ticket', blank=True, null=True, on_delete=models.CASCADE)
     company = models.ForeignKey(
