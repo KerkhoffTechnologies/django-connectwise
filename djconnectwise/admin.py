@@ -11,7 +11,7 @@ class SyncJobAdmin(admin.ModelAdmin):
         'id', 'start_time', 'end_time', 'entity_name', 'success', 'added',
         'updated', 'deleted', 'sync_type'
     )
-    list_filter = ('entity_name', )
+    list_filter = ('entity_name', 'sync_type',)
 
 
 @admin.register(models.CallBackEntry)
