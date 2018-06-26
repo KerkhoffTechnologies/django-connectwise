@@ -55,8 +55,9 @@ class LocationAdmin(admin.ModelAdmin):
 
 @admin.register(models.Member)
 class MemberAdmin(admin.ModelAdmin):
-    list_display = ('identifier', 'full_name', 'office_email', 'license_class')
+    list_display = ('identifier', 'full_name', 'office_email', 'inactive', 'license_class')
     search_fields = ('identifier', 'first_name', 'last_name', 'office_email')
+    list_filter = ('license_class', 'inactive', )
 
     def full_name(self, obj):
         return str(obj)
