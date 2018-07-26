@@ -407,6 +407,11 @@ class ServiceNoteSynchronizer(Synchronizer):
                 'Service note {} has no ticketId key to find its target'
                 '- skipping.'.format(instance.id)
             )
+        except ObjectDoesNotExist as e:
+            logger.warning(
+                'Service note {} has a ticketId that does not exist. {}'.
+                format(instance.id, e)
+            )
 
         for json_field, value in self.related_meta.items():
             model_class, field_name = value
