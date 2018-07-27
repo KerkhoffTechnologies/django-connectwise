@@ -408,9 +408,9 @@ class ServiceNoteSynchronizer(Synchronizer):
                 '- skipping.'.format(instance.id)
             )
         except ObjectDoesNotExist as e:
-            logger.warning(
-                'Service note {} has a ticketId that does not exist. {}'.
-                format(instance.id, e)
+            raise InvalidObjectException(
+                'Service note {} has a ticketId that does not exist.'
+                ' ObjectDoesNotExist Exception: '.format(instance.id, e)
             )
 
         for json_field, value in self.related_meta.items():
