@@ -210,12 +210,8 @@ class Synchronizer:
         """
         created = False
         try:
-            if self.lookup_key == 'identifier':
-                instance_identifier = api_instance[self.lookup_key]
-                instance = self.model_class.objects.get(identifier=instance_identifier)
-            else:
-                instance_pk = api_instance[self.lookup_key]
-                instance = self.model_class.objects.get(pk=instance_pk)
+            instance_pk = api_instance[self.lookup_key]
+            instance = self.model_class.objects.get(pk=instance_pk)
 
         except self.model_class.DoesNotExist:
             instance = self.model_class()
@@ -1139,7 +1135,6 @@ class ProjectSynchronizer(Synchronizer):
 class MemberSynchronizer(Synchronizer):
     client_class = api.SystemAPIClient
     model_class = models.Member
-    lookup_key = 'identifier'
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -1149,7 +1144,7 @@ class MemberSynchronizer(Synchronizer):
         instance.id = json_data['id']
         if instance.identifier == json_data['identifier']:
             raise InvalidObjectException(
-                'Identifier: {}, id: {} already exists.'.
+                'Identifier: {}, id: {} already exists - skipping.'.
                 format(instance.identifier, instance.id)
             )
         instance.first_name = json_data.get('firstName')
