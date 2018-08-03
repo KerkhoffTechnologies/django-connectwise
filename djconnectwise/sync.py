@@ -6,7 +6,7 @@ import math
 
 from django.core.files.base import ContentFile
 from django.core.exceptions import ObjectDoesNotExist
-from django.db import transaction
+from django.db import transaction, IntegrityError
 from django.utils import timezone
 from django.db.models import Q
 
@@ -1142,11 +1142,6 @@ class MemberSynchronizer(Synchronizer):
 
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
-        if instance.identifier == json_data['identifier']:
-            raise InvalidObjectException(
-                'Identifier: {}, id: {} already exists - skipping.'.
-                format(instance.identifier, instance.id)
-            )
         instance.first_name = json_data.get('firstName')
         instance.last_name = json_data.get('lastName')
         instance.identifier = json_data.get('identifier')
@@ -1194,7 +1189,12 @@ class MemberSynchronizer(Synchronizer):
         """
         In addition to what the parent does, also update avatar if necessary.
         """
-        instance, created = super().update_or_create_instance(api_instance)
+        try:
+            instance, created = super().update_or_create_instance(api_instance)
+        except IntegrityError as e:
+            raise InvalidObjectException(
+                '{} IntegrityError - skipping.'.format(e)
+            )
         username = instance.identifier
         photo_id = None
 
