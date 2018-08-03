@@ -212,7 +212,6 @@ class Synchronizer:
         try:
             instance_pk = api_instance[self.lookup_key]
             instance = self.model_class.objects.get(pk=instance_pk)
-
         except self.model_class.DoesNotExist:
             instance = self.model_class()
             created = True
