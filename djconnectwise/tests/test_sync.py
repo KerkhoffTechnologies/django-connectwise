@@ -26,6 +26,7 @@ from djconnectwise.models import TicketPriority
 from djconnectwise.models import OpportunityNote
 from djconnectwise.models import TimeEntry
 from djconnectwise.models import Territory
+from djconnectwise.models import Sla
 
 from . import fixtures
 from . import fixture_utils
@@ -783,6 +784,47 @@ class TestOpportunityTypeSynchronizer(TestCase, SynchronizerTestMixin):
         self._assert_fields(changed, new_json)
 
 
+class TestSLASynchronizer(TestCase, SynchronizerTestMixin):
+    synchronizer_class = sync.SLASynchronizer
+    model_class = Sla
+    fixture = fixtures.API_SERVICE_SLA_LIST
+
+    # def setUp(self):
+    #     super.setUp()
+    #     fixture_utils.init_slas()
+
+    def call_api(self, return_data):
+        return mocks.service_api_get_slas_call(return_data)
+
+    def test_sync_update(self):
+        self._sync(self.fixture)
+
+        json_data = self.fixture[0]
+
+        instance_id = json_data['id']
+        original = self.model_class.objects.get(id=instance_id)
+
+        name = 'A Different SLA'
+        new_json = deepcopy(json_data)
+        new_json['name'] = name
+        new_json_list = [new_json]
+
+        self._sync(new_json_list)
+
+        changed = self.model_class.objects.get(id=instance_id)
+        self.assertNotEqual(original.name, name)
+        self._assert_fields(changed, new_json)
+
+    def _assert_fields(self, instance, json_data):
+        self.assertEqual(instance.id, json_data['id'])
+        self.assertEqual(instance.name, json_data['name'])
+        self.assertEqual(instance.default_flag, json_data['defaultFlag'])
+        self.assertEqual(instance.respond_hours, json_data['respondHours'])
+        self.assertEqual(instance.plan_within, json_data['planWithin'])
+        self.assertEqual(instance.resolution_hours,
+                         json_data['resolutionHours'])
+
+
 class TestTicketSynchronizer(TestCase):
 
     def setUp(self):
@@ -808,6 +850,7 @@ class TestTicketSynchronizer(TestCase):
         fixture_utils.init_priorities()
         fixture_utils.init_projects()
         fixture_utils.init_locations()
+        fixture_utils.init_slas()
 
     def _assert_sync(self, instance, json_data):
         self.assertEqual(instance.summary, json_data['summary'])

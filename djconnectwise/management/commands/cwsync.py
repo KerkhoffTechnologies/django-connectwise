@@ -44,6 +44,8 @@ class Command(BaseCommand):
                 _('Sales Probability')),
             ('opportunity', sync.OpportunitySynchronizer,
                 _('Opportunity')),
+            ('sla', sync.SLASynchronizer,
+                _('Sla')),
             ('ticket', sync.TicketSynchronizer, _('Ticket')),
             ('service_note', sync.ServiceNoteSynchronizer,
                 _('Service Note')),
