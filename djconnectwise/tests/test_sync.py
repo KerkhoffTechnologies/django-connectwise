@@ -789,10 +789,6 @@ class TestSLASynchronizer(TestCase, SynchronizerTestMixin):
     model_class = Sla
     fixture = fixtures.API_SERVICE_SLA_LIST
 
-    # def setUp(self):
-    #     super.setUp()
-    #     fixture_utils.init_slas()
-
     def call_api(self, return_data):
         return mocks.service_api_get_slas_call(return_data)
 
