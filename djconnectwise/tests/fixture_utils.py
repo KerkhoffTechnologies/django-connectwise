@@ -62,7 +62,7 @@ def init_slas():
 
 
 def init_calendars():
-    mocks.schedule_api_get_calendar_call(fixutres.API_SCHEDULE_CALENDAR_LIST)
+    mocks.schedule_api_get_calendars_call(fixtures.API_SCHEDULE_CALENDAR_LIST)
     synchronizer = sync.CalendarSynchronizer()
     return synchronizer.sync()
 

@@ -788,13 +788,99 @@ class TestOpportunityTypeSynchronizer(TestCase, SynchronizerTestMixin):
 class TestCalendarSynchronizer(TestCase, SynchronizerTestMixin):
     synchronizer_class = sync.CalendarSynchronizer
     model_class = Calendar
-    fixure = fixtures.API_SCHEDULE_CALENDAR_LIST
+    fixture = fixtures.API_SCHEDULE_CALENDAR_LIST
+
+    def call_api(self, return_data):
+        return mocks.schedule_api_get_calendars_call(return_data)
+
+    def test_sync_update(self):
+        self._sync(self.fixture)
+
+        json_data = self.fixture[0]
+
+        instance_id = json_data['id']
+        original = self.model_class.objects.get(id=instance_id)
+
+        name = 'A New Calendar'
+        new_json = deepcopy(json_data)
+        new_json['name'] = name
+        new_json_list = [new_json]
+
+        self._sync(new_json_list)
+
+        changed = self.model_class.objects.get(id=instance_id)
+        self.assertNotEqual(original.name, name)
+        self._assert_fields(changed, new_json)
+
+    def _assert_fields(self, instance, json_data):
+        self.assertEqual(instance.id, json_data['id'])
+        self.assertEqual(instance.name, json_data['name'])
+        self.assertEqual(
+            instance.monday_start_time,
+            parse(json_data['mondayStartTime']).time()
+            )
+        self.assertEqual(
+            instance.monday_end_time,
+            parse(json_data['mondayEndTime']).time()
+            )
+        self.assertEqual(
+            instance.tuesday_start_time,
+            parse(json_data['tuesdayStartTime']).time()
+            )
+        self.assertEqual(
+            instance.tuesday_end_time,
+            parse(json_data['tuesdayEndTime']).time()
+            )
+        self.assertEqual(
+            instance.wednesday_start_time,
+            parse(json_data['wednesdayStartTime']).time()
+            )
+        self.assertEqual(
+            instance.wednesday_end_time,
+            parse(json_data['wednesdayEndTime']).time()
+            )
+        self.assertEqual(
+            instance.thursday_start_time,
+            parse(json_data['thursdayStartTime']).time()
+            )
+        self.assertEqual(
+            instance.thursday_end_time,
+            parse(json_data['thursdayEndTime']).time()
+            )
+        self.assertEqual(
+            instance.friday_start_time,
+            parse(json_data['fridayStartTime']).time()
+            )
+        self.assertEqual(
+            instance.friday_end_time,
+            parse(json_data['fridayEndTime']).time()
+            )
+        # Dont parse these ones they are None in the fixtures
+        self.assertEqual(
+            instance.saturday_start_time,
+            json_data['saturdayStartTime']
+            )
+        self.assertEqual(
+            instance.saturday_end_time,
+            json_data['saturdayEndTime']
+            )
+        self.assertEqual(
+            instance.sunday_start_time,
+            json_data['sundayStartTime']
+            )
+        self.assertEqual(
+            instance.sunday_end_time,
+            json_data['sundayEndTime']
+            )
 
 
 class TestSLASynchronizer(TestCase, SynchronizerTestMixin):
     synchronizer_class = sync.SLASynchronizer
     model_class = Sla
     fixture = fixtures.API_SERVICE_SLA_LIST
+
+    def setUp(self):
+        fixture_utils.init_calendars()
 
     def call_api(self, return_data):
         return mocks.service_api_get_slas_call(return_data)
@@ -853,6 +939,7 @@ class TestTicketSynchronizer(TestCase):
         fixture_utils.init_priorities()
         fixture_utils.init_projects()
         fixture_utils.init_locations()
+        fixture_utils.init_calendars()
         fixture_utils.init_slas()
 
     def _assert_sync(self, instance, json_data):

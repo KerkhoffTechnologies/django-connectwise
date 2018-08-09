@@ -71,8 +71,8 @@ class AbstractBaseSyncTest(object):
 
 class TestSyncCalendarsCommand(AbstractBaseSyncTest, TestCase):
     args = (
-        mocks.schedule_api_get_calendar_call,
-        fixutres.API_SCHEDULE_CALENDAR_LIST,
+        mocks.schedule_api_get_calendars_call,
+        fixtures.API_SCHEDULE_CALENDAR_LIST,
         'calendar'
     )
 

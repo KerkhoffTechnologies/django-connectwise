@@ -295,31 +295,31 @@ class Calendar(models.Model):
     monday_start_time = models.TimeField(auto_now=False, auto_now_add=False,
                                          blank=True, null=True)
     monday_end_time = models.TimeField(auto_now=False, auto_now_add=False,
-                                         blank=True, null=True)
+                                       blank=True, null=True)
     tuesday_start_time = models.TimeField(auto_now=False, auto_now_add=False,
-                                         blank=True, null=True)
+                                          blank=True, null=True)
     tuesday_end_time = models.TimeField(auto_now=False, auto_now_add=False,
-                                         blank=True, null=True)
+                                        blank=True, null=True)
     wednesday_start_time = models.TimeField(auto_now=False, auto_now_add=False,
-                                         blank=True, null=True)
+                                            blank=True, null=True)
     wednesday_end_time = models.TimeField(auto_now=False, auto_now_add=False,
-                                         blank=True, null=True)
+                                          blank=True, null=True)
     thursday_start_time = models.TimeField(auto_now=False, auto_now_add=False,
-                                         blank=True, null=True)
+                                           blank=True, null=True)
     thursday_end_time = models.TimeField(auto_now=False, auto_now_add=False,
                                          blank=True, null=True)
     friday_start_time = models.TimeField(auto_now=False, auto_now_add=False,
                                          blank=True, null=True)
     friday_end_time = models.TimeField(auto_now=False, auto_now_add=False,
-                                         blank=True, null=True)
+                                       blank=True, null=True)
     saturday_start_time = models.TimeField(auto_now=False, auto_now_add=False,
-                                         blank=True, null=True)
+                                           blank=True, null=True)
     saturday_end_time = models.TimeField(auto_now=False, auto_now_add=False,
                                          blank=True, null=True)
     sunday_start_time = models.TimeField(auto_now=False, auto_now_add=False,
                                          blank=True, null=True)
     sunday_end_time = models.TimeField(auto_now=False, auto_now_add=False,
-                                         blank=True, null=True)
+                                       blank=True, null=True)
 
 
 class ScheduleType(models.Model):
@@ -920,7 +920,7 @@ class Sla(TimeStampedModel):
     plan_within = models.BigIntegerField()
     resolution_hours = models.BigIntegerField()
     based_on = models.CharField(max_length=50, choices=BASED_ON,
-                                   db_index=True)
+                                db_index=True, default='MyCalendar')
 
     calendar = models.ForeignKey(
         'Calendar',

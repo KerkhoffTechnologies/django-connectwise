@@ -1371,13 +1371,17 @@ class CalendarSynchronizer(Synchronizer):
 
         return instance
 
-    def get_page(self, *arge, **kwargs):
+    def get_page(self, *args, **kwargs):
         return self.client.get_calendars(*args, **kwargs)
 
 
 class SLASynchronizer(Synchronizer):
     client_class = api.ServiceAPIClient
     model_class = models.Sla
+
+    related_meta = {
+        'customCalendar': (models.Calendar, 'calendar'),
+    }
 
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
@@ -1388,7 +1392,18 @@ class SLASynchronizer(Synchronizer):
         instance.resolution_hours = json_data['resolutionHours']
 
         instance.based_on = json_data.get('basedOn')
-        instance.calendar = json_data.get('customCalendar')
+
+        for json_field, value in self.related_meta.items():
+            model_class, field_name = value
+            self._assign_relation(
+                instance,
+                json_data,
+                json_field,
+                model_class,
+                field_name
+            )
+
+        instance.save()
 
         return instance
 

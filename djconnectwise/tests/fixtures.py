@@ -567,24 +567,24 @@ API_SERVICE_TEAM_LIST = [
 API_SCHEDULE_CALENDAR = {
     'id': 1,
     'name': 'Standard Calendar',
-    monday_start_time = '08:00:00',
-    monday_end_time = '17:00:00',
-    tuesday_start_time = '08:00:00',
-    tuesday_end_time = '17:00:00',
-    wednesday_start_time = '08:00:00',
-    wednesday_end_time = '17:00:00',
-    thursday_start_time = '08:00:00',
-    thursday_end_time = '17:00:00',
-    friday_start_time = '08:00:00',
-    friday_end_time = '17:00:00',
-    saturday_start_time = None,
-    saturday_end_time = None,
-    sunday_start_time = None,
-    sunday_end_time = None
+    'mondayStartTime': '08:00:00',
+    'mondayEndTime': '17:00:00',
+    'tuesdayStartTime': '08:00:00',
+    'tuesdayEndTime': '17:00:00',
+    'wednesdayStartTime': '08:00:00',
+    'wednesdayEndTime': '17:00:00',
+    'thursdayStartTime': '08:00:00',
+    'thursdayEndTime': '17:00:00',
+    'fridayStartTime': '08:00:00',
+    'fridayEndTime': '17:00:00',
+    'saturdayStartTime': None,
+    'saturdayEndTime': None,
+    'sundayStartTime': None,
+    'sundayEndTime': None
 }
 
 
-API_SCHEDULE_CALENDAR_LIST = API_SCHEDULE_CALENDAR
+API_SCHEDULE_CALENDAR_LIST = [API_SCHEDULE_CALENDAR]
 
 
 API_SERVICE_SLA = {
@@ -594,8 +594,8 @@ API_SERVICE_SLA = {
     'respondHours': 5,
     'planWithin': 10,
     'resolutionHours': 24,
-    'based_on': 'Custom',
-    'calendar': API_SCHEDULE_CALENDAR
+    'basedOn': 'Custom',
+    'customCalendar': API_SCHEDULE_CALENDAR
 }
 
 
