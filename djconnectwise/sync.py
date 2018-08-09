@@ -1359,6 +1359,8 @@ class SLASynchronizer(Synchronizer):
         instance.plan_within = json_data['planWithin']
         instance.resolution_hours = json_data['resolutionHours']
 
+        return instance
+
     def get_page(self, *args, **kwargs):
         return self.client.get_slas(*args, **kwargs)
 
