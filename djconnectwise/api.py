@@ -416,6 +416,7 @@ class ScheduleAPIClient(ConnectWiseAPIClient):
     ENDPOINT_ENTRIES = 'entries'
     ENDPOINT_SCHEDULE_TYPES = 'types'
     ENDPOINT_SCHEDULE_STATUSES = 'statuses'
+    ENDPOINT_CALENDARS = 'calendars'
 
     def get_schedule_statuses(self, *args, **kwargs):
         return self.fetch_resource(self.ENDPOINT_SCHEDULE_STATUSES,
@@ -462,6 +463,11 @@ class ScheduleAPIClient(ConnectWiseAPIClient):
             auth=self.auth,
             timeout=self.timeout,
         )
+
+    def get_calendars(self, *args, **kwargs):
+        return self.fetch_resource(self.ENDPOINT_CALENDARS,
+                                   should_page=True,
+                                   *args, **kwargs)
 
 
 class TimeAPIClient(ConnectWiseAPIClient):

@@ -27,6 +27,7 @@ from djconnectwise.models import OpportunityNote
 from djconnectwise.models import TimeEntry
 from djconnectwise.models import Territory
 from djconnectwise.models import Sla
+from djconnectwise.models import Calendar
 
 from . import fixtures
 from . import fixture_utils
@@ -782,6 +783,12 @@ class TestOpportunityTypeSynchronizer(TestCase, SynchronizerTestMixin):
         self.assertNotEqual(original.description,
                             description)
         self._assert_fields(changed, new_json)
+
+
+class TestCalendarSynchronizer(TestCase, SynchronizerTestMixin):
+    synchronizer_class = sync.CalendarSynchronizer
+    model_class = Calendar
+    fixure = fixtures.API_SCHEDULE_CALENDAR_LIST
 
 
 class TestSLASynchronizer(TestCase, SynchronizerTestMixin):

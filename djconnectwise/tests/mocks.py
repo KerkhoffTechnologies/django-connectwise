@@ -107,6 +107,11 @@ def schedule_api_get_schedule_entry_call(return_value, raised=None):
     return create_mock_call(method_name, return_value, side_effect=raised)
 
 
+def schedule_api_get_calendar_call(return_value, raised=None):
+    method_name = 'djconnectwise.api.ScheduleAPIClient.get_calendars'
+    return create_mock_call(method_name, return_value, side_effect=raised)
+
+
 def time_api_get_time_entries_call(return_value, raised=None):
     method_name = 'djconnectwise.api.TimeAPIClient.get_time_entries'
     return create_mock_call(method_name, return_value, side_effect=raised)

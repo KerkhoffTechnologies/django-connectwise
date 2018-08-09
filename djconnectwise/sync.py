@@ -1347,6 +1347,34 @@ class TicketSynchronizer(BatchConditionMixin, Synchronizer):
         return instance
 
 
+class CalendarSynchronizer(Synchronizer):
+    client_class = api.ScheduleAPIClient
+    model_class = models.Calendar
+
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data['id']
+        instance.name = json_data['name']
+        instance.monday_start_time = json_data.get('mondayStartTime')
+        instance.monday_end_time = json_data.get('mondayEndTime')
+        instance.tuesday_start_time = json_data.get('tuesdayStartTime')
+        instance.tuesday_end_time = json_data.get('tuesdayEndTime')
+        instance.wednesday_start_time = json_data.get('wednesdayStartTime')
+        instance.wednesday_end_time = json_data.get('wednesdayEndTime')
+        instance.thursday_start_time = json_data.get('thursdayStartTime')
+        instance.thursday_end_time = json_data.get('thursdayEndTime')
+        instance.friday_start_time = json_data.get('fridayStartTime')
+        instance.friday_end_time = json_data.get('fridayEndTime')
+        instance.saturday_start_time = json_data.get('saturdayStartTime')
+        instance.saturday_end_time = json_data.get('saturdayEndTime')
+        instance.sunday_start_time = json_data.get('sundayStartTime')
+        instance.sunday_end_time = json_data.get('sundayEndTime')
+
+        return instance
+
+    def get_page(self, *arge, **kwargs):
+        return self.client.get_calendars(*args, **kwargs)
+
+
 class SLASynchronizer(Synchronizer):
     client_class = api.ServiceAPIClient
     model_class = models.Sla
@@ -1362,6 +1390,7 @@ class SLASynchronizer(Synchronizer):
         instance.based_on = json_data.get('basedOn')
         instance.calendar = json_data.get('customCalendar')
 
+        return instance
 
     def get_page(self, *args, **kwargs):
         return self.client.get_slas(*args, **kwargs)

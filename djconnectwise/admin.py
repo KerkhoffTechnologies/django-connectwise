@@ -223,3 +223,8 @@ class SlaAdmin(admin.ModelAdmin):
                     'plan_within', 'resolution_hours')
     search_fields = ['name', 'respond_hours',
                      'plan_within', 'resolution_hours']
+
+@admin.register(models.Calendar)
+class CalendarAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name',)
+    search_fields = ['name']
