@@ -929,6 +929,34 @@ class Sla(TimeStampedModel):
         on_delete=models.SET_NULL
         )
 
+    class Meta:
+        verbose_name_plural = 'SLAs'
+
+    def __str__(self):
+        return self.name
+
+
+class SlaPriority(TimeStampedModel):
+
+    sla = models.ForeignKey(
+        'Sla',
+        on_delete=models.CASCADE
+        )
+    priority = models.ForeignKey(
+        'TicketPriority',
+        on_delete=models.CASCADE
+        )
+    respond_hours = models.BigIntegerField()
+    plan_within = models.BigIntegerField()
+    resolution_hours = models.BigIntegerField()
+
+    class Meta:
+        verbose_name_plural = 'SLA Priorities'
+
+    def __str__(self):
+        return 'priority: {}, on SLA:{}'.format(
+            str(self.priority), self.sla.id)
+
 
 class OpportunityNote(TimeStampedModel):
 

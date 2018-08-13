@@ -61,6 +61,14 @@ def init_slas():
     return synchronizer.sync()
 
 
+def init_slapriorities():
+    mocks.service_api_get_sla_priorities_call(
+        fixtures.API_SERVICE_SLA_PRIORITY_LIST
+    )
+    synchronizer = sync.SLAPrioritySychronizer()
+    return synchronizer.sync()
+
+
 def init_calendars():
     mocks.schedule_api_get_calendars_call(fixtures.API_SCHEDULE_CALENDAR_LIST)
     synchronizer = sync.CalendarSynchronizer()

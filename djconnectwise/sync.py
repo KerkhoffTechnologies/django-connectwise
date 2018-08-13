@@ -1375,6 +1375,48 @@ class CalendarSynchronizer(Synchronizer):
         return self.client.get_calendars(*args, **kwargs)
 
 
+class SLAPrioritySychronizer(Synchronizer):
+    client_class = api.ServiceAPIClient
+    model_class = models.SlaPriority
+
+    related_meta = {
+        'priority': (models.TicketPriority, 'priority'),
+        'sla': (models.Sla, 'sla')
+    }
+
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data['id']
+        instance.respond_hours = json_data['respondHours']
+        instance.plan_within = json_data['planWithin']
+        instance.resolution_hours = json_data['resolutionHours']
+
+        for json_field, value in self.related_meta.items():
+            model_class, field_name = value
+            self._assign_relation(
+                instance,
+                json_data,
+                json_field,
+                model_class,
+                field_name
+            )
+
+        instance.save()
+
+        return instance
+
+    def client_call(self, sla_id, *args, **kwargs):
+        return self.client.get_slapriorities(sla_id, *args, **kwargs)
+
+    def get_page(self, *args, **kwargs):
+        records = []
+        sla_qs = models.Sla.objects.all()
+
+        for sla_id in sla_qs.values_list('id', flat=True):
+            records += self.client_call(sla_id, *args, **kwargs)
+
+        return records
+
+
 class SLASynchronizer(Synchronizer):
     client_class = api.ServiceAPIClient
     model_class = models.Sla

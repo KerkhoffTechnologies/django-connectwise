@@ -48,6 +48,8 @@ class Command(BaseCommand):
                 _('Calendar')),
             ('sla', sync.SLASynchronizer,
                 _('Sla')),
+            ('sla_priority', sync.SLAPrioritySychronizer,
+                _('Sla Priority')),
             ('ticket', sync.TicketSynchronizer, _('Ticket')),
             ('service_note', sync.ServiceNoteSynchronizer,
                 _('Service Note')),

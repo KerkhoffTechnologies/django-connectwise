@@ -788,6 +788,11 @@ class ServiceAPIClient(ConnectWiseAPIClient):
         return self.fetch_resource(self.ENDPOINT_PRIORITIES, should_page=True,
                                    *args, **kwargs)
 
+    def get_slapriorities(self, sla_id, *args, **kwargs):
+        endpoint_url = '{}/{}/priorities'.format(self.ENDPOINT_SLAS, sla_id)
+        return self.fetch_resource(endpoint_url, should_page=True,
+                                   *args, **kwargs)
+
     def get_teams(self, board_id, *args, **kwargs):
         endpoint = '{}/{}/teams/'.format(self.ENDPOINT_BOARDS, board_id)
         return self.fetch_resource(endpoint, should_page=True, *args, **kwargs)
