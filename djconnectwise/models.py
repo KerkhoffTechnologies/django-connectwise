@@ -321,6 +321,9 @@ class Calendar(models.Model):
     sunday_end_time = models.TimeField(auto_now=False, auto_now_add=False,
                                        blank=True, null=True)
 
+    def __str__(self):
+        return self.name
+
 
 class ScheduleType(models.Model):
     name = models.CharField(max_length=50)
