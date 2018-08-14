@@ -254,6 +254,11 @@ def system_api_get_territories_call(return_value):
     return create_mock_call(method_name, return_value)
 
 
+def system_api_get_other_call(return_value):
+    method_name = 'djconnectwise.api.SystemAPIClient.get_other'
+    return create_mock_call(method_name, return_value)
+
+
 def cw_api_fetch_resource_call(return_value):
     method_name = 'djconnectwise.api.ConnectWiseAPIClient.fetch_resource'
     return create_mock_call(method_name, return_value)

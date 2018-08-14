@@ -242,3 +242,8 @@ class SlaPriorityAdmin(admin.ModelAdmin):
 class CalendarAdmin(admin.ModelAdmin):
     list_display = ('id', 'name',)
     search_fields = ['name']
+
+
+@admin.register(models.Other)
+class OtherAdmin(admin.ModelAdmin):
+    list_display = ('id', 'defaultCalendar',)

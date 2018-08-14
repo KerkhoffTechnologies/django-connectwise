@@ -29,6 +29,7 @@ from djconnectwise.models import Territory
 from djconnectwise.models import Sla
 from djconnectwise.models import Calendar
 from djconnectwise.models import SlaPriority
+from djconnectwise.models import Other
 
 from . import fixtures
 from . import fixture_utils
@@ -873,6 +874,40 @@ class TestCalendarSynchronizer(TestCase, SynchronizerTestMixin):
             instance.sunday_end_time,
             json_data['sundayEndTime']
             )
+
+
+class TestOtherSynchronizer(TestCase, SynchronizerTestMixin):
+    synchronizer_class = sync.OtherSynchronizer
+    model_class = Other
+    fixture = fixtures.API_SYSTEM_OTHER_LIST
+
+    def setUp(self):
+        fixture_utils.init_calendars()
+        fixture_utils.init_others()
+
+    def call_api(self, return_data):
+        return mocks.system_api_get_other_call(return_data)
+
+    def test_sync_update(self):
+        self._sync(self.fixture)
+
+        json_data = self.fixture[0]
+
+        instance_id = json_data['id']
+        original = self.model_class.objects.get(id=instance_id)
+
+        new_json = deepcopy(json_data)
+        new_json['defaultCalendar'] = None
+        new_json_list = [new_json]
+
+        self._sync(new_json_list)
+
+        changed = self.model_class.objects.get(id=instance_id)
+        self.assertNotEqual(
+            original.default_calendar, changed.default_calendar)
+
+    def _assert_fields(self, instance, json_data):
+        self.assertEqual(instance.id, json_data['id'])
 
 
 class TestSLASynchronizer(TestCase, SynchronizerTestMixin):

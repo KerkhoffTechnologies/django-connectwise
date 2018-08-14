@@ -141,6 +141,17 @@ class TestSyncLocationsCommand(AbstractBaseSyncTest, TestCase):
     )
 
 
+class TestSyncOtherCommand(AbstractBaseSyncTest, TestCase):
+    args = (
+        mocks.system_api_get_other_call,
+        fixtures.API_SYSTEM_OTHER_LIST,
+        'other',
+    )
+
+    def setUp(self):
+        fixture_utils.init_calendars()
+
+
 class TestSyncPrioritiesCommand(AbstractBaseSyncTest, TestCase):
 
     args = (
@@ -395,7 +406,8 @@ class TestSyncAllCommand(TestCase):
             TestSyncTerritoriesCommand,
             TestSyncSLAsCommand,
             TestSyncCalendarsCommand,
-            TestSyncSLAPrioritiesCommand
+            TestSyncSLAPrioritiesCommand,
+            TestSyncOtherCommand
         ]
 
         self.test_args = []
@@ -470,7 +482,8 @@ class TestSyncAllCommand(TestCase):
             'time_entry': models.TimeEntry,
             'sla': models.Sla,
             'calendar': models.Calendar,
-            'sla_priority': models.SlaPriority
+            'sla_priority': models.SlaPriority,
+            'other': models.Other
         }
 
         self.test_sync()
