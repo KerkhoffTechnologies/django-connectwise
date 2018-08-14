@@ -28,6 +28,7 @@ from djconnectwise.models import TimeEntry
 from djconnectwise.models import Territory
 from djconnectwise.models import Sla
 from djconnectwise.models import Calendar
+from djconnectwise.models import SlaPriority
 
 from . import fixtures
 from . import fixture_utils
@@ -908,6 +909,47 @@ class TestSLASynchronizer(TestCase, SynchronizerTestMixin):
         self.assertEqual(instance.id, json_data['id'])
         self.assertEqual(instance.name, json_data['name'])
         self.assertEqual(instance.default_flag, json_data['defaultFlag'])
+        self.assertEqual(instance.respond_hours, json_data['respondHours'])
+        self.assertEqual(instance.plan_within, json_data['planWithin'])
+        self.assertEqual(instance.resolution_hours,
+                         json_data['resolutionHours'])
+
+
+class TestSLAPrioritySychronizer(TestCase, SynchronizerTestMixin):
+    synchronizer_class = sync.SLAPrioritySychronizer
+    model_class = SlaPriority
+    fixture = fixtures.API_SERVICE_SLA_PRIORITY_LIST
+
+    def setUp(self):
+        fixture_utils.init_calendars()
+        fixture_utils.init_slas()
+        fixture_utils.init_priorities()
+
+    def call_api(self, return_data):
+        return mocks.service_api_get_sla_priorities_call(return_data)
+
+    def test_sync_update(self):
+        self._sync(self.fixture)
+
+        json_data = self.fixture[0]
+
+        instance_id = json_data['id']
+
+        original = self.model_class.objects.get(id=instance_id)
+
+        respond_hours = 500
+        new_json = deepcopy(json_data)
+        new_json['respondHours'] = respond_hours
+        new_json_list = [new_json]
+
+        self._sync(new_json_list)
+
+        changed = self.model_class.objects.get(id=instance_id)
+        self.assertNotEqual(original.respond_hours, respond_hours)
+        self._assert_fields(changed, new_json)
+
+    def _assert_fields(self, instance, json_data):
+        self.assertEqual(instance.id, json_data['id'])
         self.assertEqual(instance.respond_hours, json_data['respondHours'])
         self.assertEqual(instance.plan_within, json_data['planWithin'])
         self.assertEqual(instance.resolution_hours,

@@ -602,6 +602,19 @@ API_SERVICE_SLA = {
 API_SERVICE_SLA_LIST = [API_SERVICE_SLA]
 
 
+API_SERVICE_SLA_PRIORITY = {
+    'id': 5,
+    'sla': API_SERVICE_SLA,
+    'priority': API_SERVICE_PRIORITY,
+    'respondHours': 5,
+    'planWithin': 10,
+    'resolutionHours': 24
+}
+
+
+API_SERVICE_SLA_PRIORITY_LIST = [API_SERVICE_SLA_PRIORITY]
+
+
 API_SERVICE_TICKET = {
     'id': 69,
     'summary': 'Schedule and Execute Conversion',
