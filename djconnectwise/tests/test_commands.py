@@ -196,6 +196,19 @@ class TestSyncSLAsCommand(AbstractBaseSyncTest, TestCase):
         fixture_utils.init_calendars()
 
 
+class TestSyncSLAPrioritiesCommand(AbstractBaseSyncTest, TestCase):
+    args = (
+        mocks.service_api_get_sla_priorities_call,
+        fixtures.API_SERVICE_SLA_PRIORITY_LIST,
+        'sla_priority'
+    )
+
+    def setUp(self):
+        fixture_utils.init_calendars()
+        fixture_utils.init_slas()
+        fixture_utils.init_priorities()
+
+
 class TestSyncServiceNotesCommand(AbstractBaseSyncTest, TestCase):
     args = (
         mocks.service_api_get_notes_call,
@@ -381,7 +394,8 @@ class TestSyncAllCommand(TestCase):
             TestSyncTimeEntriesCommand,
             TestSyncTerritoriesCommand,
             TestSyncSLAsCommand,
-            TestSyncCalendarsCommand
+            TestSyncCalendarsCommand,
+            TestSyncSLAPrioritiesCommand
         ]
 
         self.test_args = []
@@ -455,7 +469,8 @@ class TestSyncAllCommand(TestCase):
             'schedule_status': models.ScheduleStatus,
             'time_entry': models.TimeEntry,
             'sla': models.Sla,
-            'calendar': models.Calendar
+            'calendar': models.Calendar,
+            'sla_priority': models.SlaPriority
         }
 
         self.test_sync()
