@@ -754,6 +754,9 @@ class Ticket(TimeStampedModel):
     team = models.ForeignKey(
         'Team', blank=True, null=True, related_name='team_tickets',
         on_delete=models.SET_NULL)
+    sla = models.ForeignKey(
+        'Sla', blank=True, null=True, related_name='tickets',
+        on_delete=models.SET_NULL)
 
     class Meta:
         verbose_name = 'Ticket'
@@ -867,6 +870,15 @@ class ServiceNote(TimeStampedModel):
 
     def __str__(self):
         return 'Ticket {} note: {}'.format(self.ticket, str(self.date_created))
+
+
+class Sla(TimeStampedModel):
+
+    name = models.TextField(max_length=250)
+    default_flag = models.BooleanField(default=False)
+    respond_hours = models.BigIntegerField()
+    plan_within = models.BigIntegerField()
+    resolution_hours = models.BigIntegerField()
 
 
 class OpportunityNote(TimeStampedModel):

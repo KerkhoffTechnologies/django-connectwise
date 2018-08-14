@@ -212,3 +212,14 @@ class ActivityAdmin(admin.ModelAdmin):
 @admin.register(models.SalesProbability)
 class SalesProbabilityAdmin(admin.ModelAdmin):
     list_display = ('id', 'probability',)
+
+
+@admin.register(models.Sla)
+class SlaAdmin(admin.ModelAdmin):
+    # TODO Add calendar and SLAPriorities as inline when/if they are added
+    # It wont help to edit the calendar/SLAPs but may help visualization in
+    # the admin interface
+    list_display = ('id', 'name', 'default_flag', 'respond_hours',
+                    'plan_within', 'resolution_hours')
+    search_fields = ['name', 'respond_hours',
+                     'plan_within', 'resolution_hours']
