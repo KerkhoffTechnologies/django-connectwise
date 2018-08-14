@@ -564,6 +564,19 @@ API_SERVICE_TEAM_LIST = [
 ]
 
 
+API_SERVICE_SLA = {
+    'id': 3,
+    'name': 'Standard SLA',
+    'defaultFlag': True,
+    'respondHours': 5,
+    'planWithin': 10,
+    'resolutionHours': 24
+}
+
+
+API_SERVICE_SLA_LIST = [API_SERVICE_SLA]
+
+
 API_SERVICE_TICKET = {
     'id': 69,
     'summary': 'Schedule and Execute Conversion',
@@ -687,7 +700,7 @@ API_SERVICE_TICKET = {
     'duration': None,
     'businessUnitId': 10,
     'mobileGuid': 'c5882071-79ac-4149-9088-3af3196a22f7',
-    'sla': None,
+    'sla': API_SERVICE_SLA,
     '_info': {
         'lastUpdated': '2016-03-08T21:59:20Z',
         'updatedBy': 'User1',

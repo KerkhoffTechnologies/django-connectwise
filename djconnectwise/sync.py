@@ -1244,7 +1244,8 @@ class TicketSynchronizer(BatchConditionMixin, Synchronizer):
         'project': (models.Project, 'project'),
         'serviceLocation': (models.Location, 'location'),
         'status': (models.BoardStatus, 'status'),
-        'owner': (models.Member, 'owner')
+        'owner': (models.Member, 'owner'),
+        'sla': (models.Sla, 'sla')
     }
 
     def __init__(self, *args, **kwargs):
@@ -1283,6 +1284,12 @@ class TicketSynchronizer(BatchConditionMixin, Synchronizer):
         instance.parent_ticket_id = json_data.get('parentTicketId')
         instance.has_child_ticket = json_data.get('hasChildTicket')
         instance.customer_updated = json_data.get('customerUpdatedFlag')
+        instance.respond_mins = json_data.get('respondMinutes')
+        instance.res_plan_mins = json_data.get('resPlanMinutes')
+        instance.resolve_mins = json_data.get('resolveMinutes')
+        instance.date_resolved_utc = json_data.get('dateResolved')
+        instance.date_resplan_utc = json_data.get('dateResplan')
+        instance.date_responded_utc = json_data.get('dateResponded')
 
         for json_field, value in self.related_meta.items():
             model_class, field_name = value
@@ -1344,6 +1351,24 @@ class TicketSynchronizer(BatchConditionMixin, Synchronizer):
         instance = super().fetch_sync_by_id(instance_id)
         self.sync_related(instance)
         return instance
+
+
+class SLASynchronizer(Synchronizer):
+    client_class = api.ServiceAPIClient
+    model_class = models.Sla
+
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data['id']
+        instance.name = json_data['name']
+        instance.default_flag = json_data['defaultFlag']
+        instance.respond_hours = json_data['respondHours']
+        instance.plan_within = json_data['planWithin']
+        instance.resolution_hours = json_data['resolutionHours']
+
+        return instance
+
+    def get_page(self, *args, **kwargs):
+        return self.client.get_slas(*args, **kwargs)
 
 
 class OpportunitySynchronizer(Synchronizer):

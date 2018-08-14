@@ -177,6 +177,14 @@ class TestSyncBoardsStatusesCommand(AbstractBaseSyncTest, TestCase):
         _patch.stop()
 
 
+class TestSyncSLAsCommand(AbstractBaseSyncTest, TestCase):
+    args = (
+        mocks.service_api_get_slas_call,
+        fixtures.API_SERVICE_SLA_LIST,
+        'sla',
+    )
+
+
 class TestSyncServiceNotesCommand(AbstractBaseSyncTest, TestCase):
     args = (
         mocks.service_api_get_notes_call,
@@ -361,6 +369,7 @@ class TestSyncAllCommand(TestCase):
             TestSyncScheduleEntriesCommand,
             TestSyncTimeEntriesCommand,
             TestSyncTerritoriesCommand,
+            TestSyncSLAsCommand
         ]
 
         self.test_args = []
@@ -433,6 +442,7 @@ class TestSyncAllCommand(TestCase):
             'schedule_type': models.ScheduleType,
             'schedule_status': models.ScheduleStatus,
             'time_entry': models.TimeEntry,
+            'sla': models.Sla
         }
 
         self.test_sync()

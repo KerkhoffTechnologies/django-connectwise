@@ -709,6 +709,7 @@ class ServiceAPIClient(ConnectWiseAPIClient):
     ENDPOINT_BOARDS = 'boards'
     ENDPOINT_PRIORITIES = 'priorities'
     ENDPOINT_LOCATIONS = 'locations'
+    ENDPOINT_SLAS = 'SLAs'
 
     def tickets_count(self):
         params = dict(
@@ -787,4 +788,8 @@ class ServiceAPIClient(ConnectWiseAPIClient):
 
     def get_locations(self, *args, **kwargs):
         return self.fetch_resource(self.ENDPOINT_LOCATIONS, should_page=True,
+                                   *args, **kwargs)
+
+    def get_slas(self, *args, **kwargs):
+        return self.fetch_resource(self.ENDPOINT_SLAS, should_page=True,
                                    *args, **kwargs)
