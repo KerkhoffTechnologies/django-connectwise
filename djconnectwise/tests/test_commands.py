@@ -69,6 +69,14 @@ class AbstractBaseSyncTest(object):
         self.assertEqual(msg, out.getvalue().strip())
 
 
+class TestSyncCalendarsCommand(AbstractBaseSyncTest, TestCase):
+    args = (
+        mocks.schedule_api_get_calendars_call,
+        fixtures.API_SCHEDULE_CALENDAR_LIST,
+        'calendar'
+    )
+
+
 class TestSyncCompanyStatusesCommand(AbstractBaseSyncTest, TestCase):
     args = (
         mocks.company_api_get_company_statuses_call,
@@ -183,6 +191,9 @@ class TestSyncSLAsCommand(AbstractBaseSyncTest, TestCase):
         fixtures.API_SERVICE_SLA_LIST,
         'sla',
     )
+
+    def setUp(self):
+        fixture_utils.init_calendars()
 
 
 class TestSyncServiceNotesCommand(AbstractBaseSyncTest, TestCase):
@@ -369,7 +380,8 @@ class TestSyncAllCommand(TestCase):
             TestSyncScheduleEntriesCommand,
             TestSyncTimeEntriesCommand,
             TestSyncTerritoriesCommand,
-            TestSyncSLAsCommand
+            TestSyncSLAsCommand,
+            TestSyncCalendarsCommand
         ]
 
         self.test_args = []
@@ -442,7 +454,8 @@ class TestSyncAllCommand(TestCase):
             'schedule_type': models.ScheduleType,
             'schedule_status': models.ScheduleStatus,
             'time_entry': models.TimeEntry,
-            'sla': models.Sla
+            'sla': models.Sla,
+            'calendar': models.Calendar
         }
 
         self.test_sync()

@@ -1347,9 +1347,41 @@ class TicketSynchronizer(BatchConditionMixin, Synchronizer):
         return instance
 
 
+class CalendarSynchronizer(Synchronizer):
+    client_class = api.ScheduleAPIClient
+    model_class = models.Calendar
+
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data['id']
+        instance.name = json_data['name']
+        instance.monday_start_time = json_data.get('mondayStartTime')
+        instance.monday_end_time = json_data.get('mondayEndTime')
+        instance.tuesday_start_time = json_data.get('tuesdayStartTime')
+        instance.tuesday_end_time = json_data.get('tuesdayEndTime')
+        instance.wednesday_start_time = json_data.get('wednesdayStartTime')
+        instance.wednesday_end_time = json_data.get('wednesdayEndTime')
+        instance.thursday_start_time = json_data.get('thursdayStartTime')
+        instance.thursday_end_time = json_data.get('thursdayEndTime')
+        instance.friday_start_time = json_data.get('fridayStartTime')
+        instance.friday_end_time = json_data.get('fridayEndTime')
+        instance.saturday_start_time = json_data.get('saturdayStartTime')
+        instance.saturday_end_time = json_data.get('saturdayEndTime')
+        instance.sunday_start_time = json_data.get('sundayStartTime')
+        instance.sunday_end_time = json_data.get('sundayEndTime')
+
+        return instance
+
+    def get_page(self, *args, **kwargs):
+        return self.client.get_calendars(*args, **kwargs)
+
+
 class SLASynchronizer(Synchronizer):
     client_class = api.ServiceAPIClient
     model_class = models.Sla
+
+    related_meta = {
+        'customCalendar': (models.Calendar, 'calendar'),
+    }
 
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
@@ -1358,6 +1390,20 @@ class SLASynchronizer(Synchronizer):
         instance.respond_hours = json_data['respondHours']
         instance.plan_within = json_data['planWithin']
         instance.resolution_hours = json_data['resolutionHours']
+
+        instance.based_on = json_data.get('basedOn')
+
+        for json_field, value in self.related_meta.items():
+            model_class, field_name = value
+            self._assign_relation(
+                instance,
+                json_data,
+                json_field,
+                model_class,
+                field_name
+            )
+
+        instance.save()
 
         return instance
 

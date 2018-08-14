@@ -289,6 +289,39 @@ class CompanyType(models.Model):
         return self.name
 
 
+class Calendar(models.Model):
+
+    name = models.CharField(max_length=250)
+    monday_start_time = models.TimeField(auto_now=False, auto_now_add=False,
+                                         blank=True, null=True)
+    monday_end_time = models.TimeField(auto_now=False, auto_now_add=False,
+                                       blank=True, null=True)
+    tuesday_start_time = models.TimeField(auto_now=False, auto_now_add=False,
+                                          blank=True, null=True)
+    tuesday_end_time = models.TimeField(auto_now=False, auto_now_add=False,
+                                        blank=True, null=True)
+    wednesday_start_time = models.TimeField(auto_now=False, auto_now_add=False,
+                                            blank=True, null=True)
+    wednesday_end_time = models.TimeField(auto_now=False, auto_now_add=False,
+                                          blank=True, null=True)
+    thursday_start_time = models.TimeField(auto_now=False, auto_now_add=False,
+                                           blank=True, null=True)
+    thursday_end_time = models.TimeField(auto_now=False, auto_now_add=False,
+                                         blank=True, null=True)
+    friday_start_time = models.TimeField(auto_now=False, auto_now_add=False,
+                                         blank=True, null=True)
+    friday_end_time = models.TimeField(auto_now=False, auto_now_add=False,
+                                       blank=True, null=True)
+    saturday_start_time = models.TimeField(auto_now=False, auto_now_add=False,
+                                           blank=True, null=True)
+    saturday_end_time = models.TimeField(auto_now=False, auto_now_add=False,
+                                         blank=True, null=True)
+    sunday_start_time = models.TimeField(auto_now=False, auto_now_add=False,
+                                         blank=True, null=True)
+    sunday_end_time = models.TimeField(auto_now=False, auto_now_add=False,
+                                       blank=True, null=True)
+
+
 class ScheduleType(models.Model):
     name = models.CharField(max_length=50)
     identifier = models.CharField(max_length=1)
@@ -874,11 +907,27 @@ class ServiceNote(TimeStampedModel):
 
 class Sla(TimeStampedModel):
 
+    BASED_ON = (
+        ('MyCalendar', "My Company Calendar"),
+        ('Customer', "Customer's Calendar"),
+        ('AllHours', "24 Hours"),
+        ('Custom', "Custom Calendar")
+    )
+
     name = models.TextField(max_length=250)
     default_flag = models.BooleanField(default=False)
     respond_hours = models.BigIntegerField()
     plan_within = models.BigIntegerField()
     resolution_hours = models.BigIntegerField()
+    based_on = models.CharField(max_length=50, choices=BASED_ON,
+                                db_index=True, default='MyCalendar')
+
+    calendar = models.ForeignKey(
+        'Calendar',
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL
+        )
 
 
 class OpportunityNote(TimeStampedModel):
