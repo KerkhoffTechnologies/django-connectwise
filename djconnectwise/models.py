@@ -920,7 +920,7 @@ class Sla(TimeStampedModel):
     plan_within = models.BigIntegerField()
     resolution_hours = models.BigIntegerField()
     based_on = models.CharField(max_length=50, choices=BASED_ON,
-                                db_index=True, default='MyCalendar')
+                                default='MyCalendar')
 
     calendar = models.ForeignKey(
         'Calendar',
