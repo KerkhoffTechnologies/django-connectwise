@@ -123,12 +123,26 @@ class BoardStatus(TimeStampedModel):
     """
     CLOSED = 'Closed'
 
+    ESCALATION_STATUSES = (
+        ('NotResponded', 'Not Responded'),
+        ('Responded', 'Responded'),
+        ('ResolutionPlan', 'Resolution Plan'),
+        ('Resolved', 'Resolved'),
+        ('NoEscalation', 'No Escalation')
+    )
+
     name = models.CharField(blank=True, null=True, max_length=250)
     sort_order = models.PositiveSmallIntegerField()
     display_on_board = models.BooleanField()
     inactive = models.BooleanField()
     closed_status = models.BooleanField()
     board = models.ForeignKey('ConnectWiseBoard', on_delete=models.CASCADE)
+    # Letting escalation_status allow blank/null rather than possibly having
+    # and incorrect default value in some edge case
+    escalation_status = models.CharField(
+        max_length=20, choices=ESCALATION_STATUSES, db_index=True,
+        blank=True, null=True
+    )
 
     objects = models.Manager()
     available_objects = AvailableBoardStatusManager()
@@ -765,6 +779,7 @@ class Ticket(TimeStampedModel):
     sub_type_item = models.CharField(blank=True, null=True, max_length=250)
     summary = models.CharField(blank=True, null=True, max_length=250)
     updated_by = models.CharField(blank=True, null=True, max_length=250)
+    sla_expire_date = models.DateTimeField(blank=True, null=True)
 
     board = models.ForeignKey(
         'ConnectwiseBoard', blank=True, null=True, on_delete=models.CASCADE)

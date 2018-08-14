@@ -552,6 +552,7 @@ class BoardStatusSynchronizer(BoardChildSynchronizer):
         instance.display_on_board = json_data.get('displayOnBoard')
         instance.inactive = json_data.get('inactive')
         instance.closed_status = json_data.get('closedStatus')
+        instance.escalation_status = json_data.get('escalationStatus')
 
         return instance
 
