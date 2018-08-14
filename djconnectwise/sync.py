@@ -1192,8 +1192,7 @@ class MemberSynchronizer(Synchronizer):
             instance, created = super().update_or_create_instance(api_instance)
         except IntegrityError as e:
             raise InvalidObjectException(
-                '{} Attempted to create new member' \
-                'with duplicate data - skipping.'.format(e)
+                'Failed to update member: {}'.format(e)
             )
         username = instance.identifier
         photo_id = None
