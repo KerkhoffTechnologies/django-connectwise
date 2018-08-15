@@ -162,23 +162,17 @@ class BoardStatus(TimeStampedModel):
     def __str__(self):
         return '{}/{}'.format(self.board, self.name)
 
-    def __eq__(self, other):
-        return self.escalation_status == other.escalation_status
-
-    def __ne__(self, other):
-        return self.escalation_status != other.escalation_status
-
     def __lt__(self, other):
-        return self.ESCALATION_RANK.get(self.escalation_status) < self.ESCALATION_RANK.get(other.escalation_status)
-
-    def __le__(self, other):
-        pass
+        if other is None:
+            return False
+        return self.ESCALATION_RANK.get(self.escalation_status) < \
+        self.ESCALATION_RANK.get(other.escalation_status)
 
     def __gt__(self, other):
-        pass
-
-    def __ge__(self):
-        pass
+        if other is None:
+            return False
+        return self.ESCALATION_RANK.get(self.escalation_status) > \
+        self.ESCALATION_RANK.get(other.escalation_status)
 
 
 class Location(TimeStampedModel):
