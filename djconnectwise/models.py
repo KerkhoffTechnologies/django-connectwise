@@ -329,6 +329,15 @@ class CompanyType(models.Model):
         return self.name
 
 
+class MyCompanyOther(models.Model):
+    default_calendar = models.ForeignKey(
+        'Calendar',
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL
+        )
+
+
 class Calendar(models.Model):
 
     name = models.CharField(max_length=250)

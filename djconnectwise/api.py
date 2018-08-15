@@ -568,6 +568,7 @@ class SystemAPIClient(ConnectWiseAPIClient):
     ENDPOINT_INFO = 'info/'
     # Locations in the system API are actually territories
     ENDPOINT_LOCATIONS = 'locations/'
+    ENDPOINT_OTHER = 'myCompany/other/'
 
     def get_connectwise_version(self):
         result = self.fetch_resource(self.ENDPOINT_INFO)
@@ -587,6 +588,9 @@ class SystemAPIClient(ConnectWiseAPIClient):
     def get_callbacks(self, *args, **kwargs):
         return self.fetch_resource(self.ENDPOINT_CALLBACKS,
                                    should_page=True, *args, **kwargs)
+
+    def get_mycompanyother(self, *args, **kwargs):
+        return self.fetch_resource(self.ENDPOINT_OTHER, *args, **kwargs)
 
     def delete_callback(self, entry_id):
         try:
