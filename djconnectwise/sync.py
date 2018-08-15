@@ -1306,6 +1306,13 @@ class TicketSynchronizer(BatchConditionMixin, Synchronizer):
             status_changed = '; status changed from ' \
                 '{} to {}'.format(original_status, instance.status)
 
+            if created:
+                instance.calculate_sla_expiry()
+            elif instance.status.escalation_status != \
+                original_status.escalation_status:
+                instance.calculate_sla_expiry(old_status=original_status)
+
+
         log_info = '{} ticket {}{}'.format(
             action, instance.id, status_changed
         )

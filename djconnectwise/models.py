@@ -131,6 +131,14 @@ class BoardStatus(TimeStampedModel):
         ('NoEscalation', 'No Escalation')
     )
 
+    # For comparing Escalation Statuses
+    ESCALATION_RANK = dict(
+        zip(
+            [type[0] for type in ESCALATION_STATUSES],
+            [i for i in range(5)]
+        )
+    )
+
     name = models.CharField(blank=True, null=True, max_length=250)
     sort_order = models.PositiveSmallIntegerField()
     display_on_board = models.BooleanField()
@@ -153,6 +161,24 @@ class BoardStatus(TimeStampedModel):
 
     def __str__(self):
         return '{}/{}'.format(self.board, self.name)
+
+    def __eq__(self, other):
+        return self.escalation_status == other.escalation_status
+
+    def __ne__(self, other):
+        return self.escalation_status != other.escalation_status
+
+    def __lt__(self, other):
+        return self.ESCALATION_RANK.get(self.escalation_status) < self.ESCALATION_RANK.get(other.escalation_status)
+
+    def __le__(self, other):
+        pass
+
+    def __gt__(self, other):
+        pass
+
+    def __ge__(self):
+        pass
 
 
 class Location(TimeStampedModel):
@@ -780,6 +806,7 @@ class Ticket(TimeStampedModel):
     summary = models.CharField(blank=True, null=True, max_length=250)
     updated_by = models.CharField(blank=True, null=True, max_length=250)
     sla_expire_date = models.DateTimeField(blank=True, null=True)
+    do_not_escalate_date = models.DateTimeField(blank=True, null=True)
 
     board = models.ForeignKey(
         'ConnectwiseBoard', blank=True, null=True, on_delete=models.CASCADE)
@@ -899,6 +926,10 @@ class Ticket(TimeStampedModel):
         self.closed_flag = True
         return self.save(*args, **kwargs)
 
+    def calculate_sla_expiry(self, old_status=None):
+
+        if old_status:
+            pass
 
 class ServiceNote(TimeStampedModel):
 
