@@ -75,6 +75,12 @@ def init_calendars():
     return synchronizer.sync()
 
 
+def init_others():
+    mocks.system_api_get_other_call(fixtures.API_SYSTEM_OTHER_LIST)
+    synchronizer = sync.MyCompanyOtherSynchronizer()
+    return synchronizer.sync()
+
+
 def init_priorities():
     mocks.service_api_get_priorities_call([fixtures.API_SERVICE_PRIORITY])
     synchronizer = sync.PrioritySynchronizer()

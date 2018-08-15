@@ -710,6 +710,33 @@ class CompanyTypeSynchronizer(Synchronizer):
         return self.client.get_company_types(*args, **kwargs)
 
 
+class MyCompanyOtherSynchronizer(Synchronizer):
+    client_class = api.SystemAPIClient
+    model_class = models.MyCompanyOther
+
+    related_meta = {
+        'defaultCalendar': (models.Calendar, 'default_calendar'),
+    }
+
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data['id']
+
+        for json_field, value in self.related_meta.items():
+            model_class, field_name = value
+            self._assign_relation(
+                instance,
+                json_data,
+                json_field,
+                model_class,
+                field_name
+            )
+
+        return instance
+
+    def get_page(self, *args, **kwargs):
+        return self.client.get_mycompanyother(*args, **kwargs)
+
+
 class ActivitySynchronizer(Synchronizer):
     client_class = api.SalesAPIClient
     model_class = models.Activity

@@ -46,6 +46,8 @@ class Command(BaseCommand):
                 _('Opportunity')),
             ('calendar', sync.CalendarSynchronizer,
                 _('Calendar')),
+            ('company_other', sync.MyCompanyOtherSynchronizer,
+                _('Company Other')),
             ('sla', sync.SLASynchronizer,
                 _('Sla')),
             ('sla_priority', sync.SLAPrioritySychronizer,
