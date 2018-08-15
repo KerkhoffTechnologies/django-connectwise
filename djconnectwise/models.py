@@ -442,10 +442,8 @@ class TimeEntry(models.Model):
 
     actual_hours = models.DecimalField(
         blank=True, null=True, decimal_places=2, max_digits=6)
-    billable_option = models.CharField(choices=BILL_TYPES, db_index=True,
-                                       max_length=250)
-    charge_to_type = models.CharField(choices=CHARGE_TYPES, db_index=True,
-                                      max_length=250)
+    billable_option = models.CharField(choices=BILL_TYPES, max_length=250)
+    charge_to_type = models.CharField(choices=CHARGE_TYPES, max_length=250)
     hours_deduct = models.DecimalField(
         blank=True, null=True, decimal_places=2, max_digits=6)
     internal_notes = models.TextField(blank=True, null=True, max_length=2000)
