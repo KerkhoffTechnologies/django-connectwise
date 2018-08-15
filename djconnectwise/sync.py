@@ -710,9 +710,9 @@ class CompanyTypeSynchronizer(Synchronizer):
         return self.client.get_company_types(*args, **kwargs)
 
 
-class OtherSynchronizer(Synchronizer):
+class MyCompanyOtherSynchronizer(Synchronizer):
     client_class = api.SystemAPIClient
-    model_class = models.Other
+    model_class = models.MyCompanyOther
 
     related_meta = {
         'defaultCalendar': (models.Calendar, 'default_calendar'),
@@ -734,7 +734,7 @@ class OtherSynchronizer(Synchronizer):
         return instance
 
     def get_page(self, *args, **kwargs):
-        return self.client.get_other(*args, **kwargs)
+        return self.client.get_mycompanyother(*args, **kwargs)
 
 
 class ActivitySynchronizer(Synchronizer):

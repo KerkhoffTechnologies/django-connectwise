@@ -255,7 +255,7 @@ def system_api_get_territories_call(return_value):
 
 
 def system_api_get_other_call(return_value):
-    method_name = 'djconnectwise.api.SystemAPIClient.get_other'
+    method_name = 'djconnectwise.api.SystemAPIClient.get_mycompanyother'
     return create_mock_call(method_name, return_value)
 
 

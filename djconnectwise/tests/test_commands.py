@@ -141,11 +141,11 @@ class TestSyncLocationsCommand(AbstractBaseSyncTest, TestCase):
     )
 
 
-class TestSyncOtherCommand(AbstractBaseSyncTest, TestCase):
+class TestSyncMyCompanyOtherCommand(AbstractBaseSyncTest, TestCase):
     args = (
         mocks.system_api_get_other_call,
         fixtures.API_SYSTEM_OTHER_LIST,
-        'other',
+        'company_other',
     )
 
     def setUp(self):
@@ -407,7 +407,7 @@ class TestSyncAllCommand(TestCase):
             TestSyncSLAsCommand,
             TestSyncCalendarsCommand,
             TestSyncSLAPrioritiesCommand,
-            TestSyncOtherCommand
+            TestSyncMyCompanyOtherCommand
         ]
 
         self.test_args = []
@@ -483,7 +483,7 @@ class TestSyncAllCommand(TestCase):
             'sla': models.Sla,
             'calendar': models.Calendar,
             'sla_priority': models.SlaPriority,
-            'other': models.Other
+            'company_other': models.MyCompanyOther
         }
 
         self.test_sync()

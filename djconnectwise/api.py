@@ -589,7 +589,7 @@ class SystemAPIClient(ConnectWiseAPIClient):
         return self.fetch_resource(self.ENDPOINT_CALLBACKS,
                                    should_page=True, *args, **kwargs)
 
-    def get_other(self, *args, **kwargs):
+    def get_mycompanyother(self, *args, **kwargs):
         return self.fetch_resource(self.ENDPOINT_OTHER, *args, **kwargs)
 
     def delete_callback(self, entry_id):

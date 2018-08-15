@@ -289,7 +289,7 @@ class CompanyType(models.Model):
         return self.name
 
 
-class Other(models.Model):
+class MyCompanyOther(models.Model):
     default_calendar = models.ForeignKey(
         'Calendar',
         blank=True,

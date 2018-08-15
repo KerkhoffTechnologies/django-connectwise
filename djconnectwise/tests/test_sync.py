@@ -29,7 +29,7 @@ from djconnectwise.models import Territory
 from djconnectwise.models import Sla
 from djconnectwise.models import Calendar
 from djconnectwise.models import SlaPriority
-from djconnectwise.models import Other
+from djconnectwise.models import MyCompanyOther
 
 from . import fixtures
 from . import fixture_utils
@@ -876,9 +876,9 @@ class TestCalendarSynchronizer(TestCase, SynchronizerTestMixin):
             )
 
 
-class TestOtherSynchronizer(TestCase, SynchronizerTestMixin):
-    synchronizer_class = sync.OtherSynchronizer
-    model_class = Other
+class TestMyCompanyOtherSynchronizer(TestCase, SynchronizerTestMixin):
+    synchronizer_class = sync.MyCompanyOtherSynchronizer
+    model_class = MyCompanyOther
     fixture = fixtures.API_SYSTEM_OTHER_LIST
 
     def setUp(self):

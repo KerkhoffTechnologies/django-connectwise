@@ -77,7 +77,7 @@ def init_calendars():
 
 def init_others():
     mocks.system_api_get_other_call(fixtures.API_SYSTEM_OTHER_LIST)
-    synchronizer = sync.OtherSynchronizer()
+    synchronizer = sync.MyCompanyOtherSynchronizer()
     return synchronizer.sync()
 
 
