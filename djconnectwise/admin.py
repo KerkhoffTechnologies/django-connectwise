@@ -244,6 +244,6 @@ class CalendarAdmin(admin.ModelAdmin):
     search_fields = ['name']
 
 
-@admin.register(models.MyCompanyOtherAdmin)
+@admin.register(models.MyCompanyOther)
 class MyCompanyOtherAdmin(admin.ModelAdmin):
     list_display = ('id', 'default_calendar',)
