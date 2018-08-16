@@ -1339,12 +1339,20 @@ class TicketSynchronizer(BatchConditionMixin, Synchronizer):
                 '{} to {}'.format(original_status, instance.status)
 
             if created:
+                # Null -> E
                 pass
                 # instance.calculate_sla_expiry()
             elif instance.status < original_status or \
                 instance.status > original_status:
+                # E -> N
+                # N -> E
+                # E -> E+
+                # E -> E-
                 pass
                 # instance.calculate_sla_expiry(old_status=original_status)
+
+            # Else dont recalculate new SLA target
+            # E -> E
 
 
         log_info = '{} ticket {}{}'.format(

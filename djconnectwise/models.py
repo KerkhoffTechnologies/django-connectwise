@@ -1,6 +1,7 @@
 import re
 import logging
 import urllib
+import datetime
 
 from easy_thumbnails.fields import ThumbnailerImageField
 from model_utils import Choices
@@ -9,6 +10,7 @@ from django.conf import settings
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from django_extensions.db.models import TimeStampedModel
+from django.utils import timezone
 
 from . import api
 
@@ -158,6 +160,9 @@ class BoardStatus(TimeStampedModel):
     class Meta:
         ordering = ('board__name', 'sort_order', 'name')
         verbose_name_plural = 'Board statuses'
+
+    def is_non_escalation_status(self):
+        return self.escalation_status == 'NoEscalation'
 
     def __str__(self):
         return '{}/{}'.format(self.board, self.name)
@@ -928,9 +933,59 @@ class Ticket(TimeStampedModel):
         return self.save(*args, **kwargs)
 
     def calculate_sla_expiry(self, old_status=None):
+        # Null -> E
+        # E -> N
+        # N -> E
+        # E -> E+
+        # E -> E-
 
         if old_status:
+            if old_status.is_non_escalation_status():
+                # E -> N
+                # Time sla expire set to None
+                # Save time
+                # do_not_escalate_date = timezone.now()
+                # self._enter_non_escalate()
+                pass
+            elif self.status.is_non_escalation_status():
+                # N -> E
+                # self._exit_non_escalate()
+                pass
+            elif self.status < old_status:
+                # Do nothing
+                return
+            elif self.status > old_status:
+                # E -> E+
+                # Calculate new time
+                # self._next_phase_expiry()
+                pass
+            else:
+                # There is nothing to calculate
+                return
+
+        # Old status is None
+        # New -> E (but not Null -> E yet)
+
+        # first to get object or None instead of queryset
+        sla_priority = SlaPriority.objects.filter(
+                                                  sla=self.sla,
+                                                  priority=self.priority
+                                                  ).first()
+
+        if sla_priority:
+            respond_hours = SlaPriority.respond_hours
+        else:
+            respond_hours = Sla.respond_hours
+
+        def _next_phase_expiry(self, hours, ):
             pass
+
+        def _enter_non_escalate(self):
+            pass
+
+        def _exit_non_escalate(self):
+            pass
+
 
 class ServiceNote(TimeStampedModel):
 
