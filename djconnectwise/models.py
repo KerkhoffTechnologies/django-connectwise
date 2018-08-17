@@ -33,6 +33,10 @@ class SyncJob(models.Model):
     message = models.TextField(blank=True, null=True)
     sync_type = models.CharField(max_length=32, default='full')
 
+    def duration(self):
+        if self.start_time and self.end_time:
+            return self.end_time - self.start_time
+
 
 class CallBackEntry(models.Model):
     TICKET = 'ticket'
