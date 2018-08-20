@@ -10,7 +10,6 @@ from django.conf import settings
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from django_extensions.db.models import TimeStampedModel
-from django.utils import timezone
 
 from . import api
 
@@ -179,6 +178,9 @@ class BoardStatus(TimeStampedModel):
         return self.ESCALATION_RANK.get(self.escalation_status) > \
         self.ESCALATION_RANK.get(other.escalation_status)
 
+    def get_status_rank(self):
+        return self.ESCALATION_RANK.get(self.escalation_status)
+
 
 class Location(TimeStampedModel):
     name = models.CharField(max_length=30)
@@ -262,6 +264,12 @@ class Company(TimeStampedModel):
     updatedby = models.CharField(blank=True, null=True, max_length=250)
     lastupdated = models.CharField(blank=True, null=True, max_length=250)
     deleted_flag = models.BooleanField(default=False)
+    calendar = models.ForeignKey(
+        'Calendar',
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL
+        )
     status = models.ForeignKey(
         'CompanyStatus',
         blank=True,
@@ -339,6 +347,9 @@ class MyCompanyOther(models.Model):
 
 class Calendar(models.Model):
 
+    START_TIME = '_start_time'
+    END_TIME = '_end_time'
+
     name = models.CharField(max_length=250)
     monday_start_time = models.TimeField(auto_now=False, auto_now_add=False,
                                          blank=True, null=True)
@@ -371,6 +382,27 @@ class Calendar(models.Model):
 
     def __str__(self):
         return self.name
+
+    def get_day_hours(self, is_start, day):
+        if is_start:
+            time = self.START_TIME
+        else:
+            time = self.END_TIME
+
+        if day == 0:
+            return getattr(self, "monday{}".format(time), None)
+        elif day == 1:
+            return getattr(self, "tuesday{}".format(time), None)
+        elif day == 2:
+            return getattr(self, "wednesday{}".format(time), None)
+        elif day == 3:
+            return getattr(self, "thursday{}".format(time), None)
+        elif day == 4:
+            return getattr(self, "friday{}".format(time), None)
+        elif day == 5:
+            return getattr(self, "saturday{}".format(time), None)
+        elif day == 6:
+            return getattr(self, "sunday{}".format(time), None)
 
 
 class ScheduleType(models.Model):
@@ -777,6 +809,27 @@ class Ticket(TimeStampedModel):
         ('ProjectIssue', "Project Issue"),
     )
 
+    RESPOND = 'respond'
+    PLAN = 'plan'
+    RESOLVE = 'resolve'
+    RESOLVED = 'resolved'
+    WAITING = 'waiting'
+
+    SLA_STAGE = (
+        (RESPOND, "Respond"),
+        (PLAN, "Plan"),
+        (RESOLVE, "Resolve"),
+        (RESOLVED, "Resolved"),
+        (WAITING, "Waiting"),
+    )
+
+    STAGE_RANK = dict(
+        zip(
+            [i for i in range(5)],
+            [type[0] for type in SLA_STAGE]
+        )
+    )
+
     actual_hours = models.DecimalField(
         blank=True, null=True, decimal_places=2, max_digits=6)
     agreement_id = models.IntegerField(blank=True, null=True)
@@ -813,6 +866,9 @@ class Ticket(TimeStampedModel):
     updated_by = models.CharField(blank=True, null=True, max_length=250)
     sla_expire_date = models.DateTimeField(blank=True, null=True)
     do_not_escalate_date = models.DateTimeField(blank=True, null=True)
+    sla_stage = models.CharField(blank=True, null=True,
+                                   max_length=250, choices=SLA_STAGE,
+                                   db_index=True)
 
     board = models.ForeignKey(
         'ConnectwiseBoard', blank=True, null=True, on_delete=models.CASCADE)
@@ -938,33 +994,12 @@ class Ticket(TimeStampedModel):
         # N -> E
         # E -> E+
         # E -> E-
-
-        if old_status:
-            if old_status.is_non_escalation_status():
-                # E -> N
-                # Time sla expire set to None
-                # Save time
-                # do_not_escalate_date = timezone.now()
-                # self._enter_non_escalate()
-                pass
-            elif self.status.is_non_escalation_status():
-                # N -> E
-                # self._exit_non_escalate()
-                pass
-            elif self.status < old_status:
-                # Do nothing
-                return
-            elif self.status > old_status:
-                # E -> E+
-                # Calculate new time
-                # self._next_phase_expiry()
-                pass
-            else:
-                # There is nothing to calculate
-                return
-
-        # Old status is None
-        # New -> E (but not Null -> E yet)
+        try:
+            # Check if SLAs exist and fail gracefully
+            sla = Sla.objects.get(default_flag=True)
+        except ObjectDoesNotExist as e:
+            # TODO report e in log and fail gracefully
+            return
 
         # first to get object or None instead of queryset
         sla_priority = SlaPriority.objects.filter(
@@ -973,18 +1008,117 @@ class Ticket(TimeStampedModel):
                                                   ).first()
 
         if sla_priority:
-            respond_hours = SlaPriority.respond_hours
+            sla = sla_priority
         else:
-            respond_hours = Sla.respond_hours
+            sla = self.sla
 
-        def _next_phase_expiry(self, hours, ):
+        new_stage = self.STAGE_RANK.get(
+            self.status.get_status_rank()
+        )
+
+        # TODO handle what happens when this returns null
+        # happens when is resolved or non-escalate
+        sla_hours = sla.get_stage_hours(new_stage)
+
+        calendar = self.sla.get_calendar(self.company)
+
+        if not calendar:
+            # TODO log it, fail gracefully
+            return
+
+        if old_status:
+            if old_status.is_non_escalation_status():
+                # E -> N
+                # Time sla expire set to None
+                # TODO
+                self._enter_non_escalate()
+            elif self.status.is_non_escalation_status():
+                # N -> E
+                self._exit_non_escalate(new_stage)
+            elif self.status < old_status:
+                # Do nothing
+            elif self.status > old_status:
+                # E -> E+
+                # Calculate new time
+                self.sla_stage = new_stage
+                self._next_phase_expiry(sla_hours)
+            return
+        # Old status is None
+        # New -> E (but not Null -> E yet)
+
+        self._next_phase_expiry(sla_hours)
+        self.sla_stage = new_stage
+
+    def _next_phase_expiry(self, sla_hours):
+        # TODO convert to start, end dt
+        minutes = None
+        days = 0
+        date_created = timedelta(hours=self.date_created.hour,
+                        minutes=self.date_created.minute)
+        day_of_week = datetime.datetime.utcnow().weekday()
+
+        sla_minutes = sla_hours * 60
+
+        end_of_day = calendar.get_day_hours(False, day_of_week)
+        end_of_day = datetime.timedelta(hours=end_of_day.hour,
+                        minutes=end_of_day.minute)
+
+        first_day_minutes = (date_created - end_of_day).total_seconds() / 60
+
+        if first_day_minutes <= 0:
+            # TODO if time is negative, figure out if due today, or first thing
+            # the next day
             pass
 
-        def _enter_non_escalate(self):
-            pass
+        sla_minutes = sla_minutes - first_day_minutes
 
-        def _exit_non_escalate(self):
-            pass
+        while sla_minutes > 0:
+            day_of_week += 1
+            days += 1
+
+            start_of_day = calendar.get_day_hours(True, day_of_week)
+            if start_of_day:
+                start_of_day = datetime.timedelta(hours=start_of_day.hour,
+                                minutes=start_of_day.minute)
+                end_of_day = calendar.get_day_hours(False, day_of_week)
+                end_of_day = datetime.timedelta(hours=end_of_day.hour,
+                                minutes=end_of_day.minute)
+            else:
+                # This is a day with no hours, continue to next day
+                continue
+
+            minutes = (start_of_day - end_of_day).total_seconds() / 60
+
+            sla_minutes = sla_minutes - minutes
+
+        # sla_minutes went below zero so we know that day is the expiry
+        # Add the minutes back to sla_minutes and add sla minutes to the
+        # start of that day
+        sla_minutes = sla_minutes + minutes
+
+        sla_expire_time = calendar.get_day_hours(True, day_of_week) + \
+            timedelta(minutes=sla_minutes)
+
+        # expiry_date is in UTC
+        expiry_date = self.entered_date_utc + datetime.timedelta(days=days)
+        expiry_date.replace(
+            hours=sla_expire_time.hour, minutes=sla_expire_time.minutes)
+
+        self.sla_expire_time = expiry_date
+
+    def _enter_non_escalate(self):
+        # Save time
+        # TODO
+        do_not_escalate_date = datetime.datetime.utcnow()
+        self.sla_stage = WAITING
+
+    def _exit_non_escalate(self, new_stage):
+        # TODO convert next_phase method to return minutes,
+        # then can input created date, or in this case the do_not_escalate_date
+        # get minutes back to then add to created date, and then run it again
+        # TODO idea, add waiting minutes to date created
+        # TODO use dateResponded, dateResPlan, to determine exit stage
+        pass
 
 
 class ServiceNote(TimeStampedModel):
@@ -1040,6 +1174,30 @@ class Sla(TimeStampedModel):
     def __str__(self):
         return self.name
 
+    def get_calendar(self, company_id):
+        calendar = self.calendar if self.calendar else None
+
+        try:
+            if calendar:
+                return calendar
+            elif based_on == 'Customer':
+                return Company.objects.get(id=company_id)
+            elif based_on == 'MyCalendar':
+                # Using get instead of first so it will throw an exception
+                return MyCompanyOther.objects.get().default_calendar
+        except ObjectDoesNotExist as e:
+            return None
+
+    def get_stage_hours(self, stage):
+        if stage == 'respond':
+            return self.respond_hours
+        elif stage == 'plan':
+            return self.plan_within
+        elif stage == 'resolve':
+            return self.resolution_hours
+        else:
+            return None
+
 
 class SlaPriority(TimeStampedModel):
 
@@ -1061,6 +1219,16 @@ class SlaPriority(TimeStampedModel):
     def __str__(self):
         return 'priority: {}, on SLA:{}'.format(
             str(self.priority), self.sla.id)
+
+    def get_stage_hours(self, stage):
+        if stage == 'respond':
+            return self.respond_hours
+        elif stage == 'plan':
+            return self.plan_within
+        elif stage == 'resolve':
+            return self.resolution_hours
+        else:
+            return None
 
 
 class OpportunityNote(TimeStampedModel):

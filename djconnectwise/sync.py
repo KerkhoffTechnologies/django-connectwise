@@ -625,6 +625,17 @@ class CompanySynchronizer(Synchronizer):
                         status_json['id']
                     ))
 
+        calendar_id = company_json.get('calendarId')
+        if calendar_id:
+            try:
+                company.calendar = Calendar.objects.get(id=calendar_id)
+            except models.Calendar.DoesNotExist as e:
+                # Not a warning because a calendar isn't required
+                logger.info(
+                    'Failed to find Calendar: {}'.format(
+                        calendar_id
+                    ))
+
         type_json = company_json.get('type')
         if type_json:
             try:
@@ -1338,18 +1349,18 @@ class TicketSynchronizer(BatchConditionMixin, Synchronizer):
             status_changed = '; status changed from ' \
                 '{} to {}'.format(original_status, instance.status)
 
-            if created:
-                # Null -> E
-                pass
-                # instance.calculate_sla_expiry()
-            elif instance.status < original_status or \
-                instance.status > original_status:
-                # E -> N
-                # N -> E
-                # E -> E+
-                # E -> E-
-                pass
-                # instance.calculate_sla_expiry(old_status=original_status)
+            # if created:
+            #     # Null -> E
+            #     pass
+            #     # instance.calculate_sla_expiry()
+            # elif instance.status < original_status or \
+            #     instance.status > original_status:
+            #     # E -> N
+            #     # N -> E
+            #     # E -> E+
+            #     # E -> E-
+            #     pass
+            #     # instance.calculate_sla_expiry(old_status=original_status)
 
             # Else dont recalculate new SLA target
             # E -> E
