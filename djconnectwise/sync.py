@@ -1312,7 +1312,7 @@ class TicketSynchronizer(BatchConditionMixin, Synchronizer):
         instance.id = json_data['id']
         instance.summary = json_data['summary']
         instance.closed_flag = json_data.get('closedFlag')
-        instance.entered_date_utc = json_data.get('dateEntered')
+        instance.entered_date_utc = parse(json_data.get('dateEntered'))
         instance.last_updated_utc = json_data.get('_info').get('lastUpdated')
         instance.required_date_utc = json_data.get('requiredDate')
         instance.resources = json_data.get('resources')
@@ -1348,23 +1348,6 @@ class TicketSynchronizer(BatchConditionMixin, Synchronizer):
         if original_status != instance.status:
             status_changed = '; status changed from ' \
                 '{} to {}'.format(original_status, instance.status)
-
-            # if created:
-            #     # Null -> E
-            #     pass
-            #     # instance.calculate_sla_expiry()
-            # elif instance.status < original_status or \
-            #     instance.status > original_status:
-            #     # E -> N
-            #     # N -> E
-            #     # E -> E+
-            #     # E -> E-
-            #     pass
-            #     # instance.calculate_sla_expiry(old_status=original_status)
-
-            # Else dont recalculate new SLA target
-            # E -> E
-
 
         log_info = '{} ticket {}{}'.format(
             action, instance.id, status_changed
