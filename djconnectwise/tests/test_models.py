@@ -187,3 +187,36 @@ class TestTicket(ModelTestCase):
         ticket.save()  # Should work
         with self.assertRaises(InvalidStatusError):
             ticket.close()
+
+    def test_calculate_sla_expiry(self):
+        pass
+
+    def test_calculate_sla_expiry(self):
+        pass
+
+    def test_sla_enter_waiting(self):
+        pass
+
+    def test_sla_exit_waiting(self):
+        pass
+
+    def test_sla_exit_waiting_to_lower_status(self):
+        pass
+
+    def test_sla_exit_resolved_only_to_resolve(self):
+        pass
+
+    def test_get_sla_time(self):
+        pass
+
+    def test_get_sla_time_same_day(self):
+        pass
+
+    def test_get_sla_time_over_weeked(self):
+        pass
+
+    def test_sla_get_time_same_day_weekend(self):
+        pass
+
+    def test_lowest_possible_stage(self):
+        pass

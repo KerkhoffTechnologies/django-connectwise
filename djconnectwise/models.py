@@ -1183,7 +1183,8 @@ class Ticket(TimeStampedModel):
             return minutes if minutes >= 0 else 0
         else:
             if end_of_day:
-                first_day_minutes = (end_of_day - start_time).total_seconds() / 60
+                first_day_minutes = (end_of_day - start_time).total_seconds() \
+                    / 60
             else:
                 first_day_minutes = 0
 
@@ -1210,7 +1211,7 @@ class Ticket(TimeStampedModel):
 
             end_of_day = calendar.get_day_hours(False, end.weekday())
 
-            if end_of_day
+            if end_of_day:
                 end_of_day = datetime.timedelta(hours=end_of_day.hour,
                                 minutes=end_of_day.minute)
 
@@ -1228,7 +1229,8 @@ class Ticket(TimeStampedModel):
                 start_of_day = datetime.timedelta(hours=start_of_day.hour,
                                 minutes=start_of_day.minute)
 
-                last_day_minutes = (end_time - start_of_day).total_seconds() / 60
+                last_day_minutes = (end_time - start_of_day).total_seconds() \
+                    / 60
                 minutes = last_day_minutes if last_day_minutes >= 0 else 0
             else:
                 minutes = 0
