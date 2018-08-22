@@ -13,6 +13,8 @@ from django.utils.translation import ugettext_lazy as _
 from django_extensions.db.models import TimeStampedModel
 from django.core.exceptions import ObjectDoesNotExist
 
+from .mixins import SlaGoalsMixin
+
 from . import api
 
 logger = logging.getLogger(__name__)
@@ -532,7 +534,7 @@ class TimeEntry(models.Model):
         return str(self.id) or ''
 
     actual_hours = models.DecimalField(
-        blank=True, null=True, decimal_places=2, max_digits=6)
+        blank=True, null=True, decimal_places=2, max_digits=7)
     billable_option = models.CharField(choices=BILL_TYPES, max_length=250)
     charge_to_type = models.CharField(choices=CHARGE_TYPES, max_length=250)
     hours_deduct = models.DecimalField(
@@ -1036,9 +1038,7 @@ class Ticket(TimeStampedModel):
         new_stage = self.STAGE_RANK.get(
             self.status.get_status_rank()
         )
-
         sla_hours = sla.get_stage_hours(new_stage)
-
         calendar = self.sla.get_calendar(self.company)
 
         if not calendar:
@@ -1048,11 +1048,11 @@ class Ticket(TimeStampedModel):
 
         if old_status:
             if self.status.is_non_escalation_status():
-                # E -> N
-                # N -> N
                 if old_status.is_non_escalation_status():
+                    # N -> N
                     # If both are non escalate, do nothing
                      return
+                # E -> N
                 self._enter_non_escalate()
             elif old_status.is_non_escalation_status():
                 # N -> E
@@ -1077,13 +1077,17 @@ class Ticket(TimeStampedModel):
                     self.sla_expire_date = sla_hours
                 self.sla_stage = new_stage
             return
-        # Old status is None
+        # Old status is None, new ticket
+        # Will either be a new kanban instance, or a newly created ticket
         if sla_hours is None:
+            # Ticket is resolved
             self.sla_stage = new_stage
             self.sla_expire_date = sla_hours
         elif sla_hours == 0:
+            # Ticket is waiting
             self._enter_non_escalate()
         else:
+            # New ticket
             self._next_phase_expiry(sla_hours, calendar)
             self.sla_stage = new_stage
 
@@ -1110,13 +1114,11 @@ class Ticket(TimeStampedModel):
         end_of_day = calendar.get_day_hours(False, day_of_week)
         end_of_day = datetime.timedelta(hours=end_of_day.hour,
                         minutes=end_of_day.minute)
-
         first_day_minutes = (end_of_day - start_date).total_seconds() / 60
 
         # If created outside of work hours, take no minutes off and start
         # taking time off next work day
         minutes = first_day_minutes if first_day_minutes >= 0 else 0
-
         sla_minutes = sla_minutes - minutes
 
         while sla_minutes >= 0:
@@ -1135,14 +1137,12 @@ class Ticket(TimeStampedModel):
                 continue
 
             minutes = (end_of_day - start_of_day).total_seconds() / 60
-
             sla_minutes = sla_minutes - minutes
 
         # sla_minutes went below zero so we know that day is the expiry
         # Add the minutes back to sla_minutes and add sla minutes to the
         # start of that day
         sla_minutes = sla_minutes + minutes
-
         expiry_date = start + datetime.timedelta(days=days)
 
         if days == 0:
@@ -1158,40 +1158,36 @@ class Ticket(TimeStampedModel):
         self.sla_expire_date = expiry_date.astimezone(tz=timezone.utc)
 
     def _get_sla_time(self, start, end, calendar):
+        # TODO this may explode
         # Get the sla-minutes between two dates using the given calendar
-
-        # TODO
-        # TODO
-        # TODO
-        # TODO this will explode on a weekend
-        # TODO
-        # TODO
-        # TODO
-
+        minutes = 0
         start_time = datetime.timedelta(hours=start.hour,
                         minutes=start.minute)
 
         # get sla minutes for first day
         end_of_day = calendar.get_day_hours(False, start.weekday())
-        end_of_day = datetime.timedelta(hours=end_of_day.hour,
-                        minutes=end_of_day.minute)
+
+        if end_of_day:
+            end_of_day = datetime.timedelta(hours=end_of_day.hour,
+                            minutes=end_of_day.minute)
 
         if start.date() == end.date():
-            end_time = datetime.timedelta(hours=end.hour,
-                minutes=end.minute) if \
-                calendar.get_day_hours(False, start.weekday()) > \
-                end.time() else end_of_day
-            minutes = (end_time - start_time).total_seconds() / 60
-
+            if end_of_day:
+                end_time = datetime.timedelta(hours=end.hour,
+                    minutes=end.minute) if \
+                    calendar.get_day_hours(False, start.weekday()) > \
+                    end.time() else end_of_day
+                minutes = (end_time - start_time).total_seconds() / 60
             # return sla time between start and end of day/end time, or zero
             # if start and end was outside of work hours
             return minutes if minutes >= 0 else 0
-
         else:
-            first_day_minutes = (end_of_day - start_time).total_seconds() / 60
+            if end_of_day:
+                first_day_minutes = (end_of_day - start_time).total_seconds() / 60
+            else:
+                first_day_minutes = 0
 
             sla_minutes = first_day_minutes if first_day_minutes >= 0 else 0
-
             current = start + datetime.timedelta(days=1)
             day_of_week = (day_of_week + 1) % 7
 
@@ -1208,32 +1204,34 @@ class Ticket(TimeStampedModel):
                     continue
 
                 minutes = (end_of_day - start_of_day).total_seconds() / 60
-
                 sla_minutes = sla_minutes + minutes
-
                 day_of_week = (day_of_week + 1) % 7
                 current = current + datetime.timedelta(days=1)
 
             end_of_day = calendar.get_day_hours(False, end.weekday())
-            end_of_day = datetime.timedelta(hours=end_of_day.hour,
-                            minutes=end_of_day.minute)
 
-            end_time = datetime.timedelta(hours=end.hour,
-                minutes=end.minute) if \
-                calendar.get_day_hours(False, end.weekday()) > \
-                end.time() else end_of_day
+            if end_of_day
+                end_of_day = datetime.timedelta(hours=end_of_day.hour,
+                                minutes=end_of_day.minute)
 
-            # TODO delete this, it is for debugging
-            if end.weekday() != day_of_week % 7:
-                raise Exception("Day of week doesn't match expected end day.")
+                end_time = datetime.timedelta(hours=end.hour,
+                    minutes=end.minute) if \
+                    calendar.get_day_hours(False, end.weekday()) > \
+                    end.time() else end_of_day
 
-            # get sla_minutes for last day
-            start_of_day = calendar.get_day_hours(True, end.weekday())
-            start_of_day = datetime.timedelta(hours=start_of_day.hour,
-                            minutes=start_of_day.minute)
+                # TODO delete this, it is for debugging
+                if end.weekday() != day_of_week % 7:
+                    raise Exception("Day of week doesn't match expected end day.")
 
-            last_day_minutes = (end_time - start_of_day).total_seconds() / 60
-            minutes = last_day_minutes if last_day_minutes >= 0 else 0
+                # get sla_minutes for last day
+                start_of_day = calendar.get_day_hours(True, end.weekday())
+                start_of_day = datetime.timedelta(hours=start_of_day.hour,
+                                minutes=start_of_day.minute)
+
+                last_day_minutes = (end_time - start_of_day).total_seconds() / 60
+                minutes = last_day_minutes if last_day_minutes >= 0 else 0
+            else:
+                minutes = 0
             sla_minutes += minutes
             return sla_minutes
 
@@ -1269,7 +1267,6 @@ class Ticket(TimeStampedModel):
                 timezone.localtime(),
                 calendar
                 )
-
         stage = self._lowest_possible_stage(new_stage)
         sla_hours = sla.get_stage_hours(stage)
         self.do_not_escalate_date = None
@@ -1300,7 +1297,7 @@ class ServiceNote(TimeStampedModel):
         return 'Ticket {} note: {}'.format(self.ticket, str(self.date_created))
 
 
-class Sla(TimeStampedModel):
+class Sla(TimeStampedModel, SlaGoalsMixin):
 
     BASED_ON = (
         ('MyCalendar', "My Company Calendar"),
@@ -1344,21 +1341,8 @@ class Sla(TimeStampedModel):
         except ObjectDoesNotExist as e:
             return None
 
-    # TODO create mixin for this method
-    def get_stage_hours(self, stage):
-        if stage == 'respond':
-            return self.respond_hours
-        elif stage == 'plan':
-            return self.plan_within
-        elif stage == 'resolve':
-            return self.resolution_hours
-        elif stage == 'waiting':
-            return 0
-        else:
-            return None
 
-
-class SlaPriority(TimeStampedModel):
+class SlaPriority(TimeStampedModel, SlaGoalsMixin):
 
     sla = models.ForeignKey(
         'Sla',
@@ -1378,18 +1362,6 @@ class SlaPriority(TimeStampedModel):
     def __str__(self):
         return 'priority: {}, on SLA:{}'.format(
             str(self.priority), self.sla.id)
-
-    def get_stage_hours(self, stage):
-        if stage == 'respond':
-            return self.respond_hours
-        elif stage == 'plan':
-            return self.plan_within
-        elif stage == 'resolve':
-            return self.resolution_hours
-        elif stage == 'waiting':
-            return 0
-        else:
-            return None
 
 
 class OpportunityNote(TimeStampedModel):
