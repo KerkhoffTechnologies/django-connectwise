@@ -36,7 +36,6 @@ class TestCallBackHandler(TestCase):
         self.assertEqual(entry.level, fixture['level'])
         self.assertEqual(entry.description, fixture['description'])
         self.assertEqual(entry.object_id, fixture['objectId'])
-        self.assertEqual(entry.member_id, fixture['memberId'])
         self.assertEqual(entry.inactive_flag, fixture['inactiveFlag'])
 
     def _test_delete_callback(self):
