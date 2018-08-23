@@ -56,7 +56,6 @@ class CallBackEntry(models.Model):
     url = models.CharField(max_length=255)
     level = models.CharField(max_length=255)
     object_id = models.IntegerField()
-    member = models.ForeignKey('Member', null=True,  on_delete=models.SET_NULL)
     inactive_flag = models.BooleanField(default=False)
 
     class Meta:

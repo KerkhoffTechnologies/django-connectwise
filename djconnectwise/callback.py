@@ -52,7 +52,6 @@ class CallBackHandler:
                     url=entry_json['url'],
                     object_id=entry_json['objectId'],
                     level=entry_json['level'],
-                    member_id=entry_json['memberId'],
                     description=entry_json['description'],
                     callback_type=entry_json['type'],
                     inactive_flag=False
