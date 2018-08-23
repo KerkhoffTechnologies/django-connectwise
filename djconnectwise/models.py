@@ -174,13 +174,13 @@ class BoardStatus(TimeStampedModel):
         if other is None:
             return False
         return self.ESCALATION_RANK.get(self.escalation_status) < \
-        self.ESCALATION_RANK.get(other.escalation_status)
+            self.ESCALATION_RANK.get(other.escalation_status)
 
     def __gt__(self, other):
         if other is None:
             return False
         return self.ESCALATION_RANK.get(self.escalation_status) > \
-        self.ESCALATION_RANK.get(other.escalation_status)
+            self.ESCALATION_RANK.get(other.escalation_status)
 
     def get_status_rank(self):
         return self.ESCALATION_RANK.get(self.escalation_status)
@@ -424,7 +424,6 @@ class Calendar(models.Model):
         except RecursionError:
             # Calendar has no hours on any day
             return None, None
-
 
 
 class ScheduleType(models.Model):
@@ -889,8 +888,8 @@ class Ticket(TimeStampedModel):
     sla_expire_date = models.DateTimeField(blank=True, null=True)
     do_not_escalate_date = models.DateTimeField(blank=True, null=True)
     sla_stage = models.CharField(blank=True, null=True,
-                                   max_length=250, choices=SLA_STAGE,
-                                   db_index=True)
+                                 max_length=250, choices=SLA_STAGE,
+                                 db_index=True)
     minutes_waiting = models.PositiveIntegerField(default=0)
 
     board = models.ForeignKey(
@@ -1016,8 +1015,9 @@ class Ticket(TimeStampedModel):
             # Check if SLAs exist and fail gracefully
             sla = Sla.objects.get(default_flag=True)
             if not self.sla:
-                logger.info("No SLA found on ticket {}, skipping SLA " \
-                    "update on ticket".format(self.id))
+                logger.info(
+                    "No SLA found on ticket {}, skipping SLA".format(self.id),
+                    " update on ticket")
                 return
         except ObjectDoesNotExist:
             # TODO might be a little verbose for all tickets
@@ -1042,8 +1042,9 @@ class Ticket(TimeStampedModel):
         calendar = self.sla.get_calendar(self.company)
 
         if not calendar:
-            logger.info('No calendar found for SLA {}, skipping SLA update ' \
-                'on ticket {}'.format(sla.id, self.id))
+            log = 'No calendar found for SLA {},'.format(sla.id) + \
+                'on ticket {}'.format(self.id)
+            logger.info(log)
             return
 
         if old_status:
@@ -1051,7 +1052,7 @@ class Ticket(TimeStampedModel):
                 if old_status.is_non_escalation_status():
                     # N -> N
                     # If both are non escalate, do nothing
-                     return
+                    return
                 # E -> N
                 self._enter_non_escalate()
             elif old_status.is_non_escalation_status():
@@ -1060,7 +1061,7 @@ class Ticket(TimeStampedModel):
             elif self.status < old_status:
                 # E -> E-
                 # Do nothing
-                if date_resolved_utc:
+                if self.date_resolved_utc:
                     # If ticket is in resolved stage, it can go to lower stages
                     # but, it will only be able to go to 'resolve'
                     new_stage = self.RESOLVE
@@ -1106,14 +1107,14 @@ class Ticket(TimeStampedModel):
             )
 
         start_date = datetime.timedelta(hours=start.hour,
-                        minutes=start.minute)
+                                        minutes=start.minute)
 
         # Add minutes waiting to account for non-escalate time
         sla_minutes = (sla_hours * 60) + self.minutes_waiting
 
         end_of_day = calendar.get_day_hours(False, day_of_week)
         end_of_day = datetime.timedelta(hours=end_of_day.hour,
-                        minutes=end_of_day.minute)
+                                        minutes=end_of_day.minute)
         first_day_minutes = (end_of_day - start_date).total_seconds() / 60
 
         # If created outside of work hours, take no minutes off and start
@@ -1128,10 +1129,10 @@ class Ticket(TimeStampedModel):
             start_of_day = calendar.get_day_hours(True, day_of_week)
             if start_of_day:
                 start_of_day = datetime.timedelta(hours=start_of_day.hour,
-                                minutes=start_of_day.minute)
+                                                  minutes=start_of_day.minute)
                 end_of_day = calendar.get_day_hours(False, day_of_week)
                 end_of_day = datetime.timedelta(hours=end_of_day.hour,
-                                minutes=end_of_day.minute)
+                                                minutes=end_of_day.minute)
             else:
                 # This is a day with no hours, continue to next day
                 continue
@@ -1152,8 +1153,8 @@ class Ticket(TimeStampedModel):
         else:
             sla_expire_time = calendar.get_day_hours(True, day_of_week)
             expiry_date = expiry_date.replace(
-                hour=sla_expire_time.hour, minute=sla_expire_time.minute)+ \
-                    datetime.timedelta(minutes=sla_minutes)
+                hour=sla_expire_time.hour, minute=sla_expire_time.minute) + \
+                datetime.timedelta(minutes=sla_minutes)
 
         self.sla_expire_date = expiry_date.astimezone(tz=timezone.utc)
 
@@ -1161,19 +1162,21 @@ class Ticket(TimeStampedModel):
         # TODO this may explode
         # Get the sla-minutes between two dates using the given calendar
         minutes = 0
+        day_of_week = start.weekday()
         start_time = datetime.timedelta(hours=start.hour,
-                        minutes=start.minute)
+                                        minutes=start.minute)
 
         # get sla minutes for first day
         end_of_day = calendar.get_day_hours(False, start.weekday())
 
         if end_of_day:
             end_of_day = datetime.timedelta(hours=end_of_day.hour,
-                            minutes=end_of_day.minute)
+                                            minutes=end_of_day.minute)
 
         if start.date() == end.date():
             if end_of_day:
-                end_time = datetime.timedelta(hours=end.hour,
+                end_time = datetime.timedelta(
+                    hours=end.hour,
                     minutes=end.minute) if \
                     calendar.get_day_hours(False, start.weekday()) > \
                     end.time() else end_of_day
@@ -1195,11 +1198,13 @@ class Ticket(TimeStampedModel):
             while current.date() != end.date():
                 start_of_day = calendar.get_day_hours(True, day_of_week)
                 if start_of_day:
-                    start_of_day = datetime.timedelta(hours=start_of_day.hour,
-                                    minutes=start_of_day.minute)
+                    start_of_day = datetime.timedelta(
+                        hours=start_of_day.hour,
+                        minutes=start_of_day.minute)
                     end_of_day = calendar.get_day_hours(False, day_of_week)
-                    end_of_day = datetime.timedelta(hours=end_of_day.hour,
-                                    minutes=end_of_day.minute)
+                    end_of_day = datetime.timedelta(
+                        hours=end_of_day.hour,
+                        minutes=end_of_day.minute)
                 else:
                     # This is a day with no hours, continue to next day
                     continue
@@ -1212,22 +1217,20 @@ class Ticket(TimeStampedModel):
             end_of_day = calendar.get_day_hours(False, end.weekday())
 
             if end_of_day:
-                end_of_day = datetime.timedelta(hours=end_of_day.hour,
-                                minutes=end_of_day.minute)
+                end_of_day = datetime.timedelta(
+                    hours=end_of_day.hour,
+                    minutes=end_of_day.minute)
 
-                end_time = datetime.timedelta(hours=end.hour,
+                end_time = datetime.timedelta(
+                    hours=end.hour,
                     minutes=end.minute) if \
                     calendar.get_day_hours(False, end.weekday()) > \
                     end.time() else end_of_day
 
-                # TODO delete this, it is for debugging
-                if end.weekday() != day_of_week % 7:
-                    raise Exception("Day of week doesn't match expected end day.")
-
                 # get sla_minutes for last day
                 start_of_day = calendar.get_day_hours(True, end.weekday())
                 start_of_day = datetime.timedelta(hours=start_of_day.hour,
-                                minutes=start_of_day.minute)
+                                                  minutes=start_of_day.minute)
 
                 last_day_minutes = (end_time - start_of_day).total_seconds() \
                     / 60

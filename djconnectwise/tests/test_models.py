@@ -48,6 +48,9 @@ class ModelTestCase(TestCase):
                 display_on_board=True,
                 inactive=False,
             )
+            print("***********")
+            print("Ran {} times".format(i))
+            print("***********")
 
 
 class TestTicketPriority(TestCase):
@@ -191,7 +194,7 @@ class TestTicket(ModelTestCase):
     def test_calculate_sla_expiry(self):
         pass
 
-    def test_calculate_sla_expiry(self):
+    def test_calculate_sla_expiry_out_of_hours(self):
         pass
 
     def test_sla_enter_waiting(self):
