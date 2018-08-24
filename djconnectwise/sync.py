@@ -596,6 +596,8 @@ class CompanySynchronizer(Synchronizer):
         Assigns field data from an company_json instance
         to a local Company model instance
         """
+        company_json = self.remove_null_characters(company_json)
+
         company.id = company_json['id']
         company.name = company_json['name']
         company.identifier = company_json['identifier']
@@ -669,6 +671,13 @@ class CompanySynchronizer(Synchronizer):
         # Companies are deleted by setting deleted_flag = True, so
         # just treat this as a normal sync.
         self.fetch_sync_by_id(company_id)
+
+    def remove_null_characters(self, company_json):
+        for value in company_json:
+            if isinstance(company_json.get(value), str):
+                company_json[value] = company_json[value].replace('\x00', '')
+
+        return company_json
 
 
 class CompanyStatusSynchronizer(Synchronizer):
