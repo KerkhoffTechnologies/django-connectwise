@@ -38,6 +38,10 @@ class SyncJob(models.Model):
     message = models.TextField(blank=True, null=True)
     sync_type = models.CharField(max_length=32, default='full')
 
+    def duration(self):
+        if self.start_time and self.end_time:
+            return self.end_time - self.start_time
+
 
 class CallBackEntry(models.Model):
     TICKET = 'ticket'
@@ -57,7 +61,6 @@ class CallBackEntry(models.Model):
     url = models.CharField(max_length=255)
     level = models.CharField(max_length=255)
     object_id = models.IntegerField()
-    member = models.ForeignKey('Member', null=True,  on_delete=models.SET_NULL)
     inactive_flag = models.BooleanField(default=False)
 
     class Meta:
@@ -533,11 +536,11 @@ class TimeEntry(models.Model):
         return str(self.id) or ''
 
     actual_hours = models.DecimalField(
-        blank=True, null=True, decimal_places=2, max_digits=6)
+        blank=True, null=True, decimal_places=2, max_digits=9)
     billable_option = models.CharField(choices=BILL_TYPES, max_length=250)
     charge_to_type = models.CharField(choices=CHARGE_TYPES, max_length=250)
     hours_deduct = models.DecimalField(
-        blank=True, null=True, decimal_places=2, max_digits=6)
+        blank=True, null=True, decimal_places=2, max_digits=9)
     internal_notes = models.TextField(blank=True, null=True, max_length=2000)
     notes = models.TextField(blank=True, null=True, max_length=2000)
     time_start = models.DateTimeField(blank=True, null=True)
@@ -656,11 +659,11 @@ class AvailableProjectManager(models.Manager):
 class Project(TimeStampedModel):
     name = models.CharField(max_length=200)
     actual_hours = models.DecimalField(
-        blank=True, null=True, decimal_places=2, max_digits=6)
+        blank=True, null=True, decimal_places=2, max_digits=9)
     budget_hours = models.DecimalField(
-        blank=True, null=True, decimal_places=2, max_digits=6)
+        blank=True, null=True, decimal_places=2, max_digits=9)
     scheduled_hours = models.DecimalField(
-        blank=True, null=True, decimal_places=2, max_digits=6)
+        blank=True, null=True, decimal_places=2, max_digits=9)
 
     status = models.ForeignKey(
         'ProjectStatus', blank=True, null=True, on_delete=models.SET_NULL)
@@ -852,11 +855,11 @@ class Ticket(TimeStampedModel):
     )
 
     actual_hours = models.DecimalField(
-        blank=True, null=True, decimal_places=2, max_digits=6)
+        blank=True, null=True, decimal_places=2, max_digits=9)
     agreement_id = models.IntegerField(blank=True, null=True)
     approved = models.NullBooleanField(blank=True, null=True)
     budget_hours = models.DecimalField(
-        blank=True, null=True, decimal_places=2, max_digits=6)
+        blank=True, null=True, decimal_places=2, max_digits=9)
     closed_by = models.CharField(blank=True, null=True, max_length=250)
     closed_date_utc = models.DateTimeField(blank=True, null=True)
     closed_flag = models.NullBooleanField(blank=True, null=True)
