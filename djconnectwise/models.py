@@ -1105,6 +1105,7 @@ class Ticket(TimeStampedModel):
                 hour=start_of_day.hour,
                 minute=start_of_day.minute
             )
+            days = 0
 
         start_date = datetime.timedelta(hours=start.hour,
                                         minutes=start.minute)
@@ -1159,7 +1160,6 @@ class Ticket(TimeStampedModel):
         self.sla_expire_date = expiry_date.astimezone(tz=timezone.utc)
 
     def _get_sla_time(self, start, end, calendar):
-        # TODO this may explode
         # Get the sla-minutes between two dates using the given calendar
         minutes = 0
         day_of_week = start.weekday()
@@ -1207,6 +1207,8 @@ class Ticket(TimeStampedModel):
                         minutes=end_of_day.minute)
                 else:
                     # This is a day with no hours, continue to next day
+                    day_of_week = (day_of_week + 1) % 7
+                    current = current + datetime.timedelta(days=1)
                     continue
 
                 minutes = (end_of_day - start_of_day).total_seconds() / 60
@@ -1262,14 +1264,14 @@ class Ticket(TimeStampedModel):
     def _enter_non_escalate(self):
         # Save time entered a non-escalate state
         self.sla_expire_date = None
-        self.do_not_escalate_date = timezone.localtime()
+        self.do_not_escalate_date = timezone.now()
         self.sla_stage = self.WAITING
 
     def _exit_non_escalate(self, new_stage, calendar, sla):
         if self.do_not_escalate_date:
             self.minutes_waiting += self._get_sla_time(
                 self.do_not_escalate_date.astimezone(tz=None),
-                timezone.localtime(),
+                timezone.now().astimezone(tz=None),
                 calendar
                 )
         stage = self._lowest_possible_stage(new_stage)
