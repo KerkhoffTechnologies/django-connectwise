@@ -305,6 +305,13 @@ class Synchronizer:
                 )
             logger.info(msg)
 
+    def remove_null_characters(self, json_data):
+        for value in json_data:
+            if isinstance(json_data.get(value), str):
+                json_data[value] = json_data[value].replace('\x00', '')
+
+        return json_data
+
 
 class BatchConditionMixin:
     """
@@ -671,13 +678,6 @@ class CompanySynchronizer(Synchronizer):
         # Companies are deleted by setting deleted_flag = True, so
         # just treat this as a normal sync.
         self.fetch_sync_by_id(company_id)
-
-    def remove_null_characters(self, company_json):
-        for value in company_json:
-            if isinstance(company_json.get(value), str):
-                company_json[value] = company_json[value].replace('\x00', '')
-
-        return company_json
 
 
 class CompanyStatusSynchronizer(Synchronizer):
