@@ -1,7 +1,7 @@
 
 class SlaGoalsMixin(object):
     """
-    TODO write something here
+    Returns the fields relevant to SLA goals for models with SLA information
     """
 
     def get_stage_hours(self, stage):

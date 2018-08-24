@@ -19,7 +19,7 @@ ticket_statuses_names = [
 ]
 escalation_stages = [
     'NotResponded',
-    'Responded',
+    'ResolutionPlan',
     'Responded',
     'NoEscalation',
     'Resolved',
@@ -56,7 +56,7 @@ class ModelTestCase(TestCase):
             default_flag=True,
             respond_hours=2,
             plan_within=8,
-            resolution_hours=16,
+            resolution_hours=96,
             based_on='MyCalendar'
         )
         calendar = Calendar.objects.create(
@@ -282,7 +282,7 @@ class TestTicket(ModelTestCase):
         )
         ticket.calculate_sla_expiry()
 
-        ticket.status = board.board_statuses.get(name='In Progress')
+        ticket.status = board.board_statuses.get(name='Scheduled')
         ticket.calculate_sla_expiry(old_status=old_status)
 
         self.assertEqual(
@@ -307,6 +307,24 @@ class TestTicket(ModelTestCase):
         self.assertEqual(
             str(ticket.sla_expire_date.astimezone(tz=None)),
             '2018-08-24 09:24:34-07:00'
+            )
+
+    @freeze_time("2018-08-23 17:24:34", tz_offset=-7)
+    def test_calculate_sla_expiry_several_days(self):
+        board = self.connectwise_boards[0]
+        ticket = Ticket.objects.create(
+            summary='test',
+            status=board.board_statuses.get(name='In Progress'),
+            sla=Sla.objects.first(),
+            priority=self.ticket_priorities[0],
+            board=board,
+            entered_date_utc=timezone.now()
+        )
+        ticket.calculate_sla_expiry()
+
+        self.assertEqual(
+            str(ticket.sla_expire_date.astimezone(tz=None)),
+            '2018-09-06 16:24:34-07:00'
             )
 
     @freeze_time("2018-08-25 15:24:34", tz_offset=0)
