@@ -533,7 +533,7 @@ class TimeEntry(models.Model):
         return str(self.id) or ''
 
     actual_hours = models.DecimalField(
-        blank=True, null=True, decimal_places=2, max_digits=7)
+        blank=True, null=True, decimal_places=2, max_digits=6)
     billable_option = models.CharField(choices=BILL_TYPES, max_length=250)
     charge_to_type = models.CharField(choices=CHARGE_TYPES, max_length=250)
     hours_deduct = models.DecimalField(

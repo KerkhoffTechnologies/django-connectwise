@@ -2,7 +2,7 @@ from itertools import cycle
 
 from model_mommy.recipe import Recipe, seq, foreign_key
 from djconnectwise.models import ConnectWiseBoard, \
-    TicketPriority, Ticket, Company, Member, Project
+    TicketPriority, Ticket, Company, Member, Project, Calendar
 
 import names
 
