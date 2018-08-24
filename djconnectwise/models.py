@@ -1020,16 +1020,14 @@ class Ticket(TimeStampedModel):
                     " update on ticket")
                 return
         except ObjectDoesNotExist:
-            # TODO might be a little verbose for all tickets
             logger.info("No SLA's found, skipping SLA update.")
             return
 
-        # first to get object or None instead of queryset
+        # SLAP might exist, which may alter the SLA target time
         sla_priority = SlaPriority.objects.filter(
                                                   sla=self.sla,
                                                   priority=self.priority
                                                   ).first()
-
         if sla_priority:
             sla = sla_priority
         else:
@@ -1048,10 +1046,14 @@ class Ticket(TimeStampedModel):
             return
 
         if old_status:
+            # Old status exists, need to figure out if any calculations
+            # need to be made.
+            # Not all statuses have different escalation types, so a status
+            # change happens, but the SLA target wont need to be recalculated
             if self.status.is_non_escalation_status():
                 if old_status.is_non_escalation_status():
                     # N -> N
-                    # If both are non escalate, do nothing
+                    # If both are non-escalate, do nothing
                     return
                 # E -> N
                 self._enter_non_escalate()
@@ -1060,7 +1062,8 @@ class Ticket(TimeStampedModel):
                 self._exit_non_escalate(new_stage, calendar, sla)
             elif self.status < old_status:
                 # E -> E-
-                # Do nothing
+                # Do nothing, escalation only goes up not down, with the
+                # exception of going from resolved to resolve
                 if self.date_resolved_utc:
                     # If ticket is in resolved stage, it can go to lower stages
                     # but, it will only be able to go to 'resolve'
@@ -1074,12 +1077,12 @@ class Ticket(TimeStampedModel):
                 if sla_hours:
                     self._next_phase_expiry(sla_hours, calendar)
                 else:
-                    # State is resolved
+                    # State is resolved, set expire date to None
                     self.sla_expire_date = sla_hours
                 self.sla_stage = new_stage
             return
         # Old status is None, new ticket
-        # Will either be a new kanban instance, or a newly created ticket
+        # It will either be a new kanban instance, or a newly created ticket
         if sla_hours is None:
             # Ticket is resolved
             self.sla_stage = new_stage
@@ -1093,9 +1096,11 @@ class Ticket(TimeStampedModel):
             self.sla_stage = new_stage
 
     def _next_phase_expiry(self, sla_hours, calendar):
-        start = self.entered_date_utc.astimezone(tz=None)
         minutes = 0
+        start = self.entered_date_utc.astimezone(tz=None)
 
+        # Start counting from the start of the next business day if the
+        # ticket was created on a weekend
         day_of_week, days = calendar.get_first_day(start.weekday())
 
         if days > 0:
@@ -1123,6 +1128,10 @@ class Ticket(TimeStampedModel):
         minutes = first_day_minutes if first_day_minutes >= 0 else 0
         sla_minutes = sla_minutes - minutes
 
+        # Advance day by day, reducing the sla_minutes by the time in
+        # each working day.
+        # When minutes goes below zero, add the amount of time left on it
+        # that day to the start time of that day, giving you the due date
         while sla_minutes >= 0:
             day_of_week = (day_of_week + 1) % 7
             days += 1
@@ -1243,6 +1252,8 @@ class Ticket(TimeStampedModel):
             return sla_minutes
 
     def _lowest_possible_stage(self, stage):
+        # Returns the lowest stage a ticket is allowed to go, given the input
+        # stage.
         if stage == self.RESOLVED or stage == self.RESOLVE:
             return stage
         elif stage == self.PLAN:
@@ -1262,12 +1273,17 @@ class Ticket(TimeStampedModel):
             return stage
 
     def _enter_non_escalate(self):
-        # Save time entered a non-escalate state
+        # Save time entered a non-escalate state to calculate how many minutes
+        # it has been waiting if it is ever returned to a regular state
         self.sla_expire_date = None
         self.do_not_escalate_date = timezone.now()
         self.sla_stage = self.WAITING
 
     def _exit_non_escalate(self, new_stage, calendar, sla):
+        # Get the minutes ticket has been in a non-escalate state,
+        # change the state to the desired stage, or the lowest stage allowed,
+        # add the minutes spent in waiting to the tickets minutes_waiting field
+        # and then recalculate the new stage
         if self.do_not_escalate_date:
             self.minutes_waiting += self._get_sla_time(
                 self.do_not_escalate_date.astimezone(tz=None),

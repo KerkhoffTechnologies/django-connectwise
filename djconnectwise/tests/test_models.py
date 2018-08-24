@@ -373,7 +373,7 @@ class TestTicket(ModelTestCase):
     @freeze_time("2018-08-23 17:24:34", tz_offset=-7)
     def test_sla_exit_waiting(self):
         board = self.connectwise_boards[0]
-        entered_date_utc = timezone.now()
+        entered_date_utc = timezone.now() - datetime.timedelta(hours=3)
         waiting_status = board.board_statuses.get(name='Waiting For Client')
         ticket = Ticket.objects.create(
             summary='test',
@@ -382,13 +382,14 @@ class TestTicket(ModelTestCase):
             priority=self.ticket_priorities[0],
             board=board,
             entered_date_utc=entered_date_utc,
-            do_not_escalate_date=timezone.now()+datetime.timedelta(hours=1)
+            do_not_escalate_date=timezone.now()-datetime.timedelta(hours=1)
         )
 
         ticket.status = board.board_statuses.get(name='New')
         ticket.calculate_sla_expiry(old_status=waiting_status)
 
         self.assertEqual(ticket.sla_stage, 'respond')
+        self.assertEqual(ticket.minutes_waiting, 60)
         self.assertFalse(ticket.do_not_escalate_date)
         self.assertTrue(ticket.sla_expire_date)
 
