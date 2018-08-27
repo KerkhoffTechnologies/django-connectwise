@@ -1019,8 +1019,8 @@ class Ticket(TimeStampedModel):
             sla = Sla.objects.get(default_flag=True)
             if not self.sla:
                 logger.info(
-                    "No SLA found on ticket {}, skipping SLA".format(self.id),
-                    " update on ticket")
+                    "No SLA found on ticket {}, skipping SLA update on "\
+                    "ticket.".format(self.id))
                 return
         except ObjectDoesNotExist:
             logger.info("No SLA's found, skipping SLA update.")
