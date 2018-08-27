@@ -27,6 +27,24 @@ class InvalidStatusError(Exception):
     pass
 
 
+class SlaGoalsMixin(object):
+    """
+    Returns the fields relevant to SLA goals for models with SLA information
+    """
+
+    def get_stage_hours(self, stage):
+        if stage == 'respond':
+            return self.respond_hours
+        elif stage == 'plan':
+            return self.plan_within
+        elif stage == 'resolve':
+            return self.resolution_hours
+        elif stage == 'waiting':
+            return 0
+        else:
+            return None
+
+
 class SyncJob(models.Model):
     start_time = models.DateTimeField(null=False)
     end_time = models.DateTimeField(blank=True, null=True)
@@ -396,37 +414,32 @@ class Calendar(models.Model):
         else:
             time = self.END_TIME
 
-        if day == 0:
-            return getattr(self, "monday{}".format(time), None)
-        elif day == 1:
-            return getattr(self, "tuesday{}".format(time), None)
-        elif day == 2:
-            return getattr(self, "wednesday{}".format(time), None)
-        elif day == 3:
-            return getattr(self, "thursday{}".format(time), None)
-        elif day == 4:
-            return getattr(self, "friday{}".format(time), None)
-        elif day == 5:
-            return getattr(self, "saturday{}".format(time), None)
-        elif day == 6:
-            return getattr(self, "sunday{}".format(time), None)
+        days = [
+            'monday',
+            'tuesday',
+            'wednesday',
+            'thursday',
+            'friday',
+            'saturday',
+            'sunday'
+        ]
+        return getattr(self, "{}{}".format(days[day], time), None)
 
     def get_first_day(self, start_day):
         """
         For getting the first weekday, and the days until that day, from the
         given start day that has a start and end time.
         """
-        try:
-            days = 0
-            while True:
-                day = self.get_day_hours(True, start_day)
-                if day:
-                    return start_day, days
-                start_day = (start_day + 1) % 7
-                days += 1
-        except RecursionError:
-            # Calendar has no hours on any day
-            return None, None
+        days = 0
+        while True:
+            day = self.get_day_hours(True, start_day)
+            if day:
+                return start_day, days
+            start_day = (start_day + 1) % 7
+            days += 1
+            if days > 7:
+                # Calendar has no hours on any day
+                return None, None
 
 
 class ScheduleType(models.Model):
@@ -1014,16 +1027,10 @@ class Ticket(TimeStampedModel):
         return self.save(*args, **kwargs)
 
     def calculate_sla_expiry(self, old_status=None):
-        try:
-            # Check if SLAs exist and fail gracefully
-            sla = Sla.objects.get(default_flag=True)
-            if not self.sla:
-                logger.info(
-                    "No SLA found on ticket {}, skipping SLA update on "\
-                    "ticket.".format(self.id))
-                return
-        except ObjectDoesNotExist:
-            logger.info("No SLA's found, skipping SLA update.")
+        if not self.sla:
+            logger.info(
+                "No SLA found on ticket {}, skipping SLA update on "\
+                "ticket.".format(self.id))
             return
 
         # SLAP might exist, which may alter the SLA target time
@@ -1040,7 +1047,7 @@ class Ticket(TimeStampedModel):
             self.status.get_status_rank()
         )
         sla_hours = sla.get_stage_hours(new_stage)
-        calendar = self.sla.get_calendar(self.company)
+        calendar = self.sla.get_calendar(self.company.id)
 
         if not calendar:
             log = 'No calendar found for SLA {},'.format(sla.id) + \
@@ -1354,10 +1361,8 @@ class Sla(TimeStampedModel, SlaGoalsMixin):
         return self.name
 
     def get_calendar(self, company_id):
-        calendar = self.calendar if self.calendar else None
-
         try:
-            if calendar:
+            if self.calendar:
                 return calendar
             elif self.based_on == 'Customer':
                 return Company.objects.get(id=company_id)
