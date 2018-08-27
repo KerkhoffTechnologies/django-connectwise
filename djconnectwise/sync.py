@@ -305,6 +305,13 @@ class Synchronizer:
                 )
             logger.info(msg)
 
+    def remove_null_characters(self, json_data):
+        for value in json_data:
+            if isinstance(json_data.get(value), str):
+                json_data[value] = json_data[value].replace('\x00', '')
+
+        return json_data
+
 
 class BatchConditionMixin:
     """
@@ -597,6 +604,8 @@ class CompanySynchronizer(Synchronizer):
         Assigns field data from an company_json instance
         to a local Company model instance
         """
+        company_json = self.remove_null_characters(company_json)
+
         company.id = company_json['id']
         company.name = company_json['name']
         company.identifier = company_json['identifier']
