@@ -1378,9 +1378,9 @@ class SlaPriority(TimeStampedModel, SlaGoalsMixin):
         'TicketPriority',
         on_delete=models.CASCADE
         )
-    respond_hours = models.BigIntegerField()
-    plan_within = models.BigIntegerField()
-    resolution_hours = models.BigIntegerField()
+    respond_hours = models.FloatField()
+    plan_within = models.FloatField()
+    resolution_hours = models.FloatField()
 
     class Meta:
         verbose_name_plural = 'SLA Priorities'
