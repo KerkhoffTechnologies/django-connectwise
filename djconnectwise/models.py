@@ -1365,7 +1365,7 @@ class Sla(TimeStampedModel, SlaGoalsMixin):
             elif self.based_on == 'MyCalendar':
                 # Using get instead of first so it will throw an exception
                 return MyCompanyOther.objects.get().default_calendar
-        except ObjectDoesNotExist as e:
+        except ObjectDoesNotExist:
             return None
 
 

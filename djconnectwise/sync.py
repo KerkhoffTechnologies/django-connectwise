@@ -638,7 +638,7 @@ class CompanySynchronizer(Synchronizer):
         if calendar_id:
             try:
                 company.calendar = models.Calendar.objects.get(id=calendar_id)
-            except models.Calendar.DoesNotExist as e:
+            except models.Calendar.DoesNotExist:
                 logger.warning(
                     'Failed to find Calendar: {}'.format(
                         calendar_id
