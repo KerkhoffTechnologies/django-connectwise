@@ -1361,7 +1361,7 @@ class Sla(TimeStampedModel, SlaGoalsMixin):
             if self.calendar:
                 return self.calendar
             elif self.based_on == 'Customer':
-                return Company.objects.get(id=company_id)
+                return Company.objects.get(id=company_id).calendar
             elif self.based_on == 'MyCalendar':
                 # Using get instead of first so it will throw an exception
                 return MyCompanyOther.objects.get().default_calendar
