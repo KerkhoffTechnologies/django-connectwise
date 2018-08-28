@@ -147,6 +147,30 @@ class TestBoard(ModelTestCase):
         self.assertEqual(closed_status, None)
 
 
+class TestBoardStatus(ModelTestCase):
+    def test_compare_lt(self):
+        board = self.connectwise_boards[0]
+        status_a = board.board_statuses[0]
+        status_b = board.board_statuses[1]
+        self.assertTrue(status_a < status_b)
+        self.assertFalse(status_b < status_a)
+
+    def test_compare_gt(self):
+        board = self.connectwise_boards[0]
+        status_a = board.board_statuses[0]
+        status_b = board.board_statuses[1]
+        self.assertTrue(status_b > status_a)
+        self.assertFalse(status_a > status_b)
+
+    def test_compare_none(self):
+        board = self.connectwise_boards[0]
+        status = board.board_statuses[0]
+        self.assertFalse(None > status)
+        self.assertFalse(status > None)
+        self.assertFalse(None < status)
+        self.assertFalse(status < None)
+
+
 class TestCalendar(ModelTestCase):
 
     def test_get_first_day(self):
@@ -163,6 +187,43 @@ class TestCalendar(ModelTestCase):
         day, days = calendar.get_first_day(6)
         self.assertEqual(day, 0)
         self.assertEqual(days, 1)
+
+    @freeze_time("2018-08-23 12:12:12", tz_offset=-7)
+    def test_get_sla_time(self):
+        # Ticket._get_sla_time(self, start, end, calendar)
+        start = timezone.now()
+        end = start + datetime.timedelta(days=1)
+        calendar = Calendar.objects.first()
+
+        sla_time = calendar.get_sla_time(start, end)
+        self.assertEqual(sla_time, 540)
+
+    @freeze_time("2018-08-23 12:12:12", tz_offset=-7)
+    def test_get_sla_time_same_day(self):
+        start = timezone.now()
+        end = start + datetime.timedelta(hours=1)
+        calendar = Calendar.objects.first()
+
+        sla_time = calendar.get_sla_time(start, end)
+        self.assertEqual(sla_time, 60)
+
+    @freeze_time("2018-08-25 12:00:00", tz_offset=-7)
+    def test_get_sla_time_over_weeked(self):
+        start = timezone.now()
+        end = start + datetime.timedelta(days=2)
+        calendar = Calendar.objects.first()
+
+        sla_time = calendar.get_sla_time(start, end)
+        self.assertEqual(sla_time, 240)
+
+    @freeze_time("2018-08-25 12:00:00", tz_offset=-7)
+    def test_sla_get_time_same_day_weekend(self):
+        start = timezone.now()
+        end = start + datetime.timedelta(hours=2)
+        calendar = Calendar.objects.first()
+
+        sla_time = calendar.get_sla_time(start, end)
+        self.assertEqual(sla_time, 0)
 
 
 class TestTicket(ModelTestCase):
@@ -258,6 +319,7 @@ class TestTicket(ModelTestCase):
             sla=Sla.objects.first(),
             priority=self.ticket_priorities[0],
             board=board,
+            company=self.companies[0],
             entered_date_utc=timezone.now()
         )
         ticket.calculate_sla_expiry()
@@ -278,6 +340,7 @@ class TestTicket(ModelTestCase):
             sla=Sla.objects.first(),
             priority=self.ticket_priorities[0],
             board=board,
+            company=self.companies[0],
             entered_date_utc=timezone.now()
         )
         ticket.calculate_sla_expiry()
@@ -300,6 +363,7 @@ class TestTicket(ModelTestCase):
             sla=Sla.objects.first(),
             priority=self.ticket_priorities[0],
             board=board,
+            company=self.companies[0],
             entered_date_utc=timezone.now()
         )
         ticket.calculate_sla_expiry()
@@ -318,6 +382,7 @@ class TestTicket(ModelTestCase):
             sla=Sla.objects.first(),
             priority=self.ticket_priorities[0],
             board=board,
+            company=self.companies[0],
             entered_date_utc=timezone.now()
         )
         ticket.calculate_sla_expiry()
@@ -336,6 +401,7 @@ class TestTicket(ModelTestCase):
             sla=Sla.objects.first(),
             priority=self.ticket_priorities[0],
             board=board,
+            company=self.companies[0],
             entered_date_utc=timezone.now()
         )
         ticket.calculate_sla_expiry()
@@ -356,6 +422,7 @@ class TestTicket(ModelTestCase):
             sla=Sla.objects.first(),
             priority=self.ticket_priorities[0],
             board=board,
+            company=self.companies[0],
             entered_date_utc=timezone.now()
         )
 
@@ -375,6 +442,7 @@ class TestTicket(ModelTestCase):
             sla=Sla.objects.first(),
             priority=self.ticket_priorities[0],
             board=board,
+            company=self.companies[0],
             entered_date_utc=timezone.now()
         )
 
@@ -393,18 +461,20 @@ class TestTicket(ModelTestCase):
         board = self.connectwise_boards[0]
         entered_date_utc = timezone.now() - datetime.timedelta(hours=3)
         waiting_status = board.board_statuses.get(name='Waiting For Client')
+        do_not_escalate_date = timezone.now()-datetime.timedelta(hours=1)
+
         ticket = Ticket.objects.create(
             summary='test',
             status=waiting_status,
             sla=Sla.objects.first(),
             priority=self.ticket_priorities[0],
             board=board,
+            company=self.companies[0],
             entered_date_utc=entered_date_utc,
-            do_not_escalate_date=timezone.now()-datetime.timedelta(hours=1)
         )
-
+        ticket.do_not_escalate_date = do_not_escalate_date
         ticket.status = board.board_statuses.get(name='New')
-        ticket.calculate_sla_expiry(old_status=waiting_status)
+        ticket.save()
 
         self.assertEqual(ticket.sla_stage, 'respond')
         self.assertEqual(ticket.minutes_waiting, 60)
@@ -421,6 +491,7 @@ class TestTicket(ModelTestCase):
             sla=Sla.objects.first(),
             priority=self.ticket_priorities[0],
             board=board,
+            company=self.companies[0],
             entered_date_utc=entered_date_utc,
             do_not_escalate_date=timezone.now()
         )
@@ -443,6 +514,7 @@ class TestTicket(ModelTestCase):
             sla=Sla.objects.first(),
             priority=self.ticket_priorities[0],
             board=board,
+            company=self.companies[0],
             entered_date_utc=entered_date_utc,
             do_not_escalate_date=timezone.now() - datetime.timedelta(hours=2)
         )
@@ -457,7 +529,7 @@ class TestTicket(ModelTestCase):
 
     def test_sla_exit_waiting_to_lower_status(self):
         board = self.connectwise_boards[0]
-        name_this_var = timezone.now()
+        test_date = timezone.now()
         waiting_status = board.board_statuses.get(name='Waiting For Client')
         ticket = Ticket.objects.create(
             summary='test',
@@ -465,9 +537,10 @@ class TestTicket(ModelTestCase):
             sla=Sla.objects.first(),
             priority=self.ticket_priorities[0],
             board=board,
-            entered_date_utc=name_this_var,
+            company=self.companies[0],
+            entered_date_utc=test_date,
             do_not_escalate_date=timezone.now(),
-            date_responded_utc=name_this_var
+            date_responded_utc=test_date
         )
 
         ticket.status = board.board_statuses.get(name='New')
@@ -477,7 +550,7 @@ class TestTicket(ModelTestCase):
 
     def test_sla_exit_resolved_only_to_resolve(self):
         board = self.connectwise_boards[0]
-        name_this_var = timezone.now()
+        test_date = timezone.now()
         old_status = board.board_statuses.get(name='Completed')
         ticket = Ticket.objects.create(
             summary='test',
@@ -485,87 +558,16 @@ class TestTicket(ModelTestCase):
             sla=Sla.objects.first(),
             priority=self.ticket_priorities[0],
             board=board,
-            entered_date_utc=name_this_var,
+            company=self.companies[0],
+            entered_date_utc=test_date,
             do_not_escalate_date=timezone.now(),
-            date_resolved_utc=name_this_var
+            date_resolved_utc=test_date
         )
 
         ticket.status = board.board_statuses.get(name='In Progress')
         ticket.calculate_sla_expiry(old_status=old_status)
 
         self.assertEqual(ticket.sla_stage, 'resolve')
-
-    @freeze_time("2018-08-23 12:12:12", tz_offset=-7)
-    def test_get_sla_time(self):
-        # Ticket._get_sla_time(self, start, end, calendar)
-        board = self.connectwise_boards[0]
-        start = timezone.now()
-        end = start + datetime.timedelta(days=1)
-        calendar = Calendar.objects.first()
-        ticket = Ticket.objects.create(
-            summary='test',
-            status=board.board_statuses.get(name='New'),
-            sla=Sla.objects.first(),
-            priority=self.ticket_priorities[0],
-            board=board,
-        )
-
-        sla_time = ticket._get_sla_time(start, end, calendar)
-        self.assertEqual(sla_time, 540)
-
-    @freeze_time("2018-08-23 12:12:12", tz_offset=-7)
-    def test_get_sla_time_same_day(self):
-        board = self.connectwise_boards[0]
-        start = timezone.now()
-        end = start + datetime.timedelta(hours=1)
-        calendar = Calendar.objects.first()
-        ticket = Ticket.objects.create(
-            summary='test',
-            status=board.board_statuses.get(name='New'),
-            sla=Sla.objects.first(),
-            priority=self.ticket_priorities[0],
-            board=board,
-            entered_date_utc=timezone.now()
-        )
-
-        sla_time = ticket._get_sla_time(start, end, calendar)
-        self.assertEqual(sla_time, 60)
-
-    @freeze_time("2018-08-25 12:00:00", tz_offset=-7)
-    def test_get_sla_time_over_weeked(self):
-        board = self.connectwise_boards[0]
-        start = timezone.now()
-        end = start + datetime.timedelta(days=2)
-        calendar = Calendar.objects.first()
-        ticket = Ticket.objects.create(
-            summary='test',
-            status=board.board_statuses.get(name='New'),
-            sla=Sla.objects.first(),
-            priority=self.ticket_priorities[0],
-            board=board,
-            entered_date_utc=timezone.now()
-        )
-
-        sla_time = ticket._get_sla_time(start, end, calendar)
-        self.assertEqual(sla_time, 240)
-
-    @freeze_time("2018-08-25 12:00:00", tz_offset=-7)
-    def test_sla_get_time_same_day_weekend(self):
-        board = self.connectwise_boards[0]
-        start = timezone.now()
-        end = start + datetime.timedelta(hours=2)
-        calendar = Calendar.objects.first()
-        ticket = Ticket.objects.create(
-            summary='test',
-            status=board.board_statuses.get(name='New'),
-            sla=Sla.objects.first(),
-            priority=self.ticket_priorities[0],
-            board=board,
-            entered_date_utc=timezone.now()
-        )
-
-        sla_time = ticket._get_sla_time(start, end, calendar)
-        self.assertEqual(sla_time, 0)
 
     def test_lowest_possible_stage(self):
         board = self.connectwise_boards[0]
@@ -575,6 +577,8 @@ class TestTicket(ModelTestCase):
             sla=Sla.objects.first(),
             priority=self.ticket_priorities[0],
             board=board,
+            company=self.companies[0],
+            entered_date_utc=timezone.now()
         )
 
         result = ticket._lowest_possible_stage('resolved')

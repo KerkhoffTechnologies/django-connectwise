@@ -7,3 +7,5 @@ if VERSION[-1] != "final":
 else:
     # pragma: no cover
     __version__ = '.'.join(map(str, VERSION[:-1]))
+
+default_app_config = 'djconnectwise.apps.DjangoConnectwiseConfig'
