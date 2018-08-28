@@ -559,6 +559,7 @@ class BoardStatusSynchronizer(BoardChildSynchronizer):
         instance.display_on_board = json_data.get('displayOnBoard')
         instance.inactive = json_data.get('inactive')
         instance.closed_status = json_data.get('closedStatus')
+        instance.escalation_status = json_data.get('escalationStatus')
 
         return instance
 
@@ -632,6 +633,18 @@ class CompanySynchronizer(Synchronizer):
                     'Failed to find CompanyStatus: {}'.format(
                         status_json['id']
                     ))
+
+        calendar_id = company_json.get('calendarId')
+        if calendar_id:
+            try:
+                company.calendar = models.Calendar.objects.get(id=calendar_id)
+            except models.Calendar.DoesNotExist as e:
+                logger.warning(
+                    'Failed to find Calendar: {}'.format(
+                        calendar_id
+                    ))
+        else:
+            company.calendar = calendar_id
 
         type_json = company_json.get('type')
         if type_json:
@@ -1309,7 +1322,7 @@ class TicketSynchronizer(BatchConditionMixin, Synchronizer):
         instance.id = json_data['id']
         instance.summary = json_data['summary']
         instance.closed_flag = json_data.get('closedFlag')
-        instance.entered_date_utc = json_data.get('dateEntered')
+        instance.entered_date_utc = parse(json_data.get('dateEntered'))
         instance.last_updated_utc = json_data.get('_info').get('lastUpdated')
         instance.required_date_utc = json_data.get('requiredDate')
         instance.resources = json_data.get('resources')
