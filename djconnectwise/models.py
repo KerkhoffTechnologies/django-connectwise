@@ -647,7 +647,7 @@ class TimeEntry(models.Model):
     charge_to_id = models.ForeignKey(
         'Ticket', blank=True, null=True, on_delete=models.CASCADE)
     company = models.ForeignKey(
-        'Company', blank=False, null=False, on_delete=models.CASCADE)
+        'Company', blank=True, null=True, on_delete=models.CASCADE)
     member = models.ForeignKey(
         'Member', blank=True, null=True, on_delete=models.CASCADE)
 
