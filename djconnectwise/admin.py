@@ -210,6 +210,10 @@ class TicketAdmin(admin.ModelAdmin):
         ScheduleEntryInline
     ]
 
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.select_related('status', 'status__board')
+
 
 @admin.register(models.Activity)
 class ActivityAdmin(admin.ModelAdmin):

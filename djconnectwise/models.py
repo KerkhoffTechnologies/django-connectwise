@@ -1128,12 +1128,14 @@ class Ticket(TimeStampedModel):
             self.status.get_status_rank()
         )
         sla_hours = sla.get_stage_hours(new_stage)
-        calendar = self.sla.get_calendar(self.company.id)
+        calendar = self.sla.get_calendar(self.company)
 
         if not calendar:
-            log = 'No calendar found for SLA {},'.format(sla.id) + \
-                'on ticket {}'.format(self.id)
-            logger.info(log)
+            logger.info(
+                'No calendar found for SLA {} on ticket {}'.format(
+                    sla.id, self.id
+                )
+            )
             return
 
         if old_status:
@@ -1356,15 +1358,18 @@ class Sla(TimeStampedModel, SlaGoalsMixin):
     def __str__(self):
         return self.name
 
-    def get_calendar(self, company_id):
+    def get_calendar(self, company):
         try:
             if self.calendar:
                 return self.calendar
-            elif self.based_on == 'Customer':
-                return Company.objects.get(id=company_id).calendar
+            elif self.based_on == 'Customer' and company:
+                return Company.objects.get(id=company.id).calendar
             elif self.based_on == 'MyCalendar':
                 # Using get instead of first so it will throw an exception
                 return MyCompanyOther.objects.get().default_calendar
+            else:
+                # Maybe based_on was Customer but company was None
+                return None
         except ObjectDoesNotExist:
             return None
 
