@@ -763,6 +763,25 @@ class ServiceAPIClient(ConnectWiseAPIClient):
         ]
         return self.request('patch', endpoint_url, body)
 
+    def update_ticket_priority(self, ticket_id, priority):
+        """
+        Update the ticket's priority on the server
+        """
+        endpoint_url = self._endpoint(
+            '{}/{}'.format(self.ENDPOINT_TICKETS, ticket_id)
+        )
+        body = [
+            {
+                'op': 'replace',
+                'path': 'priority',
+                'value': {
+                    'id': priority.id,
+                    'name': priority.name,
+                },
+            },
+        ]
+        return self.request('patch', endpoint_url, body)
+
     def get_notes(self, ticket_id, *args, **kwargs):
         """
         Returns the notes associated with the specific ticket.
