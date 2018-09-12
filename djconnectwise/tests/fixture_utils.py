@@ -145,6 +145,13 @@ def init_opportunity_types():
     return synchronizer.sync()
 
 
+def init_opportunity_stages():
+    mocks.sales_api_get_opportunity_stages_call(
+        fixtures.API_SALES_OPPORTUNITY_STAGES)
+    synchronizer = sync.OpportunityStageSynchronizer()
+    return synchronizer.sync()
+
+
 def init_opportunities():
     mocks.sales_api_get_opportunities_call(
         fixtures.API_SALES_OPPORTUNITIES)
