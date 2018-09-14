@@ -38,6 +38,8 @@ class Command(BaseCommand):
             ('location', sync.LocationSynchronizer, _('Location')),
             ('opportunity_status', sync.OpportunityStatusSynchronizer,
                 _('Opportunity Status')),
+            ('opportunity_stage', sync.OpportunityStageSynchronizer,
+                _('Opportunity Stage')),
             ('opportunity_type', sync.OpportunityTypeSynchronizer,
                 _('Opportunity Type')),
             ('sales_probability', sync.SalesProbabilitySynchronizer,

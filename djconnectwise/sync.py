@@ -1584,9 +1584,6 @@ class OpportunitySynchronizer(Synchronizer):
         instance.priority = self._update_or_create_child(
             models.OpportunityPriority, json_data['priority']
         )
-        instance.stage = self._update_or_create_child(
-            models.OpportunityStage, json_data['stage']
-        )
 
         # handle foreign keys
         for json_field, value in self.related_meta.items():
@@ -1604,6 +1601,20 @@ class OpportunitySynchronizer(Synchronizer):
 
     def get_single(self, opportunity_id):
         return self.client.by_id(opportunity_id)
+
+
+class OpportunityStageSynchronizer(Synchronizer):
+    client_class = api.SalesAPIClient
+    model_class = models.OpportunityStage
+
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data['id']
+        instance.name = json_data['name']
+
+        return instance
+
+    def get_page(self, *args, **kwargs):
+        return self.client.get_opportunity_stages(*args, **kwargs)
 
 
 class OpportunityStatusSynchronizer(Synchronizer):

@@ -870,6 +870,16 @@ API_SALES_OPPORTUNITY_STATUSES = [
 ]
 
 
+API_SALES_OPPORTUNITY_STAGE = {
+    '_info': None,
+    'id': 8,
+    'name': '3.Quote'
+    }
+
+
+API_SALES_OPPORTUNITY_STAGES = [API_SALES_OPPORTUNITY_STAGE]
+
+
 API_SALES_OPPORTUNITY = {
     '_info': {'lastUpdated': '2016-10-12T19:24:07Z',
               'notes_href': 'https://some-host.com/v4_6_release/apis/3.0/sales/opportunities/2/notes',

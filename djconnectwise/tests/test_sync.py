@@ -13,6 +13,7 @@ from djconnectwise.models import Location
 from djconnectwise.models import Member
 from djconnectwise.models import Opportunity
 from djconnectwise.models import OpportunityStatus
+from djconnectwise.models import OpportunityStage
 from djconnectwise.models import OpportunityType
 from djconnectwise.models import Project, ProjectStatus
 from djconnectwise.models import ScheduleEntry
@@ -279,6 +280,7 @@ class TestScheduleEntriesSynchronizer(TestCase, SynchronizerTestMixin):
         fixture_utils.init_locations()
         fixture_utils.init_priorities()
         fixture_utils.init_members()
+        fixture_utils.init_opportunity_stages()
         fixture_utils.init_opportunity_statuses()
         fixture_utils.init_opportunity_types()
         fixture_utils.init_opportunities()
@@ -582,6 +584,7 @@ class TestOpportunityNoteSynchronizer(TestCase, SynchronizerTestMixin):
     def setUp(self):
         super().setUp()
         fixture_utils.init_opportunity_notes()
+        fixture_utils.init_opportunity_stages()
         fixture_utils.init_opportunities()
 
     def call_api(self, return_data):
@@ -734,6 +737,19 @@ class TestOpportunitySynchronizer(TestCase, SynchronizerTestMixin):
     #     self.assertFalse(Opportunity.objects.filter(
     #         id=json_data['id']).exists())
     #     patch.stop()
+
+
+class TestOpportunityStageSynchronizer(TestCase, SynchronizerTestMixin):
+    synchronizer_class = sync.OpportunityStageSynchronizer
+    model_class = OpportunityStage
+    fixture = fixtures.API_SALES_OPPORTUNITY_STAGES
+
+    def call_api(self, return_data):
+        return mocks.sales_api_get_opportunity_stages_call(return_data)
+
+    def _assert_fields(self, instance, json_data):
+        self.assertEqual(instance.id, json_data['id'])
+        self.assertEqual(instance.name, json_data['name'])
 
 
 class TestOpportunityStatusSynchronizer(TestCase, SynchronizerTestMixin):
@@ -1206,6 +1222,7 @@ class TestActivitySynchronizer(TestCase, SynchronizerTestMixin):
         fixture_utils.init_territories()
         fixture_utils.init_companies()
         fixture_utils.init_opportunity_types()
+        fixture_utils.init_opportunity_stages()
         fixture_utils.init_opportunities()
         fixture_utils.init_activities()
         mocks.sales_api_get_activities_call(

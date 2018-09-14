@@ -248,6 +248,7 @@ class TestSyncOpportunityNotesCommand(AbstractBaseSyncTest, TestCase):
     def setUp(self):
         super().setUp()
         fixture_utils.init_opportunity_statuses()
+        fixture_utils.init_opportunity_stages()
         fixture_utils.init_opportunity_types()
         fixture_utils.init_opportunities()
         fixture_utils.init_opportunity_notes()
@@ -266,7 +267,16 @@ class TestSyncOpportunityCommand(AbstractBaseSyncTest, TestCase):
         fixture_utils.init_companies()
         fixture_utils.init_members()
         fixture_utils.init_opportunity_statuses()
+        fixture_utils.init_opportunity_stages()
         fixture_utils.init_opportunity_types()
+
+
+class TestSyncOpportunityStagesCommand(AbstractBaseSyncTest, TestCase):
+    args = (
+        mocks.sales_api_get_opportunity_stages_call,
+        fixtures.API_SALES_OPPORTUNITY_STAGES,
+        'opportunity_stage'
+    )
 
 
 class TestSyncOpportunityStatusesCommand(AbstractBaseSyncTest, TestCase):
@@ -395,6 +405,7 @@ class TestSyncAllCommand(TestCase):
             TestSyncServiceNotesCommand,
             TestSyncOpportunityNotesCommand,
             TestSyncOpportunityStatusesCommand,
+            TestSyncOpportunityStagesCommand,
             TestSyncOpportunityTypesCommand,
             TestSyncOpportunityCommand,
             TestSyncSalesProbabilitiesCommand,
@@ -473,6 +484,7 @@ class TestSyncAllCommand(TestCase):
             'company': models.Company,
             'opportunity': models.Opportunity,
             'opportunity_status': models.OpportunityStatus,
+            'opportunity_stage': models.OpportunityStage,
             'opportunity_type': models.OpportunityType,
             'sales_probability': models.SalesProbability,
             # 'activity': models.Activity,
