@@ -8,6 +8,7 @@ MIN_DATE = -2  # Earliest date, days prior to today
 MAX_DATE = 12  # Latest date, days prior to today
 NOW = timezone.now()
 
+
 class Command(BaseCommand):
     help = 'Update the sla expire date on tickets to dates close to current ' \
            'date, past and future.'
