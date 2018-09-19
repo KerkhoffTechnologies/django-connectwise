@@ -111,10 +111,6 @@ class ConnectWiseBoard(TimeStampedModel):
     def board_statuses(self):
         return BoardStatus.available_objects.filter(board=self)
 
-    @property
-    def board_priorities(self):
-        return TicketPriority.objects.all()
-
     def get_closed_status(self):
         """
         Find a closed status on the board. Prefer the status
@@ -1084,19 +1080,18 @@ class Ticket(TimeStampedModel):
                 )
             )
 
-    def update_cw(self):
+    def update_cw(self, ticket_attribute):
         """
-        Send ticket status and closed_flag updates to ConnectWise.
+        Send ticket status or priority and closed_flag updates to ConnectWise.
         """
-        service_client = api.ServiceAPIClient()
-        return service_client.update_ticket_status(
-            self.id, self.closed_flag, self.status
-        )
+        if ticket_attribute['type'] == 'priority':
+            value = self.priority
+        elif ticket_attribute['type'] == 'status':
+            value = self.status
 
-    def update_priority_cw(self):
         service_client = api.ServiceAPIClient()
-        return service_client.update_ticket_priority(
-            self.id, self.priority
+        return service_client.update_ticket(
+            self.id, self.closed_flag, value, ticket_attribute['type']
         )
 
     def close(self, *args, **kwargs):
