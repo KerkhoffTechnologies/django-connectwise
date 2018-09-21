@@ -743,7 +743,7 @@ class ServiceAPIClient(ConnectWiseAPIClient):
         return self.fetch_resource(self.ENDPOINT_TICKETS, should_page=True,
                                    *args, **kwargs)
 
-    def update_ticket(self, ticket_id, closed_flag, value, type):
+    def update_ticket(self, ticket_id, closed_flag, priority, status):
         """
         Update the ticket's closedFlag and priority or status on the server.
         """
@@ -760,13 +760,22 @@ class ServiceAPIClient(ConnectWiseAPIClient):
             },
             {
                 'op': 'replace',
-                'path': type,
+                'path': 'priority',
                 'value': {
-                    'id': value.id,
-                    'name': value.name,
+                    'id': priority.id,
+                    'name': priority.name,
+                },
+            },
+            {
+                'op': 'replace',
+                'path': 'status',
+                'value': {
+                    'id': status.id,
+                    'name': status.name,
                 },
             },
         ]
+        print(body)
         return self.request('patch', endpoint_url, body)
 
     def get_notes(self, ticket_id, *args, **kwargs):

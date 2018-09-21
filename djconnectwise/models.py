@@ -910,7 +910,7 @@ class Opportunity(TimeStampedModel):
         if update_cw:
             self.update_cw()
 
-    def update_cw(self, ticket_attribute):
+    def update_cw(self):
         """
         Send ticket status and closed_flag updates to ConnectWise.
         """
@@ -1080,18 +1080,13 @@ class Ticket(TimeStampedModel):
                 )
             )
 
-    def update_cw(self, ticket_attribute):
+    def update_cw(self):
         """
         Send ticket status or priority and closed_flag updates to ConnectWise.
         """
-        if ticket_attribute.get('priority'):
-            value = self.priority
-        elif ticket_attribute.get('status'):
-            value = self.status
-
         service_client = api.ServiceAPIClient()
         return service_client.update_ticket(
-            self.id, self.closed_flag, value, ticket_attribute['type']
+            self.id, self.closed_flag, self.priority, self.status
         )
 
     def close(self, *args, **kwargs):
