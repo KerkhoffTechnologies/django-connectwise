@@ -775,7 +775,6 @@ class ServiceAPIClient(ConnectWiseAPIClient):
                 },
             },
         ]
-        print(body)
         return self.request('patch', endpoint_url, body)
 
     def get_notes(self, ticket_id, *args, **kwargs):
