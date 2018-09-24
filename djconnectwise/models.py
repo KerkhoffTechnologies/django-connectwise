@@ -1109,9 +1109,6 @@ class Ticket(TimeStampedModel):
 
     def calculate_sla_expiry(self, old_status=None):
         if not self.sla:
-            logger.info(
-                "No SLA found on ticket {}, skipping SLA update on "
-                "ticket.".format(self.id))
             return
 
         # SLAP might exist, which may alter the SLA target time
