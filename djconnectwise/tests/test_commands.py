@@ -77,6 +77,25 @@ class TestSyncCalendarsCommand(AbstractBaseSyncTest, TestCase):
     )
 
 
+class TestSyncHolidayCommand(AbstractBaseSyncTest, TestCase):
+    args = (
+        mocks.schedule_api_get_holidays_call,
+        fixtures.API_SCHEDULE_HOLIDAY_MODEL_LIST,
+        'holiday'
+    )
+
+    def setUp(self):
+        fixture_utils.init_holiday_lists()
+
+
+class TestSyncHolidayListCommand(AbstractBaseSyncTest, TestCase):
+    args = (
+        mocks.schedule_api_get_holiday_lists_call,
+        fixtures.API_SCHEDULE_HOLIDAY_MODEL_LIST_LIST,
+        'holiday_list'
+    )
+
+
 class TestSyncCompanyStatusesCommand(AbstractBaseSyncTest, TestCase):
     args = (
         mocks.company_api_get_company_statuses_call,

@@ -1423,10 +1423,67 @@ class CalendarSynchronizer(Synchronizer):
         instance.sunday_start_time = json_data.get('sundayStartTime')
         instance.sunday_end_time = json_data.get('sundayEndTime')
 
+        self._assign_relation(
+            instance,
+            json_data,
+            'holidayList',
+            models.HolidayList,
+            'holiday_list'
+            )
+
         return instance
 
     def get_page(self, *args, **kwargs):
         return self.client.get_calendars(*args, **kwargs)
+
+
+class HolidaySynchronizer(Synchronizer):
+    client_class = api.ScheduleAPIClient
+    model_class = models.Holiday
+
+    def _assign_field_data(self, instance, json_data):
+
+        instance.id = json_data['id']
+        instance.name = json_data['name']
+        instance.all_day_flag = json_data.get('allDayFlag')
+        instance.date = json_data.get('date')
+        instance.start_time = json_data.get('timeStart')
+        instance.end_time = json_data.get('timeEnd')
+
+        self._assign_relation(
+            instance,
+            json_data,
+            'holidayList',
+            models.HolidayList,
+            'holiday_list'
+            )
+
+        return instance
+
+    def client_call(self, list_id, *args, **kwargs):
+        return self.client.get_holidays(list_id, *args, **kwargs)
+
+    def get_page(self, *args, **kwargs):
+        records = []
+        list_qs = models.HolidayList.objects.all()
+
+        for list_id in list_qs.values_list('id', flat=True):
+            records += self.client_call(list_id, *args, **kwargs)
+        return self.client.get_holidays(*args, **kwargs)
+
+
+class HolidayListSynchronizer(Synchronizer):
+    client_class = api.ScheduleAPIClient
+    model_class = models.HolidayList
+
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data['id']
+        instance.name = json_data['name']
+
+        return instance
+
+    def get_page(self, *args, **kwargs):
+        return self.client.get_holiday_lists(*args, **kwargs)
 
 
 class SLAPrioritySychronizer(Synchronizer):
