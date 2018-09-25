@@ -91,7 +91,7 @@ class TestSyncHolidayCommand(AbstractBaseSyncTest, TestCase):
 class TestSyncHolidayListCommand(AbstractBaseSyncTest, TestCase):
     args = (
         mocks.schedule_api_get_holiday_lists_call,
-        fixtures.API_SCHEDULE_HOLIDAY_MODEL_LIST_LIST,
+        fixtures.API_SCHEDULE_HOLIDAY_LIST_LIST,
         'holiday_list'
     )
 
@@ -437,7 +437,9 @@ class TestSyncAllCommand(TestCase):
             TestSyncSLAsCommand,
             TestSyncCalendarsCommand,
             TestSyncSLAPrioritiesCommand,
-            TestSyncMyCompanyOtherCommand
+            TestSyncMyCompanyOtherCommand,
+            TestSyncHolidayCommand,
+            TestSyncHolidayListCommand
         ]
 
         self.test_args = []
@@ -514,7 +516,9 @@ class TestSyncAllCommand(TestCase):
             'sla': models.Sla,
             'calendar': models.Calendar,
             'sla_priority': models.SlaPriority,
-            'company_other': models.MyCompanyOther
+            'company_other': models.MyCompanyOther,
+            'holiday': models.Holiday,
+            'holiday_list': models.HolidayList
         }
 
         self.test_sync()

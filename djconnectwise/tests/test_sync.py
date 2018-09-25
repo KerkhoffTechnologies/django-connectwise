@@ -817,10 +817,12 @@ class TestHolidaySynchronizer(TestCase, SynchronizerTestMixin):
         self.assertEqual(instance.id, json_data['id'])
         self.assertEqual(instance.name, json_data['name'])
         self.assertEqual(instance.all_day_flag, json_data['allDayFlag'])
-        self.assertEqual(instance.date, json_data['date'])
-        self.assertEqual(instance.time_start, json_data['timeStart'])
-        self.assertEqual(instance.time_end, json_data['timeEnd'])
-        self.assertEqual(instance.holiday_list, json_data['holidayList'])
+        self.assertEqual(instance.date, parse(json_data['date']).date())
+        self.assertEqual(
+            instance.start_time, parse(json_data['timeStart']).time())
+        self.assertEqual(instance.end_time, parse(json_data['timeEnd']).time())
+        self.assertEqual(
+            instance.holiday_list.id, json_data['holidayList']['id'])
 
     def call_api(self, return_data):
         return mocks.schedule_api_get_holidays_call(return_data)
@@ -852,7 +854,7 @@ class TestHolidayListSynchronizer(TestCase, SynchronizerTestMixin):
         self.assertEqual(instance.name, json_data['name'])
 
     def call_api(self, return_data):
-        return mocks.schedule_api_get_holidays_call(return_data)
+        return mocks.schedule_api_get_holiday_lists_call(return_data)
 
     def test_sync_update(self):
         self._sync(self.fixture)

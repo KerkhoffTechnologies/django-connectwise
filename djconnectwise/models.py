@@ -375,7 +375,7 @@ class Calendar(models.Model):
 
     name = models.CharField(max_length=250)
     holiday_list = models.ForeignKey(
-        'HolidayList', on_delete=models.SET_NULL)
+        'HolidayList', on_delete=models.SET_NULL, blank=True, null=True)
     monday_start_time = models.TimeField(auto_now=False, auto_now_add=False,
                                          blank=True, null=True)
     monday_end_time = models.TimeField(auto_now=False, auto_now_add=False,
