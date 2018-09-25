@@ -743,9 +743,9 @@ class ServiceAPIClient(ConnectWiseAPIClient):
         return self.fetch_resource(self.ENDPOINT_TICKETS, should_page=True,
                                    *args, **kwargs)
 
-    def update_ticket_status(self, ticket_id, closed_flag, status):
+    def update_ticket(self, ticket_id, closed_flag, priority, status):
         """
-        Update the ticket's closedFlag and status on the server.
+        Update the ticket's closedFlag and priority or status on the server.
         """
         # Yeah, this schema is a bit bizarre. See CW docs at
         # https://developer.connectwise.com/Manage/Developer_Guide#Patch
@@ -757,6 +757,14 @@ class ServiceAPIClient(ConnectWiseAPIClient):
                 'op': 'replace',
                 'path': 'closedFlag',
                 'value': closed_flag
+            },
+            {
+                'op': 'replace',
+                'path': 'priority',
+                'value': {
+                    'id': priority.id,
+                    'name': priority.name,
+                },
             },
             {
                 'op': 'replace',

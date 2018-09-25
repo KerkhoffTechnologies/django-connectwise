@@ -1082,11 +1082,11 @@ class Ticket(TimeStampedModel):
 
     def update_cw(self):
         """
-        Send ticket status and closed_flag updates to ConnectWise.
+        Send ticket status or priority and closed_flag updates to ConnectWise.
         """
         service_client = api.ServiceAPIClient()
-        return service_client.update_ticket_status(
-            self.id, self.closed_flag, self.status
+        return service_client.update_ticket(
+            self.id, self.closed_flag, self.priority, self.status
         )
 
     def close(self, *args, **kwargs):
