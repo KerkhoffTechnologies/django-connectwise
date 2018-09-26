@@ -1469,7 +1469,7 @@ class HolidaySynchronizer(Synchronizer):
 
         for list_id in list_qs.values_list('id', flat=True):
             records += self.client_call(list_id, *args, **kwargs)
-        return self.client.get_holidays(*args, **kwargs)
+        return records
 
 
 class HolidayListSynchronizer(Synchronizer):
