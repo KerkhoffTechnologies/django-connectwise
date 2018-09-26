@@ -268,12 +268,12 @@ class MyCompanyOtherAdmin(admin.ModelAdmin):
 
 
 @admin.register(models.Holiday)
-class Holiday(admin.Holiday):
+class Holiday(admin.ModelAdmin):
     list_display = ('id', 'name',)
     search_fields = ['name', 'date']
 
 
 @admin.register(models.HolidayList)
-class HolidayList(admin.HolidayList):
+class HolidayList(admin.ModelAdmin):
     list_display = ('id', 'name',)
     search_fields = ['name']
