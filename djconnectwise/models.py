@@ -425,21 +425,38 @@ class Calendar(models.Model):
         ]
         return getattr(self, "{}{}".format(days[day], time), None)
 
-    def get_first_day(self, start_day):
+    def get_first_day(self, start):
         """
         For getting the first weekday, and the days until that day, from the
         given start day that has a start and end time.
         """
+        start_day = start.weekday()
         days = 0
         while True:
             day = self.get_day_hours(True, start_day)
-            if day:
+            if day and \
+                    not self.is_holiday(datetime.timedelta(days=days) + start):
                 return start_day, days
             start_day = (start_day + 1) % 7
             days += 1
             if days > 7:
                 # Calendar has no hours on any day
                 return None, None
+
+    def is_holiday(self, date):
+        current_day = date.date()
+        try:
+            holiday = self.holiday_list.holiday_set.filter(date=current_day)
+            # Decided to go with filter, and test whether the list is empty or
+            # not. Rather than get, and deal with the possibility of
+            # DoesNotExist and MultipleObjectsReturned.
+        except AttributeError:
+            # No holiday list on this calendar
+            return False
+        if holiday:
+            return True
+        # Returning False instead of None
+        return False
 
     def get_sla_time(self, start, end):
         # Get the sla-minutes between two dates using the given calendar
@@ -451,7 +468,8 @@ class Calendar(models.Model):
         # get sla minutes for first day
         end_of_day = self.get_day_hours(False, start.weekday())
 
-        if end_of_day:
+        if end_of_day and \
+                not self.is_holiday(timezone.now().astimezone(tz=None)):
             end_of_day = datetime.timedelta(hours=end_of_day.hour,
                                             minutes=end_of_day.minute)
 
@@ -479,7 +497,7 @@ class Calendar(models.Model):
 
             while current.date() != end.date():
                 start_of_day = self.get_day_hours(True, day_of_week)
-                if start_of_day:
+                if start_of_day and not self.is_holiday(current):
                     start_of_day = datetime.timedelta(
                         hours=start_of_day.hour,
                         minutes=start_of_day.minute)
@@ -1227,7 +1245,7 @@ class Ticket(TimeStampedModel):
 
         # Start counting from the start of the next business day if the
         # ticket was created on a weekend
-        day_of_week, days = calendar.get_first_day(start.weekday())
+        day_of_week, days = calendar.get_first_day(start)
 
         if days > 0:
             start = start + datetime.timedelta(days=days)
@@ -1263,7 +1281,10 @@ class Ticket(TimeStampedModel):
             days += 1
 
             start_of_day = calendar.get_day_hours(True, day_of_week)
-            if start_of_day:
+            if start_of_day and \
+                not calendar.is_holiday(
+                                        datetime.timedelta(days=days) + start):
+                                        # Well done PEP8, well done...
                 start_of_day = datetime.timedelta(hours=start_of_day.hour,
                                                   minutes=start_of_day.minute)
                 end_of_day = calendar.get_day_hours(False, day_of_week)
