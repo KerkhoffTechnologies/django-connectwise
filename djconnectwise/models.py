@@ -1121,8 +1121,8 @@ class Ticket(TimeStampedModel):
         else:
             sla = self.sla
 
-        new_stage = self.STAGE_RANK.get(
-            self.status.get_status_rank()
+        new_stage = self._lowest_possible_stage(self.STAGE_RANK.get(
+            self.status.get_status_rank())
         )
         sla_hours = sla.get_stage_hours(new_stage)
         calendar = self.sla.get_calendar(self.company)
