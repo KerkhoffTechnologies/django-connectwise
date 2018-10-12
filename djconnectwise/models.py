@@ -374,6 +374,8 @@ class Calendar(models.Model):
     END_TIME = '_end_time'
 
     name = models.CharField(max_length=250)
+    holiday_list = models.ForeignKey(
+        'HolidayList', on_delete=models.SET_NULL, blank=True, null=True)
     monday_start_time = models.TimeField(auto_now=False, auto_now_add=False,
                                          blank=True, null=True)
     monday_end_time = models.TimeField(auto_now=False, auto_now_add=False,
@@ -521,6 +523,41 @@ class Calendar(models.Model):
                 minutes = 0
             sla_minutes += minutes
             return sla_minutes
+
+
+class Holiday(models.Model):
+    name = models.CharField(max_length=200)
+    all_day_flag = models.BooleanField(default=False)
+    date = models.DateField(
+                            blank=True,
+                            null=True,
+                            auto_now=False,
+                            auto_now_add=False
+                            )
+    start_time = models.TimeField(
+                                  auto_now=False,
+                                  auto_now_add=False,
+                                  blank=True,
+                                  null=True
+                                  )
+    end_time = models.TimeField(
+                                auto_now=False,
+                                auto_now_add=False,
+                                blank=True,
+                                null=True
+                                )
+    holiday_list = models.ForeignKey(
+        'HolidayList', on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.name
+
+
+class HolidayList(models.Model):
+    name = models.CharField(max_length=200)
+
+    def __str__(self):
+        return self.name
 
 
 class ScheduleType(models.Model):

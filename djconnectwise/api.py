@@ -417,6 +417,7 @@ class ScheduleAPIClient(ConnectWiseAPIClient):
     ENDPOINT_SCHEDULE_TYPES = 'types'
     ENDPOINT_SCHEDULE_STATUSES = 'statuses'
     ENDPOINT_CALENDARS = 'calendars'
+    ENDPOINT_HOLIDAY = 'holidayLists'
 
     def get_schedule_statuses(self, *args, **kwargs):
         return self.fetch_resource(self.ENDPOINT_SCHEDULE_STATUSES,
@@ -468,6 +469,26 @@ class ScheduleAPIClient(ConnectWiseAPIClient):
         return self.fetch_resource(self.ENDPOINT_CALENDARS,
                                    should_page=True,
                                    *args, **kwargs)
+
+    def get_holidays(self, holiday_list_id, *args, **kwargs):
+        endpoint_url = '{}/{}/holidays'.format(
+            self.ENDPOINT_HOLIDAY,
+            holiday_list_id
+            )
+        return self.fetch_resource(
+            endpoint_url,
+            should_page=True,
+            *args,
+            **kwargs
+            )
+
+    def get_holiday_lists(self, *args, **kwargs):
+        return self.fetch_resource(
+            self.ENDPOINT_HOLIDAY,
+            should_page=True,
+            *args,
+            **kwargs
+            )
 
 
 class TimeAPIClient(ConnectWiseAPIClient):

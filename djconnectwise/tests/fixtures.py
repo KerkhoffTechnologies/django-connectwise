@@ -564,6 +564,29 @@ API_SERVICE_TEAM_LIST = [
 ]
 
 
+API_SCHEDULE_HOLIDAY_LIST = {
+    'id': 1,
+    'name': 'Standard Holiday List'
+}
+
+
+API_SCHEDULE_HOLIDAY_LIST_LIST = [API_SCHEDULE_HOLIDAY_LIST]
+
+
+API_SCHEDULE_HOLIDAY = {
+    'id': 1,
+    'name': 'Veritably Enjoyable Holiday',
+    'allDayFlag': False,
+    'date': '2018-11-23',
+    'timeStart': '08:00:00',
+    'timeEnd': '17:00:00',
+    'holidayList': API_SCHEDULE_HOLIDAY_LIST
+}
+
+
+API_SCHEDULE_HOLIDAY_MODEL_LIST = [API_SCHEDULE_HOLIDAY]
+
+
 API_SCHEDULE_CALENDAR = {
     'id': 1,
     'name': 'Standard Calendar',
@@ -580,7 +603,8 @@ API_SCHEDULE_CALENDAR = {
     'saturdayStartTime': None,
     'saturdayEndTime': None,
     'sundayStartTime': None,
-    'sundayEndTime': None
+    'sundayEndTime': None,
+    'holidayList': API_SCHEDULE_HOLIDAY_LIST
 }
 
 

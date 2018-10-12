@@ -75,6 +75,20 @@ def init_calendars():
     return synchronizer.sync()
 
 
+def init_holidays():
+    mocks.schedule_api_get_holidays_call(
+        fixtures.API_SCHEDULE_HOLIDAY_MODEL_LIST)
+    synchronizer = sync.HolidaySynchronizer()
+    return synchronizer.sync()
+
+
+def init_holiday_lists():
+    mocks.schedule_api_get_holiday_lists_call(
+        fixtures.API_SCHEDULE_HOLIDAY_LIST_LIST)
+    synchronizer = sync.HolidayListSynchronizer()
+    return synchronizer.sync()
+
+
 def init_others():
     mocks.system_api_get_other_call(fixtures.API_SYSTEM_OTHER_LIST)
     synchronizer = sync.MyCompanyOtherSynchronizer()

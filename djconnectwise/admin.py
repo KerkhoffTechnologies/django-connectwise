@@ -265,3 +265,15 @@ class CalendarAdmin(admin.ModelAdmin):
 @admin.register(models.MyCompanyOther)
 class MyCompanyOtherAdmin(admin.ModelAdmin):
     list_display = ('id', 'default_calendar',)
+
+
+@admin.register(models.Holiday)
+class Holiday(admin.ModelAdmin):
+    list_display = ('id', 'name',)
+    search_fields = ['name', 'date']
+
+
+@admin.register(models.HolidayList)
+class HolidayList(admin.ModelAdmin):
+    list_display = ('id', 'name',)
+    search_fields = ['name']
