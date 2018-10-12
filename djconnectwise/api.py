@@ -191,10 +191,12 @@ class ConnectWiseAPIClient(object):
         messages = []
         try:
             error = json.loads(error)
-            for error_message in error.get('errors'):
-                messages.append(error_message.get('message'))
+            if error.get('errors'):
+                for error_message in error.get('errors'):
+                    messages.append(error_message.get('message'))
 
-            msg = '{}; {}.'.format(error.get('message'), ' .'.join(messages))
+            msg = '{}; {}.'.format(error.get('message'),
+                                   '. The error was: '.join(messages))
         except json.decoder.JSONDecodeError:
             # JSON decoding failed
             msg = 'An error occurred: {} {}'.format(response.status_code,
