@@ -35,6 +35,15 @@ From source:
     ]
     ```
 
+1. Add to `urls.py`:
+
+    ```
+    url(
+        r'^callback/',  # This can be whatever you want.
+        include('djconnectwise.urls', namespace='connectwise')
+    ),
+    ```
+
 1. Add to settings:
 
     ```
