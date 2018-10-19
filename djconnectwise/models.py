@@ -1241,6 +1241,11 @@ class Ticket(TimeStampedModel):
             self.sla_stage = new_stage
 
     def _next_phase_expiry(self, sla_hours, calendar):
+
+        if sla_hours is None:
+            self.sla_expire_date = None
+            return
+
         start = self.entered_date_utc.astimezone(tz=None)
 
         # Start counting from the start of the next business day if the
