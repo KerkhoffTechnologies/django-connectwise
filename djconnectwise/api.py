@@ -188,9 +188,15 @@ class ConnectWiseAPIClient(object):
         # decode the bytes encoded error to a string
         # error = error.args[0].decode("utf-8")
         error = error.replace('\r\n', '')
+        messages = []
         try:
             error = json.loads(error)
-            msg = '{}'.format(error['message'])
+            if error.get('errors'):
+                for error_message in error.get('errors'):
+                    messages.append(error_message.get('message'))
+
+            msg = '{}; {}.'.format(error.get('message'),
+                                   '. The error was: '.join(messages))
         except json.decoder.JSONDecodeError:
             # JSON decoding failed
             msg = 'An error occurred: {} {}'.format(response.status_code,
@@ -417,6 +423,7 @@ class ScheduleAPIClient(ConnectWiseAPIClient):
     ENDPOINT_SCHEDULE_TYPES = 'types'
     ENDPOINT_SCHEDULE_STATUSES = 'statuses'
     ENDPOINT_CALENDARS = 'calendars'
+    ENDPOINT_HOLIDAY = 'holidayLists'
 
     def get_schedule_statuses(self, *args, **kwargs):
         return self.fetch_resource(self.ENDPOINT_SCHEDULE_STATUSES,
@@ -468,6 +475,26 @@ class ScheduleAPIClient(ConnectWiseAPIClient):
         return self.fetch_resource(self.ENDPOINT_CALENDARS,
                                    should_page=True,
                                    *args, **kwargs)
+
+    def get_holidays(self, holiday_list_id, *args, **kwargs):
+        endpoint_url = '{}/{}/holidays'.format(
+            self.ENDPOINT_HOLIDAY,
+            holiday_list_id
+            )
+        return self.fetch_resource(
+            endpoint_url,
+            should_page=True,
+            *args,
+            **kwargs
+            )
+
+    def get_holiday_lists(self, *args, **kwargs):
+        return self.fetch_resource(
+            self.ENDPOINT_HOLIDAY,
+            should_page=True,
+            *args,
+            **kwargs
+            )
 
 
 class TimeAPIClient(ConnectWiseAPIClient):

@@ -2,7 +2,7 @@ from djconnectwise.models import TicketPriority, BoardStatus
 from model_mommy import mommy
 from test_plus.test import TestCase
 from djconnectwise.models import Ticket, InvalidStatusError, Sla, Calendar
-from djconnectwise.models import MyCompanyOther
+from djconnectwise.models import MyCompanyOther, Holiday, HolidayList
 from unittest.mock import patch
 from django.utils import timezone
 from freezegun import freeze_time
@@ -59,6 +59,15 @@ class ModelTestCase(TestCase):
             resolution_hours=96,
             based_on='MyCalendar'
         )
+        holiday_list = HolidayList.objects.create(
+            name="Test List"
+        )
+        Holiday.objects.create(
+            name="Test Holiday",
+            all_day_flag=True,
+            date=datetime.datetime(year=2017, day=12, month=12),
+            holiday_list=holiday_list
+        )
         calendar = Calendar.objects.create(
             name="Standard Office Hours",
             monday_start_time='08:00:00',
@@ -74,7 +83,8 @@ class ModelTestCase(TestCase):
             saturday_start_time=None,
             saturday_end_time=None,
             sunday_start_time=None,
-            sunday_end_time=None
+            sunday_end_time=None,
+            holiday_list=holiday_list
         )
         MyCompanyOther.objects.create(
             default_calendar=calendar
@@ -176,15 +186,18 @@ class TestCalendar(ModelTestCase):
     def test_get_first_day(self):
         calendar = Calendar.objects.first()
 
-        day, days = calendar.get_first_day(5)
+        day, days = calendar.get_first_day(
+            datetime.datetime(year=2018, day=29, month=9))
         self.assertEqual(day, 0)
         self.assertEqual(days, 2)
 
-        day, days = calendar.get_first_day(2)
+        day, days = calendar.get_first_day(
+            datetime.datetime(year=2018, day=19, month=9))
         self.assertEqual(day, 2)
         self.assertEqual(days, 0)
 
-        day, days = calendar.get_first_day(6)
+        day, days = calendar.get_first_day(
+            datetime.datetime(year=2018, day=23, month=9))
         self.assertEqual(day, 0)
         self.assertEqual(days, 1)
 

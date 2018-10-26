@@ -9,6 +9,8 @@ from djconnectwise.models import Activity
 from djconnectwise.models import BoardStatus
 from djconnectwise.models import Company, CompanyStatus, CompanyType
 from djconnectwise.models import ConnectWiseBoard
+from djconnectwise.models import Holiday
+from djconnectwise.models import HolidayList
 from djconnectwise.models import Location
 from djconnectwise.models import Member
 from djconnectwise.models import Opportunity
@@ -800,6 +802,73 @@ class TestOpportunityTypeSynchronizer(TestCase, SynchronizerTestMixin):
         changed = self.model_class.objects.get(id=instance_id)
         self.assertNotEqual(original.description,
                             description)
+        self._assert_fields(changed, new_json)
+
+
+class TestHolidaySynchronizer(TestCase, SynchronizerTestMixin):
+    synchronizer_class = sync.HolidaySynchronizer
+    model_class = Holiday
+    fixture = fixtures.API_SCHEDULE_HOLIDAY_MODEL_LIST
+
+    def setUp(self):
+        fixture_utils.init_holiday_lists()
+
+    def _assert_fields(self, instance, json_data):
+        self.assertEqual(instance.id, json_data['id'])
+        self.assertEqual(instance.name, json_data['name'])
+        self.assertEqual(instance.all_day_flag, json_data['allDayFlag'])
+        self.assertEqual(instance.date, parse(json_data['date']).date())
+        self.assertEqual(
+            instance.start_time, parse(json_data['timeStart']).time())
+        self.assertEqual(instance.end_time, parse(json_data['timeEnd']).time())
+        self.assertEqual(
+            instance.holiday_list.id, json_data['holidayList']['id'])
+
+    def call_api(self, return_data):
+        return mocks.schedule_api_get_holidays_call(return_data)
+
+    def test_sync_update(self):
+        self._sync(self.fixture)
+        json_data = self.fixture[0]
+        instance_id = json_data['id']
+        original = self.model_class.objects.get(id=instance_id)
+        new_json = deepcopy(self.fixture[0])
+        name = 'A new name'
+        new_json['name'] = name
+        new_json_list = [new_json]
+        self._sync(new_json_list)
+        changed = self.model_class.objects.get(id=instance_id)
+        self.assertNotEqual(
+            original.name,
+            name)
+        self._assert_fields(changed, new_json)
+
+
+class TestHolidayListSynchronizer(TestCase, SynchronizerTestMixin):
+    synchronizer_class = sync.HolidayListSynchronizer
+    model_class = HolidayList
+    fixture = fixtures.API_SCHEDULE_HOLIDAY_LIST_LIST
+
+    def _assert_fields(self, instance, json_data):
+        self.assertEqual(instance.id, json_data['id'])
+        self.assertEqual(instance.name, json_data['name'])
+
+    def call_api(self, return_data):
+        return mocks.schedule_api_get_holiday_lists_call(return_data)
+
+    def test_sync_update(self):
+        self._sync(self.fixture)
+        json_data = self.fixture[0]
+        instance_id = json_data['id']
+        original = self.model_class.objects.get(id=instance_id)
+        new_json = deepcopy(self.fixture[0])
+        name = 'A new name'
+        new_json['name'] = name
+        new_json_list = [new_json]
+        self._sync(new_json_list)
+        changed = self.model_class.objects.get(id=instance_id)
+        self.assertNotEqual(original.name,
+                            name)
         self._assert_fields(changed, new_json)
 
 

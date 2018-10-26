@@ -117,6 +117,16 @@ def schedule_api_get_calendars_call(return_value, raised=None):
     return create_mock_call(method_name, return_value, side_effect=raised)
 
 
+def schedule_api_get_holidays_call(return_value, raised=None):
+    method_name = 'djconnectwise.api.ScheduleAPIClient.get_holidays'
+    return create_mock_call(method_name, return_value, side_effect=raised)
+
+
+def schedule_api_get_holiday_lists_call(return_value, raised=None):
+    method_name = 'djconnectwise.api.ScheduleAPIClient.get_holiday_lists'
+    return create_mock_call(method_name, return_value, side_effect=raised)
+
+
 def time_api_get_time_entries_call(return_value, raised=None):
     method_name = 'djconnectwise.api.TimeAPIClient.get_time_entries'
     return create_mock_call(method_name, return_value, side_effect=raised)
