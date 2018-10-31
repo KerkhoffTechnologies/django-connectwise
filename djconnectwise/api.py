@@ -192,7 +192,9 @@ class ConnectWiseAPIClient(object):
 
         try:
             error = json.loads(error)
-            primary_error_msg = '{}.'.format(error.get('message').rstrip('.'))
+            stripped_message = error.get('message').rstrip('.') if \
+                error.get('message') else 'No message'
+            primary_error_msg = '{}.'.format(stripped_message)
             if error.get('errors'):
                 for error_message in error.get('errors'):
                     messages.append('{}.'.format(error_message.get('message')))
