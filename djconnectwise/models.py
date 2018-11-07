@@ -1294,8 +1294,7 @@ class Ticket(TimeStampedModel):
         if valid_stage:
             new_state = self.state_manager.get(valid_stage)(self)
 
-            self.sla_state.leave(valid_stage, calendar, sla) \
-                if self.sla_state else None
+            self.sla_state.leave(calendar, sla) if self.sla_state else None
             self.sla_state = new_state
             self.sla_state.enter(valid_stage, calendar, sla)
 
@@ -1524,7 +1523,7 @@ class Waiting(SLAMachineState):
         self.ticket.do_not_escalate_date = timezone.now()
         self.ticket.sla_stage = self.sla_stage
 
-    def leave(self, new_stage, calendar, sla):
+    def leave(self, calendar, sla):
         # Get the minutes ticket has been in a non-escalate state,
         # change the state to the desired stage, or the lowest stage allowed,
         # add the minutes spent in waiting to the tickets minutes_waiting field
@@ -1534,11 +1533,7 @@ class Waiting(SLAMachineState):
                 self.ticket.do_not_escalate_date.astimezone(tz=None),
                 timezone.now().astimezone(tz=None)
                 )
-        stage = self._lowest_possible_stage(new_stage)
-        sla_hours = sla.get_stage_hours(stage)
         self.ticket.do_not_escalate_date = None
-        calendar.next_phase_expiry(sla_hours, self.ticket)
-        self.ticket.sla_stage = stage
 
     def get_valid_next_state(self, new_state):
         if new_state != Ticket.WAITING:
