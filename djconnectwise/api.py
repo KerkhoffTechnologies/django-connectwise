@@ -189,14 +189,20 @@ class ConnectWiseAPIClient(object):
         # error = error.args[0].decode("utf-8")
         error = error.replace('\r\n', '')
         messages = []
+
         try:
             error = json.loads(error)
+            stripped_message = error.get('message').rstrip('.') if \
+                error.get('message') else 'No message'
+            primary_error_msg = '{}.'.format(stripped_message)
             if error.get('errors'):
                 for error_message in error.get('errors'):
-                    messages.append(error_message.get('message'))
+                    messages.append('{}.'.format(error_message.get('message')))
 
-            msg = '{}; {}.'.format(error.get('message'),
-                                   '. The error was: '.join(messages))
+            messages = ' The error was: '.join(messages)
+
+            msg = '{} {}'.format(primary_error_msg, messages)
+
         except json.decoder.JSONDecodeError:
             # JSON decoding failed
             msg = 'An error occurred: {} {}'.format(response.status_code,
