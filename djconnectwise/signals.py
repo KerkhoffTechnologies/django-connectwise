@@ -20,8 +20,7 @@ def handle_ticket_sla_update_pre_save(sender, instance, **kwargs):
             return
         elif old_ticket.status > instance.status or \
                 old_ticket.status < instance.status:
-            instance.calculate_sla_expiry(
-                    old_status=old_ticket.status)
+            instance.calculate_sla_expiry()
         elif old_ticket.priority != instance.priority:
             instance.calculate_sla_expiry()
     except Ticket.DoesNotExist:

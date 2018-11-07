@@ -359,7 +359,7 @@ class TestTicket(ModelTestCase):
         ticket.calculate_sla_expiry()
 
         ticket.status = board.board_statuses.get(name='Scheduled')
-        ticket.calculate_sla_expiry(old_status=old_status)
+        ticket.calculate_sla_expiry()
 
         self.assertEqual(
             str(ticket.sla_expire_date.astimezone(tz=None)),
@@ -440,7 +440,7 @@ class TestTicket(ModelTestCase):
         )
 
         ticket.status = board.board_statuses.get(name='Completed')
-        ticket.calculate_sla_expiry(old_status=old_status)
+        ticket.calculate_sla_expiry()
 
         self.assertFalse(ticket.sla_expire_date)
         self.assertEqual(ticket.sla_stage, 'resolved')
@@ -460,7 +460,7 @@ class TestTicket(ModelTestCase):
         )
 
         ticket.status = board.board_statuses.get(name='Waiting For Client')
-        ticket.calculate_sla_expiry(old_status=old_status)
+        ticket.calculate_sla_expiry()
 
         self.assertFalse(ticket.sla_expire_date)
         self.assertEqual(ticket.sla_stage, 'waiting')
@@ -510,7 +510,7 @@ class TestTicket(ModelTestCase):
         )
 
         ticket.status = board.board_statuses.get(name='New')
-        ticket.calculate_sla_expiry(old_status=waiting_status)
+        ticket.calculate_sla_expiry()
 
         self.assertEqual(ticket.sla_stage, 'respond')
         self.assertFalse(ticket.do_not_escalate_date)
@@ -533,7 +533,7 @@ class TestTicket(ModelTestCase):
         )
 
         ticket.status = board.board_statuses.get(name='New')
-        ticket.calculate_sla_expiry(old_status=waiting_status)
+        ticket.calculate_sla_expiry()
 
         self.assertEqual(ticket.sla_stage, 'respond')
         self.assertFalse(ticket.do_not_escalate_date)
@@ -557,8 +557,7 @@ class TestTicket(ModelTestCase):
         )
 
         ticket.status = board.board_statuses.get(name='New')
-        ticket.calculate_sla_expiry(old_status=waiting_status)
-
+        ticket.calculate_sla_expiry()
         self.assertEqual(ticket.sla_stage, 'plan')
 
     def test_sla_exit_resolved_only_to_resolve(self):
@@ -578,7 +577,7 @@ class TestTicket(ModelTestCase):
         )
 
         ticket.status = board.board_statuses.get(name='In Progress')
-        ticket.calculate_sla_expiry(old_status=old_status)
+        ticket.calculate_sla_expiry()
 
         self.assertEqual(ticket.sla_stage, 'resolve')
 
@@ -586,30 +585,31 @@ class TestTicket(ModelTestCase):
         board = self.connectwise_boards[0]
         ticket = Ticket.objects.create(
             summary='test',
-            status=board.board_statuses.get(name='New'),
+            status=board.board_statuses.get(name='Waiting For Client'),
             sla=Sla.objects.first(),
             priority=self.ticket_priorities[0],
             board=board,
             company=self.companies[0],
-            entered_date_utc=timezone.now()
+            entered_date_utc=timezone.now(),
+            do_not_escalate_date=timezone.now()
         )
 
-        result = ticket._lowest_possible_stage('resolved')
+        result = ticket.sla_state._lowest_possible_stage('resolved')
         self.assertEqual('resolved', result)
 
-        result = ticket._lowest_possible_stage('respond')
+        result = ticket.sla_state._lowest_possible_stage('respond')
         self.assertEqual('respond', result)
 
-        result = ticket._lowest_possible_stage('plan')
+        result = ticket.sla_state._lowest_possible_stage('plan')
         self.assertEqual('plan', result)
 
-        result = ticket._lowest_possible_stage('resolve')
+        result = ticket.sla_state._lowest_possible_stage('resolve')
         self.assertEqual('resolve', result)
 
         ticket.date_responded_utc = timezone.now()
-        result = ticket._lowest_possible_stage('respond')
+        result = ticket.sla_state._lowest_possible_stage('respond')
         self.assertEqual('plan', result)
 
         ticket.date_resplan_utc = timezone.now()
-        result = ticket._lowest_possible_stage('respond')
+        result = ticket.sla_state._lowest_possible_stage('respond')
         self.assertEqual('resolve', result)
