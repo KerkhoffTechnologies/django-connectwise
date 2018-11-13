@@ -1323,8 +1323,10 @@ class TicketSynchronizer(BatchConditionMixin, Synchronizer):
         instance.summary = json_data['summary']
         instance.closed_flag = json_data.get('closedFlag')
         instance.entered_date_utc = parse(json_data.get('dateEntered'))
-        instance.last_updated_utc = json_data.get('_info').get('lastUpdated')
-        instance.required_date_utc = json_data.get('requiredDate')
+        instance.last_updated_utc = parse(
+            json_data.get('_info').get('lastUpdated')
+        )
+        instance.required_date_utc = parse(json_data.get('requiredDate'))
         instance.resources = json_data.get('resources')
         instance.budget_hours = json_data.get('budgetHours')
         instance.actual_hours = json_data.get('actualHours')
@@ -1335,9 +1337,9 @@ class TicketSynchronizer(BatchConditionMixin, Synchronizer):
         instance.respond_mins = json_data.get('respondMinutes')
         instance.res_plan_mins = json_data.get('resPlanMinutes')
         instance.resolve_mins = json_data.get('resolveMinutes')
-        instance.date_resolved_utc = json_data.get('dateResolved')
-        instance.date_resplan_utc = json_data.get('dateResplan')
-        instance.date_responded_utc = json_data.get('dateResponded')
+        instance.date_resolved_utc = parse(json_data.get('dateResolved'))
+        instance.date_resplan_utc = parse(json_data.get('dateResplan'))
+        instance.date_responded_utc = parse(json_data.get('dateResponded'))
 
         for json_field, value in self.related_meta.items():
             model_class, field_name = value
