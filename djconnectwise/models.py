@@ -485,7 +485,8 @@ class Calendar(models.Model):
             # if start and end was outside of work hours
             return minutes if minutes >= 0 else 0
         else:
-            if end_of_day:
+            if end_of_day and \
+                    not self.is_holiday(timezone.now().astimezone(tz=None)):
                 first_day_minutes = (end_of_day - start_time).total_seconds() \
                     / 60
             else:
