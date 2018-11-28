@@ -1503,3 +1503,39 @@ class SalesProbability(TimeStampedModel):
 
     def __str__(self):
         return 'Probability {}'.format(self.probability)
+
+
+class Type(TimeStampedModel):
+    name = models.CharField(max_length=50)
+    board = models.ForeignKey('ConnectWiseBoard', on_delete=models.CASCADE)
+
+    class Meta:
+        verbose_name = 'Type'
+        verbose_name_plural = 'Types'
+
+    def __str__(self):
+        return self.name
+
+
+class SubType(TimeStampedModel):
+    name = models.CharField(max_length=50)
+    board = models.ForeignKey('ConnectWiseBoard', on_delete=models.CASCADE)
+
+    class Meta:
+        verbose_name = 'Sub Type'
+        verbose_name_plural = 'Sub types'
+
+    def __str__(self):
+        return self.name
+
+
+class Item(TimeStampedModel):
+    name = models.CharField(max_length=50)
+    board = models.ForeignKey('ConnectWiseBoard', on_delete=models.CASCADE)
+
+    class Meta:
+        verbose_name = 'Item'
+        verbose_name_plural = 'Items'
+
+    def __str__(self):
+        return self.name
