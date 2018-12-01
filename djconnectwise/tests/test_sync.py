@@ -1410,3 +1410,21 @@ class TestSyncJob(TestCase):
             pass
 
         self.assert_sync_job(0, 0, 0, self.synchronizer.error_message, False)
+
+
+class TestTypeSynchronizer(TestCase):
+
+    def _assert_fields(self, instance, json_data):
+        self.assertEqual(instance.id, json_data['id'])
+        self.assertEqual(instance.name, json_data['name'])
+        self.assertEqual(instance.board, json_data['board'])
+
+    def test_sync_update(self):
+        pass
+
+class TestSubTypeSynchronizer(TestCase):
+    pass
+
+
+class TestItemSynchronizer(TestCase):
+    pass

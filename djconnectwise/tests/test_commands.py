@@ -386,6 +386,15 @@ class TestSyncActivityCommand(AbstractBaseSyncTest, TestCase):
         'activity'
     )
 
+
+class TestSyncTypeCommand(AbstractBaseSyncTest, TestCase):
+    args = (
+        mocks.schedule_api_get_types_call,
+        fixtures.API_TYPE,
+        'types'
+    )
+
+
     def setUp(self):
         super(). setUp()
         fixture_utils.init_territories()
@@ -439,7 +448,8 @@ class TestSyncAllCommand(TestCase):
             TestSyncSLAPrioritiesCommand,
             TestSyncMyCompanyOtherCommand,
             TestSyncHolidayCommand,
-            TestSyncHolidayListCommand
+            TestSyncHolidayListCommand,
+            TestSyncTypeCommand
         ]
 
         self.test_args = []

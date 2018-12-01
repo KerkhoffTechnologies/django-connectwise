@@ -1231,3 +1231,38 @@ API_TIME_ENTRY = {
 }
 
 API_TIME_ENTRY_LIST = [API_TIME_ENTRY]
+
+API_TYPE = {
+    "id": 8,
+    "name": "Admin",
+    "category": "Reactive",
+    "defaultFlag": False,
+    "inactiveFlag": False,
+    "requestForChangeFlag": False,
+    "board": {
+        "id": 4,
+        "name": "Linux",
+        "_info": {
+            "board_href": "https://connectwise.kerkhofftech.ca/v4_6_release/apis/3.0/service/boards/4"
+        }
+    },
+    "location": {
+        "id": 2,
+        "name": "Tampa Office",
+        "_info": {
+            "location_href": "https://connectwise.kerkhofftech.ca/v4_6_release/apis/3.0/system/locations/2"
+        }
+    },
+    "department": {
+        "id": 13,
+        "identifier": "Admin",
+        "name": "Admin",
+        "_info": {
+            "department_href": "https://connectwise.kerkhofftech.ca/v4_6_release/apis/3.0/system/departments/13"
+        }
+    },
+    "_info": {
+        "lastUpdated": "2017-02-14T21:59:30Z",
+        "updatedBy": "User1"
+    }
+}
