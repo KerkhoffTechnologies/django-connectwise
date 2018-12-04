@@ -485,7 +485,8 @@ class Calendar(models.Model):
             # if start and end was outside of work hours
             return minutes if minutes >= 0 else 0
         else:
-            if end_of_day:
+            if end_of_day and \
+                    not self.is_holiday(timezone.now().astimezone(tz=None)):
                 first_day_minutes = (end_of_day - start_time).total_seconds() \
                     / 60
             else:
@@ -541,6 +542,94 @@ class Calendar(models.Model):
                 minutes = 0
             sla_minutes += minutes
             return sla_minutes
+
+    def next_phase_expiry(self, sla_hours, ticket):
+        start = ticket.entered_date_utc.astimezone(tz=None)
+
+        # Start counting from the start of the next business day if the
+        # ticket was created on a weekend
+        day_of_week, days = self.get_first_day(start)
+
+        sla_minutes, days, minutes, sla_start = self.get_sla_start(
+                                               sla_hours,
+                                               ticket.minutes_waiting,
+                                               start,
+                                               day_of_week,
+                                               days
+                                              )
+
+        # Advance day by day, reducing the sla_minutes by the time in
+        # each working day.
+        # When minutes goes below zero, add the amount of time left on it
+        # that day to the start time of that day, giving you the due date
+        while sla_minutes >= 0:
+            day_of_week = (day_of_week + 1) % 7
+            days += 1
+
+            start_of_day = self.get_day_hours(True, day_of_week)
+            if start_of_day and \
+                not self.is_holiday(
+                                    datetime.timedelta(days=days) + start):
+                                    # Well done PEP8, well done...
+                start_of_day = datetime.timedelta(hours=start_of_day.hour,
+                                                  minutes=start_of_day.minute)
+                end_of_day = self.get_day_hours(False, day_of_week)
+                end_of_day = datetime.timedelta(hours=end_of_day.hour,
+                                                minutes=end_of_day.minute)
+            else:
+                # This is a day with no hours, continue to next day
+                continue
+
+            minutes = (end_of_day - start_of_day).total_seconds() / 60
+            sla_minutes = sla_minutes - minutes
+
+        # sla_minutes went below zero so we know that day is the expiry
+        # Add the minutes back to sla_minutes and add sla minutes to the
+        # start of that day
+        sla_minutes = sla_minutes + minutes
+        self.set_sla_end(sla_start, days, day_of_week, sla_minutes, ticket)
+
+    def get_sla_start(self, sla_hours, waiting_min, start, day_of_week, days):
+        if days > 0:
+            start = start + datetime.timedelta(days=days)
+            start_of_day = self.get_day_hours(True, day_of_week)
+            start = start.replace(
+                hour=start_of_day.hour,
+                minute=start_of_day.minute
+            )
+            days = 0
+
+        start_date = datetime.timedelta(hours=start.hour,
+                                        minutes=start.minute)
+
+        sla_minutes = (sla_hours * 60) + waiting_min
+
+        end_of_day = self.get_day_hours(False, day_of_week)
+        end_of_day = datetime.timedelta(hours=end_of_day.hour,
+                                        minutes=end_of_day.minute)
+        first_day_minutes = (end_of_day - start_date).total_seconds() / 60
+
+        # If created outside of work hours, take no minutes off and start
+        # taking time off next work day
+        minutes = first_day_minutes if first_day_minutes >= 0 else 0
+        sla_minutes = sla_minutes - minutes
+
+        return sla_minutes, days, minutes, start
+
+    def set_sla_end(self, start, days, day_of_week, sla_minutes, ticket):
+        expiry_date = start + datetime.timedelta(days=days)
+
+        if days == 0:
+            sla_expire_time = start + datetime.timedelta(minutes=sla_minutes)
+            expiry_date = expiry_date.replace(
+                hour=sla_expire_time.hour, minute=sla_expire_time.minute)
+        else:
+            sla_expire_time = self.get_day_hours(True, day_of_week)
+            expiry_date = expiry_date.replace(
+                hour=sla_expire_time.hour, minute=sla_expire_time.minute) + \
+                datetime.timedelta(minutes=sla_minutes)
+
+        ticket.sla_expire_date = expiry_date.astimezone(tz=timezone.utc)
 
 
 class Holiday(models.Model):
@@ -1084,6 +1173,12 @@ class Ticket(TimeStampedModel):
         verbose_name_plural = 'Tickets'
         ordering = ('summary', )
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.state_manager = StateMachineManager
+        state_class = self.state_manager.get(self.sla_stage)
+        self.sla_state = state_class(self) if state_class else None
+
     def __str__(self):
         return '{}-{}'.format(self.id, self.summary)
 
@@ -1169,7 +1264,8 @@ class Ticket(TimeStampedModel):
         self.closed_flag = True
         return self.save(*args, **kwargs)
 
-    def calculate_sla_expiry(self, old_status=None):
+    def calculate_sla_expiry(self):
+
         if not self.sla:
             return
 
@@ -1183,10 +1279,10 @@ class Ticket(TimeStampedModel):
         else:
             sla = self.sla
 
-        new_stage = self._lowest_possible_stage(self.STAGE_RANK.get(
-            self.status.get_status_rank())
+        new_stage = self.STAGE_RANK.get(
+            self.status.get_status_rank()
         )
-        sla_hours = sla.get_stage_hours(new_stage)
+
         calendar = self.sla.get_calendar(self.company)
 
         if not calendar:
@@ -1197,179 +1293,18 @@ class Ticket(TimeStampedModel):
             )
             return
 
-        if old_status:
-            # Old status exists, need to figure out if any calculations
-            # need to be made.
-            # Not all statuses have different escalation types, so a status
-            # change happens, but the SLA target wont need to be recalculated
-            if self.status.is_non_escalation_status():
-                if old_status.is_non_escalation_status():
-                    # N -> N
-                    # If both are non-escalate, do nothing
-                    return
-                # E -> N
-                self._enter_non_escalate()
-            elif old_status.is_non_escalation_status():
-                # N -> E
-                self._exit_non_escalate(new_stage, calendar, sla)
-            elif self.status < old_status:
-                # E -> E-
-                # Do nothing, escalation only goes up not down, with the
-                # exception of going from resolved to resolve
-                if self.date_resolved_utc:
-                    # If ticket is in resolved stage, it can go to lower stages
-                    # but, it will only be able to go to 'resolve'
-                    new_stage = self.RESOLVE
-                    sla_hours = sla.get_stage_hours(new_stage)
-                    self._next_phase_expiry(sla_hours, calendar)
-                    self.sla_stage = new_stage
-            elif self.status > old_status:
-                # E -> E+
-                # Calculate new time
-                if sla_hours:
-                    self._next_phase_expiry(sla_hours, calendar)
-                else:
-                    # State is resolved, set expire date to None
-                    self.sla_expire_date = sla_hours
-                self.sla_stage = new_stage
-            return
-        # Old status is None, new ticket
-        # It will either be a new kanban instance, or a newly created ticket
-        if sla_hours is None:
-            # Ticket is resolved
-            self.sla_stage = new_stage
-            self.sla_expire_date = sla_hours
-        elif sla_hours == 0:
-            # Ticket is waiting
-            self._enter_non_escalate()
-        else:
-            # New ticket
-            self._next_phase_expiry(sla_hours, calendar)
-            self.sla_stage = new_stage
+        self.change_sla_state(new_stage, calendar, sla)
 
-    def _next_phase_expiry(self, sla_hours, calendar):
+    def change_sla_state(self, new_stage, calendar, sla):
+        valid_stage = self.sla_state.get_valid_next_state(new_stage) \
+            if self.sla_state else new_stage
 
-        if sla_hours is None:
-            self.sla_expire_date = None
-            return
+        if valid_stage:
+            new_state = self.state_manager.get(valid_stage)(self)
 
-        start = self.entered_date_utc.astimezone(tz=None)
-
-        # Start counting from the start of the next business day if the
-        # ticket was created on a weekend
-        day_of_week, days = calendar.get_first_day(start)
-
-        if days > 0:
-            start = start + datetime.timedelta(days=days)
-            start_of_day = calendar.get_day_hours(True, day_of_week)
-            start = start.replace(
-                hour=start_of_day.hour,
-                minute=start_of_day.minute
-            )
-            days = 0
-
-        start_date = datetime.timedelta(hours=start.hour,
-                                        minutes=start.minute)
-
-        # Add minutes waiting to account for non-escalate time
-        sla_minutes = (sla_hours * 60) + self.minutes_waiting
-
-        end_of_day = calendar.get_day_hours(False, day_of_week)
-        end_of_day = datetime.timedelta(hours=end_of_day.hour,
-                                        minutes=end_of_day.minute)
-        first_day_minutes = (end_of_day - start_date).total_seconds() / 60
-
-        # If created outside of work hours, take no minutes off and start
-        # taking time off next work day
-        minutes = first_day_minutes if first_day_minutes >= 0 else 0
-        sla_minutes = sla_minutes - minutes
-
-        # Advance day by day, reducing the sla_minutes by the time in
-        # each working day.
-        # When minutes goes below zero, add the amount of time left on it
-        # that day to the start time of that day, giving you the due date
-        while sla_minutes >= 0:
-            day_of_week = (day_of_week + 1) % 7
-            days += 1
-
-            start_of_day = calendar.get_day_hours(True, day_of_week)
-            if start_of_day and \
-                not calendar.is_holiday(
-                                        datetime.timedelta(days=days) + start):
-                                        # Well done PEP8, well done...
-                start_of_day = datetime.timedelta(hours=start_of_day.hour,
-                                                  minutes=start_of_day.minute)
-                end_of_day = calendar.get_day_hours(False, day_of_week)
-                end_of_day = datetime.timedelta(hours=end_of_day.hour,
-                                                minutes=end_of_day.minute)
-            else:
-                # This is a day with no hours, continue to next day
-                continue
-
-            minutes = (end_of_day - start_of_day).total_seconds() / 60
-            sla_minutes = sla_minutes - minutes
-
-        # sla_minutes went below zero so we know that day is the expiry
-        # Add the minutes back to sla_minutes and add sla minutes to the
-        # start of that day
-        sla_minutes = sla_minutes + minutes
-        expiry_date = start + datetime.timedelta(days=days)
-
-        if days == 0:
-            sla_expire_time = start + datetime.timedelta(minutes=sla_minutes)
-            expiry_date = expiry_date.replace(
-                hour=sla_expire_time.hour, minute=sla_expire_time.minute)
-        else:
-            sla_expire_time = calendar.get_day_hours(True, day_of_week)
-            expiry_date = expiry_date.replace(
-                hour=sla_expire_time.hour, minute=sla_expire_time.minute) + \
-                datetime.timedelta(minutes=sla_minutes)
-
-        self.sla_expire_date = expiry_date.astimezone(tz=timezone.utc)
-
-    def _lowest_possible_stage(self, stage):
-        # Returns the lowest stage a ticket is allowed to go, given the input
-        # stage.
-        if stage == self.RESOLVED or stage == self.RESOLVE:
-            return stage
-        elif stage == self.PLAN:
-            if self.date_resplan_utc:
-                return self.RESOLVE
-            else:
-                return stage
-        elif stage == self.RESPOND:
-            if self.date_resplan_utc:
-                return self.RESOLVE
-            elif self.date_responded_utc:
-                return self.PLAN
-            else:
-                return stage
-        else:
-            logger.warning('Exiting stage with unknown type')
-            return stage
-
-    def _enter_non_escalate(self):
-        # Save time entered a non-escalate state to calculate how many minutes
-        # it has been waiting if it is ever returned to a regular state
-        self.sla_expire_date = None
-        self.do_not_escalate_date = timezone.now()
-        self.sla_stage = self.WAITING
-
-    def _exit_non_escalate(self, new_stage, calendar, sla):
-        # Get the minutes ticket has been in a non-escalate state,
-        # change the state to the desired stage, or the lowest stage allowed,
-        # add the minutes spent in waiting to the tickets minutes_waiting field
-        # and then recalculate the new stage
-        if self.do_not_escalate_date:
-            self.minutes_waiting += calendar.get_sla_time(
-                self.do_not_escalate_date.astimezone(tz=None),
-                timezone.now().astimezone(tz=None)
-                )
-        stage = self._lowest_possible_stage(new_stage)
-        sla_hours = sla.get_stage_hours(stage)
-        self.do_not_escalate_date = None
-        self._next_phase_expiry(sla_hours, calendar)
-        self.sla_stage = stage
+            self.sla_state.leave(calendar, sla) if self.sla_state else None
+            self.sla_state = new_state
+            self.sla_state.enter(valid_stage, calendar, sla)
 
 
 class ServiceNote(TimeStampedModel):
@@ -1510,6 +1445,142 @@ class SalesProbability(TimeStampedModel):
 
     def __str__(self):
         return 'Probability {}'.format(self.probability)
+
+
+class SLAMachineState(object):
+    valid_next_states = set()
+
+    def __init__(self, ticket):
+        self.ticket = ticket
+
+    def enter(self, new_stage, calendar, sla):
+        logger.debug('Entering SLA State: {}'.format(self))
+        sla_hours = sla.get_stage_hours(new_stage)
+        calendar.next_phase_expiry(sla_hours, self.ticket)
+        self.ticket.sla_stage = new_stage
+
+    def leave(self, *args):
+        logger.debug('Leaving SLA State: {}'.format(self))
+
+    def get_valid_next_state(self, new_state):
+        if new_state in self.valid_next_states:
+            return new_state
+
+
+class EscalateState(SLAMachineState):
+    valid_next_states = {Ticket.WAITING}
+
+
+class Respond(EscalateState):
+    sla_stage = Ticket.RESPOND
+
+    def __init__(self, ticket):
+        super().__init__(ticket)
+        self.valid_next_states = self.valid_next_states.union({
+                                  Ticket.PLAN,
+                                  Ticket.RESOLVE,
+                                  Ticket.RESOLVED
+                             })
+
+
+class Plan(EscalateState):
+    sla_stage = Ticket.PLAN
+
+    def __init__(self, ticket):
+        super().__init__(ticket)
+        self.valid_next_states = self.valid_next_states.union({
+                                  Ticket.RESOLVE,
+                                  Ticket.RESOLVED
+                             })
+
+
+class Resolve(EscalateState):
+    sla_stage = Ticket.RESOLVE
+
+    def __init__(self, ticket):
+        super().__init__(ticket)
+        self.valid_next_states = \
+            self.valid_next_states.union({Ticket.RESOLVED})
+
+
+class Resolved(EscalateState):
+    sla_stage = Ticket.RESOLVED
+
+    def __init__(self, ticket):
+        super().__init__(ticket)
+        self.valid_next_states = self.valid_next_states.union({Ticket.RESOLVE})
+
+    def enter(self, *args):
+        self.ticket.sla_expire_date = None
+        self.ticket.sla_stage = self.sla_stage
+
+    def get_valid_next_state(self, new_state):
+        if new_state == Ticket.WAITING:
+            return new_state
+        elif new_state != self.sla_stage:
+            return Ticket.RESOLVE
+
+
+class Waiting(SLAMachineState):
+    sla_stage = Ticket.WAITING
+
+    def enter(self, *args):
+        # Save time entered a non-escalate state to calculate how many minutes
+        # it has been waiting if it is ever returned to a regular state
+        self.ticket.sla_expire_date = None
+        self.ticket.do_not_escalate_date = timezone.now()
+        self.ticket.sla_stage = self.sla_stage
+
+    def leave(self, calendar, sla):
+        # Get the minutes ticket has been in a non-escalate state,
+        # change the state to the desired stage, or the lowest stage allowed,
+        # add the minutes spent in waiting to the tickets minutes_waiting field
+        # and then recalculate the new stage
+        if self.ticket.do_not_escalate_date:
+            self.ticket.minutes_waiting += calendar.get_sla_time(
+                self.ticket.do_not_escalate_date.astimezone(tz=None),
+                timezone.now().astimezone(tz=None)
+                )
+        self.ticket.do_not_escalate_date = None
+
+    def get_valid_next_state(self, new_state):
+        if new_state != Ticket.WAITING:
+            return self._lowest_possible_stage(new_state)
+
+    def _lowest_possible_stage(self, stage):
+        # Returns the lowest stage a ticket is allowed to go, given the input
+        # stage.
+        if stage == Ticket.RESOLVED or stage == Ticket.RESOLVE:
+            return stage
+        elif stage == Ticket.PLAN:
+            if self.ticket.date_resplan_utc:
+                return Ticket.RESOLVE
+            else:
+                return stage
+        elif stage == Ticket.RESPOND:
+            if self.ticket.date_resplan_utc:
+                return Ticket.RESOLVE
+            elif self.ticket.date_responded_utc:
+                return Ticket.PLAN
+            else:
+                return stage
+        else:
+            logger.warning('Exiting stage with unknown type')
+            return stage
+
+
+class StateMachineManager(object):
+    SLA_STATE = {
+        Ticket.RESPOND: Respond,
+        Ticket.PLAN: Plan,
+        Ticket.RESOLVE: Resolve,
+        Ticket.RESOLVED: Resolved,
+        Ticket.WAITING: Waiting,
+    }
+
+    @classmethod
+    def get(cls, state):
+        return cls.SLA_STATE.get(state)
 
 
 class Type(TimeStampedModel):
