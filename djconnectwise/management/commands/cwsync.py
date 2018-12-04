@@ -74,7 +74,7 @@ class Command(BaseCommand):
             ('type', sync.TypeSynchronizer,
              _('Type')),
             ('sub_type', sync.SubTypeSynchronizer,
-             _('SubType')),
+             _('Sub Type')),
             ('item', sync.ItemSynchronizer,
              _('Item'))
         )

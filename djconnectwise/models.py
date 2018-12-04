@@ -1033,8 +1033,6 @@ class Ticket(TimeStampedModel):
     severity = models.CharField(blank=True, null=True, max_length=250)
     site_name = models.CharField(blank=True, null=True, max_length=250)
     source = models.CharField(blank=True, null=True, max_length=250)
-    sub_type = models.CharField(blank=True, null=True, max_length=250)
-    sub_type_item = models.CharField(blank=True, null=True, max_length=250)
     summary = models.CharField(blank=True, null=True, max_length=250)
     updated_by = models.CharField(blank=True, null=True, max_length=250)
     sla_expire_date = models.DateTimeField(blank=True, null=True)
@@ -1070,6 +1068,15 @@ class Ticket(TimeStampedModel):
         on_delete=models.SET_NULL)
     sla = models.ForeignKey(
         'Sla', blank=True, null=True, related_name='tickets',
+        on_delete=models.SET_NULL)
+    type = models.ForeignKey(
+        'Type', blank=True, null=True, related_name='type_tickets',
+        on_delete=models.SET_NULL)
+    sub_type = models.ForeignKey(
+        'Subtype', blank=True, null=True, related_name='subtype_tickets',
+        on_delete=models.SET_NULL)
+    sub_type_item = models.ForeignKey(
+        'Item', blank=True, null=True, related_name='item_tickets',
         on_delete=models.SET_NULL)
 
     class Meta:
@@ -1522,8 +1529,8 @@ class SubType(TimeStampedModel):
     board = models.ForeignKey('ConnectWiseBoard', on_delete=models.CASCADE)
 
     class Meta:
-        verbose_name = 'Sub Type'
-        verbose_name_plural = 'Sub types'
+        verbose_name = 'Subtype'
+        verbose_name_plural = 'Subtypes'
 
     def __str__(self):
         return self.name

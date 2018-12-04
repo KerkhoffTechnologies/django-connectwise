@@ -33,6 +33,9 @@ from djconnectwise.models import Sla
 from djconnectwise.models import Calendar
 from djconnectwise.models import SlaPriority
 from djconnectwise.models import MyCompanyOther
+from djconnectwise.models import Type
+from djconnectwise.models import SubType
+from djconnectwise.models import Item
 
 from . import fixtures
 from . import fixture_utils
@@ -1412,19 +1415,58 @@ class TestSyncJob(TestCase):
         self.assert_sync_job(0, 0, 0, self.synchronizer.error_message, False)
 
 
-class TestTypeSynchronizer(TestCase):
+class TestTypeSynchronizer(TestCase, SynchronizerTestMixin):
+    synchronizer_class = sync.TypeSynchronizer
+    model_class = Type
+    fixture = fixtures.API_TYPE_LIST
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_types()
+        fixture_utils.init_boards()
+
+    def call_api(self, return_data):
+        return mocks.service_api_get_types_call(return_data)
 
     def _assert_fields(self, instance, json_data):
         self.assertEqual(instance.id, json_data['id'])
         self.assertEqual(instance.name, json_data['name'])
-        self.assertEqual(instance.board, json_data['board'])
-
-    def test_sync_update(self):
-        pass
-
-class TestSubTypeSynchronizer(TestCase):
-    pass
+        self.assertEqual(instance.board.name, json_data['board']['name'])
 
 
-class TestItemSynchronizer(TestCase):
-    pass
+class TestSubTypeSynchronizer(TestCase, SynchronizerTestMixin):
+    synchronizer_class = sync.SubTypeSynchronizer
+    model_class = SubType
+    fixture = fixtures.API_SUBTYPE_LIST
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_subtypes()
+        fixture_utils.init_boards()
+
+    def call_api(self, return_data):
+        return mocks.service_api_get_subtypes_call(return_data)
+
+    def _assert_fields(self, instance, json_data):
+        self.assertEqual(instance.id, json_data['id'])
+        self.assertEqual(instance.name, json_data['name'])
+        self.assertEqual(instance.board.name, json_data['board']['name'])
+
+
+class TestItemSynchronizer(TestCase, SynchronizerTestMixin):
+    synchronizer_class = sync.ItemSynchronizer
+    model_class = Item
+    fixture = fixtures.API_ITEM_LIST
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_items()
+        fixture_utils.init_boards()
+
+    def call_api(self, return_data):
+        return mocks.service_api_get_items_call(return_data)
+
+    def _assert_fields(self, instance, json_data):
+        self.assertEqual(instance.id, json_data['id'])
+        self.assertEqual(instance.name, json_data['name'])
+        self.assertEqual(instance.board.name, json_data['board']['name'])

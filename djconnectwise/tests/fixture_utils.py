@@ -206,3 +206,24 @@ def init_time_entries():
         fixtures.API_TIME_ENTRY_LIST)
     synchronizer = sync.TimeEntrySynchronizer()
     return synchronizer.sync()
+
+
+def init_types():
+    mocks.service_api_get_types_call(
+        fixtures.API_TYPE_LIST)
+    synchronizer = sync.TypeSynchronizer()
+    return synchronizer.sync()
+
+
+def init_subtypes():
+    mocks.service_api_get_subtypes_call(
+        fixtures.API_SUBTYPE_LIST)
+    synchronizer = sync.SubTypeSynchronizer()
+    return synchronizer.sync()
+
+
+def init_items():
+    mocks.service_api_get_items_call(
+        fixtures.API_ITEM_LIST)
+    synchronizer = sync.ItemSynchronizer()
+    return synchronizer.sync()
