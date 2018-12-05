@@ -1106,6 +1106,9 @@ class TestTicketSynchronizer(TestCase):
         fixture_utils.init_locations()
         fixture_utils.init_calendars()
         fixture_utils.init_slas()
+        fixture_utils.init_types()
+        fixture_utils.init_subtypes()
+        fixture_utils.init_items()
 
     def _assert_sync(self, instance, json_data):
         self.assertEqual(instance.summary, json_data['summary'])
@@ -1151,6 +1154,15 @@ class TestTicketSynchronizer(TestCase):
         # verify assigned status
         self.assertEqual(instance.status_id,
                          json_data['status']['id'])
+
+        # verify assigned type
+        self.assertEqual(instance.type_id, json_data['type']['id'])
+
+        # verify assigned type
+        self.assertEqual(instance.sub_type_id, json_data['subType']['id'])
+
+        # verify assigned type
+        self.assertEqual(instance.sub_type_item_id, json_data['item']['id'])
 
     def test_sync_ticket(self):
         """

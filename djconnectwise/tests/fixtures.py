@@ -648,6 +648,70 @@ API_SERVICE_SLA_PRIORITY = {
 API_SERVICE_SLA_PRIORITY_LIST = [API_SERVICE_SLA_PRIORITY]
 
 
+API_TYPE = {
+    'id': 8,
+    'name': 'Admin',
+    'category': 'Reactive',
+    'defaultFlag': False,
+    'inactiveFlag': False,
+    'requestForChangeFlag': False,
+    'board': API_BOARD,
+    'location': {
+        'id': 2,
+        'name': 'Tampa Office',
+        '_info': {
+            'location_href': 'https://connectwise.kerkhofftech.ca/v4_6_release/apis/3.0/system/locations/2'
+        }
+    },
+    'department': {
+        'id': 13,
+        'identifier': 'Admin',
+        'name': 'Admin',
+        '_info': {
+            'department_href': 'https://connectwise.kerkhofftech.ca/v4_6_release/apis/3.0/system/departments/13'
+        }
+    },
+    '_info': {
+        'lastUpdated': '2017-02-14T21:59:30Z',
+        'updatedBy': 'User1'
+    }
+}
+
+API_TYPE_LIST = [API_TYPE]
+
+
+API_SUBTYPE = {
+    'id': 1,
+    'name': 'Repair',
+    'inactiveFlag': False,
+    'typeAssociationIds': [
+        30,
+        31
+    ],
+    'board': API_BOARD,
+    '_info': {
+        'lastUpdated': '2018-09-14T17:24:15Z',
+        'updatedBy': 'User1'
+    }
+}
+
+API_SUBTYPE_LIST = [API_SUBTYPE]
+
+
+API_ITEM = {
+    'id': 2,
+    'name': 'Fix it',
+    'inactiveFlag': False,
+    'board': API_BOARD,
+    '_info': {
+        'lastUpdated': '2018-09-14T17:29:23Z',
+        'updatedBy': 'User1'
+    }
+}
+
+API_ITEM_LIST = [API_ITEM]
+
+
 API_SERVICE_TICKET = {
     'id': 69,
     'summary': 'Schedule and Execute Conversion',
@@ -701,9 +765,9 @@ API_SERVICE_TICKET = {
     'contactPhoneNumber': '8135156666',
     'contactPhoneExtension': None,
     'contactEmailAddress': 'gregg.kegle@wildeagle.com',
-    'type': None,
-    'subType': None,
-    'item': None,
+    'type': API_TYPE_LIST[0],
+    'subType': API_SUBTYPE_LIST[0],
+    'item': API_ITEM_LIST[0],
     'team': API_SERVICE_TEAM_LIST[0],
     'owner': API_MEMBER,
     'priority': API_SERVICE_PRIORITY,
@@ -1231,64 +1295,3 @@ API_TIME_ENTRY = {
 }
 
 API_TIME_ENTRY_LIST = [API_TIME_ENTRY]
-
-API_TYPE = {
-    'id': 8,
-    'name': 'Admin',
-    'category': 'Reactive',
-    'defaultFlag': False,
-    'inactiveFlag': False,
-    'requestForChangeFlag': False,
-    'board': API_BOARD,
-    'location': {
-        'id': 2,
-        'name': 'Tampa Office',
-        '_info': {
-            'location_href': 'https://connectwise.kerkhofftech.ca/v4_6_release/apis/3.0/system/locations/2'
-        }
-    },
-    'department': {
-        'id': 13,
-        'identifier': 'Admin',
-        'name': 'Admin',
-        '_info': {
-            'department_href': 'https://connectwise.kerkhofftech.ca/v4_6_release/apis/3.0/system/departments/13'
-        }
-    },
-    '_info': {
-        'lastUpdated': '2017-02-14T21:59:30Z',
-        'updatedBy': 'User1'
-    }
-}
-
-API_TYPE_LIST = [API_TYPE]
-
-API_SUBTYPE = {
-    'id': 1,
-    'name': 'Repair',
-    'inactiveFlag': False,
-    'typeAssociationIds': [
-        30,
-        31
-    ],
-    'board': API_BOARD,
-    '_info': {
-        'lastUpdated': '2018-09-14T17:24:15Z',
-        'updatedBy': 'User1'
-    }
-}
-
-API_SUBTYPE_LIST = [API_SUBTYPE]
-
-API_ITEM = {
-    'id': 2,
-    'name': 'Fix it',
-    'inactiveFlag': False,
-    'board': API_BOARD,
-    '_info': {
-        'lastUpdated': '2018-09-14T17:29:23Z',
-        'updatedBy': 'User1'
-    }
-}
-
-API_ITEM_LIST = [API_ITEM]

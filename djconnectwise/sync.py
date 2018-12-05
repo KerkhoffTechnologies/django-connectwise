@@ -1293,7 +1293,10 @@ class TicketSynchronizer(BatchConditionMixin, Synchronizer):
         'serviceLocation': (models.Location, 'location'),
         'status': (models.BoardStatus, 'status'),
         'owner': (models.Member, 'owner'),
-        'sla': (models.Sla, 'sla')
+        'sla': (models.Sla, 'sla'),
+        'type': (models.Type, 'type'),
+        'subType': (models.SubType, 'sub_type'),
+        'item': (models.Item, 'sub_type_item')
     }
 
     def __init__(self, *args, **kwargs):
