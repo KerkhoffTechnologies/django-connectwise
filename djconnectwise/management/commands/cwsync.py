@@ -58,6 +58,12 @@ class Command(BaseCommand):
                 _('Sla')),
             ('sla_priority', sync.SLAPrioritySychronizer,
                 _('Sla Priority')),
+            ('type', sync.TypeSynchronizer,
+             _('Type')),
+            ('sub_type', sync.SubTypeSynchronizer,
+             _('Sub Type')),
+            ('item', sync.ItemSynchronizer,
+             _('Item')),
             ('ticket', sync.TicketSynchronizer, _('Ticket')),
             ('service_note', sync.ServiceNoteSynchronizer,
                 _('Service Note')),
@@ -70,13 +76,7 @@ class Command(BaseCommand):
             ('schedule_entry', sync.ScheduleEntriesSynchronizer,
                 _('Schedule Entry')),
             ('time_entry', sync.TimeEntrySynchronizer,
-                _('Time Entry')),
-            ('type', sync.TypeSynchronizer,
-             _('Type')),
-            ('sub_type', sync.SubTypeSynchronizer,
-             _('Sub Type')),
-            ('item', sync.ItemSynchronizer,
-             _('Item'))
+                _('Time Entry'))
         )
         self.synchronizer_map = OrderedDict()
         for name, synchronizer, obj_name in synchronizers:
