@@ -855,3 +855,18 @@ class ServiceAPIClient(ConnectWiseAPIClient):
     def get_slas(self, *args, **kwargs):
         return self.fetch_resource(self.ENDPOINT_SLAS, should_page=True,
                                    *args, **kwargs)
+
+    def get_types(self, board_id, *args, **kwargs):
+        endpoint_url = '{}/{}/types/'.format(self.ENDPOINT_BOARDS, board_id)
+        return self.fetch_resource(endpoint_url, should_page=True,
+                                   *args, **kwargs)
+
+    def get_subtypes(self, board_id, *args, **kwargs):
+        endpoint_url = '{}/{}/subtypes/'.format(self.ENDPOINT_BOARDS, board_id)
+        return self.fetch_resource(endpoint_url, should_page=True,
+                                   *args, **kwargs)
+
+    def get_items(self, board_id, *args, **kwargs):
+        endpoint_url = '{}/{}/items/'.format(self.ENDPOINT_BOARDS, board_id)
+        return self.fetch_resource(endpoint_url, should_page=True,
+                                   *args, **kwargs)

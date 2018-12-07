@@ -173,6 +173,38 @@ class TestServiceAPIClient(BaseAPITestCase):
         self.assertEqual(result, fixtures.API_SERVICE_LOCATION_LIST)
         self.assert_request_should_page(True)
 
+    @responses.activate
+    def test_get_types(self):
+        board_id = fixtures.API_BOARD_LIST[0]['id']
+        endpoint = '{}/{}/types/'.format(self.client.ENDPOINT_BOARDS, board_id)
+        endpoint_url = self.client._endpoint(endpoint)
+        mk.get(endpoint_url, fixtures.API_TYPE_LIST)
+        result = self.client.get_types(board_id)
+        self.assertEqual(result, fixtures.API_TYPE_LIST)
+        self.assert_request_should_page(True)
+
+    @responses.activate
+    def test_get_subtypes(self):
+        board_id = fixtures.API_BOARD_LIST[0]['id']
+        endpoint = '{}/{}/subtypes/'.format(
+            self.client.ENDPOINT_BOARDS, board_id
+        )
+        endpoint_url = self.client._endpoint(endpoint)
+        mk.get(endpoint_url, fixtures.API_SUBTYPE_LIST)
+        result = self.client.get_subtypes(board_id)
+        self.assertEqual(result, fixtures.API_SUBTYPE_LIST)
+        self.assert_request_should_page(True)
+
+    @responses.activate
+    def test_get_items(self):
+        board_id = fixtures.API_BOARD_LIST[0]['id']
+        endpoint = '{}/{}/items/'.format(self.client.ENDPOINT_BOARDS, board_id)
+        endpoint_url = self.client._endpoint(endpoint)
+        mk.get(endpoint_url, fixtures.API_ITEM_LIST)
+        result = self.client.get_items(board_id)
+        self.assertEqual(result, fixtures.API_ITEM_LIST)
+        self.assert_request_should_page(True)
+
 
 class TestSystemAPIClient(BaseAPITestCase):
 

@@ -387,7 +387,7 @@ class TestSyncActivityCommand(AbstractBaseSyncTest, TestCase):
     )
 
     def setUp(self):
-        super(). setUp()
+        super().setUp()
         fixture_utils.init_territories()
         fixture_utils.init_companies()
         mocks.system_api_get_member_image_by_photo_id_call(
@@ -399,6 +399,46 @@ class TestSyncActivityCommand(AbstractBaseSyncTest, TestCase):
         fixture_utils.init_tickets()
         fixture_utils.init_board_statuses()
         fixture_utils.init_activities()
+
+
+class TestSyncTypeCommand(AbstractBaseSyncTest, TestCase):
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_types()
+        fixture_utils.init_boards()
+
+    args = (
+        mocks.service_api_get_types_call,
+        fixtures.API_TYPE_LIST,
+        'type'
+    )
+
+
+class TestSyncSubTypeCommand(AbstractBaseSyncTest, TestCase):
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_types()
+        fixture_utils.init_boards()
+
+    args = (
+        mocks.service_api_get_subtypes_call,
+        fixtures.API_SUBTYPE_LIST,
+        'sub_type'
+    )
+
+
+class TestSyncItemCommand(AbstractBaseSyncTest, TestCase):
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_types()
+        fixture_utils.init_boards()
+
+    args = (
+        mocks.service_api_get_items_call,
+        fixtures.API_ITEM_LIST,
+        'item'
+    )
 
 
 class TestSyncAllCommand(TestCase):
@@ -439,7 +479,10 @@ class TestSyncAllCommand(TestCase):
             TestSyncSLAPrioritiesCommand,
             TestSyncMyCompanyOtherCommand,
             TestSyncHolidayCommand,
-            TestSyncHolidayListCommand
+            TestSyncHolidayListCommand,
+            TestSyncTypeCommand,
+            TestSyncSubTypeCommand,
+            TestSyncItemCommand
         ]
 
         self.test_args = []
@@ -518,7 +561,10 @@ class TestSyncAllCommand(TestCase):
             'sla_priority': models.SlaPriority,
             'company_other': models.MyCompanyOther,
             'holiday': models.Holiday,
-            'holiday_list': models.HolidayList
+            'holiday_list': models.HolidayList,
+            'type': models.Type,
+            'sub_type': models.SubType,
+            'item': models.Item
         }
 
         self.test_sync()

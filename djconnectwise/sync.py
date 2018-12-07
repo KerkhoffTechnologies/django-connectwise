@@ -1293,7 +1293,10 @@ class TicketSynchronizer(BatchConditionMixin, Synchronizer):
         'serviceLocation': (models.Location, 'location'),
         'status': (models.BoardStatus, 'status'),
         'owner': (models.Member, 'owner'),
-        'sla': (models.Sla, 'sla')
+        'sla': (models.Sla, 'sla'),
+        'type': (models.Type, 'type'),
+        'subType': (models.SubType, 'sub_type'),
+        'item': (models.Item, 'sub_type_item')
     }
 
     def __init__(self, *args, **kwargs):
@@ -1703,3 +1706,120 @@ class OpportunityTypeSynchronizer(Synchronizer):
 
     def get_page(self, *args, **kwargs):
         return self.client.get_opportunity_types(*args, **kwargs)
+
+
+class TypeSynchronizer(Synchronizer):
+    client_class = api.ServiceAPIClient
+    model_class = models.Type
+
+    related_meta = {
+        'board': (models.ConnectWiseBoard, 'board')
+    }
+
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data['id']
+        instance.name = json_data['name']
+
+        for json_field, value in self.related_meta.items():
+            model_class, field_name = value
+            self._assign_relation(
+                instance,
+                json_data,
+                json_field,
+                model_class,
+                field_name
+            )
+
+        instance.save()
+
+        return instance
+
+    def client_call(self, board_id, *args, **kwargs):
+        return self.client.get_types(board_id, *args, **kwargs)
+
+    def get_page(self, *args, **kwargs):
+        records = []
+        board_qs = models.ConnectWiseBoard.objects.all()
+
+        for board_id in board_qs.values_list('id', flat=True):
+            records += self.client_call(board_id, *args, **kwargs)
+
+        return records
+
+
+class SubTypeSynchronizer(Synchronizer):
+    client_class = api.ServiceAPIClient
+    model_class = models.SubType
+
+    related_meta = {
+        'board': (models.ConnectWiseBoard, 'board')
+    }
+
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data['id']
+        instance.name = json_data['name']
+
+        for json_field, value in self.related_meta.items():
+            model_class, field_name = value
+            self._assign_relation(
+                instance,
+                json_data,
+                json_field,
+                model_class,
+                field_name
+            )
+
+        instance.save()
+
+        return instance
+
+    def client_call(self, board_id, *args, **kwargs):
+        return self.client.get_subtypes(board_id, *args, **kwargs)
+
+    def get_page(self, *args, **kwargs):
+        records = []
+        board_qs = models.ConnectWiseBoard.objects.all()
+
+        for board_id in board_qs.values_list('id', flat=True):
+            records += self.client_call(board_id, *args, **kwargs)
+
+        return records
+
+
+class ItemSynchronizer(Synchronizer):
+    client_class = api.ServiceAPIClient
+    model_class = models.Item
+
+    related_meta = {
+        'board': (models.ConnectWiseBoard, 'board')
+    }
+
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data['id']
+        instance.name = json_data['name']
+
+        for json_field, value in self.related_meta.items():
+            model_class, field_name = value
+            self._assign_relation(
+                instance,
+                json_data,
+                json_field,
+                model_class,
+                field_name
+            )
+
+        instance.save()
+
+        return instance
+
+    def client_call(self, board_id, *args, **kwargs):
+        return self.client.get_items(board_id, *args, **kwargs)
+
+    def get_page(self, *args, **kwargs):
+        records = []
+        board_qs = models.ConnectWiseBoard.objects.all()
+
+        for board_id in board_qs.values_list('id', flat=True):
+            records += self.client_call(board_id, *args, **kwargs)
+
+        return records
