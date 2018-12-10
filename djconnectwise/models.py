@@ -231,7 +231,7 @@ class Member(TimeStampedModel):
         max_length=15, blank=False, unique=True
     )
     first_name = models.CharField(max_length=30, blank=False)
-    last_name = models.CharField(max_length=30, blank=False)
+    last_name = models.CharField(max_length=30, blank=False, null=True)
     office_email = models.EmailField(max_length=250)
     inactive = models.BooleanField(default=False)
     avatar = ThumbnailerImageField(
