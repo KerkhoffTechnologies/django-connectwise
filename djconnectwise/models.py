@@ -250,7 +250,8 @@ class Member(TimeStampedModel):
         ordering = ('first_name', 'last_name')
 
     def __str__(self):
-        return '{} {}'.format(self.first_name, self.last_name)
+        return '{} {}'.format(self.first_name,
+                              self.last_name if self.last_name else '')
 
     def get_initials(self):
         name_segs = str(self).split(' ')
