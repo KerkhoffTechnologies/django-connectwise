@@ -1,5 +1,8 @@
 import hashlib
 import re
+from django.core.files.base import ContentFile
+from PIL import Image, ImageOps
+from io import BytesIO
 
 from django.conf import settings
 
@@ -33,6 +36,22 @@ def get_filename_extension(filename):
     """
     m = FILENAME_EXTENSION_RE.search(filename)
     return m.group(1) if m else None
+
+
+def generate_thumbnail(avatar, size, extension, filename):
+    img_dimensions = 'x'.join([str(i) for i in size])
+    filename = '{}{}.{}'.format(filename, img_dimensions, extension)
+    avatar_image = Image.open(BytesIO(avatar))
+    thumbnail = ImageOps.fit(avatar_image, size, Image.ANTIALIAS)
+
+    if extension == 'jpg':
+        extension = 'jpeg'
+
+    byte_stream = BytesIO()
+    thumbnail.save(byte_stream, format=extension)
+    avatar_file = ContentFile(byte_stream.getvalue())
+
+    return avatar_file, filename
 
 
 class DjconnectwiseSettings:

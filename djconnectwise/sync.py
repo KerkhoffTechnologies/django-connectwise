@@ -4,7 +4,7 @@ from dateutil.parser import parse
 from copy import deepcopy
 import math
 
-from django.core.files.base import ContentFile
+from django.core.files.storage import default_storage
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction, IntegrityError
 from django.utils import timezone
@@ -12,7 +12,8 @@ from django.db.models import Q
 
 from djconnectwise import api
 from djconnectwise import models
-from djconnectwise.utils import get_hash, get_filename_extension
+from djconnectwise.utils import get_hash, get_filename_extension, \
+    generate_thumbnail
 from djconnectwise.utils import DjconnectwiseSettings
 
 
@@ -1203,7 +1204,8 @@ class MemberSynchronizer(Synchronizer):
         instance.inactive = json_data.get('inactiveFlag')
         return instance
 
-    def _save_avatar(self, member, avatar, attachment_filename):
+    def _save_avatar(self, member, avatar,
+                     attachment_filename, force_upload=None):
         """
         The Django ImageField (and ThumbnailerImageField) field adjusts our
         filename if the file already exists- it adds some random characters at
@@ -1221,14 +1223,30 @@ class MemberSynchronizer(Synchronizer):
         This method tells Django not to call save() on the given model,
         so the caller must be sure to do that itself.
         """
+        image_sizes = {
+            'avatar': (80, 80),
+            'micro_avatar': (20, 20),
+        }
         extension = get_filename_extension(attachment_filename)
-        filename = '{}.{}'.format(
-            get_hash(avatar), extension or DEFAULT_AVATAR_EXTENSION)
-        avatar_file = ContentFile(avatar)
-        member.avatar.delete(save=False)
-        member.avatar.save(filename, avatar_file, save=False)
+        filename = '{}.{}'.format(get_hash(avatar), extension)
+
+        if (filename != member.avatar) or force_upload:
+
+            for size in image_sizes:
+                filename = '{}.{}'.format(get_hash(avatar), extension)
+                # Process image to thumbnail size
+                avatar_file, filename = generate_thumbnail(avatar,
+                                                           image_sizes[size],
+                                                           extension, filename)
+
+                # Save will overwrite existing files with same name on DO.
+                default_storage.save(filename, avatar_file)
+
+        # No processing, just save image name
+        member.avatar = filename
+
         logger.info("Saved member '{}' avatar to {}.".format(
-            member.identifier, member.avatar.name))
+            member.identifier, member.avatar))
 
     def get_page(self, *args, **kwargs):
         return self.client.get_members(*args, **kwargs)

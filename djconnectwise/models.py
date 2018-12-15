@@ -3,7 +3,6 @@ import logging
 import urllib
 import datetime
 
-from easy_thumbnails.fields import ThumbnailerImageField
 from model_utils import Choices
 
 from django.conf import settings
@@ -234,8 +233,8 @@ class Member(TimeStampedModel):
     last_name = models.CharField(max_length=30, blank=False, null=True)
     office_email = models.EmailField(max_length=250)
     inactive = models.BooleanField(default=False)
-    avatar = ThumbnailerImageField(
-        null=True, blank=True,
+    avatar = models.CharField(
+        null=True, blank=True, max_length=300,
         verbose_name=_('Member Avatar'), help_text=_('Member Avatar')
     )
     license_class = models.CharField(
