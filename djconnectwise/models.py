@@ -231,7 +231,7 @@ class Member(TimeStampedModel):
         max_length=15, blank=False, unique=True
     )
     first_name = models.CharField(max_length=30, blank=False)
-    last_name = models.CharField(max_length=30, blank=False)
+    last_name = models.CharField(max_length=30, blank=False, null=True)
     office_email = models.EmailField(max_length=250)
     inactive = models.BooleanField(default=False)
     avatar = ThumbnailerImageField(
@@ -250,7 +250,8 @@ class Member(TimeStampedModel):
         ordering = ('first_name', 'last_name')
 
     def __str__(self):
-        return '{} {}'.format(self.first_name, self.last_name)
+        return '{} {}'.format(self.first_name,
+                              self.last_name if self.last_name else '')
 
     def get_initials(self):
         name_segs = str(self).split(' ')
