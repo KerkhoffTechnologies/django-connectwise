@@ -1230,8 +1230,12 @@ class MemberSynchronizer(Synchronizer):
         extension = get_filename_extension(attachment_filename)
         filename = '{}.{}'.format(get_hash(avatar), extension)
 
-        if (filename != member.avatar) or force_upload:
-
+        if filename != member.avatar:
+            # The filename hashed from the avatar is the same as the
+            # currently saved avatar. No need to generate new thumbnails.
+            print('Avatar up to date.')
+        else:
+            member.avatar = filename
             for size in image_sizes:
                 filename = '{}.{}'.format(get_hash(avatar), extension)
                 # Process image to thumbnail size
@@ -1242,11 +1246,8 @@ class MemberSynchronizer(Synchronizer):
                 # Save will overwrite existing files with same name on DO.
                 default_storage.save(filename, avatar_file)
 
-        # No processing, just save image name
-        member.avatar = filename
-
-        logger.info("Saved member '{}' avatar to {}.".format(
-            member.identifier, member.avatar))
+        # logger.info("Saved member '{}' avatar to {}.".format(
+        #    member.identifier, member.avatar))
 
     def get_page(self, *args, **kwargs):
         return self.client.get_members(*args, **kwargs)

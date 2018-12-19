@@ -1,5 +1,6 @@
 from django.test import TestCase
-from djconnectwise.utils import get_hash, get_filename_extension
+from djconnectwise.utils import get_hash, get_filename_extension, \
+                                generate_thumbnail
 
 
 class TestUtils(TestCase):
@@ -35,3 +36,17 @@ class TestUtils(TestCase):
             get_filename_extension(''),
             None
         )
+
+    def test_generate_micro_avatar_thumbnail(self):
+        from . import mocks
+
+        avatar = mocks.get_member_avatar()
+        size = (20, 20)
+        extension = 'png'
+        filename = 'AnonymousMember.png'
+        processed_filename = 'AnonymousMember.png20x20.png'
+
+        file, thumb_filename = generate_thumbnail(avatar,
+                                                  size, extension, filename)
+
+        self.assertEqual(processed_filename, thumb_filename)

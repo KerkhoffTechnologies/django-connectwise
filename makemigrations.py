@@ -8,7 +8,7 @@ settings.configure(
     DEBUG=True,
     INSTALLED_APPS=(
         'djconnectwise',
-        'easy_thumbnails',
+        #'easy_thumbnails',
     ),
     DJCONNECTWISE_API_BATCH_LIMIT=25,
 )
