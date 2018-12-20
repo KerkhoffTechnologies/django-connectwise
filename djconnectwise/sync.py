@@ -1206,7 +1206,10 @@ class MemberSynchronizer(Synchronizer):
 
     def _save_avatar(self, member, avatar, attachment_filename):
         """
-        TODO
+        In production, thumbnails are stored on Digital Ocean.
+        Development uses local file storage for thumbnails. Thumbnails
+        will only be generated if the filename hashed from the
+        avatar is not the same as the currently saved avatar.
         """
         thumbnail_size = {
             'avatar': (80, 80),
@@ -1215,15 +1218,11 @@ class MemberSynchronizer(Synchronizer):
         extension = get_filename_extension(attachment_filename)
         filename = '{}.{}'.format(get_hash(avatar), extension)
         current_avatar = member.avatar
-
-        # Only generate thumbnails if the filename hashed from the
-        # avatar is not the same as the currently saved avatar.
         process_thumbnails = filename != current_avatar
-        process_thumbnails = True
+
         if process_thumbnails:
             member.avatar = filename
             for size in thumbnail_size:
-                # Make sure that thumbnail is removed if avatar is new
                 current_filename = generate_filename(thumbnail_size[size],
                                                      current_avatar, extension)
                 filename = '{}.{}'.format(get_hash(avatar), extension)
@@ -1231,11 +1230,11 @@ class MemberSynchronizer(Synchronizer):
                     avatar, thumbnail_size[size],
                     extension, filename)
 
-                # Local file storage won't overwrite like DO spaces
-                # So delete to prevent duplicate thumbnails
+                # If this is a new image, the current avatar image
+                # needs to be removed. Plus local file storage won't
+                # overwrite like DO spaces so delete to prevent
+                # duplicate thumbnails
                 default_storage.delete(current_filename)
-
-                # Save will overwrite existing files with same name on DO.
                 default_storage.save(filename, avatar_file)
 
                 logger.info("Saved member '{}' avatar to {}.".format(
