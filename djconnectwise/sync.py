@@ -1219,7 +1219,7 @@ class MemberSynchronizer(Synchronizer):
         # Only generate thumbnails if the filename hashed from the
         # avatar is not the same as the currently saved avatar.
         process_thumbnails = filename != current_avatar
-
+        process_thumbnails = True
         if process_thumbnails:
             member.avatar = filename
             for size in thumbnail_size:
@@ -1271,6 +1271,8 @@ class MemberSynchronizer(Synchronizer):
         # a new one. Remove the image from storage.
         if instance.avatar and not photo_id:
             remove_thumbnail(instance.avatar)
+            instance.avatar = None
+            instance.save()
         # Fetch the image when:
         # CW tells us where the image is AND one of the following is true:
         # * this is a full sync

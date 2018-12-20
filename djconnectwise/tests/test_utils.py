@@ -65,4 +65,3 @@ class TestThumbnailGeneration(TestCase):
 
         self.assertEqual(expected_filename, avatar)
         self.assertIsInstance(file, ContentFile)
-
