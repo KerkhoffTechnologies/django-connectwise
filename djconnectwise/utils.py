@@ -4,6 +4,7 @@ from django.core.files.base import ContentFile
 from PIL import Image, ImageOps
 from io import BytesIO
 
+from django.core.files.storage import default_storage
 from django.conf import settings
 
 _underscorer1 = re.compile(r'(.)([A-Z][a-z]+)')
@@ -38,9 +39,30 @@ def get_filename_extension(filename):
     return m.group(1) if m else None
 
 
-def generate_thumbnail(avatar, size, extension, filename):
+def generate_filename(size, current_filename, extension):
     img_dimensions = 'x'.join([str(i) for i in size])
-    filename = '{}{}.{}'.format(filename, img_dimensions, extension)
+    filename = '{}{}.{}'.format(current_filename, img_dimensions, extension)
+    return filename
+
+
+def remove_thumbnail(avatar_filename):
+    thumbnail_size = {
+        'avatar': (80, 80),
+        'micro_avatar': (20, 20),
+    }
+    # This deletes the image name from DB field
+    # and also removes thumbnails from storage.
+    extension = get_filename_extension(avatar_filename)
+    for size in thumbnail_size:
+        filename = generate_filename(thumbnail_size[size],
+                                     avatar_filename, extension)
+        default_storage.delete(filename)
+
+    default_storage.delete(avatar_filename)
+
+
+def generate_thumbnail(avatar, size, extension, filename):
+    filename = generate_filename(size, filename, extension)
     avatar_image = Image.open(BytesIO(avatar))
     thumbnail = ImageOps.fit(avatar_image, size, Image.ANTIALIAS)
 

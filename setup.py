@@ -24,7 +24,6 @@ setup(
     install_requires=[
         'requests',
         'django',
-        #'easy-thumbnails',
         'python-dateutil',
         'django-model-utils',
         'django-braces',

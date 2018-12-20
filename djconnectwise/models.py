@@ -234,7 +234,7 @@ class Member(TimeStampedModel):
     office_email = models.EmailField(max_length=250)
     inactive = models.BooleanField(default=False)
     avatar = models.CharField(
-        null=True, blank=True, max_length=300,
+        null=True, blank=True, max_length=250,
         verbose_name=_('Member Avatar'), help_text=_('Member Avatar')
     )
     license_class = models.CharField(

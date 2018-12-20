@@ -1,6 +1,8 @@
 from django.test import TestCase
+from . import mocks
+from django.core.files.base import ContentFile
 from djconnectwise.utils import get_hash, get_filename_extension, \
-                                generate_thumbnail
+                                generate_thumbnail, generate_filename
 
 
 class TestUtils(TestCase):
@@ -37,16 +39,30 @@ class TestUtils(TestCase):
             None
         )
 
-    def test_generate_micro_avatar_thumbnail(self):
-        from . import mocks
 
-        avatar = mocks.get_member_avatar()
-        size = (20, 20)
-        extension = 'png'
-        filename = 'AnonymousMember.png'
-        processed_filename = 'AnonymousMember.png20x20.png'
+class TestThumbnailGeneration(TestCase):
+    thumbnail_size = {
+        'avatar': (80, 80),
+        'micro_avatar': (20, 20),
+    }
+    filename = 'AnonymousMember.png'
+    extension = 'png'
+    avatar = mocks.get_member_avatar()
 
-        file, thumb_filename = generate_thumbnail(avatar,
-                                                  size, extension, filename)
+    def test_generate_filename(self):
+        expected_filename = 'AnonymousMember.png80x80.png'
+        processed_filename = generate_filename(self.thumbnail_size['avatar'],
+                                               self.filename, self.extension)
 
-        self.assertEqual(processed_filename, thumb_filename)
+        self.assertEqual(expected_filename, processed_filename)
+
+    def test_generate_avatar_thumbnail(self):
+        expected_filename = 'AnonymousMember.png20x20.png'
+
+        file, avatar = generate_thumbnail(self.avatar,
+                                          self.thumbnail_size['micro_avatar'],
+                                          self.extension, self.filename)
+
+        self.assertEqual(expected_filename, avatar)
+        self.assertIsInstance(file, ContentFile)
+

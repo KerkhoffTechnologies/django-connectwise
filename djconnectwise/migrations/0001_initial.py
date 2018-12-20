@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 
 from django.db import migrations, models
 import django_extensions.db.fields
-#import easy_thumbnails.fields
 
 
 class Migration(migrations.Migration):
@@ -109,8 +108,7 @@ class Migration(migrations.Migration):
                 ('last_name', models.CharField(max_length=30)),
                 ('office_email', models.EmailField(max_length=250)),
                 ('inactive', models.BooleanField(default=False)),
-                #('avatar', easy_thumbnails.fields.ThumbnailerImageField(verbose_name='Member Avatar', null=True, help_text='Member Avatar', blank=True, upload_to='')),
-                ('avatar', models.CharField(verbose_name='Member Avatar', null=True, help_text='Member Avatar', blank=True)),
+                ('avatar', models.CharField(max_length=250, verbose_name='Member Avatar', null=True, help_text='Member Avatar', blank=True)),
             ],
             options={
                 'ordering': ('first_name', 'last_name'),
