@@ -1,6 +1,7 @@
 from copy import deepcopy
 from unittest import TestCase
 from django.test import TransactionTestCase
+from django.core.files.storage import default_storage
 
 import datetime
 
@@ -36,6 +37,7 @@ from djconnectwise.models import MyCompanyOther
 from djconnectwise.models import Type
 from djconnectwise.models import SubType
 from djconnectwise.models import Item
+from djconnectwise.utils import get_hash
 
 from . import fixtures
 from . import fixture_utils
@@ -659,6 +661,32 @@ class TestMemberSynchronization(TransactionTestCase):
         self._assert_member_fields(local_member, member_without_photo)
         local_avatar = local_member.avatar
         self.assertFalse(local_avatar)
+
+    def test_sync_member_avatar_name_is_updated(self):
+        self.synchronizer = sync.MemberSynchronizer()
+        self.synchronizer.sync()
+
+        member = Member.objects.get(identifier=self.identifier)
+        old_avatar = member.avatar
+        member.avatar = 'new_image_name.png'
+        self.synchronizer.sync()
+
+        self.assertNotEqual(old_avatar, member.avatar)
+
+    def test_avatar_thumbnails_are_in_storage(self):
+        self.synchronizer = sync.MemberSynchronizer()
+        self.synchronizer.sync()
+        member = Member.objects.get(identifier=self.identifier)
+
+        attachment_filename = 'some_new_image.png'
+        avatar = mocks.get_member_avatar()
+        self.synchronizer._save_avatar(member, avatar, attachment_filename)
+        filename = '{}.{}'.format(get_hash(avatar), 'png')
+        micro_avatar_size = filename + '20x20.png'
+        avatar_size = filename + '80x80.png'
+
+        self.assertTrue(default_storage.exists(avatar_size))
+        self.assertTrue(default_storage.exists(micro_avatar_size))
 
 
 class TestOpportunitySynchronizer(TestCase, SynchronizerTestMixin):
