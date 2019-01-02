@@ -1220,7 +1220,7 @@ class MemberSynchronizer(Synchronizer):
         current_avatar = member.avatar
         process_thumbnails = filename != current_avatar
 
-        if process_thumbnails:
+        if process_thumbnails or not default_storage.exists(member.avatar):
             member.avatar = filename
             for size in thumbnail_size:
                 current_filename = generate_filename(thumbnail_size[size],
