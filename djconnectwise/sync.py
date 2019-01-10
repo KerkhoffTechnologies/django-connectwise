@@ -4,7 +4,7 @@ from dateutil.parser import parse
 from copy import deepcopy
 import math
 
-from django.core.files.base import ContentFile
+from django.core.files.storage import default_storage
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction, IntegrityError
 from django.utils import timezone
@@ -12,7 +12,8 @@ from django.db.models import Q
 
 from djconnectwise import api
 from djconnectwise import models
-from djconnectwise.utils import get_hash, get_filename_extension
+from djconnectwise.utils import get_hash, get_filename_extension, \
+    generate_thumbnail, generate_filename, remove_thumbnail
 from djconnectwise.utils import DjconnectwiseSettings
 
 
@@ -1205,30 +1206,39 @@ class MemberSynchronizer(Synchronizer):
 
     def _save_avatar(self, member, avatar, attachment_filename):
         """
-        The Django ImageField (and ThumbnailerImageField) field adjusts our
-        filename if the file already exists- it adds some random characters at
-        the end of the name. This means if we just save a new image when the
-        old one still exists, we'll get a new image for each save, resulting
-        in lots of unnecessary images. So we'll delete the old image first,
-        and then the save will use the exact name we give it.
-
-        Well, except in the case where two or more members share the same
-        image, because we're using content hashes as names, and ConnectWise
-        gives users a common default avatar. In that case, the first save
-        will use the expected name, while subsequent saves for other members
-        will have some random characters added to the filename.
-
-        This method tells Django not to call save() on the given model,
-        so the caller must be sure to do that itself.
+        In production, thumbnails are stored on Digital Ocean.
+        Development uses local file storage for thumbnails. Thumbnails
+        will only be generated if the filename hashed from the
+        avatar is not the same as the currently saved avatar.
         """
+        thumbnail_size = {
+            'avatar': (80, 80),
+            'micro_avatar': (20, 20),
+        }
         extension = get_filename_extension(attachment_filename)
-        filename = '{}.{}'.format(
-            get_hash(avatar), extension or DEFAULT_AVATAR_EXTENSION)
-        avatar_file = ContentFile(avatar)
-        member.avatar.delete(save=False)
-        member.avatar.save(filename, avatar_file, save=False)
-        logger.info("Saved member '{}' avatar to {}.".format(
-            member.identifier, member.avatar.name))
+        filename = '{}.{}'.format(get_hash(avatar), extension)
+        current_avatar = member.avatar
+        process_thumbnails = filename != current_avatar
+
+        if process_thumbnails or not default_storage.exists(member.avatar):
+            member.avatar = filename
+            for size in thumbnail_size:
+                current_filename = generate_filename(thumbnail_size[size],
+                                                     current_avatar, extension)
+                filename = '{}.{}'.format(get_hash(avatar), extension)
+                avatar_file, filename = generate_thumbnail(
+                    avatar, thumbnail_size[size],
+                    extension, filename)
+
+                # If this is a new image, the current avatar image
+                # needs to be removed. Plus local file storage won't
+                # overwrite like DO spaces so delete to prevent
+                # duplicate thumbnails
+                default_storage.delete(current_filename)
+                default_storage.save(filename, avatar_file)
+
+                logger.info("Saved member '{}' avatar to {}.".format(
+                    member.identifier, filename))
 
     def get_page(self, *args, **kwargs):
         return self.client.get_members(*args, **kwargs)
@@ -1255,6 +1265,13 @@ class MemberSynchronizer(Synchronizer):
 
         if api_instance.get('photo'):
             photo_id = api_instance['photo']['id']
+
+        # For when a CW user removes their photo without setting
+        # a new one. Remove the image from storage.
+        if instance.avatar and not photo_id:
+            remove_thumbnail(instance.avatar)
+            instance.avatar = None
+            instance.save()
         # Fetch the image when:
         # CW tells us where the image is AND one of the following is true:
         # * this is a full sync
@@ -1274,7 +1291,7 @@ class MemberSynchronizer(Synchronizer):
                 .get_member_image_by_photo_id(photo_id, username)
             if attachment_filename and avatar:
                 self._save_avatar(instance, avatar, attachment_filename)
-                instance.save()
+            instance.save()
 
         return instance, created
 

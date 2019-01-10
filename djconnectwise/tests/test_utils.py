@@ -1,5 +1,8 @@
 from django.test import TestCase
-from djconnectwise.utils import get_hash, get_filename_extension
+from . import mocks
+from django.core.files.base import ContentFile
+from djconnectwise.utils import get_hash, get_filename_extension, \
+                                generate_thumbnail, generate_filename
 
 
 class TestUtils(TestCase):
@@ -35,3 +38,30 @@ class TestUtils(TestCase):
             get_filename_extension(''),
             None
         )
+
+
+class TestThumbnailGeneration(TestCase):
+    thumbnail_size = {
+        'avatar': (80, 80),
+        'micro_avatar': (20, 20),
+    }
+    filename = 'AnonymousMember.png'
+    extension = 'png'
+    avatar = mocks.get_member_avatar()
+
+    def test_generate_filename(self):
+        expected_filename = 'AnonymousMember.png80x80.png'
+        processed_filename = generate_filename(self.thumbnail_size['avatar'],
+                                               self.filename, self.extension)
+
+        self.assertEqual(expected_filename, processed_filename)
+
+    def test_generate_avatar_thumbnail(self):
+        expected_filename = 'AnonymousMember.png20x20.png'
+
+        file, avatar = generate_thumbnail(self.avatar,
+                                          self.thumbnail_size['micro_avatar'],
+                                          self.extension, self.filename)
+
+        self.assertEqual(expected_filename, avatar)
+        self.assertIsInstance(file, ContentFile)
