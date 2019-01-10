@@ -4,8 +4,8 @@ import re
 from django.conf import settings
 
 _underscorer1 = re.compile(r'(.)([A-Z][a-z]+)')
-_underscorer2 = re.compile('([a-z0-9])([A-Z])')
-FILENAME_EXTENSION_RE = re.compile('\.([\w]*)$')
+_underscorer2 = re.compile(r'([a-z0-9])([A-Z])')
+FILENAME_EXTENSION_RE = re.compile(r'\.([\w]*)$')
 
 
 def camel_to_snake(s):
