@@ -70,10 +70,7 @@ def generate_thumbnail(avatar, size, extension, filename):
         extension = 'jpeg'
 
     byte_stream = BytesIO()
-    try:
-        thumbnail.save(byte_stream, format=extension)
-    except KeyError:
-        pass
+    thumbnail.save(byte_stream, format=extension)
     avatar_file = ContentFile(byte_stream.getvalue())
 
     return avatar_file, filename
