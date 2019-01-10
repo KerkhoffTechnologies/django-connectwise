@@ -865,7 +865,7 @@ class ScheduleEntriesSynchronizer(BatchConditionMixin, Synchronizer):
         try:
             member_id = json_data['member']['id']
             models.Member.objects.get(pk=member_id)
-        except ObjectDoesNotExist as e:
+        except ObjectDoesNotExist:
             raise InvalidObjectException(
                 'Schedule entry {} can not find member: {}'
                 '- skipping.'.format(instance.id, member_id)

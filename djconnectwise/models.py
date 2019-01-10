@@ -18,7 +18,7 @@ from . import api
 logger = logging.getLogger(__name__)
 
 
-PRIORITY_RE = re.compile('^Priority ([\d]+)')
+PRIORITY_RE = re.compile(r'^Priority ([\d]+)')
 
 
 class InvalidStatusError(Exception):
