@@ -66,7 +66,7 @@ def generate_thumbnail(avatar, size, extension, filename):
     avatar_image = Image.open(BytesIO(avatar))
     thumbnail = ImageOps.fit(avatar_image, size, Image.ANTIALIAS)
 
-    if extension == 'jpg':
+    if extension.lower() == 'jpg':
         extension = 'jpeg'
 
     byte_stream = BytesIO()

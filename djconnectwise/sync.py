@@ -1226,10 +1226,12 @@ class MemberSynchronizer(Synchronizer):
                 current_filename = generate_filename(thumbnail_size[size],
                                                      current_avatar, extension)
                 filename = '{}.{}'.format(get_hash(avatar), extension)
-                avatar_file, filename = generate_thumbnail(
-                    avatar, thumbnail_size[size],
-                    extension, filename)
-
+                try:
+                    avatar_file, filename = generate_thumbnail(
+                        avatar, thumbnail_size[size],
+                        extension, filename)
+                except Exception as e:
+                    logger.warning("Error saving member avatar. {}".format(e))
                 # If this is a new image, the current avatar image
                 # needs to be removed. Plus local file storage won't
                 # overwrite like DO spaces so delete to prevent
