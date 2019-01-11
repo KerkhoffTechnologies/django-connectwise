@@ -1222,6 +1222,7 @@ class MemberSynchronizer(Synchronizer):
 
         if process_thumbnails or not default_storage.exists(member.avatar):
             member.avatar = filename
+            avatar_file = None
             for size in thumbnail_size:
                 current_filename = generate_filename(thumbnail_size[size],
                                                      current_avatar, extension)
@@ -1232,15 +1233,17 @@ class MemberSynchronizer(Synchronizer):
                         extension, filename)
                 except Exception as e:
                     logger.warning("Error saving member avatar. {}".format(e))
+
                 # If this is a new image, the current avatar image
                 # needs to be removed. Plus local file storage won't
                 # overwrite like DO spaces so delete to prevent
                 # duplicate thumbnails
-                default_storage.delete(current_filename)
-                default_storage.save(filename, avatar_file)
+                if avatar_file and filename:
+                    default_storage.delete(current_filename)
+                    default_storage.save(filename, avatar_file)
 
-                logger.info("Saved member '{}' avatar to {}.".format(
-                    member.identifier, filename))
+                    logger.info("Saved member '{}' avatar to {}.".format(
+                        member.identifier, filename))
 
     def get_page(self, *args, **kwargs):
         return self.client.get_members(*args, **kwargs)

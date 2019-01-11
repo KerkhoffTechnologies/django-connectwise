@@ -66,6 +66,8 @@ def generate_thumbnail(avatar, size, extension, filename):
     avatar_image = Image.open(BytesIO(avatar))
     thumbnail = ImageOps.fit(avatar_image, size, Image.ANTIALIAS)
 
+    # For now just change the extension to jpeg
+    # https://stackoverflow.com/questions/37048807/python-image-library-and-keyerror-jpg
     if extension.lower() == 'jpg':
         extension = 'jpeg'
 
