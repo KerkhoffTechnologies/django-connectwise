@@ -29,6 +29,7 @@ setup(
         'django-braces',
         'django-extensions',
         'retrying',
+        'Pillow',
     ],
     test_suite='runtests.suite',
     tests_require=[
