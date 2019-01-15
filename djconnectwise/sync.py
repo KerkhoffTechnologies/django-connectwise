@@ -1206,10 +1206,9 @@ class MemberSynchronizer(Synchronizer):
 
     def _save_avatar(self, member, avatar, attachment_filename):
         """
-        In production, thumbnails are stored on Digital Ocean.
-        Development uses local file storage for thumbnails. Thumbnails
-        will only be generated if the filename hashed from the
-        avatar is not the same as the currently saved avatar.
+        Thumbnails will only be generated if the filename hashed from the
+        avatar is not the same as the currently saved avatar or the avatar
+        does not exist in storage already.
         """
         thumbnail_size = {
             'avatar': (80, 80),
@@ -1217,10 +1216,13 @@ class MemberSynchronizer(Synchronizer):
         }
         extension = get_filename_extension(attachment_filename)
         filename = '{}.{}'.format(get_hash(avatar), extension)
+
         current_avatar = member.avatar
+        current_avatar_filename = '{}20x20.{}'.format(member.avatar, extension)
         process_thumbnails = filename != current_avatar
 
-        if process_thumbnails or not default_storage.exists(member.avatar):
+        if process_thumbnails or \
+                not default_storage.exists(current_avatar_filename):
             member.avatar = filename
             avatar_file = None
             for size in thumbnail_size:
@@ -1234,16 +1236,15 @@ class MemberSynchronizer(Synchronizer):
                 except Exception as e:
                     logger.warning("Error saving member avatar. {}".format(e))
 
-                # If this is a new image, the current avatar image
-                # needs to be removed. Plus local file storage won't
-                # overwrite like DO spaces so delete to prevent
-                # duplicate thumbnails
+                # Just delete the currently saved avatar image
+                # so we don't need to worry about cleaning up
+                # duplicates or old thumbnails
                 if avatar_file and filename:
                     default_storage.delete(current_filename)
-                    default_storage.save(filename, avatar_file)
 
-                    logger.info("Saved member '{}' avatar to {}.".format(
+                    logger.info("Saving member '{}' avatar to {}.".format(
                         member.identifier, filename))
+                    default_storage.save(filename, avatar_file)
 
     def get_page(self, *args, **kwargs):
         return self.client.get_members(*args, **kwargs)
