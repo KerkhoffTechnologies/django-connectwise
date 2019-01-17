@@ -1,2 +1,8 @@
 coverage==4.3
 flake8>=2.1.0
+mock
+freezegun
+responses
+model-mommy
+django-coverage
+names
