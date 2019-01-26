@@ -1011,7 +1011,7 @@ class Opportunity(TimeStampedModel):
                                           related_name='opportunity_primary',
                                           on_delete=models.SET_NULL)
     priority = models.ForeignKey('OpportunityPriority',
-                                 on_delete=models.CASCADE)
+                                 on_delete=models.SET_NULL, null=True)
     stage = models.ForeignKey('OpportunityStage', on_delete=models.CASCADE)
     status = models.ForeignKey('OpportunityStatus', blank=True, null=True,
                                on_delete=models.SET_NULL)

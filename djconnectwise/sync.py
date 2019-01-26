@@ -1665,9 +1665,11 @@ class OpportunitySynchronizer(Synchronizer):
         if closed_date:
             instance.closed_date = parse(closed_date)
 
-        instance.priority = self._update_or_create_child(
-            models.OpportunityPriority, json_data['priority']
-        )
+        priority = json_data.get('priority')
+        if priority:
+            instance.priority = self._update_or_create_child(
+                models.OpportunityPriority, priority
+            )
 
         # handle foreign keys
         for json_field, value in self.related_meta.items():
