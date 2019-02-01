@@ -25,7 +25,6 @@ settings.configure(
     INSTALLED_APPS=(  # Including django.contrib apps prevents warnings during
         # tests.
         'djconnectwise',
-        'easy_thumbnails',
         'django.contrib.contenttypes',
         'django.contrib.auth',
         'django.contrib.sessions',
