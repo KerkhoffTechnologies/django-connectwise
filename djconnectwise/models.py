@@ -570,7 +570,6 @@ class Calendar(models.Model):
             if start_of_day and \
                 not self.is_holiday(
                                     datetime.timedelta(days=days) + start):
-                                    # Well done PEP8, well done...
                 start_of_day = datetime.timedelta(hours=start_of_day.hour,
                                                   minutes=start_of_day.minute)
                 end_of_day = self.get_day_hours(False, day_of_week)

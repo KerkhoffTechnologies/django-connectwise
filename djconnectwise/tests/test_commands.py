@@ -658,3 +658,13 @@ class TestCallBackCommand(TestCase):
 
     def test_delete_command(self):
         self._test_command('delete', 'delete_callback', no_output=True)
+
+
+class TestListMembersCommand(TestCase):
+    def test_command(self):
+        # We don't need to check output carefully. Just verify it
+        # doesn't explode.
+        self.assertEqual(
+            call_command('list_members'),
+            None
+        )
