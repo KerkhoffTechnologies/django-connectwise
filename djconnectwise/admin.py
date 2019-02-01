@@ -28,13 +28,6 @@ class SyncJobAdmin(admin.ModelAdmin):
     duration_or_zero.short_description = 'Duration'
 
 
-@admin.register(models.CallBackEntry)
-class CallBackEntryAdmin(admin.ModelAdmin):
-    list_display = (
-        'id', 'description', 'callback_type', 'url', 'level'
-    )
-
-
 @admin.register(models.ConnectWiseBoard)
 class ConnectWiseBoardAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'inactive')

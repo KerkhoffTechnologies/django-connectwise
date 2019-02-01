@@ -632,72 +632,21 @@ class SystemAPIClient(ConnectWiseAPIClient):
         return self.fetch_resource(self.ENDPOINT_OTHER, *args, **kwargs)
 
     def delete_callback(self, entry_id):
-        try:
-            endpoint = self._endpoint(
-                '{}{}'.format(self.ENDPOINT_CALLBACKS, entry_id)
-            )
-            logger.debug('Making DELETE request to {}'.format(endpoint))
-            response = self.request(
-                'delete',
-                endpoint,
-            )
-        except requests.RequestException as e:
-            logger.error('Request failed: DELETE {}: {}'.format(endpoint, e))
-            raise ConnectWiseAPIError('{}'.format(e))
-
-        return response
+        endpoint = self._endpoint(
+            '{}{}'.format(self.ENDPOINT_CALLBACKS, entry_id)
+        )
+        return self.request(
+            'delete',
+            endpoint,
+        )
 
     def create_callback(self, callback_entry):
-        try:
-            endpoint = self._endpoint(self.ENDPOINT_CALLBACKS)
-            logger.debug('Making POST request to {}'.format(endpoint))
-            response = requests.request(
-                'post',
-                endpoint,
-                json=callback_entry,
-                auth=self.auth,
-                timeout=self.timeout,
-            )
-        except requests.RequestException as e:
-            logger.error('Request failed: POST {}: {}'.format(endpoint, e))
-            raise ConnectWiseAPIError('{}'.format(e))
-
-        if 200 <= response.status_code < 300:
-            return response.json()
-        elif 400 <= response.status_code < 499:
-            self._log_failed(response)
-            raise ConnectWiseAPIClientError(
-                self._prepare_error_response(response))
-        elif response.status_code == 500:
-            self._log_failed(response)
-            raise ConnectWiseAPIServerError(
-                self._prepare_error_response(response))
-        else:
-            self._log_failed(response)
-            raise ConnectWiseAPIError(response.content)
-
-    def update_callback(self, callback_entry):
-        try:
-            endpoint = self._endpoint(
-                'callbacks/{0}'.format(callback_entry.entry_id)
-            )
-            logger.debug('Making PUT request to {}'.format(endpoint))
-            response = requests.request(
-                'put',
-                endpoint,
-                json=callback_entry,
-                auth=self.auth,
-                timeout=self.timeout,
-            )
-        except requests.RequestException as e:
-            logger.error('Request failed: PUT {}: {}'.format(endpoint, e))
-            raise ConnectWiseAPIError('{}'.format(e))
-
-        if 200 <= response.status_code < 300:
-            return response.json()
-        else:
-            self._log_failed(response)
-            raise ConnectWiseAPIError(response.content)
+        endpoint = self._endpoint(self.ENDPOINT_CALLBACKS)
+        return self.request(
+            'post',
+            endpoint,
+            body=callback_entry,
+        )
 
     def get_member_by_identifier(self, identifier):
         return self.fetch_resource('members/{0}'.format(identifier))
