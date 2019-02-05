@@ -5,7 +5,7 @@ from . import fixtures, fixture_utils, mocks
 from django.urls import reverse
 from django.test import Client, TestCase
 
-from djconnectwise.models import CallBackEntry, Company, Ticket, Project
+from djconnectwise.models import Company, Ticket, Project
 from djconnectwise import views, api
 
 
@@ -99,7 +99,7 @@ class TestTicketCallBackView(BaseTestCallBackView):
         fixture_utils.init_teams()
         self.assertEqual(Ticket.objects.count(), 0)
         mocks.service_api_get_ticket_call()
-        self._test_added(CallBackEntry.TICKET, fixtures.API_SERVICE_TICKET)
+        self._test_added('ticket', fixtures.API_SERVICE_TICKET)
 
     def test_update(self):
         fixture_utils.init_priorities()
@@ -116,7 +116,7 @@ class TestTicketCallBackView(BaseTestCallBackView):
         t.save()
 
         mocks.service_api_get_ticket_call()
-        self._test_update(CallBackEntry.TICKET, fixtures.API_SERVICE_TICKET)
+        self._test_update('ticket', fixtures.API_SERVICE_TICKET)
 
     def test_delete(self):
         fixture_utils.init_tickets()
@@ -128,7 +128,7 @@ class TestTicketCallBackView(BaseTestCallBackView):
 
         mocks.service_api_get_ticket_call(api.ConnectWiseRecordNotFoundError)
         self._test_delete(
-            CallBackEntry.TICKET,
+            'ticket',
             fixtures.API_SERVICE_TICKET['id']
         )
 
@@ -143,7 +143,7 @@ class TestProjectCallBackView(BaseTestCallBackView):
         fixture_utils.init_project_statuses()
         self.assertEqual(Project.objects.count(), 0)
         mocks.project_api_get_project_call(fixtures.API_PROJECT)
-        self._test_added(CallBackEntry.PROJECT, fixtures.API_PROJECT)
+        self._test_added('project', fixtures.API_PROJECT)
 
     def test_update(self):
         fixture_utils.init_project_statuses()
@@ -155,7 +155,7 @@ class TestProjectCallBackView(BaseTestCallBackView):
         p.save()
 
         mocks.project_api_get_project_call(fixtures.API_PROJECT)
-        self._test_update(CallBackEntry.PROJECT, fixtures.API_PROJECT)
+        self._test_update('project', fixtures.API_PROJECT)
 
     def test_delete(self):
         fixture_utils.init_project_statuses()
@@ -167,7 +167,7 @@ class TestProjectCallBackView(BaseTestCallBackView):
             raised=api.ConnectWiseRecordNotFoundError
         )
         self._test_delete(
-            CallBackEntry.PROJECT,
+            'project',
             fixtures.API_PROJECT['id']
         )
 
@@ -181,7 +181,7 @@ class TestCompanyCallBackView(BaseTestCallBackView):
     def test_add(self):
         self.assertEqual(Company.objects.count(), 0)
         mocks.company_api_by_id_call(fixtures.API_COMPANY)
-        self._test_added(CallBackEntry.COMPANY, fixtures.API_COMPANY)
+        self._test_added('company', fixtures.API_COMPANY)
 
     def test_update(self):
         fixture_utils.init_companies()
@@ -192,7 +192,7 @@ class TestCompanyCallBackView(BaseTestCallBackView):
         c.save()
 
         mocks.company_api_by_id_call(fixtures.API_COMPANY)
-        self._test_update(CallBackEntry.COMPANY, fixtures.API_COMPANY)
+        self._test_update('company', fixtures.API_COMPANY)
 
     def test_delete(self):
         fixture_utils.init_companies()
@@ -204,7 +204,7 @@ class TestCompanyCallBackView(BaseTestCallBackView):
         company_fixture['deletedFlag'] = True
         mocks.company_api_by_id_call(company_fixture)
         self._test_delete(
-            CallBackEntry.COMPANY,
+            'company',
             company_fixture['id'],
             manager='available_objects'
         )

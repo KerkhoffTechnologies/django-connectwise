@@ -31,16 +31,16 @@ class CallBackView(views.CsrfExemptMixin,
                    views.JsonRequestResponseMixin, View):
 
     CALLBACK_TYPES = {
-        models.CallBackEntry.TICKET: (
+        'ticket': (
             sync.TicketSynchronizer, models.Ticket
         ),
-        models.CallBackEntry.PROJECT: (
+        'project': (
             sync.ProjectSynchronizer, models.Project
         ),
-        models.CallBackEntry.COMPANY: (
+        'company': (
             sync.CompanySynchronizer, models.Company
         ),
-        models.CallBackEntry.OPPORTUNITY: (
+        'opportunity': (
             sync.OpportunitySynchronizer, models.Opportunity
         ),
     }

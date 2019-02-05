@@ -868,11 +868,11 @@ API_CW_VERSION = {
 
 API_SYSTEM_CALLBACK_ENTRY = {
     'id': 0,
-    'description': 'maxLength = 100',
+    'description': 'callback description',
     'url': 'http://localhost',
-    'objectId': 0,
-    'type': 'Sample string',
-    'level': 'Sample string',
+    'objectId': 1,
+    'type': 'ticket',
+    'level': 'owner',
     'memberId': API_MEMBER['id'],
     'inactiveFlag': False,
     '_info ': {'lastUpdated': '', 'updatedBy': ''}

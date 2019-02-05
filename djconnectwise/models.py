@@ -2,9 +2,6 @@ import re
 import logging
 import urllib
 import datetime
-
-from model_utils import Choices
-
 from django.conf import settings
 from django.utils import timezone
 from django.db import models
@@ -56,34 +53,6 @@ class SyncJob(models.Model):
     def duration(self):
         if self.start_time and self.end_time:
             return self.end_time - self.start_time
-
-
-class CallBackEntry(models.Model):
-    TICKET = 'ticket'
-    PROJECT = 'project'
-    COMPANY = 'company'
-    OPPORTUNITY = 'opportunity'
-
-    CALLBACK_TYPES = Choices(
-        (COMPANY, "Company"),
-        (OPPORTUNITY, "Opportunity"),
-        (PROJECT, "Project"),
-        (TICKET, "Ticket"),
-    )
-
-    description = models.CharField(max_length=100, null=True, blank=True)
-    callback_type = models.CharField(max_length=25)
-    url = models.CharField(max_length=255)
-    level = models.CharField(max_length=255)
-    object_id = models.IntegerField()
-    inactive_flag = models.BooleanField(default=False)
-
-    class Meta:
-        verbose_name = 'Callback entry'
-        verbose_name_plural = 'Callback entries'
-
-    def __str__(self):
-        return self.url
 
 
 class AvailableConnectWiseBoardManager(models.Manager):
