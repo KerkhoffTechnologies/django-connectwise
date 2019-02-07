@@ -30,7 +30,6 @@ From source:
     INSTALLED_APPS = [
         ...
         'djconnectwise',
-        'easy_thumbnails'  # Used for managing user pictures
         ...
     ]
     ```
