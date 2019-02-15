@@ -1411,9 +1411,20 @@ class TicketSynchronizer(BatchConditionMixin, Synchronizer):
         self.sync_children(*sync_classes)
 
     def get_batch_condition(self, conditions):
-        return 'status/id in ({})'.format(
-            ','.join([str(i) for i in conditions])
+
+        closed_projects = list(
+            models.Project.objects.
+            filter(status__closed_flag=True).
+            values_list('id', flat=True)
         )
+        project_condition = 'project/id not in ({}) or project/id=null'.format(
+            ','.join([str(i) for i in closed_projects])
+        )
+        api_conditions = 'status/id in ({}) and ({})'.format(
+            ','.join([str(i) for i in conditions]), project_condition
+        )
+
+        return api_conditions
 
     def get_page(self, *args, **kwargs):
         return self.client.get_tickets(*args, **kwargs)
