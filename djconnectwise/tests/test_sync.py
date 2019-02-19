@@ -1322,6 +1322,28 @@ class TestTicketSynchronizer(TestCase):
         self.assertEqual(ticket_qset.count(), 0)
         _patch.stop()
 
+    def test_sync_open_tickets_closed_project(self):
+        """Open tickets on a closed project should not be synced."""
+        fixture_utils.init_tickets()
+
+        project = Project.objects.get(id=fixtures.API_PROJECT['id'])
+        project.status.closed_flag = True
+        project.save()
+
+        ticket_id = fixtures.API_SERVICE_TICKET['id']
+        self.assertEqual(Ticket.objects.filter(id=ticket_id).count(), 1)
+
+        ticket = Ticket.objects.get(id=ticket_id)
+        ticket.project = project
+        ticket.save()
+
+        method_name = 'djconnectwise.api.ServiceAPIClient.get_tickets'
+        mocks.create_mock_call(method_name, [])
+        synchronizer = sync.TicketSynchronizer(full=True)
+        synchronizer.sync()
+
+        self.assertEqual(Ticket.objects.filter(id=ticket_id).count(), 0)
+
 
 class TestActivitySynchronizer(TestCase, SynchronizerTestMixin):
     synchronizer_class = sync.ActivitySynchronizer
