@@ -1417,12 +1417,15 @@ class TicketSynchronizer(BatchConditionMixin, Synchronizer):
             filter(status__closed_flag=True).
             values_list('id', flat=True)
         )
-        project_condition = 'project/id not in ({}) or project/id=null'.format(
-            ','.join([str(i) for i in closed_projects])
+        api_conditions = 'status/id in ({})'.format(
+            ','.join([str(i) for i in conditions])
         )
-        api_conditions = 'status/id in ({}) and ({})'.format(
-            ','.join([str(i) for i in conditions]), project_condition
-        )
+        if closed_projects:
+            api_conditions = \
+                '{} and project/id not in ({}) or project/id=null'.format(
+                    api_conditions,
+                    ','.join([str(i) for i in closed_projects])
+                )
 
         return api_conditions
 
