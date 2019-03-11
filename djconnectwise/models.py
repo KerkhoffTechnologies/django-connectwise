@@ -903,11 +903,12 @@ class OpportunityStage(TimeStampedModel):
 
 class AvailableOpportunityStatusManager(models.Manager):
     """
-    Return only Opportunity Statuses whose closed field is False.
+    Return only Opportunity Statuses whose closed field and inactive
+    field are False.
     """
     def get_queryset(self):
         return super().get_queryset().filter(
-            closed_flag=False,
+            closed_flag=False, inactive_flag=False
         )
 
 
