@@ -483,7 +483,7 @@ class Calendar(models.Model):
 
                 minutes = (end_of_day - start_of_day).total_seconds() / 60
                 # 24 hour calendar, minutes are full day
-                todays_minutes = minutes if minutes >= 0 else 3600
+                todays_minutes = minutes if minutes >= 0 else 1440
                 sla_minutes = sla_minutes + todays_minutes
                 day_of_week = (day_of_week + 1) % 7
                 current = current + datetime.timedelta(days=1)
@@ -552,7 +552,7 @@ class Calendar(models.Model):
 
             minutes = (end_of_day - start_of_day).total_seconds() / 60
             # 24 hour calendar, minutes are full day
-            todays_minutes = minutes if minutes >= 0 else 3600
+            todays_minutes = minutes if minutes >= 0 else 1440
             sla_minutes = sla_minutes - todays_minutes
 
         # sla_minutes went below zero so we know that day is the expiry
