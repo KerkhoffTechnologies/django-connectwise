@@ -1,6 +1,7 @@
 import logging
 import re
 import json
+from urllib.parse import urlparse
 
 import requests
 from retrying import retry
@@ -8,6 +9,28 @@ from retrying import retry
 from django.conf import settings
 from django.core.cache import cache
 from djconnectwise.utils import DjconnectwiseSettings
+
+CW_CLOUD_URLS = {
+    'au.myconnectwise.net': 'api-au.myconnectwise.net',
+    'eu.myconnectwise.net': 'api-eu.myconnectwise.net',
+    'na.myconnectwise.net': 'api-na.myconnectwise.net',
+}
+COMPANY_INFO_REQUIRED = 'company-info-required'
+CW_CLOUD_DOMAIN = 'myconnectwise.net'
+DEFAULT_CW_API_CODEBASE = 'v4_6_release/'
+
+CW_RESPONSE_MAX_RECORDS = 1000  # The greatest number of records ConnectWise
+# will send us in one response.
+RETRY_WAIT_EXPONENTIAL_MULTAPPLIER = 1000  # Initial number of milliseconds to
+# wait before retrying a request.
+RETRY_WAIT_EXPONENTIAL_MAX = 10000  # Maximum number of milliseconds to wait
+# before retrying a request.
+CW_DEFAULT_PAGE = 1  # CW Pagination is 1-indexed
+CONTENT_DISPOSITION_RE = re.compile(
+    '^attachment; filename=\"{0,1}(.*?)\"{0,1}$'
+)
+
+logger = logging.getLogger(__name__)
 
 
 class ConnectWiseAPIError(Exception):
@@ -35,24 +58,6 @@ class ConnectWiseAPIServerError(ConnectWiseAPIError):
 class ConnectWiseRecordNotFoundError(ConnectWiseAPIClientError):
     """The record was not found."""
     pass
-
-
-COMPANY_INFO_REQUIRED = 'company-info-required'
-CW_CLOUD_DOMAIN = 'myconnectwise.net'
-DEFAULT_CW_API_CODEBASE = 'v4_6_release/'
-
-CW_RESPONSE_MAX_RECORDS = 1000  # The greatest number of records ConnectWise
-# will send us in one response.
-RETRY_WAIT_EXPONENTIAL_MULTAPPLIER = 1000  # Initial number of milliseconds to
-# wait before retrying a request.
-RETRY_WAIT_EXPONENTIAL_MAX = 10000  # Maximum number of milliseconds to wait
-# before retrying a request.
-CW_DEFAULT_PAGE = 1  # CW Pagination is 1-indexed
-CONTENT_DISPOSITION_RE = re.compile(
-    '^attachment; filename=\"{0,1}(.*?)\"{0,1}$'
-)
-
-logger = logging.getLogger(__name__)
 
 
 class CompanyInfoManager:
@@ -162,7 +167,7 @@ class ConnectWiseAPIClient(object):
         self.company_id = company_id
         self.api_public_key = api_public_key
         self.api_private_key = api_private_key
-        self.server_url = server_url
+        self.server_url = self.change_cw_cloud_url(server_url)
         self.auth = (
             '{0}+{1}'.format(company_id, self.api_public_key),
             '{0}'.format(self.api_private_key),
@@ -377,6 +382,22 @@ class ConnectWiseAPIClient(object):
         else:
             self._log_failed(response)
             raise ConnectWiseAPIError(response)
+
+    def change_cw_cloud_url(self, server_url):
+        """
+        Replace the user-facing CW CLoud URLs with the API URLs.
+
+        i.e. https://na.myconnectwise.net becomes
+        https://api-na.myconnectwise.net
+
+        See https://developer.connectwise.com/Products/Manage/Developer_Guide#Authentication  # noqa
+        """
+        url = urlparse(server_url)
+        if url.netloc not in CW_CLOUD_URLS:
+            # Don't change anything, just return.
+            return server_url
+
+        return url._replace(netloc=CW_CLOUD_URLS[url.netloc]).geturl()
 
 
 class ProjectAPIClient(ConnectWiseAPIClient):
