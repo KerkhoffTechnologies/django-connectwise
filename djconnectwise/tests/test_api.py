@@ -48,6 +48,26 @@ class TestConnectWiseAPIClient(TestCase):
             '(closedFlag=False)'
         )
 
+    def test_cw_cloud_url(self):
+        client = api.ServiceAPIClient()
+        self.assertEqual(client.server_url, 'https://localhost')
+
+        client = api.ServiceAPIClient(
+            server_url='https://na.myconnectwise.net'
+        )
+        self.assertEqual(
+            client.server_url,
+            'https://api-na.myconnectwise.net'
+        )
+
+        client = api.ServiceAPIClient(
+            server_url='https://api-na.myconnectwise.net'
+        )
+        self.assertEqual(
+            client.server_url,
+            'https://api-na.myconnectwise.net'
+        )
+
     def test_prepare_conditions_multiple(self):
         test_date = date(1948, 5, 14)
         test_time = time(12, 0, 0, tzinfo=timezone.get_current_timezone())

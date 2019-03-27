@@ -69,6 +69,8 @@ From source:
     DJCONNECTWISE_CONF_CALLABLE = djconnectwise_configuration
     ```
 
+    For ConnectWise Cloud users, `CONNECTWISE_SERVER_URL` can be just i.e. `https://na.myconnectwise.net`- the library changes to the `api-region` domain automatically.
+      
     The `DJCONNECTWISE_CONF_CALLABLE` function should return a dictionary with the fields shown above. It's a callable so that it can fetch settings at runtime- for example from [Constance](https://github.com/jazzband/django-constance) settings.
 1. Sync objects with this management command: `cwsync`. This will take a very long time if there are many objects to fetch.
 1. Register your callbacks with these management commands:
