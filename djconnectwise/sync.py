@@ -1343,12 +1343,12 @@ class TicketSynchronizer(BatchConditionMixin, Synchronizer):
         created = instance.id is None
         # If the status results in a move to a different column
         original_status = not created and instance.status or None
+        entered_date_utc = json_data.get('dateEntered')
 
         json_data_id = json_data['id']
         instance.id = json_data['id']
         instance.summary = json_data['summary']
         instance.closed_flag = json_data.get('closedFlag')
-        instance.entered_date_utc = parse(json_data.get('dateEntered'))
         instance.last_updated_utc = json_data.get('_info').get('lastUpdated')
         instance.required_date_utc = json_data.get('requiredDate')
         instance.resources = json_data.get('resources')
@@ -1364,6 +1364,11 @@ class TicketSynchronizer(BatchConditionMixin, Synchronizer):
         instance.date_resolved_utc = json_data.get('dateResolved')
         instance.date_resplan_utc = json_data.get('dateResplan')
         instance.date_responded_utc = json_data.get('dateResponded')
+
+        if entered_date_utc:
+            # Parse the date here so that a datetime object is
+            # available for SLA calculation.
+            instance.entered_date_utc = parse(entered_date_utc)
 
         for json_field, value in self.related_meta.items():
             model_class, field_name = value

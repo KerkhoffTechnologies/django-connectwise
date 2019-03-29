@@ -515,6 +515,7 @@ class Calendar(models.Model):
             return sla_minutes
 
     def next_phase_expiry(self, sla_hours, ticket):
+
         start = ticket.entered_date_utc.astimezone(tz=None)
 
         # Start counting from the start of the next business day if the
@@ -1237,6 +1238,15 @@ class Ticket(TimeStampedModel):
         return self.save(*args, **kwargs)
 
     def calculate_sla_expiry(self):
+        # We can't guarantee that entered_date_utc won't be null.
+        # In the case that it is null, reset the date fields to prevent
+        # incorrect SLA calculations.
+        if not self.entered_date_utc:
+            self.sla_expire_date = None
+            self.do_not_escalate_date = None
+            self.sla_stage = None
+            self.date_resplan_utc = None
+            self.date_responded_utc = None
 
         if not self.sla:
             return
