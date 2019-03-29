@@ -515,6 +515,9 @@ class Calendar(models.Model):
             return sla_minutes
 
     def next_phase_expiry(self, sla_hours, ticket):
+        if not ticket.entered_date_utc:
+            return
+
         start = ticket.entered_date_utc.astimezone(tz=None)
 
         # Start counting from the start of the next business day if the
