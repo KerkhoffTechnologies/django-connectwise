@@ -1348,7 +1348,7 @@ class TicketSynchronizer(BatchConditionMixin, Synchronizer):
         instance.id = json_data['id']
         instance.summary = json_data['summary']
         instance.closed_flag = json_data.get('closedFlag')
-        instance.entered_date_utc = parse(json_data.get('dateEntered'))
+        instance.entered_date_utc = json_data.get('dateEntered')
         instance.last_updated_utc = json_data.get('_info').get('lastUpdated')
         instance.required_date_utc = json_data.get('requiredDate')
         instance.resources = json_data.get('resources')
