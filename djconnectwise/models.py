@@ -1248,7 +1248,7 @@ class Ticket(TimeStampedModel):
             self.date_resplan_utc = None
             self.date_responded_utc = None
 
-        if not self.sla:
+        if not self.sla or not self.status:
             return
 
         # SLAP might exist, which may alter the SLA target time
