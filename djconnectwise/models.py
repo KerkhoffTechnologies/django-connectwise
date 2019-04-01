@@ -1247,6 +1247,7 @@ class Ticket(TimeStampedModel):
             self.sla_stage = None
             self.date_resplan_utc = None
             self.date_responded_utc = None
+            return
 
         if not self.sla or not self.status:
             return
