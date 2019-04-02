@@ -1249,6 +1249,13 @@ class Ticket(TimeStampedModel):
             self.date_responded_utc = None
             return
 
+        if not self.status:
+            logger.error(
+                'Ticket {}-{}, does not have a status set. '
+                'Skipping SLA calculation.'.format(self.id, self.summary)
+            )
+            return
+
         if not self.sla:
             return
 
