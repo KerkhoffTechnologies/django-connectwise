@@ -551,21 +551,21 @@ class TimeAPIClient(ConnectWiseAPIClient):
                     "emailCcFlag": kwargs.get("emailCcFlag"),
                 }
 
-        timeEnd = kwargs.get("timeEnd")
-        if timeEnd:
-            body += {"timeEnd": timeEnd}
+        time_end = kwargs.get("timeEnd")
+        if time_end:
+            body += {"timeEnd": time_end}
 
-        hoursDeduct = kwargs.get("hoursDeduct")
-        if hoursDeduct:
-            body += {"hoursDeduct": hoursDeduct}
+        hours_deduct = kwargs.get("hoursDeduct")
+        if hours_deduct:
+            body += {"hoursDeduct": hours_deduct}
 
-        actualHours = kwargs.get("actualHours")
-        if actualHours:
-            body += {"actualHours": actualHours}
+        actual_hours = kwargs.get("actualHours")
+        if actual_hours:
+            body += {"actualHours": actual_hours}
 
-        billableOption = kwargs.get("billableOption")
-        if billableOption:
-            body += {"billableOption": billableOption}
+        billable_option = kwargs.get("billableOption")
+        if billable_option:
+            body += {"billableOption": billable_option}
 
         notes = kwargs.get("")
         if notes:
