@@ -541,8 +541,10 @@ class TimeAPIClient(ConnectWiseAPIClient):
                     "chargeToType": kwargs.get("chargeToType"),
                     "member": kwargs.get("member"),
                     "timeStart": kwargs.get("timeStart"),
-                    "addToDetailDescriptionFlag": kwargs.get("addToDetailDescriptionFlag"),
-                    "addToInternalAnalysisFlag": kwargs.get("addToInternalAnalysisFlag"),
+                    "addToDetailDescriptionFlag": kwargs
+                    .get("addToDetailDescriptionFlag"),
+                    "addToInternalAnalysisFlag": kwargs
+                    .get("addToInternalAnalysisFlag"),
                     "addToResolutionFlag": kwargs.get("addToResolutionFlag"),
                     "emailResourceFlag": kwargs.get("emailResourceFlag"),
                     "emailContactFlag": kwargs.get("emailContactFlag"),
