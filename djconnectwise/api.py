@@ -535,7 +535,41 @@ class TimeAPIClient(ConnectWiseAPIClient):
 
     def post_time_entry(self, *args, **kwargs):
         endpoint_url = self._endpoint(self.ENDPOINT_ENTRIES)
-        return self.request('post', endpoint_url, kwargs)
+
+        body = {
+                    "chargeToId": kwargs.get("chargeToId"),
+                    "chargeToType": kwargs.get("chargeToType"),
+                    "member": kwargs.get("member"),
+                    "timeStart": kwargs.get("timeStart"),
+                    "addToDetailDescriptionFlag": kwargs.get("addToDetailDescriptionFlag"),
+                    "addToInternalAnalysisFlag": kwargs.get("addToInternalAnalysisFlag"),
+                    "addToResolutionFlag": kwargs.get("addToResolutionFlag"),
+                    "emailResourceFlag": kwargs.get("emailResourceFlag"),
+                    "emailContactFlag": kwargs.get("emailContactFlag"),
+                    "emailCcFlag": kwargs.get("emailCcFlag"),
+                }
+
+        timeEnd = kwargs.get("timeEnd")
+        if timeEnd:
+            body += {"timeEnd": timeEnd}
+
+        hoursDeduct = kwargs.get("hoursDeduct")
+        if hoursDeduct:
+            body += {"hoursDeduct": hoursDeduct}
+
+        actualHours = kwargs.get("actualHours")
+        if actualHours:
+            body += {"actualHours": actualHours}
+
+        billableOption = kwargs.get("billableOption")
+        if billableOption:
+            body += {"billableOption": billableOption}
+
+        notes = kwargs.get("")
+        if notes:
+            body += {"notes": notes}
+
+        return self.request('post', endpoint_url, body)
 
 
 class SalesAPIClient(ConnectWiseAPIClient):
