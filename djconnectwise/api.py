@@ -553,23 +553,23 @@ class TimeAPIClient(ConnectWiseAPIClient):
 
         time_end = kwargs.get("timeEnd")
         if time_end:
-            body += {"timeEnd": time_end}
+            body.update({"timeEnd": time_end})
 
         hours_deduct = kwargs.get("hoursDeduct")
         if hours_deduct:
-            body += {"hoursDeduct": hours_deduct}
+            body.update({"hoursDeduct": hours_deduct})
 
         actual_hours = kwargs.get("actualHours")
         if actual_hours:
-            body += {"actualHours": actual_hours}
+            body.update({"actualHours": actual_hours})
 
         billable_option = kwargs.get("billableOption")
         if billable_option:
-            body += {"billableOption": billable_option}
+            body.update({"billableOption": billable_option})
 
         notes = kwargs.get("")
         if notes:
-            body += {"notes": notes}
+            body.update({"notes": notes})
 
         return self.request('post', endpoint_url, body)
 
