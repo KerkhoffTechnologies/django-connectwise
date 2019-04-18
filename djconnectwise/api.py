@@ -539,7 +539,11 @@ class TimeAPIClient(ConnectWiseAPIClient):
         body = {
                     "chargeToId": kwargs.get("chargeToId"),
                     "chargeToType": kwargs.get("chargeToType"),
-                    "member": kwargs.get("member"),
+                    "member": {
+                        "id": kwargs.get("resource").id,
+                        "identifier": kwargs.get("resource").identifier,
+                        "name": str(kwargs.get("resource")),
+                    },
                     "timeStart": kwargs.get("timeStart"),
                     "addToDetailDescriptionFlag": kwargs
                     .get("addToDetailDescriptionFlag"),
