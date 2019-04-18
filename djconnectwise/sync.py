@@ -1093,6 +1093,15 @@ class TimeEntrySynchronizer(BatchConditionMixin, Synchronizer):
     def get_page(self, *args, **kwargs):
         return self.client.get_time_entries(*args, **kwargs)
 
+    def create_new_entry(self, *args, **kwargs):
+        """
+        Send POST request to ConnectWise to create a new entry and then
+        create it in the local database from the response
+        """
+        time_client = api.TimeAPIClient()
+        instance = time_client.post_time_entry(*args, **kwargs)
+        return self.update_or_create_instance(instance)
+
 
 class LocationSynchronizer(Synchronizer):
     client_class = api.ServiceAPIClient

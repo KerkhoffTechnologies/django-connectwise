@@ -533,6 +533,10 @@ class TimeAPIClient(ConnectWiseAPIClient):
                                    should_page=True,
                                    *args, **kwargs)
 
+    def post_time_entry(self, *args, **kwargs):
+        endpoint_url = self._endpoint(self.ENDPOINT_ENTRIES)
+        return self.request('post', endpoint_url, kwargs)
+
 
 class SalesAPIClient(ConnectWiseAPIClient):
     API = 'sales'
