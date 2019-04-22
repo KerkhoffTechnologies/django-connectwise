@@ -1093,13 +1093,20 @@ class TimeEntrySynchronizer(BatchConditionMixin, Synchronizer):
     def get_page(self, *args, **kwargs):
         return self.client.get_time_entries(*args, **kwargs)
 
-    def create_new_entry(self, *args, **kwargs):
+    def create_new_entry(self, target, **kwargs):
         """
         Send POST request to ConnectWise to create a new entry and then
         create it in the local database from the response
         """
+        target_data = {}
+        if isinstance(target, models.Ticket):
+            target_data['id'] = target.id
+            target_data['type'] = target.record_type
+        else:
+            raise InvalidObjectException("Invalid target type for TimeEntry \
+creation: " + str(target.__class__) + ".")
         time_client = api.TimeAPIClient()
-        instance = time_client.post_time_entry(*args, **kwargs)
+        instance = time_client.post_time_entry(target_data, **kwargs)
         return self.update_or_create_instance(instance)
 
 

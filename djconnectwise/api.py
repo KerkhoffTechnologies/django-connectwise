@@ -1,6 +1,7 @@
 import logging
 import re
 import json
+import pytz
 from urllib.parse import urlparse
 
 import requests
@@ -533,45 +534,51 @@ class TimeAPIClient(ConnectWiseAPIClient):
                                    should_page=True,
                                    *args, **kwargs)
 
-    def post_time_entry(self, *args, **kwargs):
+    def post_time_entry(self, target_data, **kwargs):
         endpoint_url = self._endpoint(self.ENDPOINT_ENTRIES)
 
+        time_start = kwargs.get("time_start")
+        time_start = time_start.astimezone(pytz.timezone('UTC')).strftime(
+            "%Y-%m-%dT%H:%M:%SZ")
+
         body = {
-                    "chargeToId": kwargs.get("chargeToId"),
-                    "chargeToType": kwargs.get("chargeToType"),
+                    "chargeToId": target_data['id'],
+                    "chargeToType": target_data['type'],
                     "member": {
                         "id": kwargs.get("resource").id,
                         "identifier": kwargs.get("resource").identifier,
                         "name": str(kwargs.get("resource")),
                     },
-                    "timeStart": kwargs.get("timeStart"),
+                    "timeStart": time_start,
                     "addToDetailDescriptionFlag": kwargs
-                    .get("addToDetailDescriptionFlag"),
+                    .get("description_flag"),
                     "addToInternalAnalysisFlag": kwargs
-                    .get("addToInternalAnalysisFlag"),
-                    "addToResolutionFlag": kwargs.get("addToResolutionFlag"),
-                    "emailResourceFlag": kwargs.get("emailResourceFlag"),
-                    "emailContactFlag": kwargs.get("emailContactFlag"),
-                    "emailCcFlag": kwargs.get("emailCcFlag"),
+                    .get("analysis_flag"),
+                    "addToResolutionFlag": kwargs.get("resolution_flag"),
+                    "emailResourceFlag": kwargs.get("resource_flag"),
+                    "emailContactFlag": kwargs.get("contact_flag"),
+                    "emailCcFlag": kwargs.get("cc_flag"),
                 }
 
-        time_end = kwargs.get("timeEnd")
+        time_end = kwargs.get("time_end")
         if time_end:
+            time_end = time_end.astimezone(pytz.timezone('UTC')).strftime(
+                "%Y-%m-%dT%H:%M:%SZ")
             body.update({"timeEnd": time_end})
 
-        hours_deduct = kwargs.get("hoursDeduct")
+        hours_deduct = kwargs.get("hours_deduct")
         if hours_deduct:
             body.update({"hoursDeduct": hours_deduct})
 
-        actual_hours = kwargs.get("actualHours")
+        actual_hours = kwargs.get("actual_hours")
         if actual_hours:
             body.update({"actualHours": actual_hours})
 
-        billable_option = kwargs.get("billableOption")
+        billable_option = kwargs.get("billable_option")
         if billable_option:
             body.update({"billableOption": billable_option})
 
-        notes = kwargs.get("")
+        notes = kwargs.get("notes")
         if notes:
             body.update({"notes": notes})
 
