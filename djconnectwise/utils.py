@@ -85,6 +85,7 @@ class DjconnectwiseSettings:
             'timeout': 30.0,
             'batch_size': 50,
             'max_attempts': 3,
+            'response_version': '2019.2',
         }
 
         if hasattr(settings, 'DJCONNECTWISE_CONF_CALLABLE'):
