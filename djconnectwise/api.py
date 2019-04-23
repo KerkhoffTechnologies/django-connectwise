@@ -10,10 +10,14 @@ from django.conf import settings
 from django.core.cache import cache
 from djconnectwise.utils import DjconnectwiseSettings
 
+# Cloud URLs:
+# https://developer.connectwise.com/Products/Manage/Developer_Guide#Cloud_URLs
 CW_CLOUD_URLS = {
     'au.myconnectwise.net': 'api-au.myconnectwise.net',
     'eu.myconnectwise.net': 'api-eu.myconnectwise.net',
     'na.myconnectwise.net': 'api-na.myconnectwise.net',
+    'aus.myconnectwise.net': 'api-aus.myconnectwise.net',
+    'za.myconnectwise.net': 'api-za.myconnectwise.net',
 }
 COMPANY_INFO_REQUIRED = 'company-info-required'
 CW_CLOUD_DOMAIN = 'myconnectwise.net'
@@ -232,6 +236,17 @@ class ConnectWiseAPIClient(object):
 
         return codebase_updated
 
+    def get_headers(self):
+        headers = {}
+
+        response_version = self.request_settings['response_version']
+        if response_version:
+            headers['Accept'] = \
+                'application/vnd.connectwise.com+json; version={}' \
+                .format(response_version)
+
+        return headers
+
     def fetch_resource(self, endpoint_url, params=None, should_page=False,
                        retry_counter=None,
                        *args, **kwargs):
@@ -283,7 +298,8 @@ class ConnectWiseAPIClient(object):
                 response = requests.get(
                     endpoint,
                     auth=self.auth,
-                    timeout=self.timeout
+                    timeout=self.timeout,
+                    headers=self.get_headers(),
                 )
                 logger.info(" URL: {}".format(response.url))
 
@@ -356,6 +372,7 @@ class ConnectWiseAPIClient(object):
                 json=body,
                 auth=self.auth,
                 timeout=self.timeout,
+                headers=self.get_headers(),
             )
         except requests.RequestException as e:
             logger.error(
@@ -496,6 +513,7 @@ class ScheduleAPIClient(ConnectWiseAPIClient):
             endpoint_url,
             auth=self.auth,
             timeout=self.timeout,
+            headers=self.get_headers(),
         )
 
     def get_calendars(self, *args, **kwargs):
@@ -688,6 +706,7 @@ class SystemAPIClient(ConnectWiseAPIClient):
                 endpoint,
                 auth=self.auth,
                 timeout=self.timeout,
+                headers=self.get_headers(),
             )
         except requests.RequestException as e:
             logger.error('Request failed: GET {}: {}'.format(endpoint, e))
