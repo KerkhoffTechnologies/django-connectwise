@@ -1,6 +1,7 @@
 import logging
 import re
 import json
+import pytz
 from urllib.parse import urlparse
 
 import requests
@@ -550,6 +551,56 @@ class TimeAPIClient(ConnectWiseAPIClient):
         return self.fetch_resource(self.ENDPOINT_ENTRIES,
                                    should_page=True,
                                    *args, **kwargs)
+
+    def post_time_entry(self, target_data, **kwargs):
+        endpoint_url = self._endpoint(self.ENDPOINT_ENTRIES)
+
+        time_start = kwargs.get("time_start")
+        time_start = time_start.astimezone(pytz.timezone('UTC')).strftime(
+            "%Y-%m-%dT%H:%M:%SZ")
+
+        body = {
+                    "chargeToId": target_data['id'],
+                    "chargeToType": target_data['type'],
+                    "member": {
+                        "id": kwargs.get("resource").id,
+                        "identifier": kwargs.get("resource").identifier,
+                        "name": str(kwargs.get("resource")),
+                    },
+                    "timeStart": time_start,
+                    "addToDetailDescriptionFlag": kwargs
+                    .get("description_flag"),
+                    "addToInternalAnalysisFlag": kwargs
+                    .get("analysis_flag"),
+                    "addToResolutionFlag": kwargs.get("resolution_flag"),
+                    "emailResourceFlag": kwargs.get("resource_flag"),
+                    "emailContactFlag": kwargs.get("contact_flag"),
+                    "emailCcFlag": kwargs.get("cc_flag"),
+                }
+
+        time_end = kwargs.get("time_end")
+        if time_end:
+            time_end = time_end.astimezone(pytz.timezone('UTC')).strftime(
+                "%Y-%m-%dT%H:%M:%SZ")
+            body.update({"timeEnd": time_end})
+
+        hours_deduct = kwargs.get("hours_deduct")
+        if hours_deduct:
+            body.update({"hoursDeduct": hours_deduct})
+
+        actual_hours = kwargs.get("actual_hours")
+        if actual_hours:
+            body.update({"actualHours": actual_hours})
+
+        billable_option = kwargs.get("billable_option")
+        if billable_option:
+            body.update({"billableOption": billable_option})
+
+        notes = kwargs.get("notes")
+        if notes:
+            body.update({"notes": notes})
+
+        return self.request('post', endpoint_url, body)
 
 
 class SalesAPIClient(ConnectWiseAPIClient):
