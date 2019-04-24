@@ -464,6 +464,42 @@ class TestScheduleAPIClient(BaseAPITestCase):
         self.assertEqual(mock_call.call_count, 1)
 
 
+class TestTimeAPIClient(BaseAPITestCase):
+
+    def setUp(self):
+        super(TestTimeAPIClient, self).setUp()
+        self.client = api.TimeAPIClient()
+        self.endpoint = self.client._endpoint(self.client.ENDPOINT_ENTRIES)
+
+    @responses.activate
+    def test_get_time_entries(self):
+        endpoint = self.client._endpoint(self.client.ENDPOINT_ENTRIES)
+
+        mk.get(endpoint, fixtures.API_TIME_ENTRY_LIST)
+        result = self.client.get_time_entries()
+        self.assertEqual(result, fixtures.API_TIME_ENTRY_LIST)
+        self.assert_request_should_page(True)
+
+    @responses.activate
+    def test_post_time_entry(self):
+        method_name = 'djconnectwise.api.ConnectWiseAPIClient.request'
+        mock_call, _patch = mk.create_mock_call(
+            method_name,
+            fixtures.API_TIME_ENTRY)
+        self.client = api.TimeAPIClient()
+
+        target_data = {
+            'id': 1,
+            'type': "ServiceTicket",
+        }
+
+        self.client.post_time_entry(
+            target_data,
+            time_start=timezone.now(),
+        )
+        self.assertEqual(mock_call.call_count, 1)
+
+
 class TestFetchAPICodebase(TestCase):
     HOST = 'https://na.myconnectwise.net'
     COMPANY_ID = 'foobar'
