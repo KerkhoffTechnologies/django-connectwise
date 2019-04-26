@@ -240,7 +240,7 @@ class ConnectWiseAPIClient(object):
     def get_headers(self):
         headers = {}
 
-        response_version = self.request_settings['response_version']
+        response_version = self.request_settings.get('response_version')
         if response_version:
             headers['Accept'] = \
                 'application/vnd.connectwise.com+json; version={}' \
