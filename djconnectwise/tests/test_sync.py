@@ -428,6 +428,18 @@ class TestProjectSynchronizer(TestCase, SynchronizerTestMixin):
             float(instance.scheduled_hours),
             json_data['scheduledHours']
         )
+        self.assertEqual(
+            instance.actual_start, parse(json_data['actualStart'])
+        )
+        self.assertEqual(
+            instance.actual_end, parse(json_data['actualEnd'])
+        )
+        self.assertEqual(
+            instance.estimated_start, parse(json_data['estimatedStart'])
+        )
+        self.assertEqual(
+            instance.estimated_end, parse(json_data['estimatedEnd'])
+        )
 
 
 class TestTeamSynchronizer(TestCase, SynchronizerTestMixin):
