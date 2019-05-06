@@ -875,10 +875,10 @@ class Project(TimeStampedModel):
         blank=True, null=True, decimal_places=2, max_digits=9)
     scheduled_hours = models.DecimalField(
         blank=True, null=True, decimal_places=2, max_digits=9)
-    actual_start = models.DateTimeField(blank=True, null=True)
-    actual_end = models.DateTimeField(blank=True, null=True)
-    estimated_start = models.DateTimeField(blank=True, null=True)
-    estimated_end = models.DateTimeField(blank=True, null=True)
+    actual_start = models.DateField(blank=True, null=True)
+    actual_end = models.DateField(blank=True, null=True)
+    estimated_start = models.DateField(blank=True, null=True)
+    estimated_end = models.DateField(blank=True, null=True)
 
     status = models.ForeignKey(
         'ProjectStatus', blank=True, null=True, on_delete=models.SET_NULL)
