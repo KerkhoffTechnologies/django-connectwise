@@ -1173,11 +1173,28 @@ class ProjectSynchronizer(Synchronizer):
     }
 
     def _assign_field_data(self, instance, json_data):
+        actual_start = json_data.get('actualStart')
+        actual_end = json_data.get('actualEnd')
+        estimated_start = json_data.get('estimatedStart')
+        estimated_end = json_data.get('estimatedEnd')
+
         instance.id = json_data['id']
         instance.name = json_data['name']
         instance.actual_hours = json_data.get('actualHours')
         instance.budget_hours = json_data.get('budgetHours')
         instance.scheduled_hours = json_data.get('scheduledHours')
+
+        if actual_start:
+            instance.actual_start = parse(actual_start).date()
+
+        if actual_end:
+            instance.actual_end = parse(actual_end).date()
+
+        if estimated_start:
+            instance.estimated_start = parse(estimated_start).date()
+
+        if estimated_end:
+            instance.estimated_end = parse(estimated_end).date()
 
         # handle foreign keys
         for json_field, value in self.related_meta.items():
