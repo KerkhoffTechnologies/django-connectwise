@@ -916,3 +916,40 @@ class ServiceAPIClient(ConnectWiseAPIClient):
         endpoint_url = '{}/{}/items/'.format(self.ENDPOINT_BOARDS, board_id)
         return self.fetch_resource(endpoint_url, should_page=True,
                                    *args, **kwargs)
+
+
+class HostedAPIClient(SystemAPIClient):
+    ENDPOINT_HOSTED_SETUPS = 'connectwisehostedsetups/'
+
+    def post_hosted_tab(self, *args, **kwargs):
+        endpoint_url = self._endpoint(self.ENDPOINT_HOSTED_SETUPS)
+
+        body = {
+            'screenId': kwargs.get('screen_id'),
+            'description': kwargs.get('description'),
+            'url': kwargs.get('origin_url'),
+            'type': kwargs.get('type')
+        }
+
+        return self.request('post', endpoint_url, body)
+
+    def get_hosted_tabs(self, *args, **kwargs):
+        return self.fetch_resource(self.ENDPOINT_HOSTED_SETUPS,
+                                   should_page=True,
+                                   *args, **kwargs)
+
+    def delete_hosted_tab(self, hosted_tab_id):
+        endpoint_url = self._endpoint(
+            '{}/{}'.format(self.ENDPOINT_HOSTED_SETUPS, hosted_tab_id)
+        )
+
+        return requests.request('delete', endpoint_url, auth=self.auth)
+
+
+class HostedReportAPIClient(ConnectWiseAPIClient):
+    API = 'system/reports'
+    ENDPOINT_HOSTED_REPORT = 'ConnectWiseHostedApiScreen/'
+
+    def get_hosted_screen_ids(self, *args, **kwargs):
+        return self.fetch_resource(self.ENDPOINT_HOSTED_REPORT,
+                                   *args, **kwargs)
