@@ -226,6 +226,72 @@ class TestServiceAPIClient(BaseAPITestCase):
         self.assert_request_should_page(True)
 
 
+class TestHostedAPIClient(BaseAPITestCase):
+
+    def setUp(self):
+        self.client = api.HostedAPIClient()
+
+    @responses.activate
+    def test_post_hosted_tab(self):
+        body = {
+            'screenId': fixtures.API_HOSTED_SCREENS['row_values'][3],
+            'description': 'A new hosted tab',
+            'url': 'https://example.com',
+            'type': 'Tab'
+        }
+
+        method_name = 'djconnectwise.api.ConnectWiseAPIClient.request'
+        mock_call, _patch = mk.create_mock_call(
+            method_name,
+            body)
+
+        self.client.post_hosted_tab(
+            screen_id=fixtures.API_HOSTED_SCREENS['row_values'][3],
+            description='A new hosted tab',
+            origin_url='https://example.com',
+            type='Tab'
+        )
+        self.assertEqual(mock_call.call_count, 1)
+
+    @responses.activate
+    def test_get_hosted_tabs(self):
+        endpoint_url = \
+            self.client._endpoint(self.client.ENDPOINT_HOSTED_SETUPS)
+
+        mk.get(endpoint_url, fixtures.API_HOSTED_SETUPS)
+
+        result = self.client.get_hosted_tabs()
+        self.assertEqual(result, fixtures.API_HOSTED_SETUPS)
+
+    @responses.activate
+    def test_delete_hosted_tab(self):
+        object_id = 27
+        method_name = 'requests.request'
+        mock_call, _patch = mk.create_mock_call(
+            method_name,
+            "201 Created")
+
+        self.client.delete_hosted_tab(object_id)
+        self.assertEqual(mock_call.call_count, 1)
+
+
+class TestHostedReportAPIClient(BaseAPITestCase):
+
+    def setUp(self):
+        self.client = api.HostedReportAPIClient()
+
+    @responses.activate
+    def test_get_hosted_screen_ids(self):
+        endpoint_url = \
+            self.client._endpoint(self.client.ENDPOINT_HOSTED_REPORT)
+
+        mk.get(endpoint_url, fixtures.API_HOSTED_SCREENS)
+
+        result = self.client.get_hosted_screen_ids()
+        self.assertEqual(result, fixtures.API_HOSTED_SCREENS)
+        self.assert_request_should_page(False)
+
+
 class TestSystemAPIClient(BaseAPITestCase):
 
     def setUp(self):

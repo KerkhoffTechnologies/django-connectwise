@@ -1295,3 +1295,86 @@ API_TIME_ENTRY = {
 }
 
 API_TIME_ENTRY_LIST = [API_TIME_ENTRY]
+
+API_HOSTED_SCREENS = {
+    "column_definitions": [
+        {
+            "Presenter_Identifier_Client_Api_RecID": {
+                "type": "Numeric",
+                "isNullable": False,
+                "identityColumn": True
+            }
+        },
+        {
+            "Client_Api_ID": {
+                "type": "Text",
+                "isNullable": False,
+                "identityColumn": False
+            }
+        }
+    ],
+    "row_values": [
+        [
+            1, "CompanyDetail"
+        ],
+        [
+            2, "ContactDetail"
+        ],
+        [
+            3, "ConnectWiseToday"
+        ],
+        [
+            4, "ServiceTicket"
+        ],
+        [
+            5, "ProjectTicket"
+        ],
+        [
+            6, "SalesOrderDetail"
+        ],
+        [
+            7, "CompanyFinanceDetail"
+        ],
+    ]
+}
+
+API_HOSTED_SETUPS = [
+    {
+        "id": 2,
+        "screenId": 3,
+        "description": "ConnectWise University",
+        "url": "https://university.connectwise.com/university/",
+        "type": "Tab",
+        "disabledFlag": False,
+        "locationIds": [
+            2,
+            42
+        ],
+        "locationsEnabledFlag": True,
+        "createdBy": "zadmin",
+        "dateCreated": "2017-01-27T05:44:04Z",
+        "_info": {
+            "lastUpdated": "2017-01-27T05:44:04Z",
+            "updatedBy": "zadmin"
+        }
+    },
+    {
+        "id": 4,
+        "screenId": 5,
+        "description": "Kanban Testing",
+        "url": "https://opprimo.serveo.net/all-tickets/cwhostedembed/ ",
+        "type": "Tab",
+        "origin": "https://opprimo.serveo.net/",
+        "toolbarButtonDialogHeight": 0,
+        "toolbarButtonDialogWidth": 0,
+        "disabledFlag": False,
+        "locationIds": [],
+        "locationsEnabledFlag": False,
+        "createdBy": "User1",
+        "dateCreated": "2019-02-20T20:31:30Z",
+        "_info": {
+            "lastUpdated": "2019-04-10T23:42:24Z",
+            "updatedBy": "User1"
+        }
+    }
+]
