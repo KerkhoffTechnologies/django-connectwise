@@ -927,7 +927,8 @@ class HostedAPIClient(SystemAPIClient):
         body = {
             'screenId': kwargs.get('screen_id'),
             'description': kwargs.get('description'),
-            'url': kwargs.get('origin_url'),
+            'url': kwargs.get('url'),
+            'origin': kwargs.get('origin'),
             'type': kwargs.get('type')
         }
 
