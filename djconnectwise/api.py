@@ -207,7 +207,9 @@ class ConnectWiseAPIClient(object):
             primary_error_msg = '{}.'.format(stripped_message)
             if error.get('errors'):
                 for error_message in error.get('errors'):
-                    messages.append('{}.'.format(error_message.get('message')))
+                    messages.append(
+                        '{}.'.format(error_message.get('message').rstrip('.'))
+                    )
 
             messages = ' The error was: '.join(messages)
 
