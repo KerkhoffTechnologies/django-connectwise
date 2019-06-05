@@ -437,8 +437,8 @@ class Calendar(models.Model):
         # get sla minutes for first day
         end_of_day = self.get_day_hours(False, start.weekday())
 
-        if end_of_day \
-                and not self.is_holiday(timezone.now().astimezone(tz=None)):
+        if end_of_day and \
+                not self.is_holiday(timezone.now().astimezone(tz=None)):
             end_of_day = datetime.timedelta(hours=end_of_day.hour,
                                             minutes=end_of_day.minute)
         else:
