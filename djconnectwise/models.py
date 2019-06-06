@@ -408,8 +408,9 @@ class Calendar(models.Model):
                 return start_day, days
             start_day = (start_day + 1) % 7
             days += 1
-            if days > 7:
-                # Calendar has no hours on any day
+            if days >= 7:
+                # Calendar has no hours on any day. This case can also occur
+                # if a calendar has seven consecutive holidays.
                 return None, None
 
     def is_holiday(self, date):
@@ -521,6 +522,10 @@ class Calendar(models.Model):
         # Start counting from the start of the next business day if the
         # ticket was created on a weekend
         day_of_week, days = self.get_first_day(start)
+
+        if day_of_week is None and days is None:
+            ticket.sla_expire_date = None
+            return
 
         sla_minutes, days, minutes, sla_start = self.get_sla_start(
                                                sla_hours,
