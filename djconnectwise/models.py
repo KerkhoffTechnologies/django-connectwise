@@ -434,10 +434,19 @@ class Calendar(models.Model):
         start_time = datetime.timedelta(hours=start.hour,
                                         minutes=start.minute)
 
-        if start.date() == end.date():
-            start_day_end_time = self.get_day_hours(False, start.weekday())
-            if start_day_end_time and start_day_end_time > end.time():
+        # Get sla minutes for first day
+        start_day_end_time = self.get_day_hours(False, start.weekday())
 
+        if start_day_end_time and \
+                not self.is_holiday(timezone.now().astimezone(tz=None)):
+            end_of_day = datetime.timedelta(hours=start_day_end_time.hour,
+                                            minutes=start_day_end_time.minute)
+        else:
+            end_of_day = None
+
+        if start.date() == end.date():
+
+            if end_of_day and start_day_end_time > end.time():
                 end_time = datetime.timedelta(
                     hours=end.hour,
                     minutes=end.minute
@@ -447,16 +456,6 @@ class Calendar(models.Model):
             # if start and end was outside of work hours
             return minutes if minutes >= 0 else 0
         else:
-            # get sla minutes for first day
-            end_of_day = self.get_day_hours(False, start.weekday())
-
-            if end_of_day and \
-                    not self.is_holiday(timezone.now().astimezone(tz=None)):
-                end_of_day = datetime.timedelta(hours=end_of_day.hour,
-                                                minutes=end_of_day.minute)
-            else:
-                end_of_day = None
-
             if end_of_day and \
                     not self.is_holiday(timezone.now().astimezone(tz=None)):
                 first_day_minutes = (end_of_day - start_time).total_seconds() \
