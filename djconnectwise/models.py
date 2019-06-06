@@ -523,7 +523,7 @@ class Calendar(models.Model):
         # ticket was created on a weekend
         day_of_week, days = self.get_first_day(start)
 
-        if (day_of_week and days) is None:
+        if day_of_week is None and days is None:
             ticket.sla_expire_date = None
             return
 
