@@ -841,14 +841,6 @@ class ServiceAPIClient(ConnectWiseAPIClient):
             },
             {
                 'op': 'replace',
-                'path': 'priority',
-                'value': {
-                    'id': priority.id,
-                    'name': priority.name,
-                },
-            },
-            {
-                'op': 'replace',
                 'path': 'status',
                 'value': {
                     'id': status.id,
@@ -856,6 +848,18 @@ class ServiceAPIClient(ConnectWiseAPIClient):
                 },
             },
         ]
+
+        if priority:
+            priority_body = {
+                'op': 'replace',
+                'path': 'priority',
+                'value': {
+                    'id': priority.id,
+                    'name': priority.name,
+                },
+            }
+            body.append(priority_body)
+
         return self.request('patch', endpoint_url, body)
 
     def get_notes(self, ticket_id, *args, **kwargs):
