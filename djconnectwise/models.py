@@ -447,13 +447,14 @@ class Calendar(models.Model):
         if start.date() == end.date():
 
             if end_of_day:
-                ticket_end_time = datetime.timedelta(
-                    hours=end.hour,
-                    minutes=end.minute
-                )
-                end_time = min(ticket_end_time, end_of_day)
 
-                minutes = (end_time - start_time).total_seconds() / 60
+                end_time = min(start_day_end_time, end.time())
+                end_time_delta = datetime.timedelta(
+                    hours=end_time.hour,
+                    minutes=end_time.minute
+                )
+
+                minutes = (end_time_delta - start_time).total_seconds() / 60
             # return sla time between start and end of day/end time, or zero
             # if start and end was outside of work hours
             return max(minutes, 0)
