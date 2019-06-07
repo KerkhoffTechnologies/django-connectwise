@@ -447,15 +447,18 @@ class Calendar(models.Model):
 
         if start.date() == end.date():
 
-            if end_of_day and start_day_end_time > end.time():
-                end_time = datetime.timedelta(
-                    hours=end.hour,
-                    minutes=end.minute
+            if end_of_day:
+
+                end_time = min(start_day_end_time, end.time())
+                end_time_delta = datetime.timedelta(
+                    hours=end_time.hour,
+                    minutes=end_time.minute
                 )
-                minutes = (end_time - start_time).total_seconds() / 60
+
+                minutes = (end_time_delta - start_time).total_seconds() / 60
             # return sla time between start and end of day/end time, or zero
             # if start and end was outside of work hours
-            return minutes if minutes >= 0 else 0
+            return max(minutes, 0)
         else:
             if end_of_day and \
                     not self.is_holiday(timezone.now().astimezone(tz=None)):
