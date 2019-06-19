@@ -38,6 +38,7 @@ settings.configure(
         'api_private_key': '',
         'api_codebase': 'v4_6_release',
     },
+    CONNECTWISE_CLIENTID='4f2aa08e-9bed-43d5-ad08-c366d8ab6ddd',
     DATABASES={
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
