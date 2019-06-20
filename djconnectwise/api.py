@@ -151,6 +151,7 @@ class ConnectWiseAPIClient(object):
         self,
         company_id=None,
         server_url=None,
+        client_id=None,
         api_public_key=None,
         api_private_key=None,
     ):
@@ -158,6 +159,8 @@ class ConnectWiseAPIClient(object):
             company_id = settings.CONNECTWISE_CREDENTIALS['company_id']
         if not server_url:
             server_url = settings.CONNECTWISE_SERVER_URL
+        if not client_id:
+            client_id = settings.CONNECTWISE_CLIENTID
         if not api_public_key:
             api_public_key = settings.CONNECTWISE_CREDENTIALS['api_public_key']
         if not api_private_key:
@@ -173,6 +176,7 @@ class ConnectWiseAPIClient(object):
         self.api_public_key = api_public_key
         self.api_private_key = api_private_key
         self.server_url = self.change_cw_cloud_url(server_url)
+        self.client_id = client_id
         self.auth = (
             '{0}+{1}'.format(company_id, self.api_public_key),
             '{0}'.format(self.api_private_key),
@@ -247,6 +251,9 @@ class ConnectWiseAPIClient(object):
             headers['Accept'] = \
                 'application/vnd.connectwise.com+json; version={}' \
                 .format(response_version)
+
+        if self.client_id:
+            headers['clientId'] = self.client_id
 
         return headers
 
