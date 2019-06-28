@@ -191,13 +191,20 @@ class Synchronizer:
         instance, created = self.update_or_create_instance(api_instance)
         return instance
 
-    def fetch_delete_by_id(self, instance_id):
+    def fetch_delete_by_id(self, instance_id, pre_delete_callback=None,
+                           pre_delete_args=None,
+                           post_delete_callback=None):
         try:
             self.get_single(instance_id)
         except api.ConnectWiseRecordNotFoundError:
             # This is what we expect to happen. Since it's gone in CW, we
             # are safe to delete it from here.
+            pre_delete_result = None
+            if pre_delete_callback:
+                pre_delete_result = pre_delete_callback(*pre_delete_args)
             self.model_class.objects.filter(pk=instance_id).delete()
+            if post_delete_callback:
+                post_delete_callback(pre_delete_result)
             logger.info(
                 'Deleted {} {} (if it existed).'.format(
                     self.model_class.__name__,
