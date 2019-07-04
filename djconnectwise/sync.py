@@ -1378,8 +1378,8 @@ class TicketSynchronizer(BatchConditionMixin, Synchronizer):
         if board_names:
             boards = [board.strip() for board in board_names.split(',')]
 
-            boards_exist = \
-                models.BoardStatus.objects.filter(board__name__in=boards)
+            boards_exist = models.ConnectWiseBoard.available_objects.filter(
+                name__in=boards).exists()
 
             if boards_exist:
                 filtered_statuses = filtered_statuses.filter(
