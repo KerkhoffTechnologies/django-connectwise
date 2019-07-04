@@ -1370,14 +1370,26 @@ class TicketSynchronizer(BatchConditionMixin, Synchronizer):
         # this results in timeouts for requests, so we also need to add a
         # condition for all the open statuses. This doesn't impact on-premise
         # ConnectWise, so we just do it for all cases.
-        open_statuses = list(
-            models.BoardStatus.available_objects.
-            filter(closed_status=False).
-            values_list('id', flat=True)
-        )
-        if open_statuses:
+        request_settings = DjconnectwiseSettings().get_settings()
+        board_names = request_settings.get('board_status_filter')
+        filtered_statuses = models.BoardStatus.available_objects.filter(
+            closed_status=False)
+
+        if board_names:
+            boards = [board.strip() for board in board_names.split(',')]
+
+            boards_exist = \
+                models.BoardStatus.objects.filter(board__name__in=boards)
+
+            if boards_exist:
+                filtered_statuses = filtered_statuses.filter(
+                    board__name__in=boards
+                )
+
+        if filtered_statuses:
             # Only do this if we know of at least one open status.
-            self.batch_condition_list = open_statuses
+            self.batch_condition_list = \
+                list(filtered_statuses.values_list('id', flat=True))
 
     def _assign_field_data(self, instance, json_data):
         created = instance.id is None
