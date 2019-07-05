@@ -82,6 +82,10 @@ class Synchronizer:
         self.batch_size = request_settings['batch_size']
         self.full = full
 
+        self.pre_delete_callback = kwargs.pop('pre_delete_callback', None)
+        self.pre_delete_args = kwargs.pop('pre_delete_args', None)
+        self.post_delete_callback = kwargs.pop('post_delete_callback', None)
+
     @staticmethod
     def _assign_null_relation(instance, model_field):
         """
@@ -247,11 +251,20 @@ class Synchronizer:
         if stale_ids:
             delete_qset = self.model_class.objects.filter(pk__in=stale_ids)
             deleted_count = delete_qset.count()
-            msg = 'Removing {} stale records for model: {}'.format(
-                len(stale_ids), self.model_class,
+
+            pre_delete_result = None
+            if self.pre_delete_callback:
+                pre_delete_result = self.pre_delete_callback(
+                    *self.pre_delete_args
+                )
+            logger.info(
+                'Removing {} stale records for model: {}'.format(
+                    len(stale_ids), self.model_class,
+                )
             )
-            logger.info(msg)
             delete_qset.delete()
+            if self.post_delete_callback:
+                self.post_delete_callback(pre_delete_result)
 
         return deleted_count
 
