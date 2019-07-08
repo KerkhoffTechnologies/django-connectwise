@@ -37,6 +37,7 @@ from djconnectwise.models import MyCompanyOther
 from djconnectwise.models import Type
 from djconnectwise.models import SubType
 from djconnectwise.models import Item
+from djconnectwise.models import WorkType
 from djconnectwise.utils import get_hash
 
 from . import fixtures
@@ -1522,3 +1523,21 @@ class TestItemSynchronizer(TestCase, SynchronizerTestMixin):
         self.assertEqual(instance.id, json_data['id'])
         self.assertEqual(instance.name, json_data['name'])
         self.assertEqual(instance.board.name, json_data['board']['name'])
+
+
+class TestWorkTypeSynchronizer(TestCase, SynchronizerTestMixin):
+    synchronizer_class = sync.WorkTypeSynchronizer
+    model_class = WorkType
+    fixture = fixtures.API_WORK_TYPE_LIST
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_work_types()
+
+    def call_api(self, return_data):
+        return mocks.time_api_get_work_types_call(return_data)
+
+    def _assert_fields(self, instance, json_data):
+        self.assertEqual(instance.id, json_data['id'])
+        self.assertEqual(instance.name, json_data['name'])
+        self.assertEqual(instance.inactive_flag, json_data['inactiveFlag'])

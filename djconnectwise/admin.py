@@ -288,3 +288,9 @@ class SubType(admin.ModelAdmin):
 class Item(admin.ModelAdmin):
     list_display = ('id', 'name', 'board',)
     search_fields = ['name']
+
+
+@admin.register(models.WorkType)
+class WorkType(admin.ModelAdmin):
+    list_display = ('id', 'name', 'inactive_flag',)
+    search_fields = ['name']

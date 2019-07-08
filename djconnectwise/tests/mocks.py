@@ -299,6 +299,11 @@ def get(url, data, headers=None, status=200):
     get_raw(url, json.dumps(data), "application/json", headers, status=status)
 
 
+def time_api_get_work_types_call(return_value):
+    method_name = 'djconnectwise.api.TimeAPIClient.get_work_types'
+    return create_mock_call(method_name, return_value)
+
+
 def get_raw(url, data, content_type="application/octet-stream", headers=None,
             status=200):
     """Set up requests mock for given URL."""
