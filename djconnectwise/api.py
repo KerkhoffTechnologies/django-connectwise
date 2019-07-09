@@ -617,6 +617,10 @@ class TimeAPIClient(ConnectWiseAPIClient):
         if billable_option:
             body.update({"billableOption": billable_option})
 
+        work_type = kwargs.get('work_type')
+        if work_type:
+            body.update({"workType": work_type})
+
         notes = kwargs.get("notes")
         if notes:
             body.update({"notes": notes})

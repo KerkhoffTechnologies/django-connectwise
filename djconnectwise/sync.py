@@ -1372,7 +1372,8 @@ class TicketSynchronizer(BatchConditionMixin, Synchronizer):
         'sla': (models.Sla, 'sla'),
         'type': (models.Type, 'type'),
         'subType': (models.SubType, 'sub_type'),
-        'item': (models.Item, 'sub_type_item')
+        'item': (models.Item, 'sub_type_item'),
+        'workType': (models.WorkType, 'work_type')
     }
 
     def __init__(self, *args, **kwargs):
