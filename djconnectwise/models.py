@@ -782,7 +782,7 @@ class TimeEntry(models.Model):
     member = models.ForeignKey(
         'Member', blank=True, null=True, on_delete=models.CASCADE)
     work_type = models.ForeignKey(
-        'WorkType', blank=True, null=True, on_delete=models.CASCADE)
+        'WorkType', blank=True, null=True, on_delete=models.SET)
 
 
 class AvailableBoardTeamManager(models.Manager):
