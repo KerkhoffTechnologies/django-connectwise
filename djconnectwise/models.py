@@ -746,7 +746,6 @@ class TimeEntry(models.Model):
         ('Billable', "Billable"),
         ('DoNotBill', "Do Not Bill"),
         ('NoCharge', "No Charge"),
-        ('NoDefault', "No Default")
     )
 
     class Meta:
