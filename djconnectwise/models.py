@@ -746,7 +746,6 @@ class TimeEntry(models.Model):
         ('Billable', "Billable"),
         ('DoNotBill', "Do Not Bill"),
         ('NoCharge', "No Charge"),
-        ('NoDefault', "No Default")
     )
 
     class Meta:
@@ -1064,6 +1063,13 @@ class Ticket(TimeStampedModel):
         ('ProjectIssue', "Project Issue"),
     )
 
+    BILL_TIME_TYPES = (
+        ('Billable', "Billable"),
+        ('DoNotBill', "Do Not Bill"),
+        ('NoCharge', "No Charge"),
+        ('NoDefault', "No Default")
+    )
+
     RESPOND = 'respond'
     PLAN = 'plan'
     RESOLVE = 'resolve'
@@ -1123,6 +1129,11 @@ class Ticket(TimeStampedModel):
                                  max_length=250, choices=SLA_STAGE,
                                  db_index=True)
     minutes_waiting = models.PositiveIntegerField(default=0)
+    bill_time = models.CharField(blank=True, null=True,
+                                 max_length=20, choices=BILL_TIME_TYPES)
+    automatic_email_cc_flag = models.BooleanField(default=False)
+    automatic_email_contact_flag = models.BooleanField(default=False)
+    automatic_email_resource_flag = models.BooleanField(default=False)
 
     board = models.ForeignKey(
         'ConnectwiseBoard', blank=True, null=True, on_delete=models.CASCADE)
