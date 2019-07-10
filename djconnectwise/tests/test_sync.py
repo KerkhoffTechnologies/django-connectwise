@@ -1204,6 +1204,14 @@ class TestTicketSynchronizer(TestCase):
         # verify assigned type
         self.assertEqual(instance.sub_type_item_id, json_data['item']['id'])
 
+        self.assertEqual(instance.bill_time, json_data['billTime'])
+        self.assertEqual(instance.automatic_email_cc_flag,
+                         json_data['automaticEmailCcFlag'])
+        self.assertEqual(instance.automatic_email_contact_flag,
+                         json_data['automaticEmailContactFlag'])
+        self.assertEqual(instance.automatic_email_resource_flag,
+                         json_data['automaticEmailResourceFlag'])
+
     def test_sync_ticket(self):
         """
         Test to ensure ticket synchronizer saves a CW Ticket instance
