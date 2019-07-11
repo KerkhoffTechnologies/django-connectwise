@@ -228,8 +228,17 @@ class Synchronizer:
             instance = self.model_class()
             created = True
 
-        self._assign_field_data(instance, api_instance)
-        instance.save()
+        try:
+            self._assign_field_data(instance, api_instance)
+            if created:
+                instance.save(force_insert=True)
+        except IntegrityError as e:
+            # This can happen when multiple threads are creating the
+            # same ticket at once. See issue description for #991
+            # for the full details.
+            msg = "IntegrityError while attempting to create {} instance: {}"
+            logger.error(msg.format(self.model_class, e))
+
 
         logger.info(
             '{}: {} {}'.format(
