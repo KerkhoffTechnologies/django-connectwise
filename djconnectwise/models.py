@@ -780,6 +780,8 @@ class TimeEntry(models.Model):
         'Company', blank=True, null=True, on_delete=models.CASCADE)
     member = models.ForeignKey(
         'Member', blank=True, null=True, on_delete=models.CASCADE)
+    work_type = models.ForeignKey(
+        'WorkType', blank=True, null=True, on_delete=models.SET_NULL)
 
 
 class AvailableBoardTeamManager(models.Manager):
@@ -1168,6 +1170,9 @@ class Ticket(TimeStampedModel):
         on_delete=models.SET_NULL)
     sub_type_item = models.ForeignKey(
         'Item', blank=True, null=True, related_name='item_tickets',
+        on_delete=models.SET_NULL)
+    work_type = models.ForeignKey(
+        'WorkType', blank=True, null=True, related_name='work_type_tickets',
         on_delete=models.SET_NULL)
 
     class Meta:
@@ -1633,6 +1638,14 @@ class Item(TimeStampedModel):
     class Meta:
         verbose_name = 'Item'
         verbose_name_plural = 'Items'
+
+    def __str__(self):
+        return self.name
+
+
+class WorkType(TimeStampedModel):
+    name = models.CharField(max_length=50)
+    inactive_flag = models.BooleanField(default=False)
 
     def __str__(self):
         return self.name

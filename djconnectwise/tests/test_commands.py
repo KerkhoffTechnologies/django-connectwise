@@ -438,6 +438,18 @@ class TestSyncItemCommand(AbstractBaseSyncTest, TestCase):
     )
 
 
+class TestSyncWorkTypeCommand(AbstractBaseSyncTest, TestCase):
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_work_types()
+
+    args = (
+        mocks.time_api_get_work_types_call,
+        fixtures.API_WORK_TYPE_LIST,
+        'work_type'
+    )
+
+
 class TestSyncAllCommand(TestCase):
 
     def setUp(self):
@@ -479,7 +491,8 @@ class TestSyncAllCommand(TestCase):
             TestSyncHolidayListCommand,
             TestSyncTypeCommand,
             TestSyncSubTypeCommand,
-            TestSyncItemCommand
+            TestSyncItemCommand,
+            TestSyncWorkTypeCommand
         ]
 
         self.test_args = []
@@ -561,7 +574,8 @@ class TestSyncAllCommand(TestCase):
             'holiday_list': models.HolidayList,
             'type': models.Type,
             'sub_type': models.SubType,
-            'item': models.Item
+            'item': models.Item,
+            'work_type': models.WorkType
         }
 
         self.test_sync()

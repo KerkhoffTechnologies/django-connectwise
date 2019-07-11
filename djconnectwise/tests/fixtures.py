@@ -1378,3 +1378,34 @@ API_HOSTED_SETUPS = [
         }
     }
 ]
+
+API_WORK_TYPE = {
+        "id": 4,
+        "name": "After Hours",
+        "billTime": "Billable",
+        "rateType": "Multiplier",
+        "rate": 2.5,
+        "hoursMin": 0.5,
+        "hoursMax": 0,
+        "roundBillHoursTo": 0.5,
+        "externalIntegrationXRef": {
+            "id": 2,
+            "identifier": "Weekend After Hours",
+            "name": "Weekend and Holiday Time",
+            "_info": {
+                "workTypeExternalIntegration_href":
+                    "https://connectwise.kerkhofftech.ca/v4_6_release/apis/3.0"
+            }
+        },
+        "inactiveFlag": False,
+        "overallDefaultFlag": False,
+        "activityDefaultFlag": False,
+        "utilizationFlag": True,
+        "costMultiplier": 1,
+        "_info": {
+            "lastUpdated": "2019-09-09T17:37:19Z",
+            "updatedBy": "User1"
+        }
+    }
+
+API_WORK_TYPE_LIST = [API_WORK_TYPE]

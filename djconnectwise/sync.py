@@ -1372,7 +1372,8 @@ class TicketSynchronizer(BatchConditionMixin, Synchronizer):
         'sla': (models.Sla, 'sla'),
         'type': (models.Type, 'type'),
         'subType': (models.SubType, 'sub_type'),
-        'item': (models.Item, 'sub_type_item')
+        'item': (models.Item, 'sub_type_item'),
+        'workType': (models.WorkType, 'work_type')
     }
 
     def __init__(self, *args, **kwargs):
@@ -1926,3 +1927,19 @@ class ItemSynchronizer(Synchronizer):
             records += self.client_call(board_id, *args, **kwargs)
 
         return records
+
+
+class WorkTypeSynchronizer(Synchronizer):
+    client_class = api.TimeAPIClient
+    model_class = models.WorkType
+
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data['id']
+        instance.name = json_data['name']
+        instance.inactive_flag = json_data['inactiveFlag']
+        instance.save()
+
+        return instance
+
+    def get_page(self, *args, **kwargs):
+        return self.client.get_work_types(*args, **kwargs)

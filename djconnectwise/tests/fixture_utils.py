@@ -227,3 +227,10 @@ def init_items():
         fixtures.API_ITEM_LIST)
     synchronizer = sync.ItemSynchronizer()
     return synchronizer.sync()
+
+
+def init_work_types():
+    mocks.time_api_get_work_types_call(
+        fixtures.API_WORK_TYPE_LIST)
+    synchronizer = sync.WorkTypeSynchronizer()
+    return synchronizer.sync()

@@ -555,9 +555,15 @@ class ScheduleAPIClient(ConnectWiseAPIClient):
 class TimeAPIClient(ConnectWiseAPIClient):
     API = 'time'
     ENDPOINT_ENTRIES = 'entries'
+    ENDPOINT_WORK_TYPES = 'workTypes'
 
     def get_time_entries(self, *args, **kwargs):
         return self.fetch_resource(self.ENDPOINT_ENTRIES,
+                                   should_page=True,
+                                   *args, **kwargs)
+
+    def get_work_types(self, *args, **kwargs):
+        return self.fetch_resource(self.ENDPOINT_WORK_TYPES,
                                    should_page=True,
                                    *args, **kwargs)
 
@@ -610,6 +616,14 @@ class TimeAPIClient(ConnectWiseAPIClient):
         billable_option = kwargs.get("billable_option")
         if billable_option:
             body.update({"billableOption": billable_option})
+
+        work_type = kwargs.get("work_type")
+        if work_type:
+            body.update({
+                "workType": {
+                    "name": str(work_type)
+                }
+            })
 
         notes = kwargs.get("notes")
         if notes:
