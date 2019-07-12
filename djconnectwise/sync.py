@@ -235,8 +235,9 @@ class Synchronizer:
             # This can happen when multiple threads are creating the
             # same ticket at once. See issue description for #991
             # for the full details.
-            msg = "IntegrityError while attempting to create {}. Error: {}"
-            logger.error(msg.format(self.model_class, e))
+            msg = "IntegrityError while attempting to create {}." \
+                  " Error: {}".format(self.model_class, e)
+            logger.error(msg)
             raise InvalidObjectException(msg)
 
         logger.info(
