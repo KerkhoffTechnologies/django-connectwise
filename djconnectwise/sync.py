@@ -502,9 +502,9 @@ class OpportunityNoteSynchronizer(Synchronizer):
             related_opportunity = opp_class.objects.get(pk=opportunity_id)
             setattr(instance, 'opportunity', related_opportunity)
         except ObjectDoesNotExist as e:
-            logger.warning(
-                'Opportunity not found for {}.'.format(instance.id) +
-                ' ObjectDoesNotExist Exception: {}'.format(e)
+            raise InvalidObjectException(
+                'Opportunity note {} has a opportunityId that does not exist.'
+                ' ObjectDoesNotExist Exception: {}'.format(instance.id, e)
             )
 
     def client_call(self, opportunity_id, *args, **kwargs):
