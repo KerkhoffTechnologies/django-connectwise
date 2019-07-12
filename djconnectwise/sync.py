@@ -230,17 +230,13 @@ class Synchronizer:
 
         try:
             self._assign_field_data(instance, api_instance)
-            if created and self.model_class is models.Ticket:
-                instance.save(force_insert=True)
-            else:
-                instance.save()
+            instance.save()
         except IntegrityError as e:
             # This can happen when multiple threads are creating the
             # same ticket at once. See issue description for #991
             # for the full details.
-            msg = "IntegrityError while attempting to create {} instance: {}"
+            msg = "IntegrityError while attempting to create {}. Error: {}"
             logger.error(msg.format(self.model_class, e))
-            # TODO better message
             raise InvalidObjectException(msg)
 
         logger.info(
@@ -1465,7 +1461,10 @@ class TicketSynchronizer(BatchConditionMixin, Synchronizer):
                 field_name
             )
 
-        instance.save()
+        if created:
+            instance.save(force_insert=True)
+        else:
+            instance.save()
 
         logger.info('Syncing ticket {}'.format(json_data_id))
         action = created and 'Created' or 'Updated'
