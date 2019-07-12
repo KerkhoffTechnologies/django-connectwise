@@ -1431,11 +1431,11 @@ class TicketSynchronizer(BatchConditionMixin, Synchronizer):
         instance.date_responded_utc = json_data.get('dateResponded')
         instance.bill_time = json_data.get('billTime')
         instance.automatic_email_cc_flag = \
-            json_data.get('automaticEmailCcFlag')
+            json_data.get('automaticEmailCcFlag', False)
         instance.automatic_email_contact_flag = \
-            json_data.get('automaticEmailContactFlag')
+            json_data.get('automaticEmailContactFlag', False)
         instance.automatic_email_resource_flag = \
-            json_data.get('automaticEmailResourceFlag')
+            json_data.get('automaticEmailResourceFlag', False)
 
         if entered_date_utc:
             # Parse the date here so that a datetime object is
