@@ -230,7 +230,10 @@ class Synchronizer:
 
         try:
             self._assign_field_data(instance, api_instance)
-            instance.save()
+            if created and self.model_class is models.Ticket:
+                instance.save(force_insert=True)
+            else:
+                instance.save()
         except IntegrityError as e:
             # This can happen when multiple threads are creating the
             # same ticket at once. See issue description for #991
@@ -1415,12 +1418,8 @@ class TicketSynchronizer(BatchConditionMixin, Synchronizer):
                 list(filtered_statuses.values_list('id', flat=True))
 
     def _assign_field_data(self, instance, json_data):
-        created = instance.id is None
-        # If the status results in a move to a different column
-        original_status = not created and instance.status or None
         entered_date_utc = json_data.get('dateEntered')
 
-        json_data_id = json_data['id']
         instance.id = json_data['id']
         instance.summary = json_data['summary']
         instance.closed_flag = json_data.get('closedFlag')
@@ -1461,24 +1460,6 @@ class TicketSynchronizer(BatchConditionMixin, Synchronizer):
                 model_class,
                 field_name
             )
-
-        if created:
-            instance.save(force_insert=True)
-        else:
-            instance.save()
-
-        logger.info('Syncing ticket {}'.format(json_data_id))
-        action = created and 'Created' or 'Updated'
-
-        status_changed = ''
-        if original_status != instance.status:
-            status_changed = '; status changed from ' \
-                '{} to {}'.format(original_status, instance.status)
-
-        log_info = '{} ticket {}{}'.format(
-            action, instance.id, status_changed
-        )
-        logger.info(log_info)
 
         return instance
 
