@@ -221,6 +221,7 @@ class Synchronizer:
         Creates and returns an instance if it does not already exist.
         """
         created = False
+        api_instance = self.remove_null_characters(api_instance)
         try:
             instance_pk = api_instance[self.lookup_key]
             instance = self.model_class.objects.get(pk=instance_pk)
@@ -625,8 +626,6 @@ class CompanySynchronizer(Synchronizer):
         Assigns field data from an company_json instance
         to a local Company model instance
         """
-        company_json = self.remove_null_characters(company_json)
-
         company.id = company_json['id']
         company.name = company_json['name']
         company.identifier = company_json['identifier']
