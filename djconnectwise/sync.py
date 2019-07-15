@@ -1935,3 +1935,19 @@ class WorkTypeSynchronizer(Synchronizer):
 
     def get_page(self, *args, **kwargs):
         return self.client.get_work_types(*args, **kwargs)
+
+
+class WorkRoleSynchronizer(Synchronizer):
+    client_class = api.TimeAPIClient
+    model_class = models.WorkRole
+
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data['id']
+        instance.name = json_data['name']
+        instance.inactive_flag = json_data['inactiveFlag']
+        instance.save()
+
+        return instance
+
+    def get_page(self, *args, **kwargs):
+        return self.client.get_work_roles(*args, **kwargs)

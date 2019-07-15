@@ -556,6 +556,7 @@ class TimeAPIClient(ConnectWiseAPIClient):
     API = 'time'
     ENDPOINT_ENTRIES = 'entries'
     ENDPOINT_WORK_TYPES = 'workTypes'
+    ENDPOINT_WORK_ROLES = 'workRoles'
 
     def get_time_entries(self, *args, **kwargs):
         return self.fetch_resource(self.ENDPOINT_ENTRIES,
@@ -564,6 +565,11 @@ class TimeAPIClient(ConnectWiseAPIClient):
 
     def get_work_types(self, *args, **kwargs):
         return self.fetch_resource(self.ENDPOINT_WORK_TYPES,
+                                   should_page=True,
+                                   *args, **kwargs)
+
+    def get_work_roles(self, *args, **kwargs):
+        return self.fetch_resource(self.ENDPOINT_WORK_ROLES,
                                    should_page=True,
                                    *args, **kwargs)
 
@@ -621,6 +627,14 @@ class TimeAPIClient(ConnectWiseAPIClient):
         if work_type:
             body.update({
                 "workType": {
+                    "name": str(work_type)
+                }
+            })
+
+        work_role = kwargs.get("work_role")
+        if work_role:
+            body.update({
+                "workRole": {
                     "name": str(work_type)
                 }
             })

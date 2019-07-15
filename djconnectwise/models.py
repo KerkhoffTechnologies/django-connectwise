@@ -1171,9 +1171,6 @@ class Ticket(TimeStampedModel):
     sub_type_item = models.ForeignKey(
         'Item', blank=True, null=True, related_name='item_tickets',
         on_delete=models.SET_NULL)
-    work_type = models.ForeignKey(
-        'WorkType', blank=True, null=True, related_name='work_type_tickets',
-        on_delete=models.SET_NULL)
 
     class Meta:
         verbose_name = 'Ticket'
@@ -1644,6 +1641,14 @@ class Item(TimeStampedModel):
 
 
 class WorkType(TimeStampedModel):
+    name = models.CharField(max_length=50)
+    inactive_flag = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.name
+
+
+class WorkRole(TimeStampedModel):
     name = models.CharField(max_length=50)
     inactive_flag = models.BooleanField(default=False)
 
