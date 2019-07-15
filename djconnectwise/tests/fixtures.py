@@ -1409,3 +1409,19 @@ API_WORK_TYPE = {
     }
 
 API_WORK_TYPE_LIST = [API_WORK_TYPE]
+
+API_WORK_ROLE = {
+        "id": 11,
+        "name": "System Engineer",
+        "hourlyRate": 100,
+        "inactiveFlag": False,
+        "locationIds": [
+            2
+        ],
+        "_info": {
+            "lastUpdated": "2003-08-21T13:02:52Z",
+            "updatedBy": "zAdmin"
+        }
+    }
+
+API_WORK_ROLE_LIST = [API_WORK_ROLE]
