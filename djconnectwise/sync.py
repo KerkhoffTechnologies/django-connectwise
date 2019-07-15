@@ -1929,6 +1929,7 @@ class WorkTypeSynchronizer(Synchronizer):
         instance.id = json_data['id']
         instance.name = json_data['name']
         instance.inactive_flag = json_data['inactiveFlag']
+        instance.bill_time = json_data['billTime']
         instance.save()
 
         return instance

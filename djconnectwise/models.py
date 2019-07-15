@@ -1646,6 +1646,9 @@ class Item(TimeStampedModel):
 class WorkType(TimeStampedModel):
     name = models.CharField(max_length=50)
     inactive_flag = models.BooleanField(default=False)
+    bill_time = models.CharField(
+        max_length=50, choices=TimeEntry.BILL_TYPES, blank=True, null=True
+    )
 
     def __str__(self):
         return self.name
