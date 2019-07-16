@@ -64,6 +64,12 @@ class AvailableConnectWiseBoardManager(models.Manager):
 class ConnectWiseBoard(TimeStampedModel):
     name = models.CharField(max_length=255)
     inactive = models.BooleanField(default=False)
+    work_role = models.ForeignKey(
+        'WorkRole',
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL
+    )
 
     objects = models.Manager()
     available_objects = AvailableConnectWiseBoardManager()

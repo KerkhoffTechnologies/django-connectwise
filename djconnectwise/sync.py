@@ -539,6 +539,20 @@ class BoardSynchronizer(Synchronizer):
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
         instance.name = json_data['name']
+
+        work_role = json_data.get('workRole')
+        if work_role:
+            work_role_id = work_role['id']
+
+            try:
+                instance.work_role = \
+                    models.WorkRole.objects.get(pk=work_role_id)
+
+            except models.WorkRole.DoesNotExist:
+                logger.warning(
+                    'Failed to find Work Role: {}'.format(work_role)
+                )
+
         if 'inactiveFlag' in json_data:
             # This is the new CW way
             instance.inactive = json_data.get('inactiveFlag')

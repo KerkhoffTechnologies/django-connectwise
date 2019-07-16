@@ -1,12 +1,36 @@
 from django.conf import settings
 
+API_WORK_ROLE = {
+        "id": 11,
+        "name": "System Engineer",
+        "hourlyRate": 100,
+        "inactiveFlag": False,
+        "locationIds": [
+            2
+        ],
+        "_info": {
+            "lastUpdated": "2003-08-21T13:02:52Z",
+            "updatedBy": "zAdmin"
+        }
+    }
+
+API_WORK_ROLE_LIST = [API_WORK_ROLE]
+
 API_BOARD = {
     'id': 1,
     'name': 'Service A',
     'locationId': 1,
     'businessUnitId': 10,
     'inactiveFlag': False,
-    'projectFlag': False
+    'projectFlag': False,
+    'workRole': {
+        'id': API_WORK_ROLE['id'],
+        'name': API_WORK_ROLE['name'],
+        '_info': {
+            'workRole_href':
+                'https://connectwise.kerkhofftech.ca/v4_6_release/test'
+        }
+    },
 }
 
 API_BOARD_LIST = [API_BOARD]
@@ -1409,19 +1433,3 @@ API_WORK_TYPE = {
     }
 
 API_WORK_TYPE_LIST = [API_WORK_TYPE]
-
-API_WORK_ROLE = {
-        "id": 11,
-        "name": "System Engineer",
-        "hourlyRate": 100,
-        "inactiveFlag": False,
-        "locationIds": [
-            2
-        ],
-        "_info": {
-            "lastUpdated": "2003-08-21T13:02:52Z",
-            "updatedBy": "zAdmin"
-        }
-    }
-
-API_WORK_ROLE_LIST = [API_WORK_ROLE]
