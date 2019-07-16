@@ -1384,7 +1384,6 @@ class TicketSynchronizer(BatchConditionMixin, Synchronizer):
         'type': (models.Type, 'type'),
         'subType': (models.SubType, 'sub_type'),
         'item': (models.Item, 'sub_type_item'),
-        'workType': (models.WorkType, 'work_type')
     }
 
     def __init__(self, *args, **kwargs):
@@ -1929,6 +1928,7 @@ class WorkTypeSynchronizer(Synchronizer):
         instance.id = json_data['id']
         instance.name = json_data['name']
         instance.inactive_flag = json_data['inactiveFlag']
+        instance.bill_time = json_data['billTime']
         instance.save()
 
         return instance
