@@ -635,7 +635,7 @@ class TimeAPIClient(ConnectWiseAPIClient):
         if work_role:
             body.update({
                 "workRole": {
-                    "name": str(work_type)
+                    "name": str(work_role)
                 }
             })
 
