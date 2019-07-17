@@ -629,6 +629,12 @@ class TimeAPIClient(ConnectWiseAPIClient):
         if notes:
             body.update({"notes": notes})
 
+        email_cc = kwargs.get("email_cc")
+        if email_cc:
+            body.update({
+                "emailCc": email_cc
+            })
+
         return self.request('post', endpoint_url, body)
 
 
