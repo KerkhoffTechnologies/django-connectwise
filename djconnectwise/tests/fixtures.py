@@ -16,6 +16,37 @@ API_WORK_ROLE = {
 
 API_WORK_ROLE_LIST = [API_WORK_ROLE]
 
+API_WORK_TYPE = {
+        "id": 4,
+        "name": "After Hours",
+        "billTime": "Billable",
+        "rateType": "Multiplier",
+        "rate": 2.5,
+        "hoursMin": 0.5,
+        "hoursMax": 0,
+        "roundBillHoursTo": 0.5,
+        "externalIntegrationXRef": {
+            "id": 2,
+            "identifier": "Weekend After Hours",
+            "name": "Weekend and Holiday Time",
+            "_info": {
+                "workTypeExternalIntegration_href":
+                    "https://connectwise.kerkhofftech.ca/v4_6_release/apis/3.0"
+            }
+        },
+        "inactiveFlag": False,
+        "overallDefaultFlag": False,
+        "activityDefaultFlag": False,
+        "utilizationFlag": True,
+        "costMultiplier": 1,
+        "_info": {
+            "lastUpdated": "2019-09-09T17:37:19Z",
+            "updatedBy": "User1"
+        }
+    }
+
+API_WORK_TYPE_LIST = [API_WORK_TYPE]
+
 API_BOARD = {
     'id': 1,
     'name': 'Service A',
@@ -28,6 +59,14 @@ API_BOARD = {
         'name': API_WORK_ROLE['name'],
         '_info': {
             'workRole_href':
+                'https://connectwise.kerkhofftech.ca/v4_6_release/test'
+        }
+    },
+    'workType': {
+        'id': API_WORK_TYPE['id'],
+        'name': API_WORK_TYPE['name'],
+        '_info': {
+            'workType_href':
                 'https://connectwise.kerkhofftech.ca/v4_6_release/test'
         }
     },
@@ -1402,34 +1441,3 @@ API_HOSTED_SETUPS = [
         }
     }
 ]
-
-API_WORK_TYPE = {
-        "id": 4,
-        "name": "After Hours",
-        "billTime": "Billable",
-        "rateType": "Multiplier",
-        "rate": 2.5,
-        "hoursMin": 0.5,
-        "hoursMax": 0,
-        "roundBillHoursTo": 0.5,
-        "externalIntegrationXRef": {
-            "id": 2,
-            "identifier": "Weekend After Hours",
-            "name": "Weekend and Holiday Time",
-            "_info": {
-                "workTypeExternalIntegration_href":
-                    "https://connectwise.kerkhofftech.ca/v4_6_release/apis/3.0"
-            }
-        },
-        "inactiveFlag": False,
-        "overallDefaultFlag": False,
-        "activityDefaultFlag": False,
-        "utilizationFlag": True,
-        "costMultiplier": 1,
-        "_info": {
-            "lastUpdated": "2019-09-09T17:37:19Z",
-            "updatedBy": "User1"
-        }
-    }
-
-API_WORK_TYPE_LIST = [API_WORK_TYPE]

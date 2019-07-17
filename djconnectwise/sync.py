@@ -536,22 +536,14 @@ class BoardSynchronizer(Synchronizer):
     client_class = api.ServiceAPIClient
     model_class = models.ConnectWiseBoard
 
+    related_meta = {
+        'workRole': (models.WorkRole, 'work_role'),
+        'workType': (models.WorkType, 'work_type')
+    }
+
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
         instance.name = json_data['name']
-
-        work_role = json_data.get('workRole')
-        if work_role:
-            work_role_id = work_role['id']
-
-            try:
-                instance.work_role = \
-                    models.WorkRole.objects.get(pk=work_role_id)
-
-            except models.WorkRole.DoesNotExist:
-                logger.warning(
-                    'Failed to find Work Role: {}'.format(work_role)
-                )
 
         if 'inactiveFlag' in json_data:
             # This is the new CW way
@@ -559,6 +551,17 @@ class BoardSynchronizer(Synchronizer):
         else:
             # This is old, but keep for backwards-compatibility
             instance.inactive = json_data.get('inactive')
+
+        for json_field, value in self.related_meta.items():
+            model_class, field_name = value
+            self._assign_relation(
+                instance,
+                json_data,
+                json_field,
+                model_class,
+                field_name
+            )
+
         return instance
 
     def get_page(self, *args, **kwargs):

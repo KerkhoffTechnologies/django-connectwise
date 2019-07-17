@@ -520,10 +520,13 @@ class TestBoardSynchronizer(TestCase, SynchronizerTestMixin):
         self.assertEqual(instance.inactive, json_data['inactiveFlag'])
         self.assertEqual(instance.work_role.name,
                          json_data['workRole']['name'])
+        self.assertEqual(instance.work_type.name,
+                         json_data['workType']['name'])
 
     def setUp(self):
         super().setUp()
         fixture_utils.init_work_roles()
+        fixture_utils.init_work_types()
         fixture_utils.init_boards()
 
 

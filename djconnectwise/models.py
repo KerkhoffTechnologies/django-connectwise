@@ -70,6 +70,12 @@ class ConnectWiseBoard(TimeStampedModel):
         null=True,
         on_delete=models.SET_NULL
     )
+    work_type = models.ForeignKey(
+        'WorkType',
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL
+    )
 
     objects = models.Manager()
     available_objects = AvailableConnectWiseBoardManager()
