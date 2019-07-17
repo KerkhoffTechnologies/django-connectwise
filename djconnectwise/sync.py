@@ -1443,6 +1443,8 @@ class TicketSynchronizer(BatchConditionMixin, Synchronizer):
             json_data.get('automaticEmailContactFlag', False)
         instance.automatic_email_resource_flag = \
             json_data.get('automaticEmailResourceFlag', False)
+        instance.automatic_email_cc = \
+            json_data.get('automaticEmailCc')
 
         if entered_date_utc:
             # Parse the date here so that a datetime object is
