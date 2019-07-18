@@ -309,6 +309,11 @@ def time_api_get_work_roles_call(return_value):
     return create_mock_call(method_name, return_value)
 
 
+def finance_api_get_agreements_call(return_value):
+    method_name = 'djconnectwise.api.FinanceAPIClient.get_agreements'
+    return create_mock_call(method_name, return_value)
+
+
 def get_raw(url, data, content_type="application/octet-stream", headers=None,
             status=200):
     """Set up requests mock for given URL."""

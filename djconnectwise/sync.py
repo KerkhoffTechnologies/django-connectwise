@@ -1968,3 +1968,34 @@ class WorkRoleSynchronizer(Synchronizer):
 
     def get_page(self, *args, **kwargs):
         return self.client.get_work_roles(*args, **kwargs)
+
+
+class AgreementSynchronizer(Synchronizer):
+    client_class = api.FinanceAPIClient
+    model_class = models.Agreement
+
+    related_meta = {
+        'workRole': (models.WorkRole, 'work_role'),
+        'workType': (models.WorkType, 'work_type')
+    }
+
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data['id']
+        instance.name = json_data['name']
+        instance.bill_time = json_data['billTime']
+
+        for json_field, value in self.related_meta.items():
+            model_class, field_name = value
+            self._assign_relation(
+                instance,
+                json_data,
+                json_field,
+                model_class,
+                field_name
+            )
+        instance.save()
+
+        return instance
+
+    def get_page(self, *args, **kwargs):
+        return self.client.get_agreements(*args, **kwargs)

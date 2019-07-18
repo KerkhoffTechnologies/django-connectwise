@@ -1669,3 +1669,17 @@ class WorkRole(TimeStampedModel):
 
     def __str__(self):
         return self.name
+
+
+class Agreement(TimeStampedModel):
+    name = models.CharField(max_length=100)
+    bill_time = models.CharField(
+        max_length=50, choices=TimeEntry.BILL_TYPES, blank=True, null=True
+    )
+    work_type = models.ForeignKey(
+        'WorkType', null=True, on_delete=models.SET_NULL)
+    work_role = models.ForeignKey(
+        'WorkRole', null=True, on_delete=models.SET_NULL)
+
+    def __str__(self):
+        return self.name

@@ -1441,3 +1441,27 @@ API_HOSTED_SETUPS = [
         }
     }
 ]
+
+API_AGREEMENT = {
+    "id": 1,
+    "name": "Gold Rate",
+    "billTime": "Billable",
+    "workRole": {
+        "id": API_WORK_ROLE['id'],
+        "name": API_WORK_ROLE['name'],
+        "_info": {
+            "workRole_href":
+                "https://cw.com/v4_6_release/apis/3.0/time/workRoles/18"
+        }
+    },
+    "workType": {
+        "id": API_WORK_TYPE['id'],
+        "name": API_WORK_TYPE['name'],
+        "_info": {
+            "workType_href":
+                "https://cw.com/v4_6_release/apis/3.0/time/workTypes/3"
+        }
+    }
+}
+
+API_AGREEMENT_LIST = [API_AGREEMENT]

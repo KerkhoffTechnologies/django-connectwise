@@ -39,6 +39,7 @@ from djconnectwise.models import SubType
 from djconnectwise.models import Item
 from djconnectwise.models import WorkType
 from djconnectwise.models import WorkRole
+from djconnectwise.models import Agreement
 from djconnectwise.utils import get_hash
 
 from . import fixtures
@@ -1578,3 +1579,22 @@ class TestWorkRoleSynchronizer(TestCase, SynchronizerTestMixin):
         self.assertEqual(instance.id, json_data['id'])
         self.assertEqual(instance.name, json_data['name'])
         self.assertEqual(instance.inactive_flag, json_data['inactiveFlag'])
+
+
+class TestAgreementSynchronizer(TestCase, SynchronizerTestMixin):
+    synchronizer_class = sync.AgreementSynchronizer
+    model_class = Agreement
+    fixture = fixtures.API_AGREEMENT_LIST
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_agreements()
+        fixture_utils.init_work_roles()
+        fixture_utils.init_work_types()
+
+    def call_api(self, return_data):
+        return mocks.finance_api_get_agreements_call(return_data)
+
+    def _assert_fields(self, instance, json_data):
+        self.assertEqual(instance.id, json_data['id'])
+        self.assertEqual(instance.name, json_data['name'])
