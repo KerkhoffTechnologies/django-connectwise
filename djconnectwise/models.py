@@ -785,6 +785,7 @@ class TimeEntry(models.Model):
     email_resource_flag = models.BooleanField(default=False)
     email_contact_flag = models.BooleanField(default=False)
     email_cc_flag = models.BooleanField(default=False)
+    email_cc = models.CharField(blank=True, null=True, max_length=1000)
 
     charge_to_id = models.ForeignKey(
         'Ticket', blank=True, null=True, on_delete=models.CASCADE)
@@ -1144,6 +1145,9 @@ class Ticket(TimeStampedModel):
     bill_time = models.CharField(blank=True, null=True,
                                  max_length=20, choices=BILL_TIME_TYPES)
     automatic_email_cc_flag = models.BooleanField(default=False)
+    automatic_email_cc = models.CharField(blank=True,
+                                          null=True,
+                                          max_length=1000)
     automatic_email_contact_flag = models.BooleanField(default=False)
     automatic_email_resource_flag = models.BooleanField(default=False)
 
