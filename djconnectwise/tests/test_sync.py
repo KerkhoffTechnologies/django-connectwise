@@ -38,6 +38,7 @@ from djconnectwise.models import Type
 from djconnectwise.models import SubType
 from djconnectwise.models import Item
 from djconnectwise.models import WorkType
+from djconnectwise.models import WorkRole
 from djconnectwise.utils import get_hash
 
 from . import fixtures
@@ -517,6 +518,16 @@ class TestBoardSynchronizer(TestCase, SynchronizerTestMixin):
     def _assert_fields(self, instance, json_data):
         self.assertEqual(instance.name, json_data['name'])
         self.assertEqual(instance.inactive, json_data['inactiveFlag'])
+        self.assertEqual(instance.work_role.name,
+                         json_data['workRole']['name'])
+        self.assertEqual(instance.work_type.name,
+                         json_data['workType']['name'])
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_work_roles()
+        fixture_utils.init_work_types()
+        fixture_utils.init_boards()
 
 
 class TestBoardStatusSynchronizer(TestCase, SynchronizerTestMixin):
@@ -1544,6 +1555,24 @@ class TestWorkTypeSynchronizer(TestCase, SynchronizerTestMixin):
 
     def call_api(self, return_data):
         return mocks.time_api_get_work_types_call(return_data)
+
+    def _assert_fields(self, instance, json_data):
+        self.assertEqual(instance.id, json_data['id'])
+        self.assertEqual(instance.name, json_data['name'])
+        self.assertEqual(instance.inactive_flag, json_data['inactiveFlag'])
+
+
+class TestWorkRoleSynchronizer(TestCase, SynchronizerTestMixin):
+    synchronizer_class = sync.WorkRoleSynchronizer
+    model_class = WorkRole
+    fixture = fixtures.API_WORK_ROLE_LIST
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_work_roles()
+
+    def call_api(self, return_data):
+        return mocks.time_api_get_work_roles_call(return_data)
 
     def _assert_fields(self, instance, json_data):
         self.assertEqual(instance.id, json_data['id'])

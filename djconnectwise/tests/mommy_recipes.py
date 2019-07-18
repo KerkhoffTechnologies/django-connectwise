@@ -2,31 +2,36 @@ from itertools import cycle
 
 from model_mommy.recipe import Recipe, seq, foreign_key
 from djconnectwise.models import ConnectWiseBoard, \
-    TicketPriority, Ticket, Company, Member, Project, Calendar
+    TicketPriority, Ticket, Company, Member, Project, WorkRole
 
 import names
 
-connectwise_board = Recipe(ConnectWiseBoard,
+connectwise_board = Recipe(
+    ConnectWiseBoard,
     name=seq('Board #'),
 )
 
-member = Recipe(Member,
+member = Recipe(
+    Member,
     identifier=seq('user'),
     first_name=lambda: names.get_first_name(),
     last_name=lambda: names.get_last_name(),
 )
 
-project = Recipe(Project,
+project = Recipe(
+    Project,
     name=seq('Project #'),
     manager=foreign_key(member),
 )
 
-company = Recipe(Company,
+company = Recipe(
+    Company,
     name=seq('Company #'),
     identifier=seq('company'),
 )
 
-ticket_priority = Recipe(TicketPriority,
+ticket_priority = Recipe(
+    TicketPriority,
     name=seq('Priority #'),
 )
 

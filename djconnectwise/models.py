@@ -64,6 +64,18 @@ class AvailableConnectWiseBoardManager(models.Manager):
 class ConnectWiseBoard(TimeStampedModel):
     name = models.CharField(max_length=255)
     inactive = models.BooleanField(default=False)
+    work_role = models.ForeignKey(
+        'WorkRole',
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL
+    )
+    work_type = models.ForeignKey(
+        'WorkType',
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL
+    )
 
     objects = models.Manager()
     available_objects = AvailableConnectWiseBoardManager()
@@ -1646,6 +1658,14 @@ class WorkType(TimeStampedModel):
     bill_time = models.CharField(
         max_length=50, choices=TimeEntry.BILL_TYPES, blank=True, null=True
     )
+
+    def __str__(self):
+        return self.name
+
+
+class WorkRole(TimeStampedModel):
+    name = models.CharField(max_length=50)
+    inactive_flag = models.BooleanField(default=False)
 
     def __str__(self):
         return self.name
