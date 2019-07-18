@@ -1223,6 +1223,8 @@ class TestTicketSynchronizer(TestCase):
                          json_data['automaticEmailContactFlag'])
         self.assertEqual(instance.automatic_email_resource_flag,
                          json_data['automaticEmailResourceFlag'])
+        self.assertEqual(instance.automatic_email_cc,
+                         json_data['automaticEmailCc'])
 
     def test_sync_ticket(self):
         """
