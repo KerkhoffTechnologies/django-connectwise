@@ -294,3 +294,9 @@ class Item(admin.ModelAdmin):
 class WorkType(admin.ModelAdmin):
     list_display = ('id', 'name', 'inactive_flag',)
     search_fields = ['name']
+
+
+@admin.register(models.WorkRole)
+class WorkRole(admin.ModelAdmin):
+    list_display = ('id', 'name', 'inactive_flag',)
+    search_fields = ['name']
