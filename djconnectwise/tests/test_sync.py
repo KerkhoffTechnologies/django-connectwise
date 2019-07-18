@@ -1162,6 +1162,7 @@ class TestTicketSynchronizer(TestCase):
         fixture_utils.init_types()
         fixture_utils.init_subtypes()
         fixture_utils.init_items()
+        fixture_utils.init_agreements()
 
     def _assert_sync(self, instance, json_data):
         self.assertEqual(instance.summary, json_data['summary'])
@@ -1226,6 +1227,7 @@ class TestTicketSynchronizer(TestCase):
                          json_data['automaticEmailResourceFlag'])
         self.assertEqual(instance.automatic_email_cc,
                          json_data['automaticEmailCc'])
+        self.assertEqual(instance.agreement, json_data['agreement'])
 
     def test_sync_ticket(self):
         """

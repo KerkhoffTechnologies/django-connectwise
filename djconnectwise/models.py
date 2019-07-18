@@ -795,6 +795,8 @@ class TimeEntry(models.Model):
         'Member', blank=True, null=True, on_delete=models.CASCADE)
     work_type = models.ForeignKey(
         'WorkType', blank=True, null=True, on_delete=models.SET_NULL)
+    agreement = models.ForeignKey(
+        'Agreement', blank=True, null=True, on_delete=models.SET_NULL)
 
 
 class AvailableBoardTeamManager(models.Manager):
@@ -1106,7 +1108,6 @@ class Ticket(TimeStampedModel):
 
     actual_hours = models.DecimalField(
         blank=True, null=True, decimal_places=2, max_digits=9)
-    agreement_id = models.IntegerField(blank=True, null=True)
     approved = models.NullBooleanField(blank=True, null=True)
     budget_hours = models.DecimalField(
         blank=True, null=True, decimal_places=2, max_digits=9)
@@ -1186,6 +1187,9 @@ class Ticket(TimeStampedModel):
         on_delete=models.SET_NULL)
     sub_type_item = models.ForeignKey(
         'Item', blank=True, null=True, related_name='item_tickets',
+        on_delete=models.SET_NULL)
+    agreement = models.ForeignKey(
+        'Agreement', blank=True, null=True, related_name='agreement_tickets',
         on_delete=models.SET_NULL)
 
     class Meta:
