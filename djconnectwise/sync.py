@@ -1401,6 +1401,7 @@ class TicketSynchronizer(BatchConditionMixin, Synchronizer):
         'type': (models.Type, 'type'),
         'subType': (models.SubType, 'sub_type'),
         'item': (models.Item, 'sub_type_item'),
+        'agreement': (models.Agreement, 'agreement'),
     }
 
     def __init__(self, *args, **kwargs):
@@ -1978,13 +1979,16 @@ class AgreementSynchronizer(Synchronizer):
 
     related_meta = {
         'workRole': (models.WorkRole, 'work_role'),
-        'workType': (models.WorkType, 'work_type')
+        'workType': (models.WorkType, 'work_type'),
+        'company': (models.Company, 'company')
     }
 
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
         instance.name = json_data['name']
         instance.bill_time = json_data['billTime']
+        instance.agreement_type = json_data['type']['name']
+        instance.cancelled_flag = json_data['cancelledFlag']
 
         for json_field, value in self.related_meta.items():
             model_class, field_name = value

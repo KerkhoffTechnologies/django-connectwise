@@ -304,5 +304,6 @@ class WorkRole(admin.ModelAdmin):
 
 @admin.register(models.Agreement)
 class Agreement(admin.ModelAdmin):
-    list_display = ('id', 'name', 'bill_time', 'work_type', 'work_role')
+    list_display = ('id', '__str__', 'company', 'cancelled_flag',
+                    'bill_time', 'work_type', 'work_role')
     search_fields = ['name']

@@ -1446,6 +1446,20 @@ API_AGREEMENT = {
     "id": 1,
     "name": "Gold Rate",
     "billTime": "Billable",
+    "company": {
+        "id": API_COMPANY["id"],
+        "name": API_COMPANY["name"],
+        "identifier": API_COMPANY["identifier"],
+    },
+    "cancelledFlag": False,
+    "type": {
+        "id": 5,
+        "name": "Block Time - One time",
+        "_info": {
+            "type_href":
+                "https://cw.com/v4_6_release/apis/3.0/finance/agreements/types"
+        }
+    },
     "workRole": {
         "id": API_WORK_ROLE['id'],
         "name": API_WORK_ROLE['name'],

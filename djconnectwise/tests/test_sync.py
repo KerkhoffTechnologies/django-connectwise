@@ -1602,3 +1602,11 @@ class TestAgreementSynchronizer(TestCase, SynchronizerTestMixin):
     def _assert_fields(self, instance, json_data):
         self.assertEqual(instance.id, json_data['id'])
         self.assertEqual(instance.name, json_data['name'])
+        self.assertEqual(instance.bill_time, json_data['billTime'])
+        self.assertEqual(instance.agreement_type, json_data['type']['name'])
+        self.assertEqual(instance.cancelled_flag, json_data['cancelledFlag'])
+        self.assertEqual(
+            instance.work_role.name, json_data['workRole']['name'])
+        self.assertEqual(
+            instance.work_type.name, json_data['workType']['name'])
+        self.assertEqual(instance.company.name, json_data['company']['name'])
