@@ -847,3 +847,19 @@ class TestAPISettings(TestCase):
             retry_counter['count'],
             api.ServiceAPIClient.MAX_404_ATTEMPTS + 1
         )
+
+
+class TestFinanceAPIClient(BaseAPITestCase):
+
+    def setUp(self):
+        super(TestFinanceAPIClient, self).setUp()
+        self.client = api.FinanceAPIClient()
+        self.endpoint = self.client._endpoint(self.client.ENDPOINT_AGREEMENTS)
+
+    @responses.activate
+    def test_get_agreements(self):
+        mk.get(self.endpoint, fixtures.API_AGREEMENT_LIST)
+        result = self.client.get_agreements()
+
+        self.assertEqual(result, fixtures.API_AGREEMENT_LIST)
+        self.assert_request_should_page(True)

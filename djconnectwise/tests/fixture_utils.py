@@ -241,3 +241,10 @@ def init_work_roles():
         fixtures.API_WORK_ROLE_LIST)
     synchronizer = sync.WorkRoleSynchronizer()
     return synchronizer.sync()
+
+
+def init_agreements():
+    mocks.finance_api_get_agreements_call(
+        fixtures.API_AGREEMENT_LIST)
+    synchronizer = sync.AgreementSynchronizer()
+    return synchronizer.sync()

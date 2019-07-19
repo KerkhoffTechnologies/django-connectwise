@@ -1401,6 +1401,7 @@ class TicketSynchronizer(BatchConditionMixin, Synchronizer):
         'type': (models.Type, 'type'),
         'subType': (models.SubType, 'sub_type'),
         'item': (models.Item, 'sub_type_item'),
+        'agreement': (models.Agreement, 'agreement'),
     }
 
     def __init__(self, *args, **kwargs):
@@ -1947,7 +1948,10 @@ class WorkTypeSynchronizer(Synchronizer):
         instance.id = json_data['id']
         instance.name = json_data['name']
         instance.inactive_flag = json_data['inactiveFlag']
-        instance.bill_time = json_data['billTime']
+        if json_data['billTime'] == 'NoDefault':
+            instance.bill_time = None
+        else:
+            instance.bill_time = json_data['billTime']
         instance.save()
 
         return instance
@@ -1970,3 +1974,40 @@ class WorkRoleSynchronizer(Synchronizer):
 
     def get_page(self, *args, **kwargs):
         return self.client.get_work_roles(*args, **kwargs)
+
+
+class AgreementSynchronizer(Synchronizer):
+    client_class = api.FinanceAPIClient
+    model_class = models.Agreement
+
+    related_meta = {
+        'workRole': (models.WorkRole, 'work_role'),
+        'workType': (models.WorkType, 'work_type'),
+        'company': (models.Company, 'company')
+    }
+
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data['id']
+        instance.name = json_data['name']
+        instance.agreement_type = json_data['type']['name']
+        instance.cancelled_flag = json_data['cancelledFlag']
+        if json_data['billTime'] == 'NoDefault':
+            instance.bill_time = None
+        else:
+            instance.bill_time = json_data['billTime']
+
+        for json_field, value in self.related_meta.items():
+            model_class, field_name = value
+            self._assign_relation(
+                instance,
+                json_data,
+                json_field,
+                model_class,
+                field_name
+            )
+        instance.save()
+
+        return instance
+
+    def get_page(self, *args, **kwargs):
+        return self.client.get_agreements(*args, **kwargs)

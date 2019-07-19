@@ -795,6 +795,8 @@ class TimeEntry(models.Model):
         'Member', blank=True, null=True, on_delete=models.CASCADE)
     work_type = models.ForeignKey(
         'WorkType', blank=True, null=True, on_delete=models.SET_NULL)
+    agreement = models.ForeignKey(
+        'Agreement', blank=True, null=True, on_delete=models.SET_NULL)
 
 
 class AvailableBoardTeamManager(models.Manager):
@@ -1106,7 +1108,6 @@ class Ticket(TimeStampedModel):
 
     actual_hours = models.DecimalField(
         blank=True, null=True, decimal_places=2, max_digits=9)
-    agreement_id = models.IntegerField(blank=True, null=True)
     approved = models.NullBooleanField(blank=True, null=True)
     budget_hours = models.DecimalField(
         blank=True, null=True, decimal_places=2, max_digits=9)
@@ -1186,6 +1187,9 @@ class Ticket(TimeStampedModel):
         on_delete=models.SET_NULL)
     sub_type_item = models.ForeignKey(
         'Item', blank=True, null=True, related_name='item_tickets',
+        on_delete=models.SET_NULL)
+    agreement = models.ForeignKey(
+        'Agreement', blank=True, null=True, related_name='agreement_tickets',
         on_delete=models.SET_NULL)
 
     class Meta:
@@ -1673,3 +1677,21 @@ class WorkRole(TimeStampedModel):
 
     def __str__(self):
         return self.name
+
+
+class Agreement(TimeStampedModel):
+    name = models.CharField(max_length=100)
+    agreement_type = models.CharField(max_length=50, null=True)
+    cancelled_flag = models.BooleanField(default=False)
+    bill_time = models.CharField(
+        max_length=50, choices=TimeEntry.BILL_TYPES, blank=True, null=True
+    )
+    work_type = models.ForeignKey(
+        'WorkType', null=True, on_delete=models.SET_NULL)
+    work_role = models.ForeignKey(
+        'WorkRole', null=True, on_delete=models.SET_NULL)
+    company = models.ForeignKey(
+        'Company', null=True, on_delete=models.SET_NULL)
+
+    def __str__(self):
+        return '{}/{}'.format(self.agreement_type, self.name)

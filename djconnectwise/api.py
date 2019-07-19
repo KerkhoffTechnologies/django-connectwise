@@ -639,6 +639,15 @@ class TimeAPIClient(ConnectWiseAPIClient):
                 }
             })
 
+        agreement = kwargs.get("agreement")
+        if agreement:
+            body.update({
+                "agreement": {
+                    "id": agreement.id,
+                    "name": str(agreement)
+                }
+            })
+
         notes = kwargs.get("notes")
         if notes:
             body.update({"notes": notes})
@@ -962,6 +971,15 @@ class ServiceAPIClient(ConnectWiseAPIClient):
     def get_items(self, board_id, *args, **kwargs):
         endpoint_url = '{}/{}/items/'.format(self.ENDPOINT_BOARDS, board_id)
         return self.fetch_resource(endpoint_url, should_page=True,
+                                   *args, **kwargs)
+
+
+class FinanceAPIClient(ConnectWiseAPIClient):
+    API = 'finance'
+    ENDPOINT_AGREEMENTS = 'agreements'
+
+    def get_agreements(self, *args, **kwargs):
+        return self.fetch_resource(self.ENDPOINT_AGREEMENTS, should_page=True,
                                    *args, **kwargs)
 
 
