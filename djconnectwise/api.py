@@ -643,6 +643,7 @@ class TimeAPIClient(ConnectWiseAPIClient):
         if agreement:
             body.update({
                 "agreement": {
+                    "id": agreement.id,
                     "name": str(agreement)
                 }
             })

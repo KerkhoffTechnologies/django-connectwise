@@ -1948,7 +1948,10 @@ class WorkTypeSynchronizer(Synchronizer):
         instance.id = json_data['id']
         instance.name = json_data['name']
         instance.inactive_flag = json_data['inactiveFlag']
-        instance.bill_time = json_data['billTime']
+        if json_data['billTime'] == 'NoDefault':
+            instance.bill_time = None
+        else:
+            instance.bill_time = json_data['billTime']
         instance.save()
 
         return instance
@@ -1986,9 +1989,12 @@ class AgreementSynchronizer(Synchronizer):
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
         instance.name = json_data['name']
-        instance.bill_time = json_data['billTime']
         instance.agreement_type = json_data['type']['name']
         instance.cancelled_flag = json_data['cancelledFlag']
+        if json_data['billTime'] == 'NoDefault':
+            instance.bill_time = None
+        else:
+            instance.bill_time = json_data['billTime']
 
         for json_field, value in self.related_meta.items():
             model_class, field_name = value
