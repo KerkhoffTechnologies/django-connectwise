@@ -78,7 +78,11 @@ class Command(BaseCommand):
             ('time_entry', sync.TimeEntrySynchronizer,
                 _('Time Entry')),
             ('work_type', sync.WorkTypeSynchronizer,
-             _('Work Type'))
+             _('Work Type')),
+            ('work_role', sync.WorkRoleSynchronizer,
+             _('Work Role')),
+            ('agreement', sync.AgreementSynchronizer,
+             _('Agreement'))
         )
         self.synchronizer_map = OrderedDict()
         for name, synchronizer, obj_name in synchronizers:

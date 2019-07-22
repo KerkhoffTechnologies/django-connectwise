@@ -234,3 +234,17 @@ def init_work_types():
         fixtures.API_WORK_TYPE_LIST)
     synchronizer = sync.WorkTypeSynchronizer()
     return synchronizer.sync()
+
+
+def init_work_roles():
+    mocks.time_api_get_work_roles_call(
+        fixtures.API_WORK_ROLE_LIST)
+    synchronizer = sync.WorkRoleSynchronizer()
+    return synchronizer.sync()
+
+
+def init_agreements():
+    mocks.finance_api_get_agreements_call(
+        fixtures.API_AGREEMENT_LIST)
+    synchronizer = sync.AgreementSynchronizer()
+    return synchronizer.sync()

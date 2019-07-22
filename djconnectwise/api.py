@@ -556,6 +556,7 @@ class TimeAPIClient(ConnectWiseAPIClient):
     API = 'time'
     ENDPOINT_ENTRIES = 'entries'
     ENDPOINT_WORK_TYPES = 'workTypes'
+    ENDPOINT_WORK_ROLES = 'workRoles'
 
     def get_time_entries(self, *args, **kwargs):
         return self.fetch_resource(self.ENDPOINT_ENTRIES,
@@ -564,6 +565,11 @@ class TimeAPIClient(ConnectWiseAPIClient):
 
     def get_work_types(self, *args, **kwargs):
         return self.fetch_resource(self.ENDPOINT_WORK_TYPES,
+                                   should_page=True,
+                                   *args, **kwargs)
+
+    def get_work_roles(self, *args, **kwargs):
+        return self.fetch_resource(self.ENDPOINT_WORK_ROLES,
                                    should_page=True,
                                    *args, **kwargs)
 
@@ -625,9 +631,32 @@ class TimeAPIClient(ConnectWiseAPIClient):
                 }
             })
 
+        work_role = kwargs.get("work_role")
+        if work_role:
+            body.update({
+                "workRole": {
+                    "name": str(work_role)
+                }
+            })
+
+        agreement = kwargs.get("agreement")
+        if agreement:
+            body.update({
+                "agreement": {
+                    "id": agreement.id,
+                    "name": str(agreement)
+                }
+            })
+
         notes = kwargs.get("notes")
         if notes:
             body.update({"notes": notes})
+
+        email_cc = kwargs.get("email_cc")
+        if email_cc:
+            body.update({
+                "emailCc": email_cc
+            })
 
         return self.request('post', endpoint_url, body)
 
@@ -976,6 +1005,15 @@ class ServiceAPIClient(ConnectWiseAPIClient):
     def get_items(self, board_id, *args, **kwargs):
         endpoint_url = '{}/{}/items/'.format(self.ENDPOINT_BOARDS, board_id)
         return self.fetch_resource(endpoint_url, should_page=True,
+                                   *args, **kwargs)
+
+
+class FinanceAPIClient(ConnectWiseAPIClient):
+    API = 'finance'
+    ENDPOINT_AGREEMENTS = 'agreements'
+
+    def get_agreements(self, *args, **kwargs):
+        return self.fetch_resource(self.ENDPOINT_AGREEMENTS, should_page=True,
                                    *args, **kwargs)
 
 

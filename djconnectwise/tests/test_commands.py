@@ -450,6 +450,30 @@ class TestSyncWorkTypeCommand(AbstractBaseSyncTest, TestCase):
     )
 
 
+class TestSyncWorkRoleCommand(AbstractBaseSyncTest, TestCase):
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_work_roles()
+
+    args = (
+        mocks.time_api_get_work_roles_call,
+        fixtures.API_WORK_ROLE_LIST,
+        'work_role'
+    )
+
+
+class TestSyncAgreementCommand(AbstractBaseSyncTest, TestCase):
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_agreements()
+
+    args = (
+        mocks.finance_api_get_agreements_call,
+        fixtures.API_AGREEMENT_LIST,
+        'agreement'
+    )
+
+
 class TestSyncAllCommand(TestCase):
 
     def setUp(self):
@@ -492,7 +516,9 @@ class TestSyncAllCommand(TestCase):
             TestSyncTypeCommand,
             TestSyncSubTypeCommand,
             TestSyncItemCommand,
-            TestSyncWorkTypeCommand
+            TestSyncWorkTypeCommand,
+            TestSyncWorkRoleCommand,
+            TestSyncAgreementCommand
         ]
 
         self.test_args = []
@@ -575,7 +601,9 @@ class TestSyncAllCommand(TestCase):
             'type': models.Type,
             'sub_type': models.SubType,
             'item': models.Item,
-            'work_type': models.WorkType
+            'work_type': models.WorkType,
+            'work_role': models.WorkRole,
+            'agreement': models.Agreement,
         }
 
         self.test_sync()

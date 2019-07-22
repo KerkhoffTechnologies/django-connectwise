@@ -38,6 +38,8 @@ from djconnectwise.models import Type
 from djconnectwise.models import SubType
 from djconnectwise.models import Item
 from djconnectwise.models import WorkType
+from djconnectwise.models import WorkRole
+from djconnectwise.models import Agreement
 from djconnectwise.utils import get_hash
 
 from . import fixtures
@@ -517,6 +519,16 @@ class TestBoardSynchronizer(TestCase, SynchronizerTestMixin):
     def _assert_fields(self, instance, json_data):
         self.assertEqual(instance.name, json_data['name'])
         self.assertEqual(instance.inactive, json_data['inactiveFlag'])
+        self.assertEqual(instance.work_role.name,
+                         json_data['workRole']['name'])
+        self.assertEqual(instance.work_type.name,
+                         json_data['workType']['name'])
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_work_roles()
+        fixture_utils.init_work_types()
+        fixture_utils.init_boards()
 
 
 class TestBoardStatusSynchronizer(TestCase, SynchronizerTestMixin):
@@ -1150,6 +1162,7 @@ class TestTicketSynchronizer(TestCase):
         fixture_utils.init_types()
         fixture_utils.init_subtypes()
         fixture_utils.init_items()
+        fixture_utils.init_agreements()
 
     def _assert_sync(self, instance, json_data):
         self.assertEqual(instance.summary, json_data['summary'])
@@ -1212,6 +1225,9 @@ class TestTicketSynchronizer(TestCase):
                          json_data['automaticEmailContactFlag'])
         self.assertEqual(instance.automatic_email_resource_flag,
                          json_data['automaticEmailResourceFlag'])
+        self.assertEqual(instance.automatic_email_cc,
+                         json_data['automaticEmailCc'])
+        self.assertEqual(instance.agreement, json_data['agreement'])
 
     def test_sync_ticket(self):
         """
@@ -1549,3 +1565,48 @@ class TestWorkTypeSynchronizer(TestCase, SynchronizerTestMixin):
         self.assertEqual(instance.id, json_data['id'])
         self.assertEqual(instance.name, json_data['name'])
         self.assertEqual(instance.inactive_flag, json_data['inactiveFlag'])
+
+
+class TestWorkRoleSynchronizer(TestCase, SynchronizerTestMixin):
+    synchronizer_class = sync.WorkRoleSynchronizer
+    model_class = WorkRole
+    fixture = fixtures.API_WORK_ROLE_LIST
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_work_roles()
+
+    def call_api(self, return_data):
+        return mocks.time_api_get_work_roles_call(return_data)
+
+    def _assert_fields(self, instance, json_data):
+        self.assertEqual(instance.id, json_data['id'])
+        self.assertEqual(instance.name, json_data['name'])
+        self.assertEqual(instance.inactive_flag, json_data['inactiveFlag'])
+
+
+class TestAgreementSynchronizer(TestCase, SynchronizerTestMixin):
+    synchronizer_class = sync.AgreementSynchronizer
+    model_class = Agreement
+    fixture = fixtures.API_AGREEMENT_LIST
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_agreements()
+        fixture_utils.init_work_roles()
+        fixture_utils.init_work_types()
+
+    def call_api(self, return_data):
+        return mocks.finance_api_get_agreements_call(return_data)
+
+    def _assert_fields(self, instance, json_data):
+        self.assertEqual(instance.id, json_data['id'])
+        self.assertEqual(instance.name, json_data['name'])
+        self.assertEqual(instance.bill_time, json_data['billTime'])
+        self.assertEqual(instance.agreement_type, json_data['type']['name'])
+        self.assertEqual(instance.cancelled_flag, json_data['cancelledFlag'])
+        self.assertEqual(
+            instance.work_role.name, json_data['workRole']['name'])
+        self.assertEqual(
+            instance.work_type.name, json_data['workType']['name'])
+        self.assertEqual(instance.company.name, json_data['company']['name'])

@@ -221,6 +221,7 @@ class Synchronizer:
         Creates and returns an instance if it does not already exist.
         """
         created = False
+        api_instance = self.remove_null_characters(api_instance)
         try:
             instance_pk = api_instance[self.lookup_key]
             instance = self.model_class.objects.get(pk=instance_pk)
@@ -228,8 +229,20 @@ class Synchronizer:
             instance = self.model_class()
             created = True
 
-        self._assign_field_data(instance, api_instance)
-        instance.save()
+        try:
+            self._assign_field_data(instance, api_instance)
+            if created and self.model_class is models.Ticket:
+                instance.save(force_insert=True)
+            else:
+                instance.save()
+        except IntegrityError as e:
+            # This can happen when multiple threads are creating the
+            # same ticket at once. See issue description for #991
+            # for the full details.
+            msg = "IntegrityError while attempting to create {}." \
+                  " Error: {}".format(self.model_class, e)
+            logger.error(msg)
+            raise InvalidObjectException(msg)
 
         logger.info(
             '{}: {} {}'.format(
@@ -501,9 +514,9 @@ class OpportunityNoteSynchronizer(Synchronizer):
             related_opportunity = opp_class.objects.get(pk=opportunity_id)
             setattr(instance, 'opportunity', related_opportunity)
         except ObjectDoesNotExist as e:
-            logger.warning(
-                'Opportunity not found for {}.'.format(instance.id) +
-                ' ObjectDoesNotExist Exception: {}'.format(e)
+            raise InvalidObjectException(
+                'Opportunity note {} has a opportunityId that does not exist.'
+                ' ObjectDoesNotExist Exception: {}'.format(instance.id, e)
             )
 
     def client_call(self, opportunity_id, *args, **kwargs):
@@ -523,15 +536,32 @@ class BoardSynchronizer(Synchronizer):
     client_class = api.ServiceAPIClient
     model_class = models.ConnectWiseBoard
 
+    related_meta = {
+        'workRole': (models.WorkRole, 'work_role'),
+        'workType': (models.WorkType, 'work_type')
+    }
+
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
         instance.name = json_data['name']
+
         if 'inactiveFlag' in json_data:
             # This is the new CW way
             instance.inactive = json_data.get('inactiveFlag')
         else:
             # This is old, but keep for backwards-compatibility
             instance.inactive = json_data.get('inactive')
+
+        for json_field, value in self.related_meta.items():
+            model_class, field_name = value
+            self._assign_relation(
+                instance,
+                json_data,
+                json_field,
+                model_class,
+                field_name
+            )
+
         return instance
 
     def get_page(self, *args, **kwargs):
@@ -625,8 +655,6 @@ class CompanySynchronizer(Synchronizer):
         Assigns field data from an company_json instance
         to a local Company model instance
         """
-        company_json = self.remove_null_characters(company_json)
-
         company.id = company_json['id']
         company.name = company_json['name']
         company.identifier = company_json['identifier']
@@ -1373,7 +1401,7 @@ class TicketSynchronizer(BatchConditionMixin, Synchronizer):
         'type': (models.Type, 'type'),
         'subType': (models.SubType, 'sub_type'),
         'item': (models.Item, 'sub_type_item'),
-        'workType': (models.WorkType, 'work_type')
+        'agreement': (models.Agreement, 'agreement'),
     }
 
     def __init__(self, *args, **kwargs):
@@ -1406,12 +1434,8 @@ class TicketSynchronizer(BatchConditionMixin, Synchronizer):
                 list(filtered_statuses.values_list('id', flat=True))
 
     def _assign_field_data(self, instance, json_data):
-        created = instance.id is None
-        # If the status results in a move to a different column
-        original_status = not created and instance.status or None
         entered_date_utc = json_data.get('dateEntered')
 
-        json_data_id = json_data['id']
         instance.id = json_data['id']
         instance.summary = json_data['summary']
         instance.closed_flag = json_data.get('closedFlag')
@@ -1432,11 +1456,13 @@ class TicketSynchronizer(BatchConditionMixin, Synchronizer):
         instance.date_responded_utc = json_data.get('dateResponded')
         instance.bill_time = json_data.get('billTime')
         instance.automatic_email_cc_flag = \
-            json_data.get('automaticEmailCcFlag')
+            json_data.get('automaticEmailCcFlag', False)
         instance.automatic_email_contact_flag = \
-            json_data.get('automaticEmailContactFlag')
+            json_data.get('automaticEmailContactFlag', False)
         instance.automatic_email_resource_flag = \
-            json_data.get('automaticEmailResourceFlag')
+            json_data.get('automaticEmailResourceFlag', False)
+        instance.automatic_email_cc = \
+            json_data.get('automaticEmailCc')
 
         if entered_date_utc:
             # Parse the date here so that a datetime object is
@@ -1452,21 +1478,6 @@ class TicketSynchronizer(BatchConditionMixin, Synchronizer):
                 model_class,
                 field_name
             )
-
-        instance.save()
-
-        logger.info('Syncing ticket {}'.format(json_data_id))
-        action = created and 'Created' or 'Updated'
-
-        status_changed = ''
-        if original_status != instance.status:
-            status_changed = '; status changed from ' \
-                '{} to {}'.format(original_status, instance.status)
-
-        log_info = '{} ticket {}{}'.format(
-            action, instance.id, status_changed
-        )
-        logger.info(log_info)
 
         return instance
 
@@ -1937,9 +1948,66 @@ class WorkTypeSynchronizer(Synchronizer):
         instance.id = json_data['id']
         instance.name = json_data['name']
         instance.inactive_flag = json_data['inactiveFlag']
+        if json_data['billTime'] == 'NoDefault':
+            instance.bill_time = None
+        else:
+            instance.bill_time = json_data['billTime']
         instance.save()
 
         return instance
 
     def get_page(self, *args, **kwargs):
         return self.client.get_work_types(*args, **kwargs)
+
+
+class WorkRoleSynchronizer(Synchronizer):
+    client_class = api.TimeAPIClient
+    model_class = models.WorkRole
+
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data['id']
+        instance.name = json_data['name']
+        instance.inactive_flag = json_data['inactiveFlag']
+        instance.save()
+
+        return instance
+
+    def get_page(self, *args, **kwargs):
+        return self.client.get_work_roles(*args, **kwargs)
+
+
+class AgreementSynchronizer(Synchronizer):
+    client_class = api.FinanceAPIClient
+    model_class = models.Agreement
+
+    related_meta = {
+        'workRole': (models.WorkRole, 'work_role'),
+        'workType': (models.WorkType, 'work_type'),
+        'company': (models.Company, 'company')
+    }
+
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data['id']
+        instance.name = json_data['name']
+        instance.agreement_type = json_data['type']['name']
+        instance.cancelled_flag = json_data['cancelledFlag']
+        if json_data['billTime'] == 'NoDefault':
+            instance.bill_time = None
+        else:
+            instance.bill_time = json_data['billTime']
+
+        for json_field, value in self.related_meta.items():
+            model_class, field_name = value
+            self._assign_relation(
+                instance,
+                json_data,
+                json_field,
+                model_class,
+                field_name
+            )
+        instance.save()
+
+        return instance
+
+    def get_page(self, *args, **kwargs):
+        return self.client.get_agreements(*args, **kwargs)

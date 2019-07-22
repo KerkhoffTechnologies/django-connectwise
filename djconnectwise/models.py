@@ -64,6 +64,18 @@ class AvailableConnectWiseBoardManager(models.Manager):
 class ConnectWiseBoard(TimeStampedModel):
     name = models.CharField(max_length=255)
     inactive = models.BooleanField(default=False)
+    work_role = models.ForeignKey(
+        'WorkRole',
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL
+    )
+    work_type = models.ForeignKey(
+        'WorkType',
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL
+    )
 
     objects = models.Manager()
     available_objects = AvailableConnectWiseBoardManager()
@@ -773,6 +785,7 @@ class TimeEntry(models.Model):
     email_resource_flag = models.BooleanField(default=False)
     email_contact_flag = models.BooleanField(default=False)
     email_cc_flag = models.BooleanField(default=False)
+    email_cc = models.CharField(blank=True, null=True, max_length=1000)
 
     charge_to_id = models.ForeignKey(
         'Ticket', blank=True, null=True, on_delete=models.CASCADE)
@@ -782,6 +795,8 @@ class TimeEntry(models.Model):
         'Member', blank=True, null=True, on_delete=models.CASCADE)
     work_type = models.ForeignKey(
         'WorkType', blank=True, null=True, on_delete=models.SET_NULL)
+    agreement = models.ForeignKey(
+        'Agreement', blank=True, null=True, on_delete=models.SET_NULL)
 
 
 class AvailableBoardTeamManager(models.Manager):
@@ -1093,7 +1108,6 @@ class Ticket(TimeStampedModel):
 
     actual_hours = models.DecimalField(
         blank=True, null=True, decimal_places=2, max_digits=9)
-    agreement_id = models.IntegerField(blank=True, null=True)
     approved = models.NullBooleanField(blank=True, null=True)
     budget_hours = models.DecimalField(
         blank=True, null=True, decimal_places=2, max_digits=9)
@@ -1132,6 +1146,9 @@ class Ticket(TimeStampedModel):
     bill_time = models.CharField(blank=True, null=True,
                                  max_length=20, choices=BILL_TIME_TYPES)
     automatic_email_cc_flag = models.BooleanField(default=False)
+    automatic_email_cc = models.CharField(blank=True,
+                                          null=True,
+                                          max_length=1000)
     automatic_email_contact_flag = models.BooleanField(default=False)
     automatic_email_resource_flag = models.BooleanField(default=False)
 
@@ -1171,8 +1188,8 @@ class Ticket(TimeStampedModel):
     sub_type_item = models.ForeignKey(
         'Item', blank=True, null=True, related_name='item_tickets',
         on_delete=models.SET_NULL)
-    work_type = models.ForeignKey(
-        'WorkType', blank=True, null=True, related_name='work_type_tickets',
+    agreement = models.ForeignKey(
+        'Agreement', blank=True, null=True, related_name='agreement_tickets',
         on_delete=models.SET_NULL)
 
     class Meta:
@@ -1646,6 +1663,35 @@ class Item(TimeStampedModel):
 class WorkType(TimeStampedModel):
     name = models.CharField(max_length=50)
     inactive_flag = models.BooleanField(default=False)
+    bill_time = models.CharField(
+        max_length=50, choices=TimeEntry.BILL_TYPES, blank=True, null=True
+    )
 
     def __str__(self):
         return self.name
+
+
+class WorkRole(TimeStampedModel):
+    name = models.CharField(max_length=50)
+    inactive_flag = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.name
+
+
+class Agreement(TimeStampedModel):
+    name = models.CharField(max_length=100)
+    agreement_type = models.CharField(max_length=50, null=True)
+    cancelled_flag = models.BooleanField(default=False)
+    bill_time = models.CharField(
+        max_length=50, choices=TimeEntry.BILL_TYPES, blank=True, null=True
+    )
+    work_type = models.ForeignKey(
+        'WorkType', null=True, on_delete=models.SET_NULL)
+    work_role = models.ForeignKey(
+        'WorkRole', null=True, on_delete=models.SET_NULL)
+    company = models.ForeignKey(
+        'Company', null=True, on_delete=models.SET_NULL)
+
+    def __str__(self):
+        return '{}/{}'.format(self.agreement_type, self.name)

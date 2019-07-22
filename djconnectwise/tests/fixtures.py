@@ -1,12 +1,75 @@
 from django.conf import settings
 
+API_WORK_ROLE = {
+        "id": 11,
+        "name": "System Engineer",
+        "hourlyRate": 100,
+        "inactiveFlag": False,
+        "locationIds": [
+            2
+        ],
+        "_info": {
+            "lastUpdated": "2003-08-21T13:02:52Z",
+            "updatedBy": "zAdmin"
+        }
+    }
+
+API_WORK_ROLE_LIST = [API_WORK_ROLE]
+
+API_WORK_TYPE = {
+        "id": 4,
+        "name": "After Hours",
+        "billTime": "Billable",
+        "rateType": "Multiplier",
+        "rate": 2.5,
+        "hoursMin": 0.5,
+        "hoursMax": 0,
+        "roundBillHoursTo": 0.5,
+        "externalIntegrationXRef": {
+            "id": 2,
+            "identifier": "Weekend After Hours",
+            "name": "Weekend and Holiday Time",
+            "_info": {
+                "workTypeExternalIntegration_href":
+                    "https://connectwise.kerkhofftech.ca/v4_6_release/apis/3.0"
+            }
+        },
+        "inactiveFlag": False,
+        "overallDefaultFlag": False,
+        "activityDefaultFlag": False,
+        "utilizationFlag": True,
+        "costMultiplier": 1,
+        "_info": {
+            "lastUpdated": "2019-09-09T17:37:19Z",
+            "updatedBy": "User1"
+        }
+    }
+
+API_WORK_TYPE_LIST = [API_WORK_TYPE]
+
 API_BOARD = {
     'id': 1,
     'name': 'Service A',
     'locationId': 1,
     'businessUnitId': 10,
     'inactiveFlag': False,
-    'projectFlag': False
+    'projectFlag': False,
+    'workRole': {
+        'id': API_WORK_ROLE['id'],
+        'name': API_WORK_ROLE['name'],
+        '_info': {
+            'workRole_href':
+                'https://connectwise.kerkhofftech.ca/v4_6_release/test'
+        }
+    },
+    'workType': {
+        'id': API_WORK_TYPE['id'],
+        'name': API_WORK_TYPE['name'],
+        '_info': {
+            'workType_href':
+                'https://connectwise.kerkhofftech.ca/v4_6_release/test'
+        }
+    },
 }
 
 API_BOARD_LIST = [API_BOARD]
@@ -1379,33 +1442,40 @@ API_HOSTED_SETUPS = [
     }
 ]
 
-API_WORK_TYPE = {
-        "id": 4,
-        "name": "After Hours",
-        "billTime": "Billable",
-        "rateType": "Multiplier",
-        "rate": 2.5,
-        "hoursMin": 0.5,
-        "hoursMax": 0,
-        "roundBillHoursTo": 0.5,
-        "externalIntegrationXRef": {
-            "id": 2,
-            "identifier": "Weekend After Hours",
-            "name": "Weekend and Holiday Time",
-            "_info": {
-                "workTypeExternalIntegration_href":
-                    "https://connectwise.kerkhofftech.ca/v4_6_release/apis/3.0"
-            }
-        },
-        "inactiveFlag": False,
-        "overallDefaultFlag": False,
-        "activityDefaultFlag": False,
-        "utilizationFlag": True,
-        "costMultiplier": 1,
+API_AGREEMENT = {
+    "id": 1,
+    "name": "Gold Rate",
+    "billTime": "Billable",
+    "company": {
+        "id": API_COMPANY["id"],
+        "name": API_COMPANY["name"],
+        "identifier": API_COMPANY["identifier"],
+    },
+    "cancelledFlag": False,
+    "type": {
+        "id": 5,
+        "name": "Block Time - One time",
         "_info": {
-            "lastUpdated": "2019-09-09T17:37:19Z",
-            "updatedBy": "User1"
+            "type_href":
+                "https://cw.com/v4_6_release/apis/3.0/finance/agreements/types"
+        }
+    },
+    "workRole": {
+        "id": API_WORK_ROLE['id'],
+        "name": API_WORK_ROLE['name'],
+        "_info": {
+            "workRole_href":
+                "https://cw.com/v4_6_release/apis/3.0/time/workRoles/18"
+        }
+    },
+    "workType": {
+        "id": API_WORK_TYPE['id'],
+        "name": API_WORK_TYPE['name'],
+        "_info": {
+            "workType_href":
+                "https://cw.com/v4_6_release/apis/3.0/time/workTypes/3"
         }
     }
+}
 
-API_WORK_TYPE_LIST = [API_WORK_TYPE]
+API_AGREEMENT_LIST = [API_AGREEMENT]
