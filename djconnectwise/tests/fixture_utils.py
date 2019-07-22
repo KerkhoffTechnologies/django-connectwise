@@ -194,6 +194,20 @@ def init_schedule_entries():
     return synchronizer.sync()
 
 
+def init_activity_statuses():
+    mocks.sales_api_get_activities_statuses_call(
+        fixtures.API_SALES_ACTIVITY_STATUSES)
+    synchronizer = sync.ActivityStatusSynchronizer()
+    return synchronizer.sync()
+
+
+def init_activity_types():
+    mocks.sales_api_get_activities_types_call(
+        fixtures.API_SALES_ACTIVITY_TYPES)
+    synchronizer = sync.ActivityTypeSynchronizer()
+    return synchronizer.sync()
+
+
 def init_activities():
     mocks.sales_api_get_activities_call(
         fixtures.API_SALES_ACTIVITIES)

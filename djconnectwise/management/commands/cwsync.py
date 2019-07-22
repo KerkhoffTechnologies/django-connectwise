@@ -71,6 +71,12 @@ class Command(BaseCommand):
                 _('Activity Status')),
             ('activity_type', sync.ActivityTypeSynchronizer,
                 _('Activity Type')),
+            ('work_type', sync.WorkTypeSynchronizer,
+             _('Work Type')),
+            ('work_role', sync.WorkRoleSynchronizer,
+             _('Work Role')),
+            ('agreement', sync.AgreementSynchronizer,
+             _('Agreement')),
             ('activity', sync.ActivitySynchronizer,
                 _('Activity')),
             ('schedule_type', sync.ScheduleTypeSychronizer,
@@ -81,12 +87,6 @@ class Command(BaseCommand):
                 _('Schedule Entry')),
             ('time_entry', sync.TimeEntrySynchronizer,
                 _('Time Entry')),
-            ('work_type', sync.WorkTypeSynchronizer,
-             _('Work Type')),
-            ('work_role', sync.WorkRoleSynchronizer,
-             _('Work Role')),
-            ('agreement', sync.AgreementSynchronizer,
-             _('Agreement'))
         )
         self.synchronizer_map = OrderedDict()
         for name, synchronizer, obj_name in synchronizers:

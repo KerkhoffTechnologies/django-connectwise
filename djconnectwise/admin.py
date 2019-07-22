@@ -229,7 +229,7 @@ class ActivityTypeAdmin(admin.ModelAdmin):
 class ActivityAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'notes', 'date_start', 'date_end',
                     'assign_to', 'opportunity', 'ticket')
-    search_fields = ['name', 'notes']
+    search_fields = ['name', 'notes', 'ticket__summary', 'opportunity__name', 'company__name']
     list_filter = ('status', 'type')
 
     formfield_overrides = {

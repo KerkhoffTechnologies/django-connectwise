@@ -856,6 +856,8 @@ class ActivitySynchronizer(Synchronizer):
         'assignTo': (models.Member, 'assign_to'),
         'status': (models.ActivityStatus, 'status'),
         'type': (models.ActivityType, 'type'),
+        'company': (models.Company, 'company'),
+        'agreement': (models.Agreement, 'agreement'),
     }
 
     def __init__(self, *args, **kwargs):

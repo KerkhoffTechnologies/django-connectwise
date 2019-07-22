@@ -1500,15 +1500,16 @@ class Activity(TimeStampedModel):
         'ActivityStatus', blank=True, null=True, on_delete=models.SET_NULL)
     type = models.ForeignKey(
         'ActivityType', blank=True, null=True, on_delete=models.SET_NULL)
+    company = models.ForeignKey(
+        'Company', blank=True, null=True, on_delete=models.CASCADE)
+    agreement = models.ForeignKey(
+        'Agreement', blank=True, null=True, on_delete=models.SET_NULL)
 
     class Meta:
         verbose_name_plural = 'activities'
 
     def __str__(self):
-        return self.get_identifier() or ''
-
-    def get_identifier(self):
-        return self.name
+        return self.name or ''
 
 
 class SalesProbability(TimeStampedModel):
