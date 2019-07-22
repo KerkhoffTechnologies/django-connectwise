@@ -221,6 +221,7 @@ class ActivityStatusAdmin(admin.ModelAdmin):
 @admin.register(models.ActivityType)
 class ActivityTypeAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'points', 'inactive_flag')
+    list_filter = ('inactive_flag',)
     search_fields = ['name']
 
 
@@ -229,6 +230,7 @@ class ActivityAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'notes', 'date_start', 'date_end',
                     'assign_to', 'opportunity', 'ticket')
     search_fields = ['name', 'notes']
+    list_filter = ('status', 'type')
 
     formfield_overrides = {
         db_models.CharField: {'widget': TextInput(attrs={'size': '40'})}
