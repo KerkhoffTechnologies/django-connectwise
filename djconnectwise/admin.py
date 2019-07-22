@@ -32,6 +32,7 @@ class SyncJobAdmin(admin.ModelAdmin):
 class ConnectWiseBoardAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'inactive')
     search_fields = ['name']
+    list_filter = ('inactive',)
 
 
 @admin.register(models.BoardStatus)
@@ -101,14 +102,12 @@ class CompanyTypeAdmin(admin.ModelAdmin):
 @admin.register(models.ScheduleType)
 class ScheduleTypeAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'identifier')
-    list_filter = ('name', )
     search_fields = ['name']
 
 
 @admin.register(models.ScheduleStatus)
 class ScheduleStatusAdmin(admin.ModelAdmin):
     list_display = ('id', 'name')
-    list_filter = ('name', )
     search_fields = ['name']
 
 
@@ -128,9 +127,13 @@ class TimeEntryAdmin(admin.ModelAdmin):
                     'member', 'billable_option', 'actual_hours',
                     'time_start', 'time_end', 'hours_deduct', 'notes',
                     'internal_notes')
-    list_filter = ('charge_to_id', 'member', 'charge_to_type')
+    list_filter = ('member', 'charge_to_type')
     search_fields = ['id', 'charge_to_id__id', 'member__identifier',
                      'charge_to_type']
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.select_related('company', 'member', 'charge_to_id')
 
 
 @admin.register(models.Team)
@@ -208,11 +211,23 @@ class TicketAdmin(admin.ModelAdmin):
         return qs.select_related('status', 'status__board')
 
 
+@admin.register(models.ActivityStatus)
+class ActivityStatusAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'inactive_flag', 'closed_flag')
+    list_filter = ('inactive_flag', 'closed_flag')
+    search_fields = ['name']
+
+
+@admin.register(models.ActivityType)
+class ActivityTypeAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'points', 'inactive_flag')
+    search_fields = ['name']
+
+
 @admin.register(models.Activity)
 class ActivityAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'notes', 'date_start', 'date_end',
                     'assign_to', 'opportunity', 'ticket')
-    list_filter = ['opportunity', ]
     search_fields = ['name', 'notes']
 
     formfield_overrides = {

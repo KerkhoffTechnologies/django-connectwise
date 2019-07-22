@@ -77,13 +77,13 @@ def sales_api_get_opportunity_statuses_call(return_value, raised=None):
     return create_mock_call(method_name, return_value, side_effect=raised)
 
 
-def sales_api_get_opportunity_stages_call(return_value, raised=None):
-    method_name = 'djconnectwise.api.SalesAPIClient.get_opportunity_stages'
+def sales_api_get_opportunity_types_call(return_value, raised=None):
+    method_name = 'djconnectwise.api.SalesAPIClient.get_opportunity_types'
     return create_mock_call(method_name, return_value, side_effect=raised)
 
 
-def sales_api_get_opportunity_types_call(return_value, raised=None):
-    method_name = 'djconnectwise.api.SalesAPIClient.get_opportunity_types'
+def sales_api_get_opportunity_stages_call(return_value, raised=None):
+    method_name = 'djconnectwise.api.SalesAPIClient.get_opportunity_stages'
     return create_mock_call(method_name, return_value, side_effect=raised)
 
 
@@ -134,6 +134,16 @@ def time_api_get_time_entries_call(return_value, raised=None):
 
 def sales_api_get_activities_call(return_value, raised=None):
     method_name = 'djconnectwise.api.SalesAPIClient.get_activities'
+    return create_mock_call(method_name, return_value, side_effect=raised)
+
+
+def sales_api_get_activities_statuses_call(return_value, raised=None):
+    method_name = 'djconnectwise.api.SalesAPIClient.get_activity_statuses'
+    return create_mock_call(method_name, return_value, side_effect=raised)
+
+
+def sales_api_get_activities_types_call(return_value, raised=None):
+    method_name = 'djconnectwise.api.SalesAPIClient.get_activity_types'
     return create_mock_call(method_name, return_value, side_effect=raised)
 
 

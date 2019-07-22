@@ -692,6 +692,26 @@ class TestSalesAPIClient(BaseAPITestCase):
         self.assert_request_should_page(True)
 
     @responses.activate
+    def test_get_activity_statuses(self):
+        endpoint = self.client._endpoint(
+            self.client.ENDPOINT_ACTIVITY_STATUSES)
+
+        mk.get(endpoint, fixtures.API_SALES_ACTIVITY_STATUSES)
+        result = self.client.get_activity_statuses()
+        self.assertEqual(result, fixtures.API_SALES_ACTIVITY_STATUSES)
+        self.assert_request_should_page(True)
+
+    @responses.activate
+    def test_get_activity_types(self):
+        endpoint = self.client._endpoint(
+            self.client.ENDPOINT_ACTIVITY_TYPES)
+
+        mk.get(endpoint, fixtures.API_SALES_ACTIVITY_TYPES)
+        result = self.client.get_activity_types()
+        self.assertEqual(result, fixtures.API_SALES_ACTIVITY_TYPES)
+        self.assert_request_should_page(True)
+
+    @responses.activate
     def test_get_single_activity(self):
         endpoint = self.client._endpoint(
             self.client.ENDPOINT_ACTIVITIES)

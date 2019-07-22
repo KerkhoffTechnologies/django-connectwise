@@ -6,7 +6,7 @@ from django.core.files.storage import default_storage
 import datetime
 
 from dateutil.parser import parse
-from djconnectwise.models import Activity
+from djconnectwise.models import ActivityStatus, ActivityType, Activity
 from djconnectwise.models import BoardStatus
 from djconnectwise.models import Company, CompanyStatus, CompanyType
 from djconnectwise.models import ConnectWiseBoard
@@ -1360,6 +1360,45 @@ class TestTicketSynchronizer(TestCase):
         _patch.stop()
 
 
+class TestActivityStatusSynchronizer(TestCase, SynchronizerTestMixin):
+    synchronizer_class = sync.ActivityStatusSynchronizer
+    model_class = ActivityStatus
+    fixture = fixtures.API_SALES_ACTIVITY_STATUSES
+
+    def call_api(self, return_data):
+        return mocks.sales_api_get_activities_statuses_call(return_data)
+
+    def _assert_fields(self, instance, json_data):
+        self.assertEqual(instance.id, json_data['id'])
+        self.assertEqual(instance.name, json_data['name'])
+        self.assertEqual(instance.default_flag, json_data['defaultFlag'])
+        self.assertEqual(instance.inactive_flag, json_data['inactiveFlag'])
+        self.assertEqual(
+            instance.spawn_followup_flag,
+            json_data.get('spawnFollowupFlag', False)
+        )
+        self.assertEqual(instance.closed_flag, json_data['closedFlag'])
+
+
+class TestActivityTypeSynchronizer(TestCase, SynchronizerTestMixin):
+    synchronizer_class = sync.ActivityTypeSynchronizer
+    model_class = ActivityType
+    fixture = fixtures.API_SALES_ACTIVITY_TYPES
+
+    def call_api(self, return_data):
+        return mocks.sales_api_get_activities_types_call(return_data)
+
+    def _assert_fields(self, instance, json_data):
+        self.assertEqual(instance.id, json_data['id'])
+        self.assertEqual(instance.name, json_data['name'])
+        self.assertEqual(instance.name, json_data['name'])
+        self.assertEqual(instance.default_flag, json_data['defaultFlag'])
+        self.assertEqual(instance.inactive_flag, json_data['inactiveFlag'])
+        self.assertEqual(instance.email_flag, json_data['emailFlag'])
+        self.assertEqual(instance.memo_flag, json_data['memoFlag'])
+        self.assertEqual(instance.history_flag, json_data['historyFlag'])
+
+
 class TestActivitySynchronizer(TestCase, SynchronizerTestMixin):
     synchronizer_class = sync.ActivitySynchronizer
     model_class = Activity
@@ -1403,29 +1442,26 @@ class TestActivitySynchronizer(TestCase, SynchronizerTestMixin):
         if api_activity['ticket'] is not None:
             self.assertEqual(activity.ticket_id, api_activity['ticket']['id'])
 
-    # TODO Django 2.0.5 broke this test, but seeing as we aren't syncing
-    #      activities yet, this test may not even be the same at all in the
-    #      future. Commenting out until activity syncing is back in.
-    # def test_sync_null_member_activity(self):
-    #     null_member_activity = deepcopy(fixtures.API_SALES_ACTIVITY)
-    #     null_member_activity['id'] = 999
-    #     null_member_activity['assignTo'] = {'id': 99999}  # Member that does
-    #     # not exist
-    #     activity_list = [null_member_activity]
-    #
-    #     method_name = 'djconnectwise.api.SalesAPIClient.get_activities'
-    #     mock_call, _patch = \
-    #         mocks.create_mock_call(method_name, activity_list)
-    #     synchronizer = sync.ActivitySynchronizer(full=True)
-    #
-    #     created_count, updated_count, deleted_count = \
-    #         synchronizer.sync()
-    #
-    #     # The existing Activity (#47) should be deleted and
-    #     # null_member_activity should not be added to the db
-    #     self.assertEqual(created_count, 0)
-    #     self.assertEqual(updated_count, 0)
-    #     self.assertEqual(deleted_count, 1)
+    def test_sync_null_member_activity(self):
+        null_member_activity = deepcopy(fixtures.API_SALES_ACTIVITY)
+        null_member_activity['id'] = 999
+        null_member_activity['assignTo'] = {'id': 99999}  # Member that does
+        # not exist
+        activity_list = [null_member_activity]
+
+        method_name = 'djconnectwise.api.SalesAPIClient.get_activities'
+        mock_call, _patch = \
+            mocks.create_mock_call(method_name, activity_list)
+        synchronizer = sync.ActivitySynchronizer(full=True)
+
+        created_count, updated_count, deleted_count = \
+            synchronizer.sync()
+
+        # The existing Activity (#47) should be deleted and
+        # null_member_activity should not be added to the db
+        self.assertEqual(created_count, 0)
+        self.assertEqual(updated_count, 0)
+        self.assertEqual(deleted_count, 1)
 
 
 class TestSyncSettings(TestCase):

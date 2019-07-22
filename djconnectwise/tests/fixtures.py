@@ -1099,17 +1099,147 @@ API_SALES_OPPORTUNITIES = [
     API_SALES_OPPORTUNITY,
 ]
 
+API_SALES_ACTIVITY_STATUSES = [
+    {
+        "id": 1,
+        "name": "Open",
+        "defaultFlag": True,
+        "inactiveFlag": False,
+        "closedFlag": False,
+        "_info": {
+            "lastUpdated": "2000-12-28T22:34:26Z"
+        }
+    },
+    {
+        "id": 2,
+        "name": "Closed",
+        "defaultFlag": False,
+        "inactiveFlag": False,
+        "closedFlag": True,
+        "_info": {
+            "lastUpdated": "2000-12-28T22:34:35Z"
+        }
+    },
+    {
+        "id": 8,
+        "name": "Opened",
+        "defaultFlag": False,
+        "inactiveFlag": False,
+        "spawnFollowupFlag": False,
+        "closedFlag": False,
+        "_info": {
+            "lastUpdated": "2016-05-11T00:31:06Z",
+            "updatedBy": "User1"
+        }
+    }
+]
+
+API_SALES_ACTIVITY_TYPES = [
+    {
+        "id": 1,
+        "name": "Call",
+        "points": 2,
+        "defaultFlag": False,
+        "inactiveFlag": False,
+        "emailFlag": False,
+        "memoFlag": False,
+        "historyFlag": False,
+        "_info": {
+            "lastUpdated": "2003-10-31T18:52:58Z",
+            "updatedBy": "zAdmin"
+        }
+    },
+    {
+        "id": 2,
+        "name": "Appointment",
+        "points": 5,
+        "defaultFlag": False,
+        "inactiveFlag": False,
+        "emailFlag": False,
+        "memoFlag": False,
+        "historyFlag": False,
+        "_info": {
+            "lastUpdated": "2003-10-31T18:52:50Z",
+            "updatedBy": "zAdmin"
+        }
+    },
+    {
+        "id": 3,
+        "name": "Historical Entry",
+        "points": 0,
+        "defaultFlag": False,
+        "inactiveFlag": False,
+        "emailFlag": False,
+        "memoFlag": False,
+        "historyFlag": True,
+        "_info": {
+            "lastUpdated": "2003-10-31T18:53:45Z",
+            "updatedBy": "zAdmin"
+        }
+    },
+    {
+        "id": 5,
+        "name": "Quote",
+        "points": 5,
+        "defaultFlag": False,
+        "inactiveFlag": False,
+        "emailFlag": False,
+        "memoFlag": False,
+        "historyFlag": False,
+        "_info": {
+            "lastUpdated": "2003-10-31T18:54:17Z",
+            "updatedBy": "zAdmin"
+        }
+    },
+    {
+        "id": 6,
+        "name": "Follow Up",
+        "points": 1,
+        "defaultFlag": False,
+        "inactiveFlag": False,
+        "emailFlag": False,
+        "memoFlag": False,
+        "historyFlag": False,
+        "_info": {
+            "lastUpdated": "2003-10-31T18:53:31Z",
+            "updatedBy": "zAdmin"
+        }
+    },
+    {
+        "id": 7,
+        "name": "Email",
+        "points": 1,
+        "defaultFlag": False,
+        "inactiveFlag": False,
+        "emailFlag": True,
+        "memoFlag": False,
+        "historyFlag": False,
+        "_info": {
+            "lastUpdated": "2003-10-31T18:53:23Z",
+            "updatedBy": "zAdmin"
+        }
+    },
+    {
+        "id": 8,
+        "name": "Task",
+        "points": 1,
+        "defaultFlag": False,
+        "inactiveFlag": False,
+        "emailFlag": False,
+        "memoFlag": False,
+        "historyFlag": False,
+        "_info": {
+            "lastUpdated": "2003-10-31T18:54:27Z",
+            "updatedBy": "zAdmin"
+        }
+    },
+]
+
 
 API_SALES_ACTIVITY = {
     'id': 47,
     'name': 'Stage Change from 1.Prospect to 2.Qualification',
-    'type': {
-        'id': 3,
-        'name': 'Historical Entry',
-        '_info': {
-            'type_href': 'https://example.com/v4_6_release/apis/3.0/sales/activities/types/3'
-        }
-    },
+    'type': API_SALES_ACTIVITY_TYPES[0],
     'company': API_COMPANY,
     'contact': {
         'id': 20,
@@ -1120,13 +1250,7 @@ API_SALES_ACTIVITY = {
     },
     'phoneNumber': '8139888241',
     'email': 'test@test.com',
-    'status': {
-        'id': 4,
-        'name': '1-High',
-        '_info': {
-            'status_href': 'https://example.com/v4_6_release/apis/3.0/sales/activities/statuses/4'
-        }
-    },
+    'status': API_SALES_ACTIVITY_STATUSES[0],
     'opportunity': API_SALES_OPPORTUNITY,
     'ticket': None,
     'agreement': None,
