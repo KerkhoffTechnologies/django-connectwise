@@ -65,7 +65,7 @@ def init_slapriorities():
     mocks.service_api_get_sla_priorities_call(
         fixtures.API_SERVICE_SLA_PRIORITY_LIST
     )
-    synchronizer = sync.SLAPrioritySychronizer()
+    synchronizer = sync.SLAPrioritySynchronizer()
     return synchronizer.sync()
 
 
@@ -176,7 +176,7 @@ def init_opportunities():
 def init_schedule_types():
     mocks.schedule_api_get_schedule_types_call(
         fixtures.API_SCHEDULE_TYPE_LIST)
-    synchronizer = sync.ScheduleTypeSychronizer()
+    synchronizer = sync.ScheduleTypeSynchronizer()
     return synchronizer.sync()
 
 
@@ -191,6 +191,20 @@ def init_schedule_entries():
     mocks.schedule_api_get_schedule_entries_call(
         fixtures.API_SCHEDULE_ENTRIES)
     synchronizer = sync.ScheduleEntriesSynchronizer()
+    return synchronizer.sync()
+
+
+def init_activity_statuses():
+    mocks.sales_api_get_activities_statuses_call(
+        fixtures.API_SALES_ACTIVITY_STATUSES)
+    synchronizer = sync.ActivityStatusSynchronizer()
+    return synchronizer.sync()
+
+
+def init_activity_types():
+    mocks.sales_api_get_activities_types_call(
+        fixtures.API_SALES_ACTIVITY_TYPES)
+    synchronizer = sync.ActivityTypeSynchronizer()
     return synchronizer.sync()
 
 

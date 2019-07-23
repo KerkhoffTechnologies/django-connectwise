@@ -361,7 +361,7 @@ class TestScheduleEntriesSynchronizer(TestCase, SynchronizerTestMixin):
 
 
 class TestScheduleTypeSynchronizer(TestCase, SynchronizerTestMixin):
-    synchronizer_class = sync.ScheduleTypeSychronizer
+    synchronizer_class = sync.ScheduleTypeSynchronizer
     model_class = ScheduleType
     fixture = fixtures.API_SCHEDULE_TYPE_LIST
 
@@ -1091,8 +1091,8 @@ class TestSLASynchronizer(TestCase, SynchronizerTestMixin):
                          json_data['resolutionHours'])
 
 
-class TestSLAPrioritySychronizer(TestCase, SynchronizerTestMixin):
-    synchronizer_class = sync.SLAPrioritySychronizer
+class TestSLAPrioritySynchronizer(TestCase, SynchronizerTestMixin):
+    synchronizer_class = sync.SLAPrioritySynchronizer
     model_class = SlaPriority
     fixture = fixtures.API_SERVICE_SLA_PRIORITY_LIST
 
@@ -1412,10 +1412,10 @@ class TestActivitySynchronizer(TestCase, SynchronizerTestMixin):
         fixture_utils.init_opportunity_types()
         fixture_utils.init_opportunity_stages()
         fixture_utils.init_opportunities()
+        fixture_utils.init_activity_statuses()
+        fixture_utils.init_activity_types()
+        fixture_utils.init_agreements()
         fixture_utils.init_activities()
-        mocks.sales_api_get_activities_call(
-            fixtures.API_SALES_ACTIVITIES)
-        sync.ActivitySynchronizer().sync()
 
     def call_api(self, return_data):
         return mocks.sales_api_get_activities_call(return_data)
@@ -1441,6 +1441,18 @@ class TestActivitySynchronizer(TestCase, SynchronizerTestMixin):
                          api_activity['opportunity']['id'])
         if api_activity['ticket'] is not None:
             self.assertEqual(activity.ticket_id, api_activity['ticket']['id'])
+        self.assertEqual(
+            activity.status_id, api_activity['status']['id']
+        )
+        self.assertEqual(
+            activity.type_id, api_activity['type']['id']
+        )
+        self.assertEqual(
+            activity.company_id, api_activity['company']['id']
+        )
+        self.assertEqual(
+            activity.agreement_id, api_activity['agreement']['id']
+        )
 
     def test_sync_null_member_activity(self):
         null_member_activity = deepcopy(fixtures.API_SALES_ACTIVITY)
