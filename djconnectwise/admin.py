@@ -113,12 +113,18 @@ class ScheduleStatusAdmin(admin.ModelAdmin):
 
 @admin.register(models.ScheduleEntry)
 class ScheduleEntryAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'expected_date_start', 'expected_date_end',
-                    'done_flag', 'ticket_object', 'activity_object', 'member',
-                    'where', 'status', 'schedule_type')
-    list_filter = ('where', 'status', 'schedule_type')
+    list_display = ('id', 'ticket_object', 'activity_object', 'member',
+                    'done_flag',
+                    'status', 'expected_date_start', 'expected_date_end',)
+    list_filter = ('status', 'done_flag', 'member')
     search_fields = ['name', 'ticket_object__id',
                      'activity_object__id', 'member__identifier']
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.select_related(
+            'ticket_object', 'activity_object', 'member', 'status'
+        )
 
 
 @admin.register(models.TimeEntry)
@@ -238,6 +244,10 @@ class ActivityAdmin(admin.ModelAdmin):
     formfield_overrides = {
         db_models.CharField: {'widget': TextInput(attrs={'size': '40'})}
     }
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.select_related('ticket', 'opportunity', 'assign_to')
 
 
 @admin.register(models.SalesProbability)
