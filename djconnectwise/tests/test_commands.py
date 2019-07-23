@@ -1,5 +1,4 @@
 import io
-import unittest
 
 from django.core.management import call_command
 from django.test import TestCase
@@ -375,7 +374,22 @@ class TestSyncScheduleStatusesCommand(AbstractBaseSyncTest, TestCase):
     )
 
 
-@unittest.skip("Activities sync is temporarily removed- see issue #484")
+class TestSyncActivityStatusesCommand(AbstractBaseSyncTest, TestCase):
+    args = (
+        mocks.sales_api_get_activities_statuses_call,
+        fixtures.API_SALES_ACTIVITY_STATUSES,
+        'activity_status',
+    )
+
+
+class TestSyncActivityTypesCommand(AbstractBaseSyncTest, TestCase):
+    args = (
+        mocks.sales_api_get_activities_types_call,
+        fixtures.API_SALES_ACTIVITY_TYPES,
+        'activity_type',
+    )
+
+
 class TestSyncActivityCommand(AbstractBaseSyncTest, TestCase):
     args = (
         mocks.sales_api_get_activities_call,
@@ -501,7 +515,9 @@ class TestSyncAllCommand(TestCase):
             TestSyncOpportunityTypesCommand,
             TestSyncOpportunityCommand,
             TestSyncSalesProbabilitiesCommand,
-            # TestSyncActivityCommand,
+            TestSyncActivityStatusesCommand,
+            TestSyncActivityTypesCommand,
+            TestSyncActivityCommand,
             TestSyncScheduleTypesCommand,
             TestSyncScheduleStatusesCommand,
             TestSyncScheduleEntriesCommand,
@@ -587,7 +603,9 @@ class TestSyncAllCommand(TestCase):
             'opportunity_stage': models.OpportunityStage,
             'opportunity_type': models.OpportunityType,
             'sales_probability': models.SalesProbability,
-            # 'activity': models.Activity,
+            'activity_status': models.ActivityStatus,
+            'activity_type': models.ActivityType,
+            'activity': models.Activity,
             'schedule_entry': models.ScheduleEntry,
             'schedule_type': models.ScheduleType,
             'schedule_status': models.ScheduleStatus,
@@ -626,8 +644,10 @@ class TestSyncAllCommand(TestCase):
         output = self._test_sync(full_option=True)
 
         for apicall, fixture, cw_object in self.test_args:
-            summary = full_sync_summary(slug_to_title(cw_object),
-                                        pre_full_sync_counts[cw_object])
+            summary = full_sync_summary(
+                slug_to_title(cw_object),
+                pre_full_sync_counts[cw_object]
+            )
             self.assertIn(summary, output)
 
 

@@ -473,7 +473,7 @@ class ServiceNoteSynchronizer(Synchronizer):
 
         # We are using the conditions here to specify getting a single
         # tickets notes, and then overwriting it, because only a number
-        # was supplied, which cant acutally be used later on. When it is
+        # was supplied, which can't actually be used later on. When it is
         # being synced by huey it will append a 'lastUpdated' condition
         # after this point, so we are free to use conditions to select
         # one ticket in this strange way without disrupting any other
@@ -808,6 +808,44 @@ class MyCompanyOtherSynchronizer(Synchronizer):
         return self.client.get_mycompanyother(*args, **kwargs)
 
 
+class ActivityStatusSynchronizer(Synchronizer):
+    client_class = api.SalesAPIClient
+    model_class = models.ActivityStatus
+
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data['id']
+        instance.name = json_data['name']
+        instance.default_flag = json_data.get('defaultFlag', False)
+        instance.inactive_flag = json_data.get('inactiveFlag', False)
+        instance.spawn_followup_flag = \
+            json_data.get('spawnFollowupFlag', False)
+        instance.closed_flag = json_data.get('closedFlag', False)
+        return instance
+
+    def get_page(self, *args, **kwargs):
+        return self.client.get_activity_statuses(*args, **kwargs)
+
+
+class ActivityTypeSynchronizer(Synchronizer):
+    client_class = api.SalesAPIClient
+    model_class = models.ActivityType
+
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data['id']
+        instance.name = json_data['name']
+        instance.points = json_data['points']
+        instance.default_flag = json_data.get('defaultFlag', False)
+        instance.inactive_flag = json_data.get('inactiveFlag', False)
+        instance.email_flag = json_data.get('emailFlag', False)
+        instance.memo_flag = json_data.get('memoFlag', False)
+        instance.history_flag = json_data.get('historyFlag', False)
+
+        return instance
+
+    def get_page(self, *args, **kwargs):
+        return self.client.get_activity_types(*args, **kwargs)
+
+
 class ActivitySynchronizer(Synchronizer):
     client_class = api.SalesAPIClient
     model_class = models.Activity
@@ -816,7 +854,25 @@ class ActivitySynchronizer(Synchronizer):
         'opportunity': (models.Opportunity, 'opportunity'),
         'ticket': (models.Ticket, 'ticket'),
         'assignTo': (models.Member, 'assign_to'),
+        'status': (models.ActivityStatus, 'status'),
+        'type': (models.ActivityType, 'type'),
     }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Only sync activities in non-closed statuses. There shouldn't be
+        # too many activity statuses so we don't need to page this like we
+        # do with tickets.
+        self.api_conditions = ['status/id in ({})'.format(
+            ','.join(
+                [
+                    str(i.id) for
+                    i in models.ActivityStatus.objects.filter(
+                        closed_flag=False
+                    )
+                ]
+            )
+        )]
 
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
@@ -1496,6 +1552,10 @@ class TicketSynchronizer(BatchConditionMixin, Synchronizer):
         time_sync = TimeEntrySynchronizer()
         time_sync.batch_condition_list = [instance_id]
         sync_classes.append((time_sync, Q(charge_to_id=instance)))
+
+        activity_sync = ActivitySynchronizer()
+        activity_sync.api_conditions = ['ticket/id={}'.format(instance_id)]
+        sync_classes.append((activity_sync, Q(ticket=instance)))
 
         self.sync_children(*sync_classes)
 

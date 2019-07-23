@@ -1454,6 +1454,37 @@ class OpportunityNote(TimeStampedModel):
             str(self.id), self.opportunity.id)
 
 
+class ActivityStatus(TimeStampedModel):
+    name = models.CharField(max_length=50)
+    default_flag = models.BooleanField(default=False)
+    inactive_flag = models.BooleanField(default=False)
+    spawn_followup_flag = models.BooleanField(default=False)
+    closed_flag = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ('name', )
+        verbose_name_plural = 'activity statuses'
+
+    def __str__(self):
+        return self.name
+
+
+class ActivityType(TimeStampedModel):
+    name = models.CharField(max_length=50)
+    points = models.IntegerField()
+    default_flag = models.BooleanField(default=False)
+    inactive_flag = models.BooleanField(default=False)
+    email_flag = models.BooleanField(default=False)
+    memo_flag = models.BooleanField(default=False)
+    history_flag = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ('name', )
+
+    def __str__(self):
+        return self.name
+
+
 class Activity(TimeStampedModel):
     name = models.CharField(max_length=250)
     notes = models.TextField(blank=True, null=True, max_length=2000)
@@ -1465,10 +1496,13 @@ class Activity(TimeStampedModel):
         'Opportunity', blank=True, null=True, on_delete=models.CASCADE)
     ticket = models.ForeignKey(
         'Ticket', blank=True, null=True, on_delete=models.CASCADE)
+    status = models.ForeignKey(
+        'ActivityStatus', blank=True, null=True, on_delete=models.SET_NULL)
+    type = models.ForeignKey(
+        'ActivityType', blank=True, null=True, on_delete=models.SET_NULL)
 
     class Meta:
         verbose_name_plural = 'activities'
-        # ordering = ('opportunity', 'ticket')
 
     def __str__(self):
         return self.get_identifier() or ''

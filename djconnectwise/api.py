@@ -669,6 +669,8 @@ class SalesAPIClient(ConnectWiseAPIClient):
     ENDPOINT_OPPORTUNITY_TYPES = \
         '{}/types'.format(ENDPOINT_OPPORTUNITIES)
     ENDPOINT_ACTIVITIES = 'activities'
+    ENDPOINT_ACTIVITY_STATUSES = '{}/statuses'.format(ENDPOINT_ACTIVITIES)
+    ENDPOINT_ACTIVITY_TYPES = '{}/types'.format(ENDPOINT_ACTIVITIES)
     ENDPOINT_PROBABILITIES = 'probabilities'
     ENDPOINT_STAGES = 'stages'
 
@@ -686,6 +688,16 @@ class SalesAPIClient(ConnectWiseAPIClient):
         endpoint_url = '{}/{}'.format(
             self.ENDPOINT_ACTIVITIES, activity_id)
         return self.fetch_resource(endpoint_url)
+
+    def get_activity_statuses(self, *args, **kwargs):
+        return self.fetch_resource(self.ENDPOINT_ACTIVITY_STATUSES,
+                                   should_page=True,
+                                   *args, **kwargs)
+
+    def get_activity_types(self, *args, **kwargs):
+        return self.fetch_resource(self.ENDPOINT_ACTIVITY_TYPES,
+                                   should_page=True,
+                                   *args, **kwargs)
 
     def get_probabilities(self, *args, **kwargs):
         return self.fetch_resource(self.ENDPOINT_PROBABILITIES,
