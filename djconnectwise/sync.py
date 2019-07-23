@@ -204,11 +204,13 @@ class Synchronizer:
             # This is what we expect to happen. Since it's gone in CW, we
             # are safe to delete it from here.
             pre_delete_result = None
-            if pre_delete_callback:
-                pre_delete_result = pre_delete_callback(*pre_delete_args)
-            self.model_class.objects.filter(pk=instance_id).delete()
-            if post_delete_callback:
-                post_delete_callback(pre_delete_result)
+            try:
+                if pre_delete_callback:
+                    pre_delete_result = pre_delete_callback(*pre_delete_args)
+                self.model_class.objects.filter(pk=instance_id).delete()
+            finally:
+                if post_delete_callback:
+                    post_delete_callback(pre_delete_result)
             logger.info(
                 'Deleted {} {} (if it existed).'.format(
                     self.model_class.__name__,
@@ -736,10 +738,19 @@ class CompanySynchronizer(Synchronizer):
     def get_single(self, company_id):
         return self.client.by_id(company_id)
 
-    def fetch_delete_by_id(self, company_id):
+    def fetch_delete_by_id(self, company_id, pre_delete_callback=None,
+                           pre_delete_args=None,
+                           post_delete_callback=None):
         # Companies are deleted by setting deleted_flag = True, so
         # just treat this as a normal sync.
-        self.fetch_sync_by_id(company_id)
+        pre_delete_result = None
+        try:
+            if pre_delete_callback:
+                pre_delete_result = pre_delete_callback(*pre_delete_args)
+            self.fetch_sync_by_id(company_id)
+        finally:
+            if post_delete_callback:
+                post_delete_callback(pre_delete_result)
 
 
 class CompanyStatusSynchronizer(Synchronizer):
