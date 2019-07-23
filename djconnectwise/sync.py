@@ -1068,7 +1068,7 @@ class ScheduleStatusSynchronizer(Synchronizer):
         return self.client.get_schedule_statuses(*args, **kwargs)
 
 
-class ScheduleTypeSychronizer(Synchronizer):
+class ScheduleTypeSynchronizer(Synchronizer):
     client_class = api.ScheduleAPIClient
     model_class = models.ScheduleType
 
@@ -1664,7 +1664,7 @@ class HolidayListSynchronizer(Synchronizer):
         return self.client.get_holiday_lists(*args, **kwargs)
 
 
-class SLAPrioritySychronizer(Synchronizer):
+class SLAPrioritySynchronizer(Synchronizer):
     client_class = api.ServiceAPIClient
     model_class = models.SlaPriority
 

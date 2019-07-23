@@ -361,7 +361,7 @@ class TestScheduleEntriesSynchronizer(TestCase, SynchronizerTestMixin):
 
 
 class TestScheduleTypeSynchronizer(TestCase, SynchronizerTestMixin):
-    synchronizer_class = sync.ScheduleTypeSychronizer
+    synchronizer_class = sync.ScheduleTypeSynchronizer
     model_class = ScheduleType
     fixture = fixtures.API_SCHEDULE_TYPE_LIST
 
@@ -1091,8 +1091,8 @@ class TestSLASynchronizer(TestCase, SynchronizerTestMixin):
                          json_data['resolutionHours'])
 
 
-class TestSLAPrioritySychronizer(TestCase, SynchronizerTestMixin):
-    synchronizer_class = sync.SLAPrioritySychronizer
+class TestSLAPrioritySynchronizer(TestCase, SynchronizerTestMixin):
+    synchronizer_class = sync.SLAPrioritySynchronizer
     model_class = SlaPriority
     fixture = fixtures.API_SERVICE_SLA_PRIORITY_LIST
 
