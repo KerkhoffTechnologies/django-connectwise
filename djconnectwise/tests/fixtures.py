@@ -31,7 +31,7 @@ API_WORK_TYPE = {
             "name": "Weekend and Holiday Time",
             "_info": {
                 "workTypeExternalIntegration_href":
-                    "https://connectwise.kerkhofftech.ca/v4_6_release/apis/3.0"
+                    "https://example.com/v4_6_release/apis/3.0"
             }
         },
         "inactiveFlag": False,
@@ -59,7 +59,7 @@ API_BOARD = {
         'name': API_WORK_ROLE['name'],
         '_info': {
             'workRole_href':
-                'https://connectwise.kerkhofftech.ca/v4_6_release/test'
+                'https://example.com/v4_6_release/test'
         }
     },
     'workType': {
@@ -67,7 +67,7 @@ API_BOARD = {
         'name': API_WORK_TYPE['name'],
         '_info': {
             'workType_href':
-                'https://connectwise.kerkhofftech.ca/v4_6_release/test'
+                'https://example.com/v4_6_release/test'
         }
     },
 }
@@ -153,7 +153,7 @@ API_COMPANY = {
         'id': 77,
         'name': 'Bob Dobbs',
         '_info': {
-            'contact_href': 'https: //some-host.com/v4_6_release/' +
+            'contact_href': 'https://example.com/v4_6_release/' +
                             'apis/3.0/company/contacts/77'
         }
     },
@@ -188,7 +188,7 @@ API_COMPANY = {
         'id': 11,
         'name': 'State',
         '_info': {
-            'taxCode_href': 'https: //some-host.com/v4_6_release/apis/3.0/finance/taxCodes/11'
+            'taxCode_href': 'https: //example.com/v4_6_release/apis/3.0/finance/taxCodes/11'
         }
     },
     'billingTerms': {
@@ -204,7 +204,7 @@ API_COMPANY = {
         'identifier': 'YourCompany',
         'name': 'TestCompany',
         '_info': {
-            'company_href': 'https: //some-host.com/v4_6_release/apis/3.0/company/companies/2'
+            'company_href': 'https: //example.com/v4_6_release/apis/3.0/company/companies/2'
         }
     },
     'billingSite': None,
@@ -255,7 +255,7 @@ API_MEMBER = {
         'identifier': 'User1',
         'name': 'Training User1',
         '_info': {
-            'member_href': 'https://some-host.com/v4_6_release/apis/3.0/system/members/176'
+            'member_href': 'https://example.com/v4_6_release/apis/3.0/system/members/176'
         }
     },
     'firstName': 'Training',
@@ -325,7 +325,7 @@ API_MEMBER = {
         'id': 1,
         'name': 'Tampa Office/Services',
         '_info': {
-            'board_href': 'https://some-host.com/v4_6_release/apis/3.0/service/boards/1'
+            'board_href': 'https://example.com/v4_6_release/apis/3.0/service/boards/1'
         }
     },
     'serviceDefaultDepartmentId': 10,
@@ -341,7 +341,7 @@ API_MEMBER = {
         'identifier': 'User1',
         'name': 'Training User1',
         '_info': {
-            'member_href': 'https://some-host.com/v4_6_release/apis/3.0/system/members/176'
+            'member_href': 'https://example.com/v4_6_release/apis/3.0/system/members/176'
         }
     },
     'timeReminderEmailFlag': False,
@@ -489,7 +489,7 @@ API_PROJECT = {
         'id': 70,
         'name': 'Gregg Kegle',
         '_info': {
-            'contact_href': 'https://some-host.com/v4_6_release/apis/3.0/company/contacts/70'
+            'contact_href': 'https://example.com/v4_6_release/apis/3.0/company/contacts/70'
         }
     },
     'customerPO': '',
@@ -500,7 +500,7 @@ API_PROJECT = {
         'isoCode': 'USD',
         'name': 'US Dollars',
         '_info': {
-            'currency_href': 'https://some-host.com/v4_6_release/apis/3.0/finance/currencies/7'
+            'currency_href': 'https://example.com/v4_6_release/apis/3.0/finance/currencies/7'
         }
     },
     'downpayment': 0,
@@ -523,14 +523,14 @@ API_PROJECT = {
         'id': 28,
         'name': 'Main',
         '_info': {
-            'site_href': 'https://some-host.com/v4_6_release/apis/3.0/company/companies/24/sites/28'
+            'site_href': 'https://example.com/v4_6_release/apis/3.0/company/companies/24/sites/28'
         }
     },
     'site': {
         'id': 28,
         'name': 'Main',
         '_info': {
-            'site_href': 'https://some-host.com/v4_6_release/apis/3.0/company/companies/24/sites/28'
+            'site_href': 'https://example.com/v4_6_release/apis/3.0/company/companies/24/sites/28'
         }
     },
     'status': API_PROJECT_STATUSES[0],
@@ -564,8 +564,8 @@ API_SERVICE_PRIORITY = {
     'sortOrder': 6,
     'color': 'blue',
     '_info': {
-        'priority_href': 'https://some-host.com/v4_6_release/apis/3.0/service/priorities/4',
-        'image_href': 'https://some-host.com/v4_6_release/'
+        'priority_href': 'https://example.com/v4_6_release/apis/3.0/service/priorities/4',
+        'image_href': 'https://example.com/v4_6_release/'
             'apis/3.0/service/priorities/4/image?lm=2005-05-27T14:58:21Z'
     }
 }
@@ -591,7 +591,7 @@ API_SERVICE_TEAM_LIST = [
         'members': [179, 176, 181, 183, 185],
         'name': 'Windows Team',
         'notifyOnTicketDelete': False,
-        'teamLeader': {'_info': {'member_href': 'https://some-host.com/v4_6_release/apis/3.0/system/members/186'},
+        'teamLeader': {'_info': {'member_href': 'https://example.com/v4_6_release/apis/3.0/system/members/186'},
                        'id': 186,
                        'identifier': 'User10',
                        'name': 'Training User10'}},
@@ -605,7 +605,7 @@ API_SERVICE_TEAM_LIST = [
         'members': [202, 191, 189, 193, 195],
         'name': 'Network Team',
         'notifyOnTicketDelete': False,
-        'teamLeader': {'_info': {'member_href': 'https://some-host.com/v4_6_release/apis/3.0/system/members/186'},
+        'teamLeader': {'_info': {'member_href': 'https://example.com/v4_6_release/apis/3.0/system/members/186'},
                        'id': 186,
                        'identifier': 'User10',
                        'name': 'Training User10'}},
@@ -619,7 +619,7 @@ API_SERVICE_TEAM_LIST = [
         'members': [180, 178, 187, 186, 182, 184],
         'name': 'Linux Team',
         'notifyOnTicketDelete': False,
-        'teamLeader': {'_info': {'member_href': 'https://some-host.com/v4_6_release/apis/3.0/system/members/189'},
+        'teamLeader': {'_info': {'member_href': 'https://example.com/v4_6_release/apis/3.0/system/members/189'},
                        'id': 189,
                        'identifier': 'User13',
                        'name': 'Training User13'}
@@ -723,7 +723,7 @@ API_TYPE = {
         'id': 2,
         'name': 'Tampa Office',
         '_info': {
-            'location_href': 'https://connectwise.kerkhofftech.ca/v4_6_release/apis/3.0/system/locations/2'
+            'location_href': 'https://example.com/v4_6_release/apis/3.0/system/locations/2'
         }
     },
     'department': {
@@ -731,7 +731,7 @@ API_TYPE = {
         'identifier': 'Admin',
         'name': 'Admin',
         '_info': {
-            'department_href': 'https://connectwise.kerkhofftech.ca/v4_6_release/apis/3.0/system/departments/13'
+            'department_href': 'https://example.com/v4_6_release/apis/3.0/system/departments/13'
         }
     },
     '_info': {
@@ -783,14 +783,14 @@ API_SERVICE_TICKET = {
         'id': 1,
         'name': 'Service A',
         '_info': {
-            'board_href': 'https://some-host.com/v4_6_release/apis/3.0/service/boards/1'
+            'board_href': 'https://example.com/v4_6_release/apis/3.0/service/boards/1'
         }
     },
     'status': {
         'id': 1,
         'name': 'New',
         '_info': {
-            'status_href': 'https://some-host.com/v4_6_release/apis/3.0/service/boards/1/statuses/1'
+            'status_href': 'https://example.com/v4_6_release/apis/3.0/service/boards/1/statuses/1'
         }
     },
     'project': API_PROJECT,
@@ -798,7 +798,7 @@ API_SERVICE_TICKET = {
         'id': 8,
         'name': 'Solution Implementation',
         '_info': {
-            'phase_href': 'https://some-host.com/v4_6_release/apis/3.0/project/projects/5/phases/8'
+            'phase_href': 'https://example.com/v4_6_release/apis/3.0/project/projects/5/phases/8'
         }
     },
     'wbsCode': '10.2',
@@ -807,7 +807,7 @@ API_SERVICE_TICKET = {
         'id': 28,
         'name': 'Main',
         '_info': {
-            'site_href': 'https://some-host.com/v4_6_release/apis/3.0/company/companies/24/sites/28'
+            'site_href': 'https://example.com/v4_6_release/apis/3.0/company/companies/24/sites/28'
         }
     },
     'siteName': None,
@@ -821,7 +821,7 @@ API_SERVICE_TICKET = {
         'id': 70,
         'name': 'Gregg Kegle',
         '_info': {
-            'contact_href': 'https://some-host.com/v4_6_release/apis/3.0/company/contacts/70'
+            'contact_href': 'https://example.com/v4_6_release/apis/3.0/company/contacts/70'
         }
     },
     'contactName': 'Gregg Kegle',
@@ -843,7 +843,7 @@ API_SERVICE_TICKET = {
         'id': 2,
         'name': 'Phone',
         '_info': {
-            'source_href': 'https://some-host.com/v4_6_release/apis/3.0/service/sources/2'
+            'source_href': 'https://example.com/v4_6_release/apis/3.0/service/sources/2'
         }
     },
     'requiredDate': "2017-03-03T00:00:00Z",
@@ -902,14 +902,14 @@ API_SERVICE_TICKET = {
     '_info': {
         'lastUpdated': '2016-03-08T21:59:20Z',
         'updatedBy': 'User1',
-        'activities_href': 'https://some-host.com/v4_6_release/apis/3.0/service/tickets/69/activities',
-        'timeentries_href': 'https://some-host.com/v4_6_release/apis/3.0/service/tickets/69/timeentries',
-        'scheduleentries_href': 'https://some-host.com/v4_6_release/apis/3.0/service/tickets/69/scheduleentries',
-        'documents_href': 'https://some-host.com/v4_6_release/apis/3.0/service/tickets/69/documents',
-        'products_href': 'https://some-host.com/v4_6_release/apis/3.0/service/tickets/69/products',
-        'configurations_href': 'https://some-host.com/v4_6_release/apis/3.0/service/tickets/69/configurations',
-        'tasks_href': 'https://some-host.com/v4_6_release/apis/3.0/service/tickets/69/tasks',
-        'notes_href': 'https://some-host.com/v4_6_release/apis/3.0/service/tickets/69/notes'
+        'activities_href': 'https://example.com/v4_6_release/apis/3.0/service/tickets/69/activities',
+        'timeentries_href': 'https://example.com/v4_6_release/apis/3.0/service/tickets/69/timeentries',
+        'scheduleentries_href': 'https://example.com/v4_6_release/apis/3.0/service/tickets/69/scheduleentries',
+        'documents_href': 'https://example.com/v4_6_release/apis/3.0/service/tickets/69/documents',
+        'products_href': 'https://example.com/v4_6_release/apis/3.0/service/tickets/69/products',
+        'configurations_href': 'https://example.com/v4_6_release/apis/3.0/service/tickets/69/configurations',
+        'tasks_href': 'https://example.com/v4_6_release/apis/3.0/service/tickets/69/tasks',
+        'notes_href': 'https://example.com/v4_6_release/apis/3.0/service/tickets/69/notes'
     },
     'customFields': None
 }
@@ -950,6 +950,43 @@ API_SYSTEM_TERRITORY = {
 
 API_SYSTEM_TERRITORY_LIST = [API_SYSTEM_TERRITORY]
 
+API_AGREEMENT = {
+    "id": 1,
+    "name": "Gold Rate",
+    "billTime": "Billable",
+    "company": {
+        "id": API_COMPANY["id"],
+        "name": API_COMPANY["name"],
+        "identifier": API_COMPANY["identifier"],
+    },
+    "cancelledFlag": False,
+    "type": {
+        "id": 5,
+        "name": "Block Time - One time",
+        "_info": {
+            "type_href":
+                "https://cw.com/v4_6_release/apis/3.0/finance/agreements/types"
+        }
+    },
+    "workRole": {
+        "id": API_WORK_ROLE['id'],
+        "name": API_WORK_ROLE['name'],
+        "_info": {
+            "workRole_href":
+                "https://cw.com/v4_6_release/apis/3.0/time/workRoles/18"
+        }
+    },
+    "workType": {
+        "id": API_WORK_TYPE['id'],
+        "name": API_WORK_TYPE['name'],
+        "_info": {
+            "workType_href":
+                "https://cw.com/v4_6_release/apis/3.0/time/workTypes/3"
+        }
+    }
+}
+
+API_AGREEMENT_LIST = [API_AGREEMENT]
 
 API_SALES_OPPORTUNITY_TYPE = {
     'id': 2,
@@ -1033,28 +1070,28 @@ API_SALES_OPPORTUNITY_STAGES = [API_SALES_OPPORTUNITY_STAGE]
 
 API_SALES_OPPORTUNITY = {
     '_info': {'lastUpdated': '2016-10-12T19:24:07Z',
-              'notes_href': 'https://some-host.com/v4_6_release/apis/3.0/sales/opportunities/2/notes',
+              'notes_href': 'https://example.com/v4_6_release/apis/3.0/sales/opportunities/2/notes',
               'updatedBy': 'TaxUpdate'},
     'billToCompany':
-        {'_info': {'company_href': 'https://some-host.com/v4_6_release/apis/3.0/company/companies/8'},
+        {'_info': {'company_href': 'https://example.com/v4_6_release/apis/3.0/company/companies/8'},
          'id': 8,
          'identifier': 'AngryFoxCo',
          'name': 'Angry Fox, Co.'},
-    'billToContact': {'_info': {'contact_href': 'https://some-host.com/v4_6_release/apis/3.0/company/contacts/20'},
+    'billToContact': {'_info': {'contact_href': 'https://example.com/v4_6_release/apis/3.0/company/contacts/20'},
                       'id': 20,
                       'name': 'Flin Storts'},
-    'billToSite': {'_info': {'site_href': 'https://some-host.com/v4_6_release/apis/3.0/company/companies/8/sites/7'},
+    'billToSite': {'_info': {'site_href': 'https://example.com/v4_6_release/apis/3.0/company/companies/8/sites/7'},
                    'id': 7,
                    'name': 'Main'},
     'billingTerms': {'_info': None, 'id': 2, 'name': 'Net 10 days'},
     'businessUnitId': 10,
-    'campaign': {'_info': {'campaign_href': 'https://some-host.com/v4_6_release/apis/3.0/marketing/campaigns/3'},
+    'campaign': {'_info': {'campaign_href': 'https://example.com/v4_6_release/apis/3.0/marketing/campaigns/3'},
                  'id': 3,
                  'name': 'Partner Referral'},
     'closedBy': API_MEMBER,
     'closedDate': '2005-09-09T19:53:52Z',
     'company': API_COMPANY,
-    'contact': {'_info': {'contact_href': 'https://some-host.com/v4_6_release/apis/3.0/company/contacts/20'},
+    'contact': {'_info': {'contact_href': 'https://example.com/v4_6_release/apis/3.0/company/contacts/20'},
                 'id': 20,
                 'name': 'Flin Storts'},
     'customFields': None,
@@ -1069,26 +1106,26 @@ API_SALES_OPPORTUNITY = {
     'primarySalesRep': API_MEMBER,
     'priority': {'_info': None, 'id': 7, 'name': 'Clear Flag'},
     'probability': API_SALES_PROBABILITY,
-    'rating': {'_info': {'rating_href': 'https://some-host.com/v4_6_release/apis/3.0/sales/opportunities/ratings/4'},
+    'rating': {'_info': {'rating_href': 'https://example.com/v4_6_release/apis/3.0/sales/opportunities/ratings/4'},
                'id': 4,
                'name': 'Hot'},
     'secondarySalesRep': API_MEMBER,
     'shipToCompany': API_COMPANY,
-    'shipToContact': {'_info': {'contact_href': 'https://some-host.com/v4_6_release/apis/3.0/company/contacts/20'},
+    'shipToContact': {'_info': {'contact_href': 'https://example.com/v4_6_release/apis/3.0/company/contacts/20'},
                       'id': 20,
                       'name': 'Flin Storts'},
-    'shipToSite': {'_info': {'site_href': 'https://some-host.com/v4_6_release/apis/3.0/company/companies/8/sites/7'},
+    'shipToSite': {'_info': {'site_href': 'https://example.com/v4_6_release/apis/3.0/company/companies/8/sites/7'},
                    'id': 7,
                    'name': 'Main'},
-    'site': {'_info': {'site_href': 'https://some-host.com/v4_6_release/apis/3.0/company/companies/8/sites/7'},
+    'site': {'_info': {'site_href': 'https://example.com/v4_6_release/apis/3.0/company/companies/8/sites/7'},
              'id': 7,
              'name': 'Main'},
     'source': 'Microsoft sent to us',
     'stage': {'_info': None, 'id': 8, 'name': '3.Quote'},
-    'status': {'_info': {'status_href': 'https://some-host.com/v4_6_release/apis/3.0/sales/opportunities/statuses/1'},
+    'status': {'_info': {'status_href': 'https://example.com/v4_6_release/apis/3.0/sales/opportunities/statuses/1'},
                'id': 1,
                'name': 'Open'},
-    'taxCode': {'_info': {'taxCode_href': 'https://some-host.com/v4_6_release/apis/3.0/finance/taxCodes/11'},
+    'taxCode': {'_info': {'taxCode_href': 'https://example.com/v4_6_release/apis/3.0/finance/taxCodes/11'},
                 'id': 11,
                 'name': 'State'},
     'totalSalesTax': 0.0,
@@ -1099,17 +1136,147 @@ API_SALES_OPPORTUNITIES = [
     API_SALES_OPPORTUNITY,
 ]
 
+API_SALES_ACTIVITY_STATUSES = [
+    {
+        "id": 1,
+        "name": "Open",
+        "defaultFlag": True,
+        "inactiveFlag": False,
+        "closedFlag": False,
+        "_info": {
+            "lastUpdated": "2000-12-28T22:34:26Z"
+        }
+    },
+    {
+        "id": 2,
+        "name": "Closed",
+        "defaultFlag": False,
+        "inactiveFlag": False,
+        "closedFlag": True,
+        "_info": {
+            "lastUpdated": "2000-12-28T22:34:35Z"
+        }
+    },
+    {
+        "id": 8,
+        "name": "Opened",
+        "defaultFlag": False,
+        "inactiveFlag": False,
+        "spawnFollowupFlag": False,
+        "closedFlag": False,
+        "_info": {
+            "lastUpdated": "2016-05-11T00:31:06Z",
+            "updatedBy": "User1"
+        }
+    }
+]
+
+API_SALES_ACTIVITY_TYPES = [
+    {
+        "id": 1,
+        "name": "Call",
+        "points": 2,
+        "defaultFlag": False,
+        "inactiveFlag": False,
+        "emailFlag": False,
+        "memoFlag": False,
+        "historyFlag": False,
+        "_info": {
+            "lastUpdated": "2003-10-31T18:52:58Z",
+            "updatedBy": "zAdmin"
+        }
+    },
+    {
+        "id": 2,
+        "name": "Appointment",
+        "points": 5,
+        "defaultFlag": False,
+        "inactiveFlag": False,
+        "emailFlag": False,
+        "memoFlag": False,
+        "historyFlag": False,
+        "_info": {
+            "lastUpdated": "2003-10-31T18:52:50Z",
+            "updatedBy": "zAdmin"
+        }
+    },
+    {
+        "id": 3,
+        "name": "Historical Entry",
+        "points": 0,
+        "defaultFlag": False,
+        "inactiveFlag": False,
+        "emailFlag": False,
+        "memoFlag": False,
+        "historyFlag": True,
+        "_info": {
+            "lastUpdated": "2003-10-31T18:53:45Z",
+            "updatedBy": "zAdmin"
+        }
+    },
+    {
+        "id": 5,
+        "name": "Quote",
+        "points": 5,
+        "defaultFlag": False,
+        "inactiveFlag": False,
+        "emailFlag": False,
+        "memoFlag": False,
+        "historyFlag": False,
+        "_info": {
+            "lastUpdated": "2003-10-31T18:54:17Z",
+            "updatedBy": "zAdmin"
+        }
+    },
+    {
+        "id": 6,
+        "name": "Follow Up",
+        "points": 1,
+        "defaultFlag": False,
+        "inactiveFlag": False,
+        "emailFlag": False,
+        "memoFlag": False,
+        "historyFlag": False,
+        "_info": {
+            "lastUpdated": "2003-10-31T18:53:31Z",
+            "updatedBy": "zAdmin"
+        }
+    },
+    {
+        "id": 7,
+        "name": "Email",
+        "points": 1,
+        "defaultFlag": False,
+        "inactiveFlag": False,
+        "emailFlag": True,
+        "memoFlag": False,
+        "historyFlag": False,
+        "_info": {
+            "lastUpdated": "2003-10-31T18:53:23Z",
+            "updatedBy": "zAdmin"
+        }
+    },
+    {
+        "id": 8,
+        "name": "Task",
+        "points": 1,
+        "defaultFlag": False,
+        "inactiveFlag": False,
+        "emailFlag": False,
+        "memoFlag": False,
+        "historyFlag": False,
+        "_info": {
+            "lastUpdated": "2003-10-31T18:54:27Z",
+            "updatedBy": "zAdmin"
+        }
+    },
+]
+
 
 API_SALES_ACTIVITY = {
     'id': 47,
     'name': 'Stage Change from 1.Prospect to 2.Qualification',
-    'type': {
-        'id': 3,
-        'name': 'Historical Entry',
-        '_info': {
-            'type_href': 'https://example.com/v4_6_release/apis/3.0/sales/activities/types/3'
-        }
-    },
+    'type': API_SALES_ACTIVITY_TYPES[0],
     'company': API_COMPANY,
     'contact': {
         'id': 20,
@@ -1120,20 +1287,13 @@ API_SALES_ACTIVITY = {
     },
     'phoneNumber': '8139888241',
     'email': 'test@test.com',
-    'status': {
-        'id': 4,
-        'name': '1-High',
-        '_info': {
-            'status_href': 'https://example.com/v4_6_release/apis/3.0/sales/activities/statuses/4'
-        }
-    },
+    'status': API_SALES_ACTIVITY_STATUSES[0],
     'opportunity': API_SALES_OPPORTUNITY,
     'ticket': None,
-    'agreement': None,
+    'agreement': API_AGREEMENT,
     'campaign': None,
     'notes': 'Stage Change from 1.Prospect to 2.Qualification',
     'dateStart': '2016-03-06',
-    # 'dateEnd': None,                  # ConnectWise 2017.5 removed null values
     'assignedBy': {
         'id': 196,
         'identifier': 'User20',
@@ -1301,21 +1461,21 @@ API_TIME_ENTRY = {
         'id': 3,
         'name': 'Regular',
         '_info': {
-            'workType_href': 'https://connectwise.kerkhofftech.ca/v4_6_release/apis/3.0/system/workTypes/3'
+            'workType_href': 'https://example.com/v4_6_release/apis/3.0/system/workTypes/3'
         }
     },
     'workRole': {
         'id': 11,
         'name': 'System Engineer',
         '_info': {
-            'workRole_href': 'https://connectwise.kerkhofftech.ca/v4_6_release/apis/3.0/time/workRoles/11'
+            'workRole_href': 'https://example.com/v4_6_release/apis/3.0/time/workRoles/11'
         }
     },
     'agreement': {
         'id': 3,
         'name': 'Retainer Agreement for Big Design',
         '_info': {
-            'agreement_href': 'https://connectwise.kerkhofftech.ca/v4_6_release/apis/3.0/finance/agreements/3'
+            'agreement_href': 'https://example.com/v4_6_release/apis/3.0/finance/agreements/3'
         }
     },
 
@@ -1337,7 +1497,7 @@ API_TIME_ENTRY = {
         'id': 4,
         'identifier': '3',
         '_info': {
-            'invoice_href': 'https://connectwise.kerkhofftech.ca/v4_6_release/apis/3.0/finance/invoices/4'
+            'invoice_href': 'https://example.com/v4_6_release/apis/3.0/finance/invoices/4'
         }
     },
     'mobileGuid': '6fd34162-0856-4bc1-80ae-c3dccd89357a',
@@ -1346,7 +1506,7 @@ API_TIME_ENTRY = {
         'id': 2,
         'name': '2005-05-14 to 2005-05-20',
         '_info': {
-            'timeSheet_href': 'https://connectwise.kerkhofftech.ca/v4_6_release/apis/3.0/time/sheets/2'
+            'timeSheet_href': 'https://example.com/v4_6_release/apis/3.0/time/sheets/2'
         }
     },
     'status': 'Billed',
@@ -1441,41 +1601,3 @@ API_HOSTED_SETUPS = [
         }
     }
 ]
-
-API_AGREEMENT = {
-    "id": 1,
-    "name": "Gold Rate",
-    "billTime": "Billable",
-    "company": {
-        "id": API_COMPANY["id"],
-        "name": API_COMPANY["name"],
-        "identifier": API_COMPANY["identifier"],
-    },
-    "cancelledFlag": False,
-    "type": {
-        "id": 5,
-        "name": "Block Time - One time",
-        "_info": {
-            "type_href":
-                "https://cw.com/v4_6_release/apis/3.0/finance/agreements/types"
-        }
-    },
-    "workRole": {
-        "id": API_WORK_ROLE['id'],
-        "name": API_WORK_ROLE['name'],
-        "_info": {
-            "workRole_href":
-                "https://cw.com/v4_6_release/apis/3.0/time/workRoles/18"
-        }
-    },
-    "workType": {
-        "id": API_WORK_TYPE['id'],
-        "name": API_WORK_TYPE['name'],
-        "_info": {
-            "workType_href":
-                "https://cw.com/v4_6_release/apis/3.0/time/workTypes/3"
-        }
-    }
-}
-
-API_AGREEMENT_LIST = [API_AGREEMENT]

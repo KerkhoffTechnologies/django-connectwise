@@ -86,13 +86,24 @@ class Synchronizer:
         self.pre_delete_args = kwargs.pop('pre_delete_args', None)
         self.post_delete_callback = kwargs.pop('post_delete_callback', None)
 
+    def set_relations(self, instance, json_data):
+        for json_field, value in self.related_meta.items():
+            model_class, field_name = value
+            self._assign_relation(
+                instance,
+                json_data,
+                json_field,
+                model_class,
+                field_name
+            )
+
     @staticmethod
     def _assign_null_relation(instance, model_field):
         """
         Set the FK to null, but handle issues like the FK being non-null.
 
         This can happen because ConnectWise gives us records that point to
-        non-existant records- such as activities whose assignTo fields point
+        non-existent records- such as activities whose assignTo fields point
         to deleted members.
         """
         try:
@@ -115,8 +126,8 @@ class Synchronizer:
             self._assign_null_relation(instance, model_field)
             return
 
+        uid = relation_json['id']
         try:
-            uid = relation_json['id']
             related_instance = model_class.objects.get(pk=uid)
             setattr(instance, model_field, related_instance)
         except model_class.DoesNotExist:
@@ -204,11 +215,13 @@ class Synchronizer:
             # This is what we expect to happen. Since it's gone in CW, we
             # are safe to delete it from here.
             pre_delete_result = None
-            if pre_delete_callback:
-                pre_delete_result = pre_delete_callback(*pre_delete_args)
-            self.model_class.objects.filter(pk=instance_id).delete()
-            if post_delete_callback:
-                post_delete_callback(pre_delete_result)
+            try:
+                if pre_delete_callback:
+                    pre_delete_result = pre_delete_callback(*pre_delete_args)
+                self.model_class.objects.filter(pk=instance_id).delete()
+            finally:
+                if post_delete_callback:
+                    post_delete_callback(pre_delete_result)
             logger.info(
                 'Deleted {} {} (if it existed).'.format(
                     self.model_class.__name__,
@@ -454,15 +467,7 @@ class ServiceNoteSynchronizer(Synchronizer):
                 ' ObjectDoesNotExist Exception: '.format(instance.id, e)
             )
 
-        for json_field, value in self.related_meta.items():
-            model_class, field_name = value
-            self._assign_relation(
-                instance,
-                json_data,
-                json_field,
-                model_class,
-                field_name
-            )
+        self.set_relations(instance, json_data)
 
     def client_call(self, ticket_id, *args, **kwargs):
         return self.client.get_notes(ticket_id, *args, **kwargs)
@@ -473,7 +478,7 @@ class ServiceNoteSynchronizer(Synchronizer):
 
         # We are using the conditions here to specify getting a single
         # tickets notes, and then overwriting it, because only a number
-        # was supplied, which cant acutally be used later on. When it is
+        # was supplied, which can't actually be used later on. When it is
         # being synced by huey it will append a 'lastUpdated' condition
         # after this point, so we are free to use conditions to select
         # one ticket in this strange way without disrupting any other
@@ -571,16 +576,7 @@ class BoardSynchronizer(Synchronizer):
             # This is old, but keep for backwards-compatibility
             instance.inactive = json_data.get('inactive')
 
-        for json_field, value in self.related_meta.items():
-            model_class, field_name = value
-            self._assign_relation(
-                instance,
-                json_data,
-                json_field,
-                model_class,
-                field_name
-            )
-
+        self.set_relations(instance, json_data)
         return instance
 
     def get_page(self, *args, **kwargs):
@@ -755,10 +751,19 @@ class CompanySynchronizer(Synchronizer):
     def get_single(self, company_id):
         return self.client.by_id(company_id)
 
-    def fetch_delete_by_id(self, company_id):
+    def fetch_delete_by_id(self, company_id, pre_delete_callback=None,
+                           pre_delete_args=None,
+                           post_delete_callback=None):
         # Companies are deleted by setting deleted_flag = True, so
         # just treat this as a normal sync.
-        self.fetch_sync_by_id(company_id)
+        pre_delete_result = None
+        try:
+            if pre_delete_callback:
+                pre_delete_result = pre_delete_callback(*pre_delete_args)
+            self.fetch_sync_by_id(company_id)
+        finally:
+            if post_delete_callback:
+                post_delete_callback(pre_delete_result)
 
 
 class CompanyStatusSynchronizer(Synchronizer):
@@ -810,21 +815,49 @@ class MyCompanyOtherSynchronizer(Synchronizer):
 
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
-
-        for json_field, value in self.related_meta.items():
-            model_class, field_name = value
-            self._assign_relation(
-                instance,
-                json_data,
-                json_field,
-                model_class,
-                field_name
-            )
-
+        self.set_relations(instance, json_data)
         return instance
 
     def get_page(self, *args, **kwargs):
         return self.client.get_mycompanyother(*args, **kwargs)
+
+
+class ActivityStatusSynchronizer(Synchronizer):
+    client_class = api.SalesAPIClient
+    model_class = models.ActivityStatus
+
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data['id']
+        instance.name = json_data['name']
+        instance.default_flag = json_data.get('defaultFlag', False)
+        instance.inactive_flag = json_data.get('inactiveFlag', False)
+        instance.spawn_followup_flag = \
+            json_data.get('spawnFollowupFlag', False)
+        instance.closed_flag = json_data.get('closedFlag', False)
+        return instance
+
+    def get_page(self, *args, **kwargs):
+        return self.client.get_activity_statuses(*args, **kwargs)
+
+
+class ActivityTypeSynchronizer(Synchronizer):
+    client_class = api.SalesAPIClient
+    model_class = models.ActivityType
+
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data['id']
+        instance.name = json_data['name']
+        instance.points = json_data['points']
+        instance.default_flag = json_data.get('defaultFlag', False)
+        instance.inactive_flag = json_data.get('inactiveFlag', False)
+        instance.email_flag = json_data.get('emailFlag', False)
+        instance.memo_flag = json_data.get('memoFlag', False)
+        instance.history_flag = json_data.get('historyFlag', False)
+
+        return instance
+
+    def get_page(self, *args, **kwargs):
+        return self.client.get_activity_types(*args, **kwargs)
 
 
 class ActivitySynchronizer(Synchronizer):
@@ -835,7 +868,27 @@ class ActivitySynchronizer(Synchronizer):
         'opportunity': (models.Opportunity, 'opportunity'),
         'ticket': (models.Ticket, 'ticket'),
         'assignTo': (models.Member, 'assign_to'),
+        'status': (models.ActivityStatus, 'status'),
+        'type': (models.ActivityType, 'type'),
+        'company': (models.Company, 'company'),
+        'agreement': (models.Agreement, 'agreement'),
     }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Only sync activities in non-closed statuses. There shouldn't be
+        # too many activity statuses so we don't need to page this like we
+        # do with tickets.
+        self.api_conditions = ['status/id in ({})'.format(
+            ','.join(
+                [
+                    str(i.id) for
+                    i in models.ActivityStatus.objects.filter(
+                        closed_flag=False
+                    )
+                ]
+            )
+        )]
 
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
@@ -852,17 +905,7 @@ class ActivitySynchronizer(Synchronizer):
         if date_end:
             instance.date_end = parse(date_end, default=parse('00:00Z'))
 
-        # Assign foreign keys
-        for json_field, value in self.related_meta.items():
-            model_class, field_name = value
-            self._assign_relation(
-                instance,
-                json_data,
-                json_field,
-                model_class,
-                field_name
-            )
-
+        self.set_relations(instance, json_data)
         return instance
 
     def get_page(self, *args, **kwargs):
@@ -948,18 +991,8 @@ class ScheduleEntriesSynchronizer(BatchConditionMixin, Synchronizer):
         if expected_date_end:
             instance.expected_date_end = parse(expected_date_end)
 
-        # handle foreign keys
-        for json_field, value in self.related_meta.items():
-            model_class, field_name = value
-            self._assign_relation(
-                instance,
-                json_data,
-                json_field,
-                model_class,
-                field_name
-            )
-        # _assign_relation expects a dict. objectId is an integer. Handle it
-        # as a special situation.
+        self.set_relations(instance, json_data)
+
         ticket_class = models.Ticket
         activity_class = models.Activity
         try:
@@ -1029,7 +1062,7 @@ class ScheduleStatusSynchronizer(Synchronizer):
         return self.client.get_schedule_statuses(*args, **kwargs)
 
 
-class ScheduleTypeSychronizer(Synchronizer):
+class ScheduleTypeSynchronizer(Synchronizer):
     client_class = api.ScheduleAPIClient
     model_class = models.ScheduleType
 
@@ -1120,23 +1153,14 @@ class TimeEntrySynchronizer(BatchConditionMixin, Synchronizer):
         if resolution_flag:
             instance.resolution_flag = resolution_flag
 
-        for json_field, value in self.related_meta.items():
-            model_class, field_name = value
-            self._assign_relation(
-                instance,
-                json_data,
-                json_field,
-                model_class,
-                field_name
-            )
+        self.set_relations(instance, json_data)
 
         # Similar to Schedule Entries, chargeToId is stored as an int in
-        # ConnectWise, handled as special situation
+        # ConnectWise, handled as special situation.
         # Not making a method to handle this in a similar way to Schedule
-        # entries and even with the similar code
-        # as this may be VERY different in the near future, because
-        # charge_to_id would be converted to a GenericForeignKey
-        # and would be handled differently
+        # entries and even with the similar code as this may be VERY
+        # different in the near future, because charge_to_id would be
+        # converted to a GenericForeignKey and would be handled differently.
         ticket_class = models.Ticket
         try:
             charge_id = json_data['chargeToId']
@@ -1263,15 +1287,7 @@ class ProjectSynchronizer(Synchronizer):
         if estimated_end:
             instance.estimated_end = parse(estimated_end).date()
 
-        # handle foreign keys
-        for json_field, value in self.related_meta.items():
-            model_class, field_name = value
-            self._assign_relation(instance,
-                                  json_data,
-                                  json_field,
-                                  model_class,
-                                  field_name)
-
+        self.set_relations(instance, json_data)
         return instance
 
     def get_page(self, *args, **kwargs):
@@ -1488,16 +1504,7 @@ class TicketSynchronizer(BatchConditionMixin, Synchronizer):
             # available for SLA calculation.
             instance.entered_date_utc = parse(entered_date_utc)
 
-        for json_field, value in self.related_meta.items():
-            model_class, field_name = value
-            self._assign_relation(
-                instance,
-                json_data,
-                json_field,
-                model_class,
-                field_name
-            )
-
+        self.set_relations(instance, json_data)
         return instance
 
     def sync_related(self, instance):
@@ -1515,6 +1522,10 @@ class TicketSynchronizer(BatchConditionMixin, Synchronizer):
         time_sync = TimeEntrySynchronizer()
         time_sync.batch_condition_list = [instance_id]
         sync_classes.append((time_sync, Q(charge_to_id=instance)))
+
+        activity_sync = ActivitySynchronizer()
+        activity_sync.api_conditions = ['ticket/id={}'.format(instance_id)]
+        sync_classes.append((activity_sync, Q(ticket=instance)))
 
         self.sync_children(*sync_classes)
 
@@ -1621,7 +1632,7 @@ class HolidayListSynchronizer(Synchronizer):
         return self.client.get_holiday_lists(*args, **kwargs)
 
 
-class SLAPrioritySychronizer(Synchronizer):
+class SLAPrioritySynchronizer(Synchronizer):
     client_class = api.ServiceAPIClient
     model_class = models.SlaPriority
 
@@ -1636,18 +1647,7 @@ class SLAPrioritySychronizer(Synchronizer):
         instance.plan_within = json_data['planWithin']
         instance.resolution_hours = json_data['resolutionHours']
 
-        for json_field, value in self.related_meta.items():
-            model_class, field_name = value
-            self._assign_relation(
-                instance,
-                json_data,
-                json_field,
-                model_class,
-                field_name
-            )
-
-        instance.save()
-
+        self.set_relations(instance, json_data)
         return instance
 
     def client_call(self, sla_id, *args, **kwargs):
@@ -1678,21 +1678,9 @@ class SLASynchronizer(Synchronizer):
         instance.respond_hours = json_data['respondHours']
         instance.plan_within = json_data['planWithin']
         instance.resolution_hours = json_data['resolutionHours']
-
         instance.based_on = json_data.get('basedOn')
 
-        for json_field, value in self.related_meta.items():
-            model_class, field_name = value
-            self._assign_relation(
-                instance,
-                json_data,
-                json_field,
-                model_class,
-                field_name
-            )
-
-        instance.save()
-
+        self.set_relations(instance, json_data)
         return instance
 
     def get_page(self, *args, **kwargs):
@@ -1779,15 +1767,7 @@ class OpportunitySynchronizer(Synchronizer):
                 models.OpportunityPriority, priority
             )
 
-        # handle foreign keys
-        for json_field, value in self.related_meta.items():
-            model_class, field_name = value
-            self._assign_relation(instance,
-                                  json_data,
-                                  json_field,
-                                  model_class,
-                                  field_name)
-
+        self.set_relations(instance, json_data)
         return instance
 
     def get_page(self, *args, **kwargs):
@@ -1854,18 +1834,7 @@ class TypeSynchronizer(Synchronizer):
         instance.id = json_data['id']
         instance.name = json_data['name']
 
-        for json_field, value in self.related_meta.items():
-            model_class, field_name = value
-            self._assign_relation(
-                instance,
-                json_data,
-                json_field,
-                model_class,
-                field_name
-            )
-
-        instance.save()
-
+        self.set_relations(instance, json_data)
         return instance
 
     def client_call(self, board_id, *args, **kwargs):
@@ -1893,18 +1862,7 @@ class SubTypeSynchronizer(Synchronizer):
         instance.id = json_data['id']
         instance.name = json_data['name']
 
-        for json_field, value in self.related_meta.items():
-            model_class, field_name = value
-            self._assign_relation(
-                instance,
-                json_data,
-                json_field,
-                model_class,
-                field_name
-            )
-
-        instance.save()
-
+        self.set_relations(instance, json_data)
         return instance
 
     def client_call(self, board_id, *args, **kwargs):
@@ -1932,18 +1890,7 @@ class ItemSynchronizer(Synchronizer):
         instance.id = json_data['id']
         instance.name = json_data['name']
 
-        for json_field, value in self.related_meta.items():
-            model_class, field_name = value
-            self._assign_relation(
-                instance,
-                json_data,
-                json_field,
-                model_class,
-                field_name
-            )
-
-        instance.save()
-
+        self.set_relations(instance, json_data)
         return instance
 
     def client_call(self, board_id, *args, **kwargs):
@@ -1971,7 +1918,6 @@ class WorkTypeSynchronizer(Synchronizer):
             instance.bill_time = None
         else:
             instance.bill_time = json_data['billTime']
-        instance.save()
 
         return instance
 
@@ -1987,7 +1933,6 @@ class WorkRoleSynchronizer(Synchronizer):
         instance.id = json_data['id']
         instance.name = json_data['name']
         instance.inactive_flag = json_data['inactiveFlag']
-        instance.save()
 
         return instance
 
@@ -2015,17 +1960,7 @@ class AgreementSynchronizer(Synchronizer):
         else:
             instance.bill_time = json_data['billTime']
 
-        for json_field, value in self.related_meta.items():
-            model_class, field_name = value
-            self._assign_relation(
-                instance,
-                json_data,
-                json_field,
-                model_class,
-                field_name
-            )
-        instance.save()
-
+        self.set_relations(instance, json_data)
         return instance
 
     def get_page(self, *args, **kwargs):

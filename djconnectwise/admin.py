@@ -32,6 +32,7 @@ class SyncJobAdmin(admin.ModelAdmin):
 class ConnectWiseBoardAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'inactive')
     search_fields = ['name']
+    list_filter = ('inactive',)
 
 
 @admin.register(models.BoardStatus)
@@ -101,25 +102,29 @@ class CompanyTypeAdmin(admin.ModelAdmin):
 @admin.register(models.ScheduleType)
 class ScheduleTypeAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'identifier')
-    list_filter = ('name', )
     search_fields = ['name']
 
 
 @admin.register(models.ScheduleStatus)
 class ScheduleStatusAdmin(admin.ModelAdmin):
     list_display = ('id', 'name')
-    list_filter = ('name', )
     search_fields = ['name']
 
 
 @admin.register(models.ScheduleEntry)
 class ScheduleEntryAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'expected_date_start', 'expected_date_end',
-                    'done_flag', 'ticket_object', 'activity_object', 'member',
-                    'where', 'status', 'schedule_type')
-    list_filter = ('where', 'status', 'schedule_type')
+    list_display = ('id', 'ticket_object', 'activity_object', 'member',
+                    'done_flag',
+                    'status', 'expected_date_start', 'expected_date_end',)
+    list_filter = ('status', 'done_flag', 'member')
     search_fields = ['name', 'ticket_object__id',
                      'activity_object__id', 'member__identifier']
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.select_related(
+            'ticket_object', 'activity_object', 'member', 'status'
+        )
 
 
 @admin.register(models.TimeEntry)
@@ -128,9 +133,13 @@ class TimeEntryAdmin(admin.ModelAdmin):
                     'member', 'billable_option', 'actual_hours',
                     'time_start', 'time_end', 'hours_deduct', 'notes',
                     'internal_notes')
-    list_filter = ('charge_to_id', 'member', 'charge_to_type')
+    list_filter = ('member', 'charge_to_type')
     search_fields = ['id', 'charge_to_id__id', 'member__identifier',
                      'charge_to_type']
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.select_related('company', 'member', 'charge_to_id')
 
 
 @admin.register(models.Team)
@@ -208,16 +217,37 @@ class TicketAdmin(admin.ModelAdmin):
         return qs.select_related('status', 'status__board')
 
 
+@admin.register(models.ActivityStatus)
+class ActivityStatusAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'inactive_flag', 'closed_flag')
+    list_filter = ('inactive_flag', 'closed_flag')
+    search_fields = ['name']
+
+
+@admin.register(models.ActivityType)
+class ActivityTypeAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'points', 'inactive_flag')
+    list_filter = ('inactive_flag',)
+    search_fields = ['name']
+
+
 @admin.register(models.Activity)
 class ActivityAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'notes', 'date_start', 'date_end',
                     'assign_to', 'opportunity', 'ticket')
-    list_filter = ['opportunity', ]
-    search_fields = ['name', 'notes']
+    search_fields = [
+        'name', 'notes', 'ticket__summary', 'opportunity__name',
+        'company__name'
+    ]
+    list_filter = ('status', 'type')
 
     formfield_overrides = {
         db_models.CharField: {'widget': TextInput(attrs={'size': '40'})}
     }
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.select_related('ticket', 'opportunity', 'assign_to')
 
 
 @admin.register(models.SalesProbability)

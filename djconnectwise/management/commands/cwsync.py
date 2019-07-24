@@ -18,8 +18,6 @@ class Command(BaseCommand):
         # using kwargs in Python 3.6. But we need Python 3.5 compatibility for
         # now.
         # See https://www.python.org/dev/peps/pep-0468/.
-        # ActivitySynchronizer is omitted here because it typically takes
-        # a long time and activities aren't a common use.
         synchronizers = (
             ('member', sync.MemberSynchronizer, _('Member')),
             ('board', sync.BoardSynchronizer, _('Board')),
@@ -56,7 +54,7 @@ class Command(BaseCommand):
                 _('Company Other')),
             ('sla', sync.SLASynchronizer,
                 _('Sla')),
-            ('sla_priority', sync.SLAPrioritySychronizer,
+            ('sla_priority', sync.SLAPrioritySynchronizer,
                 _('Sla Priority')),
             ('type', sync.TypeSynchronizer,
              _('Type')),
@@ -69,7 +67,19 @@ class Command(BaseCommand):
                 _('Service Note')),
             ('opportunity_note', sync.OpportunityNoteSynchronizer,
                 _('Opportunity Note')),
-            ('schedule_type', sync.ScheduleTypeSychronizer,
+            ('work_type', sync.WorkTypeSynchronizer,
+             _('Work Type')),
+            ('work_role', sync.WorkRoleSynchronizer,
+             _('Work Role')),
+            ('agreement', sync.AgreementSynchronizer,
+             _('Agreement')),
+            ('activity_status', sync.ActivityStatusSynchronizer,
+                _('Activity Status')),
+            ('activity_type', sync.ActivityTypeSynchronizer,
+                _('Activity Type')),
+            ('activity', sync.ActivitySynchronizer,
+                _('Activity')),
+            ('schedule_type', sync.ScheduleTypeSynchronizer,
                 _('Schedule Type')),
             ('schedule_status', sync.ScheduleStatusSynchronizer,
                 _('Schedule Status')),
@@ -77,12 +87,6 @@ class Command(BaseCommand):
                 _('Schedule Entry')),
             ('time_entry', sync.TimeEntrySynchronizer,
                 _('Time Entry')),
-            ('work_type', sync.WorkTypeSynchronizer,
-             _('Work Type')),
-            ('work_role', sync.WorkRoleSynchronizer,
-             _('Work Role')),
-            ('agreement', sync.AgreementSynchronizer,
-             _('Agreement'))
         )
         self.synchronizer_map = OrderedDict()
         for name, synchronizer, obj_name in synchronizers:
