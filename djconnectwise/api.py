@@ -962,7 +962,6 @@ class ServiceAPIClient(ConnectWiseAPIClient):
 
         return self.request('post', endpoint_url, body)
 
-
     def get_statuses(self, board_id, *args, **kwargs):
         """
         Returns the status types associated with the specified board.
