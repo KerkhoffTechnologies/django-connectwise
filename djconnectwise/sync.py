@@ -496,6 +496,25 @@ class ServiceNoteSynchronizer(Synchronizer):
 
         return records
 
+    def create_new_note(self, target, **kwargs):
+        """
+        Send POST request to ConnectWise to create a new note and then
+        create it in the local database from the response
+        """
+
+        target_data = {}
+
+        if isinstance(target, models.Ticket):
+            target_data['id'] = target.id
+            target_data['type'] = target.record_type
+        else:
+            raise InvalidObjectException("Invalid target type for note \
+            creation: " + str(target.__class__) + ".")
+        service_client = api.ServiceAPIClient()
+        instance = service_client.post_note(target_data, **kwargs)
+
+        return self.update_or_create_instance(instance)
+
 
 class OpportunityNoteSynchronizer(Synchronizer):
     client_class = api.SalesAPIClient

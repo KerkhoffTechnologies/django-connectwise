@@ -921,8 +921,8 @@ class ServiceAPIClient(ConnectWiseAPIClient):
                                    *args, **kwargs)
 
     def post_note(self, target_data, **kwargs):
-        endpoint_url = '{}/{}/notes'.format(
-            self.ENDPOINT_TICKETS, target_data.['id'])
+        endpoint_url = self._endpoint(
+            '{}/{}/notes'.format(self.ENDPOINT_TICKETS, target_data['id']))
 
         body = {
             "detailDescriptionFlag": kwargs
@@ -930,10 +930,7 @@ class ServiceAPIClient(ConnectWiseAPIClient):
             "internalAnalysisFlag": kwargs
             .get("analysis_flag"),
             "resolutionFlag": kwargs.get("resolution_flag"),
-            # TODO what is process notifications?
-            # "processNotifications": kwargs.get(""),
-            # TODO I think this is the equivalent of contact_flag? test
-            "customerUpdatedFlag": kwargs.get("contact_flag"),
+            "processNotifications": kwargs.get("process_notifications")
         }
 
         member = kwargs.get("resource")
