@@ -937,10 +937,8 @@ class ServiceAPIClient(ConnectWiseAPIClient):
             '{}/{}/notes'.format(self.ENDPOINT_TICKETS, target_data['id']))
 
         body = {
-            "detailDescriptionFlag": kwargs
-            .get("description_flag"),
-            "internalAnalysisFlag": kwargs
-            .get("analysis_flag"),
+            "detailDescriptionFlag": kwargs.get("description_flag"),
+            "internalAnalysisFlag": kwargs.get("analysis_flag"),
             "resolutionFlag": kwargs.get("resolution_flag"),
             "processNotifications": kwargs.get("process_notifications")
         }

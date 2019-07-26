@@ -513,8 +513,10 @@ class ServiceNoteSynchronizer(Synchronizer):
             target_data['id'] = target.id
             target_data['type'] = target.record_type
         else:
-            raise InvalidObjectException("Invalid target type for note \
-            creation: " + str(target.__class__) + ".")
+            raise ValueError(
+                "Invalid target type for note creation: {}.".format(
+                    str(target.__class__))
+            )
         service_client = api.ServiceAPIClient()
         instance = service_client.post_note(target_data, **kwargs)
 
