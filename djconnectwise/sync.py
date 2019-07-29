@@ -549,6 +549,10 @@ class BoardSynchronizer(Synchronizer):
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
         instance.name = json_data['name']
+        if json_data['billTime'] == 'NoDefault':
+            instance.bill_time = None
+        else:
+            instance.bill_time = json_data['billTime']
 
         if 'inactiveFlag' in json_data:
             # This is the new CW way
@@ -1282,6 +1286,11 @@ class MemberSynchronizer(Synchronizer):
     client_class = api.SystemAPIClient
     model_class = models.Member
 
+    related_meta = {
+        'workRole': (models.WorkRole, 'work_role'),
+        'workType': (models.WorkType, 'work_type')
+    }
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.last_sync_job_time = None
@@ -1299,6 +1308,9 @@ class MemberSynchronizer(Synchronizer):
             )
         instance.license_class = json_data.get('licenseClass')
         instance.inactive = json_data.get('inactiveFlag')
+
+        self.set_relations(instance, json_data)
+
         return instance
 
     def _save_avatar(self, member, avatar, attachment_filename):
@@ -1914,6 +1926,7 @@ class WorkRoleSynchronizer(Synchronizer):
         instance.id = json_data['id']
         instance.name = json_data['name']
         instance.inactive_flag = json_data['inactiveFlag']
+        instance.overall_default_flag = json_data['overallDefaultFlag']
 
         return instance
 
