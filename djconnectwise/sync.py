@@ -1907,6 +1907,7 @@ class WorkTypeSynchronizer(Synchronizer):
         instance.id = json_data['id']
         instance.name = json_data['name']
         instance.inactive_flag = json_data['inactiveFlag']
+        instance.overall_default_flag = json_data['overallDefaultFlag']
         if json_data['billTime'] == 'NoDefault':
             instance.bill_time = None
         else:
@@ -1926,7 +1927,6 @@ class WorkRoleSynchronizer(Synchronizer):
         instance.id = json_data['id']
         instance.name = json_data['name']
         instance.inactive_flag = json_data['inactiveFlag']
-        instance.overall_default_flag = json_data['overallDefaultFlag']
 
         return instance
 
