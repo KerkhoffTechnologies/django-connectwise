@@ -1049,6 +1049,15 @@ class ScheduleEntriesSynchronizer(BatchConditionMixin, Synchronizer):
         instance = schedule_client.post_schedule_entry(*args, **kwargs)
         return self.update_or_create_instance(instance)
 
+    def update_entry(self, *args, **kwargs):
+        """
+        Send PATCH request to ConnectWise to update an entry and then
+        update it in the local database from the response
+        """
+        schedule_client = api.ScheduleAPIClient()
+        instance = schedule_client.patch_schedule_entry(*args, **kwargs)
+        return self.update_or_create_instance(instance)
+
 
 class ScheduleStatusSynchronizer(Synchronizer):
     client_class = api.ScheduleAPIClient

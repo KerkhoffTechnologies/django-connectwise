@@ -515,6 +515,16 @@ class ScheduleAPIClient(ConnectWiseAPIClient):
                 }
         return self.request('post', endpoint_url, body)
 
+    def patch_schedule_entry(self, *args, **kwargs):
+        schedule_id = kwargs.get("id")
+        endpoint_url = self._endpoint(
+            "{}/{}".format(self.ENDPOINT_ENTRIES, schedule_id))
+
+        body = {
+                    # Update the things
+                }
+        return self.request('patch', endpoint_url, body)
+
     def delete_schedule_entry(self, entry_id):
         endpoint_url = self._endpoint(
             '{}/{}'.format(self.ENDPOINT_ENTRIES, entry_id))
