@@ -932,6 +932,34 @@ class ServiceAPIClient(ConnectWiseAPIClient):
         return self.fetch_resource(endpoint_url, should_page=True,
                                    *args, **kwargs)
 
+    def post_note(self, target_data, **kwargs):
+        endpoint_url = self._endpoint(
+            '{}/{}/notes'.format(self.ENDPOINT_TICKETS, target_data['id']))
+
+        body = {
+            "detailDescriptionFlag": kwargs.get("description_flag"),
+            "internalAnalysisFlag": kwargs.get("analysis_flag"),
+            "resolutionFlag": kwargs.get("resolution_flag"),
+            "processNotifications": kwargs.get("process_notifications")
+        }
+
+        member = kwargs.get("resource")
+        if member:
+            body.update({
+                "member": {
+                    "id": member.id,
+                    "identifier": member.identifier,
+                    "name": str(member),
+                }
+
+            })
+
+        text = kwargs.get("text")
+        if text:
+            body.update({"text": text})
+
+        return self.request('post', endpoint_url, body)
+
     def get_statuses(self, board_id, *args, **kwargs):
         """
         Returns the status types associated with the specified board.
