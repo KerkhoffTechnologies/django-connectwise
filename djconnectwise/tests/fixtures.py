@@ -70,6 +70,7 @@ API_BOARD = {
                 'https://example.com/v4_6_release/test'
         }
     },
+    'billTime': 'NoDefault',
 }
 
 API_BOARD_LIST = [API_BOARD]
