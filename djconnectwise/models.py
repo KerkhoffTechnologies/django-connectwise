@@ -16,6 +16,12 @@ logger = logging.getLogger(__name__)
 
 PRIORITY_RE = re.compile(r'^Priority ([\d]+)')
 
+BILL_TYPES = (
+        ('Billable', "Billable"),
+        ('DoNotBill', "Do Not Bill"),
+        ('NoCharge', "No Charge"),
+    )
+
 
 class InvalidStatusError(Exception):
     pass
@@ -62,6 +68,7 @@ class AvailableConnectWiseBoardManager(models.Manager):
 
 
 class ConnectWiseBoard(TimeStampedModel):
+
     name = models.CharField(max_length=255)
     inactive = models.BooleanField(default=False)
     work_role = models.ForeignKey(
@@ -75,6 +82,11 @@ class ConnectWiseBoard(TimeStampedModel):
         blank=True,
         null=True,
         on_delete=models.SET_NULL
+    )
+    bill_time = models.CharField(
+        max_length=50,
+        choices=BILL_TYPES,
+        blank=True, null=True
     )
 
     objects = models.Manager()
@@ -222,6 +234,10 @@ class Member(TimeStampedModel):
         blank=True, null=True, max_length=20,
         choices=LICENSE_CLASSES, db_index=True
     )
+    work_type = models.ForeignKey(
+        'WorkType', null=True, on_delete=models.SET_NULL)
+    work_role = models.ForeignKey(
+        'WorkRole', null=True, on_delete=models.SET_NULL)
 
     objects = models.Manager()
     regular_objects = RegularMemberManager()
@@ -753,11 +769,6 @@ class TimeEntry(models.Model):
         ('ProjectTicket', "Project Ticket"),
         ('ChargeCode', "Charge Code"),
         ('Activity', "Activity")
-    )
-    BILL_TYPES = (
-        ('Billable', "Billable"),
-        ('DoNotBill', "Do Not Bill"),
-        ('NoCharge', "No Charge"),
     )
 
     class Meta:
@@ -1698,8 +1709,9 @@ class Item(TimeStampedModel):
 class WorkType(TimeStampedModel):
     name = models.CharField(max_length=50)
     inactive_flag = models.BooleanField(default=False)
+    overall_default_flag = models.BooleanField(default=False)
     bill_time = models.CharField(
-        max_length=50, choices=TimeEntry.BILL_TYPES, blank=True, null=True
+        max_length=50, choices=BILL_TYPES, blank=True, null=True
     )
 
     def __str__(self):
@@ -1719,7 +1731,7 @@ class Agreement(TimeStampedModel):
     agreement_type = models.CharField(max_length=50, null=True)
     cancelled_flag = models.BooleanField(default=False)
     bill_time = models.CharField(
-        max_length=50, choices=TimeEntry.BILL_TYPES, blank=True, null=True
+        max_length=50, choices=BILL_TYPES, blank=True, null=True
     )
     work_type = models.ForeignKey(
         'WorkType', null=True, on_delete=models.SET_NULL)
