@@ -92,6 +92,4 @@ class DjconnectwiseSettings:
         if hasattr(settings, 'DJCONNECTWISE_CONF_CALLABLE'):
             request_settings.update(settings.DJCONNECTWISE_CONF_CALLABLE())
 
-
-
         return request_settings
