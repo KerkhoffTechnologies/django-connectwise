@@ -86,9 +86,12 @@ class DjconnectwiseSettings:
             'batch_size': 50,
             'max_attempts': 3,
             'response_version': '2019.2',
+            'sync_child_tickets': True,
         }
 
         if hasattr(settings, 'DJCONNECTWISE_CONF_CALLABLE'):
             request_settings.update(settings.DJCONNECTWISE_CONF_CALLABLE())
+
+
 
         return request_settings

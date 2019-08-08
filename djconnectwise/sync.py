@@ -1466,6 +1466,10 @@ class TicketSynchronizer(BatchConditionMixin, Synchronizer):
         filtered_statuses = models.BoardStatus.available_objects.filter(
             closed_status=False)
 
+        sync_child_tickets = request_settings.get('sync_child_tickets')
+        if not sync_child_tickets and sync_child_tickets is not None:
+            self.api_conditions.append('parentTicketId=null')
+
         if board_names:
             boards = [board.strip() for board in board_names.split(',')]
 
