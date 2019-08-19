@@ -37,7 +37,6 @@ class AbstractBaseSyncTest(object):
         args = ['cwsync', cw_object]
         if full_option:
             args.append('--full')
-
         call_command(*args, stdout=out)
         return out
 
@@ -194,6 +193,19 @@ class TestSyncProjectsCommand(AbstractBaseSyncTest, TestCase):
     def setUp(self):
         super().setUp()
         fixture_utils.init_project_statuses()
+
+
+class TestSyncProjectPhaseCommand(AbstractBaseSyncTest, TestCase):
+    args = (
+        mocks.projects_api_get_project_phases_call,
+        fixtures.API_PROJECT_PHASE_LIST,
+        'project_phase'
+    )
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_projects()
+        fixture_utils.init_project_phases()
 
 
 class TestSyncBoardsStatusesCommand(AbstractBaseSyncTest, TestCase):
@@ -503,6 +515,7 @@ class TestSyncAllCommand(TestCase):
             TestSyncCompanyTypesCommand,
             TestSyncLocationsCommand,
             TestSyncPrioritiesCommand,
+            TestSyncProjectPhaseCommand,
             TestSyncProjectStatusesCommand,
             TestSyncProjectsCommand,
             TestSyncTeamsCommand,
@@ -544,7 +557,7 @@ class TestSyncAllCommand(TestCase):
             apicall, fixture, cw_object = test_case.args
             apicall(fixture)
 
-    def _test_sync(self, full_option=False):
+    def call_sync_command(self, full_option=False):
         out = io.StringIO()
         args = ['cwsync']
 
@@ -555,10 +568,9 @@ class TestSyncAllCommand(TestCase):
 
         return out.getvalue().strip()
 
-    def test_sync(self):
-        """Test sync all objects command."""
+    def assert_sync_results(self):
+        output = self.call_sync_command()
 
-        output = self._test_sync()
         for apicall, fixture, cw_object in self.test_args:
             summary = sync_summary(slug_to_title(cw_object), len(fixture))
             self.assertIn(summary, output)
@@ -588,6 +600,7 @@ class TestSyncAllCommand(TestCase):
             'priority': models.TicketPriority,
             'project_status': models.ProjectStatus,
             'project': models.Project,
+            'project_phase': models.ProjectPhase,
             'board_status': models.BoardStatus,
             'territory': models.Territory,
             'company_status': models.CompanyStatus,
@@ -623,9 +636,9 @@ class TestSyncAllCommand(TestCase):
             'work_role': models.WorkRole,
             'agreement': models.Agreement,
         }
+        self.assert_sync_results()
 
-        self.test_sync()
-
+        fixture_utils.init_projects()
         fixture_utils.init_members()
         fixture_utils.init_board_statuses()
         fixture_utils.init_teams()
@@ -641,7 +654,7 @@ class TestSyncAllCommand(TestCase):
         for apicall, _, _ in self.test_args:
             apicall([])
 
-        output = self._test_sync(full_option=True)
+        output = self.call_sync_command(full_option=True)
 
         for apicall, fixture, cw_object in self.test_args:
             summary = full_sync_summary(

@@ -161,6 +161,12 @@ class ProjectStatusAdmin(admin.ModelAdmin):
     search_fields = ['name']
 
 
+@admin.register(models.ProjectPhase)
+class ProjectPhase(admin.ModelAdmin):
+    list_display = ('id', 'description', 'project')
+    search_fields = ['description']
+
+
 @admin.register(models.Project)
 class ProjectAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'status', )

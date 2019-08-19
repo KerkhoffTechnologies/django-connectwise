@@ -898,6 +898,37 @@ class ProjectStatus(TimeStampedModel):
         return self.name
 
 
+class ProjectPhase(TimeStampedModel):
+    description = models.CharField(max_length=100)
+    scheduled_start = models.DateField(blank=True, null=True)
+    scheduled_end = models.DateField(blank=True, null=True)
+    actual_start = models.DateField(blank=True, null=True)
+    actual_end = models.DateField(blank=True, null=True)
+
+    bill_time = models.CharField(
+        max_length=50, choices=BILL_TYPES, blank=True, null=True)
+    notes = models.TextField(null=True, blank=False)
+    scheduled_hours = models.DecimalField(
+        blank=True, null=True, decimal_places=2, max_digits=9)
+    actual_hours = models.DecimalField(
+        blank=True, null=True, decimal_places=2, max_digits=9)
+    budget_hours = models.DecimalField(
+        blank=True, null=True, decimal_places=2, max_digits=9)
+
+    project = models.ForeignKey(
+        'Project', blank=True, null=True, on_delete=models.SET_NULL
+    )
+    board = models.ForeignKey(
+        'ConnectwiseBoard', blank=True, null=True, on_delete=models.SET_NULL
+    )
+
+    class Meta:
+        verbose_name_plural = 'Project phases'
+
+    def __str__(self):
+        return self.description
+
+
 class AvailableProjectManager(models.Manager):
     """
     Return only projects whose status closed field is False.
@@ -1181,6 +1212,9 @@ class Ticket(TimeStampedModel):
     project = models.ForeignKey(
         'Project', blank=True, null=True, related_name='project_tickets',
         on_delete=models.CASCADE)
+    phase = models.ForeignKey(
+        'ProjectPhase', blank=True, null=True, related_name='phase_tickets',
+        on_delete=models.SET_NULL)
     status = models.ForeignKey(
         'BoardStatus', blank=True, null=True, related_name='status_tickets',
         on_delete=models.SET_NULL)

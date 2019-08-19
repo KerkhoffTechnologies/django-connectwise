@@ -548,6 +548,69 @@ API_PROJECT = {
 
 API_PROJECT_LIST = [API_PROJECT]
 
+API_PROJECT_PHASE = {
+    'id': 1,
+    'projectId': API_PROJECT['id'],
+    'description': 'Project Management',
+    'board': {
+        'id': 3,
+        'name': 'Windows',
+        '_info': {
+            'board_href': 'https://connectwise.kerkhofftech.ca/v4_6_release/apis/3.0/service/boards/3'
+        }
+    },
+    'status': {
+        'id': 1,
+        'name': 'Open',
+        '_info': {
+            'status_href': 'https://connectwise.kerkhofftech.ca/v4_6_release/apis/3.0/project/phaseStatuses/1'
+        }
+    },
+    'wbsCode': '1',
+    'billTime': 'Billable',
+    'billExpenses': 'Billable',
+    'billProducts': 'Billable',
+    'markAsMilestoneFlag': False,
+    'notes': '\n',
+    'billSeparatelyFlag': False,
+    'billingMethod': 'ActualRates',
+    'scheduledHours': 9,
+    'scheduledStart': '2005-05-02T12:00:00Z',
+    'scheduledEnd': '2017-07-26T19:00:00Z',
+    'actualHours': 8,
+    'actualStart': '2005-05-02T00:00:00Z',
+    'actualEnd': '2005-08-23T00:00:00Z',
+    'budgetHours': 14,
+    'locationId': 2,
+    'businessUnitId': 10,
+    'hourlyRate': 0,
+    'billPhaseClosedFlag': False,
+    'billProjectClosedFlag': False,
+    'downpayment': 0,
+    'poAmount': 0,
+    'estimatedTimeCost': 0,
+    'estimatedExpenseCost': 0,
+    'estimatedProductCost': 0,
+    'estimatedTimeRevenue': 0,
+    'estimatedExpenseRevenue': 0,
+    'estimatedProductRevenue': 0,
+    'currency': {
+        'id': 7,
+        'symbol': '$',
+        'isoCode': 'USD',
+        'name': 'US Dollars',
+        '_info': {
+            'currency_href': 'https://connectwise.kerkhofftech.ca/v4_6_release/apis/3.0/finance/currencies/7'
+        }
+    },
+    '_info': {
+        'lastUpdated': '2005-05-26T14:39:26Z',
+        'updatedBy': 'User10'
+    }
+}
+
+API_PROJECT_PHASE_LIST = [API_PROJECT_PHASE]
+
 API_SERVICE_LOCATION = {
     'id': 1,
     'name': 'On-Site',
@@ -796,8 +859,8 @@ API_SERVICE_TICKET = {
     },
     'project': API_PROJECT,
     'phase': {
-        'id': 8,
-        'name': 'Solution Implementation',
+        'id': API_PROJECT_PHASE['id'],
+        'name': API_PROJECT_PHASE['description'],
         '_info': {
             'phase_href': 'https://example.com/v4_6_release/apis/3.0/project/projects/5/phases/8'
         }
