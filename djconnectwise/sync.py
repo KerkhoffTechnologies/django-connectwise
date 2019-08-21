@@ -126,10 +126,7 @@ class Synchronizer:
             self._assign_null_relation(instance, model_field)
             return
 
-        if isinstance(relation_json, int):
-            uid = relation_json
-        else:
-            uid = relation_json['id']
+        uid = relation_json['id']
 
         try:
             related_instance = model_class.objects.get(pk=uid)
@@ -1278,19 +1275,21 @@ class ProjectPhaseSynchronizer(Synchronizer):
     client_class = api.ProjectAPIClient
     model_class = models.ProjectPhase
     related_meta = {
-        'projectId': (models.Project, 'project'),
         'board': (models.ConnectWiseBoard, 'board')
     }
 
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
         instance.description = json_data['description']
-        instance.bill_time = json_data.get('billTime')
         instance.notes = json_data.get('notes')
         instance.scheduled_hours = json_data.get('scheduledHours')
         instance.actual_hours = json_data.get('actualHours')
         instance.budget_hours = json_data.get('budgetHours')
-        instance.project_id = json_data.get('projectId')
+
+        if json_data['billTime'] == 'NoDefault':
+            instance.bill_time = None
+        else:
+            instance.bill_time = json_data['billTime']
 
         scheduled_start = json_data.get('scheduledStart')
         scheduled_end = json_data.get('scheduledEnd')
@@ -1308,6 +1307,21 @@ class ProjectPhaseSynchronizer(Synchronizer):
 
         if actual_end:
             instance.actual_end = parse(actual_end).date()
+
+        try:
+            project_id = json_data['projectId']
+            related_project = models.Project.objects.get(pk=project_id)
+            setattr(instance, 'project', related_project)
+        except KeyError:
+            raise InvalidObjectException(
+                'Project phase {} has no projectId key to find its target'
+                '- skipping.'.format(instance.id)
+            )
+        except ObjectDoesNotExist as e:
+            raise InvalidObjectException(
+                'Project phase {} has a projectId that does not exist.'
+                ' ObjectDoesNotExist Exception: '.format(instance.id, e)
+            )
 
         self.set_relations(instance, json_data)
         return instance

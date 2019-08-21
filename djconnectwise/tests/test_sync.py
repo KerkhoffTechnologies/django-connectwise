@@ -58,7 +58,6 @@ class SynchronizerTestMixin:
     synchronizer_class = None
     model_class = None
     fixture = None
-    name = 'name'
 
     def call_api(self, return_data):
         raise NotImplementedError
@@ -99,7 +98,7 @@ class SynchronizerTestMixin:
 
         changed = self.model_class.objects.get(id=instance_id)
 
-        self.assertNotEqual(getattr(original, self.name), name)
+        self.assertNotEqual(original.name, name)
         self._assert_fields(changed, new_json)
 
 
@@ -407,7 +406,6 @@ class TestProjectPhaseSynchronizer(TestCase, SynchronizerTestMixin):
     synchronizer_class = sync.ProjectPhaseSynchronizer
     model_class = ProjectPhase
     fixture = fixtures.API_PROJECT_PHASE_LIST
-    name = 'description'
 
     def setUp(self):
         super().setUp()
@@ -439,6 +437,26 @@ class TestProjectPhaseSynchronizer(TestCase, SynchronizerTestMixin):
         self.assertEqual(
             instance.actual_end, parse(json_data['actualEnd']).date()
         )
+
+    def test_sync_update(self):
+        self._sync(self.fixture)
+
+        json_data = self.fixture[0]
+
+        instance_id = json_data['id']
+        original = self.model_class.objects.get(id=instance_id)
+
+        description = 'Some New Description'
+        new_json = deepcopy(self.fixture[0])
+        new_json['description'] = description
+        new_json_list = [new_json]
+
+        self._sync(new_json_list)
+
+        changed = self.model_class.objects.get(id=instance_id)
+
+        self.assertNotEqual(original.description, description)
+        self._assert_fields(changed, new_json)
 
 
 class TestProjectSynchronizer(TestCase, SynchronizerTestMixin):

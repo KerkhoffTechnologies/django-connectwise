@@ -557,7 +557,7 @@ class TestSyncAllCommand(TestCase):
             apicall, fixture, cw_object = test_case.args
             apicall(fixture)
 
-    def call_sync_command(self, full_option=False):
+    def run_sync_command(self, full_option=False):
         out = io.StringIO()
         args = ['cwsync']
 
@@ -568,8 +568,12 @@ class TestSyncAllCommand(TestCase):
 
         return out.getvalue().strip()
 
-    def assert_sync_results(self):
-        output = self.call_sync_command()
+    def test_partial_sync(self):
+        """
+        Test the command to run a sync of all objects without
+        the --full argument.
+        """
+        output = self.run_sync_command()
 
         for apicall, fixture, cw_object in self.test_args:
             summary = sync_summary(slug_to_title(cw_object), len(fixture))
@@ -593,7 +597,7 @@ class TestSyncAllCommand(TestCase):
                          len([fixtures.API_SERVICE_TICKET]))
 
     def test_full_sync(self):
-        """Test sync all objects command."""
+        """Test the command to run a full sync of all objects."""
         cw_object_map = {
             'member': models.Member,
             'board': models.ConnectWiseBoard,
@@ -636,7 +640,6 @@ class TestSyncAllCommand(TestCase):
             'work_role': models.WorkRole,
             'agreement': models.Agreement,
         }
-        self.assert_sync_results()
 
         fixture_utils.init_projects()
         fixture_utils.init_members()
@@ -645,8 +648,8 @@ class TestSyncAllCommand(TestCase):
 
         pre_full_sync_counts = {}
 
-        for key, clazz in cw_object_map.items():
-            pre_full_sync_counts[key] = clazz.objects.all().count()
+        for key, model_class in cw_object_map.items():
+            pre_full_sync_counts[key] = model_class.objects.all().count()
 
         mocks.system_api_get_members_call([])
         mocks.company_api_by_id_call([])
@@ -654,7 +657,7 @@ class TestSyncAllCommand(TestCase):
         for apicall, _, _ in self.test_args:
             apicall([])
 
-        output = self.call_sync_command(full_option=True)
+        output = self.run_sync_command(full_option=True)
 
         for apicall, fixture, cw_object in self.test_args:
             summary = full_sync_summary(
