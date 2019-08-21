@@ -641,6 +641,9 @@ class TestSyncAllCommand(TestCase):
             'agreement': models.Agreement,
         }
 
+        # Run partial sync first
+        self.run_sync_command()
+
         fixture_utils.init_projects()
         fixture_utils.init_members()
         fixture_utils.init_board_statuses()
