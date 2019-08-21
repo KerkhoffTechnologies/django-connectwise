@@ -18,7 +18,7 @@ from djconnectwise.models import Opportunity
 from djconnectwise.models import OpportunityStatus
 from djconnectwise.models import OpportunityStage
 from djconnectwise.models import OpportunityType
-from djconnectwise.models import Project, ProjectStatus
+from djconnectwise.models import Project, ProjectStatus, ProjectPhase
 from djconnectwise.models import ScheduleEntry
 from djconnectwise.models import ScheduleStatus
 from djconnectwise.models import ScheduleType
@@ -97,8 +97,8 @@ class SynchronizerTestMixin:
         self._sync(new_json_list)
 
         changed = self.model_class.objects.get(id=instance_id)
-        self.assertNotEqual(original.name,
-                            name)
+
+        self.assertNotEqual(original.name, name)
         self._assert_fields(changed, new_json)
 
 
@@ -400,6 +400,63 @@ class TestProjectStatusSynchronizer(TestCase, SynchronizerTestMixin):
         self.assertEqual(instance.default_flag, json_data['defaultFlag'])
         self.assertEqual(instance.inactive_flag, json_data['inactiveFlag'])
         self.assertEqual(instance.closed_flag, json_data['closedFlag'])
+
+
+class TestProjectPhaseSynchronizer(TestCase, SynchronizerTestMixin):
+    synchronizer_class = sync.ProjectPhaseSynchronizer
+    model_class = ProjectPhase
+    fixture = fixtures.API_PROJECT_PHASE_LIST
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_projects()
+        fixture_utils.init_project_phases()
+
+    def call_api(self, return_data):
+        return mocks.projects_api_get_project_phases_call(return_data)
+
+    def _assert_fields(self, instance, json_data):
+        self.assertEqual(instance.id, json_data['id'])
+        self.assertEqual(instance.description, json_data['description'])
+        self.assertEqual(instance.bill_time, json_data['billTime'])
+        self.assertEqual(instance.notes, json_data['notes'])
+        self.assertEqual(instance.scheduled_hours, json_data['scheduledHours'])
+        self.assertEqual(instance.actual_hours, json_data['actualHours'])
+        self.assertEqual(instance.budget_hours, json_data['budgetHours'])
+        self.assertEqual(instance.project_id, json_data['projectId'])
+
+        self.assertEqual(
+            instance.scheduled_start, parse(json_data['scheduledStart']).date()
+        )
+        self.assertEqual(
+            instance.scheduled_end, parse(json_data['scheduledEnd']).date()
+        )
+        self.assertEqual(
+            instance.actual_start, parse(json_data['actualStart']).date()
+        )
+        self.assertEqual(
+            instance.actual_end, parse(json_data['actualEnd']).date()
+        )
+
+    def test_sync_update(self):
+        self._sync(self.fixture)
+
+        json_data = self.fixture[0]
+
+        instance_id = json_data['id']
+        original = self.model_class.objects.get(id=instance_id)
+
+        description = 'Some New Description'
+        new_json = deepcopy(self.fixture[0])
+        new_json['description'] = description
+        new_json_list = [new_json]
+
+        self._sync(new_json_list)
+
+        changed = self.model_class.objects.get(id=instance_id)
+
+        self.assertNotEqual(original.description, description)
+        self._assert_fields(changed, new_json)
 
 
 class TestProjectSynchronizer(TestCase, SynchronizerTestMixin):

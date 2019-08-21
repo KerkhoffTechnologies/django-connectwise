@@ -127,6 +127,7 @@ class Synchronizer:
             return
 
         uid = relation_json['id']
+
         try:
             related_instance = model_class.objects.get(pk=uid)
             setattr(instance, model_field, related_instance)
@@ -1270,6 +1271,74 @@ class ProjectStatusSynchronizer(Synchronizer):
         return self.client.get_project_statuses(*args, **kwargs)
 
 
+class ProjectPhaseSynchronizer(Synchronizer):
+    client_class = api.ProjectAPIClient
+    model_class = models.ProjectPhase
+    related_meta = {
+        'board': (models.ConnectWiseBoard, 'board')
+    }
+
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data['id']
+        instance.description = json_data['description']
+        instance.notes = json_data.get('notes')
+        instance.scheduled_hours = json_data.get('scheduledHours')
+        instance.actual_hours = json_data.get('actualHours')
+        instance.budget_hours = json_data.get('budgetHours')
+
+        if json_data['billTime'] == 'NoDefault':
+            instance.bill_time = None
+        else:
+            instance.bill_time = json_data['billTime']
+
+        scheduled_start = json_data.get('scheduledStart')
+        scheduled_end = json_data.get('scheduledEnd')
+        actual_start = json_data.get('actualStart')
+        actual_end = json_data.get('actualEnd')
+
+        if scheduled_start:
+            instance.scheduled_start = parse(scheduled_start).date()
+
+        if scheduled_end:
+            instance.scheduled_end = parse(scheduled_end).date()
+
+        if actual_start:
+            instance.actual_start = parse(actual_start).date()
+
+        if actual_end:
+            instance.actual_end = parse(actual_end).date()
+
+        try:
+            project_id = json_data['projectId']
+            related_project = models.Project.objects.get(pk=project_id)
+            setattr(instance, 'project', related_project)
+        except KeyError:
+            raise InvalidObjectException(
+                'Project phase {} has no projectId key to find its target'
+                '- skipping.'.format(instance.id)
+            )
+        except ObjectDoesNotExist as e:
+            raise InvalidObjectException(
+                'Project phase {} has a projectId that does not exist.'
+                ' ObjectDoesNotExist Exception: '.format(instance.id, e)
+            )
+
+        self.set_relations(instance, json_data)
+        return instance
+
+    def client_call(self, project_id, *args, **kwargs):
+        return self.client.get_project_phases(project_id, *args, **kwargs)
+
+    def get_page(self, *args, **kwargs):
+        records = []
+        project_qs = models.Project.objects.all()
+
+        for project_id in project_qs.values_list('id', flat=True):
+            records += self.client_call(project_id, *args, **kwargs)
+
+        return records
+
+
 class ProjectSynchronizer(Synchronizer):
     client_class = api.ProjectAPIClient
     model_class = models.Project
@@ -1452,6 +1521,7 @@ class TicketSynchronizer(BatchConditionMixin, Synchronizer):
         'company': (models.Company, 'company'),
         'priority': (models.TicketPriority, 'priority'),
         'project': (models.Project, 'project'),
+        'phase': (models.ProjectPhase, 'phase'),
         'serviceLocation': (models.Location, 'location'),
         'status': (models.BoardStatus, 'status'),
         'owner': (models.Member, 'owner'),

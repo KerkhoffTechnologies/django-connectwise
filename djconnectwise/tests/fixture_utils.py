@@ -108,6 +108,13 @@ def init_project_statuses():
     return synchronizer.sync()
 
 
+def init_project_phases():
+    mocks.projects_api_get_project_phases_call(
+        fixtures.API_PROJECT_PHASE_LIST)
+    synchronizer = sync.ProjectPhaseSynchronizer()
+    return synchronizer.sync()
+
+
 def init_projects():
     mocks.project_api_get_projects_call(fixtures.API_PROJECT_LIST)
     synchronizer = sync.ProjectSynchronizer()
