@@ -35,6 +35,13 @@ NEEDED_CALLBACKS = [
     "url": None,
     "objectId": 1,
     "level": "owner",
+  },
+  {
+    "type": "activity",
+    "description": "Kanban application activity callback",
+    "url": None,
+    "objectId": 1,
+    "level": "owner",
   }
 ]
 
