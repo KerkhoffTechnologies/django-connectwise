@@ -43,6 +43,9 @@ class CallBackView(views.CsrfExemptMixin,
         'opportunity': (
             sync.OpportunitySynchronizer, models.Opportunity
         ),
+        'activity': (
+            sync.ActivitySynchronizer, models.Activity
+        ),
     }
 
     def post(self, request, *args, **kwargs):
