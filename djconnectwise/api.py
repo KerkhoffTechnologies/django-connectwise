@@ -780,6 +780,27 @@ class SalesAPIClient(ConnectWiseAPIClient):
         ]
         return self.request('patch', endpoint_url, body)
 
+    def update_activity_status(self, obj_id, status):
+        """
+        Update the activities' status on the server.
+        """
+        # Yeah, this schema is a bit bizarre. See CW docs at
+        # https://developer.connectwise.com/Manage/Developer_Guide#Patch
+        endpoint_url = self._endpoint(
+            '{}/{}'.format(self.ENDPOINT_ACTIVITIES, obj_id)
+        )
+        body = [
+            {
+                'op': 'replace',
+                'path': 'status',
+                'value': {
+                    'id': status.id,
+                    'name': status.name,
+                },
+            },
+        ]
+        return self.request('patch', endpoint_url, body)
+
 
 class SystemAPIClient(ConnectWiseAPIClient):
     API = 'system'
