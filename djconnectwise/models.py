@@ -809,6 +809,18 @@ class TimeEntry(models.Model):
     agreement = models.ForeignKey(
         'Agreement', blank=True, null=True, on_delete=models.SET_NULL)
 
+    def get_entered_time(self):
+        if self.time_end:
+            entered_time = self.time_end
+        elif self.actual_hours:
+            # timedelta does not like decimals
+            minutes = int(self.actual_hours * 60)
+            entered_time = self.time_start + timezone.timedelta(
+                minutes=minutes)
+        else:
+            entered_time = self.time_start
+
+        return entered_time
 
 class AvailableBoardTeamManager(models.Manager):
     """Return only teams whose ConnectWise board is active."""
