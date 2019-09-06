@@ -822,6 +822,7 @@ class TimeEntry(models.Model):
 
         return entered_time
 
+
 class AvailableBoardTeamManager(models.Manager):
     """Return only teams whose ConnectWise board is active."""
     def get_queryset(self):
