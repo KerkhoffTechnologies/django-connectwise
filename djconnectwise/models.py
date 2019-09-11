@@ -965,6 +965,9 @@ class Project(TimeStampedModel):
     estimated_start = models.DateField(blank=True, null=True)
     estimated_end = models.DateField(blank=True, null=True)
 
+    company = models.ForeignKey(
+        'Company', on_delete=models.SET_NULL, blank=True, null=True
+    )
     status = models.ForeignKey(
         'ProjectStatus', blank=True, null=True, on_delete=models.SET_NULL)
     manager = models.ForeignKey(
