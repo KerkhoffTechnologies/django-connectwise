@@ -965,7 +965,7 @@ class ScheduleEntriesSynchronizer(BatchConditionMixin, Synchronizer):
         self.batch_condition_list = list(ticket_ids | opportunity_ids)
 
     def get_optimal_size(self, condition_list):
-        object_id_size = self.settings['time_entry_conditions_size']
+        object_id_size = self.settings['schedule_entry_conditions_size']
 
         return object_id_size if object_id_size \
             else super().get_optimal_size(condition_list)
