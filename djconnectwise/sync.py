@@ -948,6 +948,8 @@ class ScheduleEntriesSynchronizer(BatchConditionMixin, Synchronizer):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.settings = DjconnectwiseSettings().get_settings()
+
         self.api_conditions = [
             "(type/identifier='S' or type/identifier='O')",
             "doneFlag=false",
@@ -961,6 +963,12 @@ class ScheduleEntriesSynchronizer(BatchConditionMixin, Synchronizer):
             models.Opportunity.objects.values_list('id', flat=True)
         )
         self.batch_condition_list = list(ticket_ids | opportunity_ids)
+
+    def get_optimal_size(self, condition_list):
+        object_id_size = self.settings['schedule_entry_conditions_size']
+
+        return object_id_size if object_id_size \
+            else super().get_optimal_size(condition_list)
 
     def get_batch_condition(self, conditions):
         return 'objectId in ({})'.format(

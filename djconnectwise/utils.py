@@ -85,6 +85,7 @@ class DjconnectwiseSettings:
             'timeout': 30.0,
             'batch_size': 50,
             'max_attempts': 3,
+            'schedule_entry_conditions_size': 0,
             'response_version': '2019.2',
             'sync_child_tickets': True,
         }
