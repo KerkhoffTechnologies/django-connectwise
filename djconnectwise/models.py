@@ -322,6 +322,9 @@ class Company(TimeStampedModel):
     def get_identifier(self):
         return self.identifier
 
+    def get_name(self):
+        return self.name or ''
+
 
 class CompanyStatus(models.Model):
     name = models.CharField(max_length=50)
