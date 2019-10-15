@@ -1604,6 +1604,13 @@ class TicketSynchronizer(BatchConditionMixin, Synchronizer):
             json_data.get('automaticEmailResourceFlag', False)
         instance.automatic_email_cc = \
             json_data.get('automaticEmailCc')
+        if instance.automatic_email_cc:
+            # Truncate the field to 1000 characters as per CW docs for the
+            # automatic_email_cc field, because in some cases more can be
+            # received which causes a DataError. It is preferred to keep the
+            # DB schema in-line with the CW specifications, even if the
+            # specifications are wrong.
+            instance.automatic_email_cc = instance.automatic_email_cc[:1000]
 
         if entered_date_utc:
             # Parse the date here so that a datetime object is

@@ -1300,6 +1300,25 @@ class TestTicketSynchronizer(TestCase):
         self._assert_sync(instance, json_data)
         assert_sync_job(Ticket)
 
+    def test_sync_ticket_truncates_automatic_cc_field(self):
+        """
+        Test to ensure ticket synchronizer truncates the automatic CC field
+        to 1000 characters.
+        """
+        synchronizer = sync.TicketSynchronizer()
+
+        instance = Ticket()
+
+        field_data = "kanban@kanban.com;"
+        for i in range(6):
+            # Make some field data with length 1152
+            field_data = field_data + field_data
+
+        json_data = deepcopy(fixtures.API_SERVICE_TICKET)
+        json_data['automaticEmailCc'] = field_data
+        instance = synchronizer._assign_field_data(instance, json_data)
+        self.assertEqual(len(instance.automatic_email_cc), 1000)
+
     def test_sync_child_tickets(self):
         """
         Test to ensure that a ticket will sync related objects,
