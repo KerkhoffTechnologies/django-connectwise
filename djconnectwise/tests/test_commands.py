@@ -670,11 +670,11 @@ class TestSyncAllCommand(TestCase):
             self.assertIn(summary, output)
 
 
-class TestListMembersCommand(TestCase):
+class TestListUsersCommand(TestCase):
     def test_command(self):
         # We don't need to check output carefully. Just verify it
         # doesn't explode.
         self.assertEqual(
-            call_command('list_members'),
+            call_command('list_users'),
             None
         )
