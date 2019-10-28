@@ -16,6 +16,7 @@ from djconnectwise.utils import get_hash, get_filename_extension, \
     generate_thumbnail, generate_filename, remove_thumbnail
 from djconnectwise.utils import DjconnectwiseSettings
 
+from botocore.exceptions import NoCredentialsError
 
 DEFAULT_AVATAR_EXTENSION = 'jpg'
 MAX_URL_LENGTH = 2000
@@ -1492,7 +1493,13 @@ class MemberSynchronizer(Synchronizer):
         # For when a CW user removes their photo without setting
         # a new one. Remove the image from storage.
         if instance.avatar and not photo_id:
-            remove_thumbnail(instance.avatar)
+            try:
+                remove_thumbnail(instance.avatar)
+            except NoCredentialsError as e:
+                msg = 'Error when removing thumbnail for {}.' \
+                      ' NoCredentialsError Exception: {}.' \
+                    .format(instance.username, e)
+                logger.warning(msg)
             instance.avatar = None
             instance.save()
         # Fetch the image when:
@@ -1513,7 +1520,13 @@ class MemberSynchronizer(Synchronizer):
             (attachment_filename, avatar) = self.client \
                 .get_member_image_by_photo_id(photo_id, username)
             if attachment_filename and avatar:
-                self._save_avatar(instance, avatar, attachment_filename)
+                try:
+                    self._save_avatar(instance, avatar, attachment_filename)
+                except NoCredentialsError as e:
+                    msg = 'Error when saving avatar for {}.' \
+                          ' NoCredentialsError Exception: {}.' \
+                          .format(username, e)
+                    logger.warning(msg)
             instance.save()
 
         return instance, created
