@@ -1133,6 +1133,8 @@ class Opportunity(TimeStampedModel):
 
 
 class Ticket(TimeStampedModel):
+    SCHEDULE_ENTRY_TYPE = "S"
+
     RECORD_TYPES = (
         ('ServiceTicket', "Service Ticket"),
         ('ProjectTicket', "Project Ticket"),

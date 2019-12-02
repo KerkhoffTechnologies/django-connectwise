@@ -507,21 +507,37 @@ class ScheduleAPIClient(ConnectWiseAPIClient):
         endpoint_url = '{}/{}'.format(self.ENDPOINT_ENTRIES, entry_id)
         return self.fetch_resource(endpoint_url)
 
-    def post_schedule_entry(self, *args, **kwargs):
+    def post_schedule_entry(self, target, member, schedule_type, **kwargs):
         endpoint_url = self._endpoint(self.ENDPOINT_ENTRIES)
 
         body = {
-                    "objectId": kwargs.get("objectId"),
+                    "objectId": target.id,
                     "member": {
-                        "id": kwargs.get("resource").id,
-                        "identifier": kwargs.get("resource").identifier,
-                        "name": str(kwargs.get("resource")),
+                        "id": member.id,
+                        "identifier": member.identifier,
+                        "name": str(member),
                     },
                     "type": {
-                        "id": kwargs.get("scheduleType").id,
-                        "identifier": kwargs.get("scheduleType").identifier,
+                        "id": schedule_type.id,
+                        "identifier": schedule_type.identifier,
                     }
                 }
+
+        date_start = kwargs.get("date_start")
+        if date_start:
+            body["dateStart"] = date_start.astimezone(
+                pytz.timezone('UTC')).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+        date_end = kwargs.get("date_end")
+        if date_end:
+            body["dateEnd"] = kwargs.get("date_end")
+            body["dateEnd"] = date_end.astimezone(
+                pytz.timezone('UTC')).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+        allow_conflicts = kwargs.get("allow_conflicts")
+        if allow_conflicts is not None:
+            body["allowScheduleConflictsFlag"] = allow_conflicts
+
         return self.request('post', endpoint_url, body)
 
     def patch_schedule_entry(self, **kwargs):

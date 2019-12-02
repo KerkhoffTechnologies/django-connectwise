@@ -1054,13 +1054,22 @@ class ScheduleEntriesSynchronizer(BatchConditionMixin, Synchronizer):
     def get_single(self, entry_id):
         return self.client.get_schedule_entry(entry_id)
 
-    def create_new_entry(self, *args, **kwargs):
+    def create_new_entry(self, target, member, **kwargs):
         """
         Send POST request to ConnectWise to create a new entry and then
         create it in the local database from the response
+
         """
         schedule_client = api.ScheduleAPIClient()
-        instance = schedule_client.post_schedule_entry(*args, **kwargs)
+        # Type defines if it is a service ticket, opportunity, or activity.
+        # (There are more but we probably wont be using them).
+        # In the context of schedule entry types, Service Tickets and
+        # Project tickets are the same.
+        schedule_type = models.ScheduleType.objects.get(
+            identifier=target.SCHEDULE_ENTRY_TYPE)
+
+        instance = schedule_client.post_schedule_entry(
+            target, member, schedule_type, **kwargs)
         return self.update_or_create_instance(instance)
 
     def update_entry(self, **kwargs):
