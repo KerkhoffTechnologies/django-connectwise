@@ -503,7 +503,8 @@ class TestScheduleAPIClient(BaseAPITestCase):
         schedule_type = SimpleNamespace()
         schedule_type.id = 4
         schedule_type.identifier = 'S'
-        object_id = 69
+        ticket_object = SimpleNamespace()
+        ticket_object.id = 4
 
         method_name = 'djconnectwise.api.ConnectWiseAPIClient.request'
         mock_call, _patch = mk.create_mock_call(
@@ -512,9 +513,8 @@ class TestScheduleAPIClient(BaseAPITestCase):
         self.client = api.ScheduleAPIClient()
 
         self.client.post_schedule_entry(
-            objectId=object_id,
-            scheduleType=schedule_type,
-            resource=member)
+            ticket_object,
+            schedule_type)
         self.assertEqual(mock_call.call_count, 1)
 
     @responses.activate
