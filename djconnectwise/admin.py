@@ -115,7 +115,7 @@ class ScheduleStatusAdmin(admin.ModelAdmin):
 class ScheduleEntryAdmin(admin.ModelAdmin):
     list_display = ('id', 'ticket_object', 'activity_object', 'member',
                     'done_flag',
-                    'status', 'expected_date_start', 'expected_date_end',)
+                    'status', 'date_start', 'date_end',)
     list_filter = ('status', 'done_flag', 'member')
     search_fields = ['name', 'ticket_object__id',
                      'activity_object__id', 'member__identifier']

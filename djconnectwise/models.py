@@ -701,8 +701,8 @@ class ScheduleStatus(models.Model):
 
 class ScheduleEntry(models.Model):
     name = models.CharField(max_length=250, blank=True, null=True)
-    expected_date_start = models.DateTimeField(blank=True, null=True)
-    expected_date_end = models.DateTimeField(blank=True, null=True)
+    date_start = models.DateTimeField(blank=True, null=True)
+    date_end = models.DateTimeField(blank=True, null=True)
     done_flag = models.BooleanField(default=False)
 
     ticket_object = models.ForeignKey(

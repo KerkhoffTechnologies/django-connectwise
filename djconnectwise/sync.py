@@ -999,13 +999,13 @@ class ScheduleEntriesSynchronizer(BatchConditionMixin, Synchronizer):
             )
 
         # handle dates
-        expected_date_start = json_data.get('dateStart')
-        if expected_date_start:
-            instance.expected_date_start = parse(expected_date_start)
+        date_start = json_data.get('dateStart')
+        if date_start:
+            instance.date_start = parse(date_start)
 
-        expected_date_end = json_data.get('dateEnd')
-        if expected_date_end:
-            instance.expected_date_end = parse(expected_date_end)
+        date_end = json_data.get('dateEnd')
+        if date_end:
+            instance.date_end = parse(date_end)
 
         self.set_relations(instance, json_data)
 

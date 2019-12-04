@@ -346,9 +346,9 @@ class TestScheduleEntriesSynchronizer(TestCase, SynchronizerTestMixin):
         self.assertEqual(instance.id, json_data['id'])
         self.assertEqual(instance.name, json_data['name'])
         self.assertEqual(instance.done_flag, json_data['doneFlag'])
-        self.assertEqual(instance.expected_date_start,
+        self.assertEqual(instance.date_start,
                          parse(json_data['dateStart']))
-        self.assertEqual(instance.expected_date_end,
+        self.assertEqual(instance.date_end,
                          parse(json_data['dateEnd']))
 
         # verify referenced objects
