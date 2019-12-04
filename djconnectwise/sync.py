@@ -1054,7 +1054,7 @@ class ScheduleEntriesSynchronizer(BatchConditionMixin, Synchronizer):
     def get_single(self, entry_id):
         return self.client.get_schedule_entry(entry_id)
 
-    def create_new_entry(self, target, member, **kwargs):
+    def create_new_entry(self, target, **kwargs):
         """
         Send POST request to ConnectWise to create a new entry and then
         create it in the local database from the response
@@ -1069,7 +1069,7 @@ class ScheduleEntriesSynchronizer(BatchConditionMixin, Synchronizer):
             identifier=target.SCHEDULE_ENTRY_TYPE)
 
         instance = schedule_client.post_schedule_entry(
-            target, member, schedule_type, **kwargs)
+            target, schedule_type, **kwargs)
         return self.update_or_create_instance(instance)
 
     def update_entry(self, **kwargs):

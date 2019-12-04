@@ -507,21 +507,26 @@ class ScheduleAPIClient(ConnectWiseAPIClient):
         endpoint_url = '{}/{}'.format(self.ENDPOINT_ENTRIES, entry_id)
         return self.fetch_resource(endpoint_url)
 
-    def post_schedule_entry(self, target, member, schedule_type, **kwargs):
+    def post_schedule_entry(self, target, schedule_type, **kwargs):
         endpoint_url = self._endpoint(self.ENDPOINT_ENTRIES)
 
         body = {
                     "objectId": target.id,
-                    "member": {
-                        "id": member.id,
-                        "identifier": member.identifier,
-                        "name": str(member),
-                    },
                     "type": {
                         "id": schedule_type.id,
                         "identifier": schedule_type.identifier,
                     }
                 }
+
+        member = kwargs.get("member")
+        if member:
+            body.update({
+                "member": {
+                            "id": member.id,
+                            "identifier": member.identifier,
+                            "name": str(member)
+                          }
+            })
 
         date_start = kwargs.get("date_start")
         if date_start:
