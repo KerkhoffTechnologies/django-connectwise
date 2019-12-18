@@ -1353,26 +1353,12 @@ class TestTicketSynchronizer(TestCase):
         self._init_data()
         fixture_utils.init_tickets()
         fixture_utils.init_schedule_entries()
-        fixture_utils.init_time_entries()
         fixture_utils.init_service_notes()
         synchronizer = sync.TicketSynchronizer()
 
         ticket = Ticket.objects.get(id=fixtures.API_SERVICE_TICKET['id'])
 
-        # Change some fields on all three child objects
-        updated_fixture = deepcopy(
-            fixtures.API_SCHEDULE_ENTRY_FOR_TICKET
-            )
-        updated_fixture['name'] = 'A new kind of name'
-        fixture_list = [updated_fixture]
-        fixture_list
-
-        method_name = 'djconnectwise.api.ScheduleAPIClient' \
-            '.get_schedule_entries'
-        mock_call, _patch = mocks.create_mock_call(
-            method_name, fixture_list
-        )
-
+        # Change some fields on all child objects
         updated_fixture = deepcopy(fixtures.API_SERVICE_NOTE_LIST[0])
         updated_fixture['text'] = 'Some new text'
         fixture_list = [updated_fixture]
@@ -1391,14 +1377,11 @@ class TestTicketSynchronizer(TestCase):
         synchronizer.fetch_sync_by_id(ticket.id)
 
         # Get the new Values from the db
-        updated_sched = ScheduleEntry.objects.filter(ticket_object=ticket)[0]
-
         updated_note = ServiceNote.objects.filter(ticket=ticket)[0]
 
         updated_time = TimeEntry.objects.filter(charge_to_id=ticket)[0]
 
         # Confirm that they have all been updated
-        self.assertEqual('A new kind of name', updated_sched.name)
         self.assertEqual('Some new text', updated_note.text)
         self.assertEqual(
             datetime.datetime(

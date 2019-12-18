@@ -42,6 +42,13 @@ NEEDED_CALLBACKS = [
     "url": None,
     "objectId": 1,
     "level": "owner",
+  },
+  {
+    "type": "schedule",
+    "description": "Kanban application schedule entry callback",
+    "url": None,
+    "objectId": 1,
+    "level": "owner",
   }
 ]
 
