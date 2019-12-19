@@ -57,6 +57,14 @@ settings.configure(
             'LOCATION': 'unique-snowflake',
         }
     },
+    LOGGING={
+        'version': 1,
+        'loggers': {
+            'djconnectwise': {
+                'level': 'ERROR'
+            }
+        }
+    },
     DJCONNECTWISE_CONF_CALLABLE=djconnectwise_configuration,
 )
 

@@ -1646,10 +1646,6 @@ class TicketSynchronizer(BatchConditionMixin, Synchronizer):
         instance_id = instance.id
         sync_classes = []
 
-        sched_sync = ScheduleEntriesSynchronizer()
-        sched_sync.batch_condition_list = [instance_id]
-        sync_classes.append((sched_sync, Q(ticket_object=instance)))
-
         note_sync = ServiceNoteSynchronizer()
         note_sync.api_conditions = [instance_id]
         sync_classes.append((note_sync, Q(ticket=instance)))
