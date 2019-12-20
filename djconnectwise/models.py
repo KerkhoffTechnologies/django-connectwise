@@ -49,6 +49,8 @@ class SyncJob(models.Model):
     start_time = models.DateTimeField(null=False)
     end_time = models.DateTimeField(blank=True, null=True)
     entity_name = models.CharField(max_length=100)
+    synchronizer_class = models.CharField(max_length=100, blank=True,
+                                          null=True)
     added = models.PositiveIntegerField(null=True)
     updated = models.PositiveIntegerField(null=True)
     deleted = models.PositiveIntegerField(null=True)

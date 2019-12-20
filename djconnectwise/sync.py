@@ -55,6 +55,7 @@ def log_sync_job(f):
         finally:
             sync_job.end_time = timezone.now()
             sync_job.entity_name = sync_instance.model_class.__name__
+            sync_job.synchronizer_class = sync_instance.__class__.__name__
             sync_job.added = created_count
             sync_job.updated = updated_count
             sync_job.deleted = deleted_count
@@ -277,7 +278,6 @@ class Synchronizer:
         stale_ids = initial_ids - synced_ids
         deleted_count = 0
         if stale_ids:
-            # delete_qset = self.model_class.objects.filter(pk__in=stale_ids)
             delete_qset = self.get_delete_qset(stale_ids)
             deleted_count = delete_qset.count()
 
@@ -300,11 +300,14 @@ class Synchronizer:
     def get_delete_qset(self, stale_ids):
         return self.model_class.objects.filter(pk__in=stale_ids)
 
-    @log_sync_job
-    def sync(self):
-        sync_job_qset = models.SyncJob.objects.filter(
+    def get_sync_job_qset(self):
+        return models.SyncJob.objects.filter(
             entity_name=self.model_class.__name__
         )
+
+    @log_sync_job
+    def sync(self):
+        sync_job_qset = self.get_sync_job_qset()
 
         if sync_job_qset.exists() and not self.full:
             last_sync_job_time = sync_job_qset.last().start_time.isoformat()
@@ -1645,6 +1648,12 @@ class TicketSynchronizerMixin:
     def get_delete_qset(self, stale_ids):
         tickets = self.filter_by_record_type()
         return tickets.filter(pk__in=stale_ids)
+
+    def get_sync_job_qset(self):
+        return models.SyncJob.objects.filter(
+            entity_name=self.model_class.__name__,
+            synchronizer_class=self.__class__.__name__
+        )
 
 
 class TicketSynchronizer(TicketSynchronizerMixin,
