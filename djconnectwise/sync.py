@@ -277,7 +277,8 @@ class Synchronizer:
         stale_ids = initial_ids - synced_ids
         deleted_count = 0
         if stale_ids:
-            delete_qset = self.model_class.objects.filter(pk__in=stale_ids)
+            # delete_qset = self.model_class.objects.filter(pk__in=stale_ids)
+            delete_qset = self.get_delete_qset(stale_ids)
             deleted_count = delete_qset.count()
 
             pre_delete_result = None
@@ -295,6 +296,9 @@ class Synchronizer:
                 self.post_delete_callback(pre_delete_result)
 
         return deleted_count
+
+    def get_delete_qset(self, stale_ids):
+        return self.model_class.objects.filter(pk__in=stale_ids)
 
     @log_sync_job
     def sync(self):
@@ -1541,8 +1545,7 @@ class MemberSynchronizer(Synchronizer):
         return instance, created
 
 
-class TicketSynchronizer(BatchConditionMixin, Synchronizer):
-    client_class = api.ServiceAPIClient
+class TicketSynchronizerMixin:
     model_class = models.Ticket
     batch_condition_list = []
 
@@ -1565,6 +1568,7 @@ class TicketSynchronizer(BatchConditionMixin, Synchronizer):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
         self.api_conditions = ['closedFlag=False']
         # To get all open tickets, we can simply supply a `closedFlag=False`
         # condition for on-premise ConnectWise. But for hosted ConnectWise,
@@ -1575,10 +1579,6 @@ class TicketSynchronizer(BatchConditionMixin, Synchronizer):
         board_names = request_settings.get('board_status_filter')
         filtered_statuses = models.BoardStatus.available_objects.filter(
             closed_status=False)
-
-        sync_child_tickets = request_settings.get('sync_child_tickets')
-        if not sync_child_tickets and sync_child_tickets is not None:
-            self.api_conditions.append('parentTicketId=null')
 
         if board_names:
             boards = [board.strip() for board in board_names.split(',')]
@@ -1595,6 +1595,69 @@ class TicketSynchronizer(BatchConditionMixin, Synchronizer):
             # Only do this if we know of at least one open status.
             self.batch_condition_list = \
                 list(filtered_statuses.values_list('id', flat=True))
+
+    def get_batch_condition(self, conditions):
+        return 'status/id in ({})'.format(
+            ','.join([str(i) for i in conditions])
+        )
+
+    def get_page(self, *args, **kwargs):
+        return self.client.get_tickets(*args, **kwargs)
+
+    def get_single(self, ticket_id):
+        return self.client.get_ticket(ticket_id)
+
+    def sync_related(self, instance):
+        instance_id = instance.id
+        sync_classes = []
+
+        note_sync = ServiceNoteSynchronizer()
+        note_sync.api_conditions = [instance_id]
+        sync_classes.append((note_sync, Q(ticket=instance)))
+
+        time_sync = TimeEntrySynchronizer()
+        time_sync.batch_condition_list = [instance_id]
+        sync_classes.append((time_sync, Q(charge_to_id=instance)))
+
+        activity_sync = ActivitySynchronizer()
+        activity_sync.api_conditions = ['ticket/id={}'.format(instance_id)]
+        sync_classes.append((activity_sync, Q(ticket=instance)))
+
+        self.sync_children(*sync_classes)
+
+    def fetch_sync_by_id(self, instance_id):
+        instance = super().fetch_sync_by_id(instance_id)
+        if not instance.closed_flag:
+            self.sync_related(instance)
+        return instance
+
+    def _instance_ids(self, filter_params=None):
+        tickets_qset = self.filter_by_record_type()
+
+        if not filter_params:
+            ids = tickets_qset.values_list(self.lookup_key, flat=True)
+        else:
+            ids = tickets_qset.filter(filter_params).values_list(
+                self.lookup_key, flat=True
+            )
+        return set(ids)
+
+    def get_delete_qset(self, stale_ids):
+        tickets = self.filter_by_record_type()
+        return tickets.filter(pk__in=stale_ids)
+
+
+class TicketSynchronizer(TicketSynchronizerMixin,
+                         BatchConditionMixin, Synchronizer):
+    client_class = api.ServiceAPIClient
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        request_settings = DjconnectwiseSettings().get_settings()
+
+        sync_child_tickets = request_settings.get('sync_child_tickets')
+        if not sync_child_tickets and sync_child_tickets is not None:
+            self.api_conditions.append('parentTicketId=null')
 
     def _assign_field_data(self, instance, json_data):
         entered_date_utc = json_data.get('dateEntered')
@@ -1642,40 +1705,60 @@ class TicketSynchronizer(BatchConditionMixin, Synchronizer):
         self.set_relations(instance, json_data)
         return instance
 
-    def sync_related(self, instance):
-        instance_id = instance.id
-        sync_classes = []
+    def filter_by_record_type(self):
+        return self.model_class.objects.filter(
+            record_type=models.Ticket.SERVICE_TICKET)
 
-        note_sync = ServiceNoteSynchronizer()
-        note_sync.api_conditions = [instance_id]
-        sync_classes.append((note_sync, Q(ticket=instance)))
 
-        time_sync = TimeEntrySynchronizer()
-        time_sync.batch_condition_list = [instance_id]
-        sync_classes.append((time_sync, Q(charge_to_id=instance)))
+class ProjectTicketSynchronizer(TicketSynchronizerMixin,
+                                BatchConditionMixin, Synchronizer):
+    client_class = api.ProjectAPIClient
 
-        activity_sync = ActivitySynchronizer()
-        activity_sync.api_conditions = ['ticket/id={}'.format(instance_id)]
-        sync_classes.append((activity_sync, Q(ticket=instance)))
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data['id']
+        instance.summary = json_data['summary']
+        instance.closed_flag = json_data.get('closedFlag')
+        instance.required_date_utc = json_data.get('requiredDate')
+        instance.resources = json_data.get('resources')
+        instance.budget_hours = json_data.get('budgetHours')
+        instance.actual_hours = json_data.get('actualHours')
+        instance.customer_updated = json_data.get('customerUpdatedFlag')
+        instance.bill_time = json_data.get('billTime')
 
-        self.sync_children(*sync_classes)
+        instance.automatic_email_cc_flag = \
+            json_data.get('automaticEmailCcFlag', False)
+        instance.automatic_email_contact_flag = \
+            json_data.get('automaticEmailContactFlag', False)
+        instance.automatic_email_resource_flag = \
+            json_data.get('automaticEmailResourceFlag', False)
+        instance.automatic_email_cc = \
+            json_data.get('automaticEmailCc')
 
-    def get_batch_condition(self, conditions):
-        return 'status/id in ({})'.format(
-            ','.join([str(i) for i in conditions])
-        )
+        if instance.automatic_email_cc:
+            # Truncate the field to 1000 characters as per CW docs for the
+            # automatic_email_cc field, because in some cases more can be
+            # received which causes a DataError. It is preferred to keep the
+            # DB schema in-line with the CW specifications, even if the
+            # specifications are wrong.
+            instance.automatic_email_cc = instance.automatic_email_cc[:1000]
 
-    def get_page(self, *args, **kwargs):
-        return self.client.get_tickets(*args, **kwargs)
+        # Tickets from the project/tickets API endpoint do not include the
+        # record type field but we use the same Ticket model for project and
+        # service tickets so we need to set the record type here.
+        if json_data.get('isIssueFlag'):
+            instance.record_type = models.Ticket.PROJECT_ISSUE
+        else:
+            instance.record_type = models.Ticket.PROJECT_TICKET
 
-    def get_single(self, ticket_id):
-        return self.client.get_ticket(ticket_id)
-
-    def fetch_sync_by_id(self, instance_id):
-        instance = super().fetch_sync_by_id(instance_id)
-        if not instance.closed_flag:
-            self.sync_related(instance)
+        self.set_relations(instance, json_data)
         return instance
+
+    def filter_by_record_type(self):
+        project_record_types = [
+            models.Ticket.PROJECT_ISSUE, models.Ticket.PROJECT_TICKET
+        ]
+        return self.model_class.objects.filter(
+            record_type__in=project_record_types)
 
 
 class CalendarSynchronizer(Synchronizer):

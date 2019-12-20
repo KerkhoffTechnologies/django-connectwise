@@ -1135,10 +1135,14 @@ class Opportunity(TimeStampedModel):
 class Ticket(TimeStampedModel):
     SCHEDULE_ENTRY_TYPE = "S"
 
+    PROJECT_TICKET = 'ProjectTicket'
+    PROJECT_ISSUE = 'ProjectIssue'
+    SERVICE_TICKET = 'ServiceTicket'
+
     RECORD_TYPES = (
-        ('ServiceTicket', "Service Ticket"),
-        ('ProjectTicket', "Project Ticket"),
-        ('ProjectIssue', "Project Issue"),
+        (SERVICE_TICKET, "Service Ticket"),
+        (PROJECT_TICKET, "Project Ticket"),
+        (PROJECT_ISSUE, "Project Issue"),
     )
 
     BILL_TIME_TYPES = (
@@ -1333,9 +1337,15 @@ class Ticket(TimeStampedModel):
     def update_cw(self):
         """
         Send ticket status or priority and closed_flag updates to ConnectWise.
+        As of version 2019.3, project tickets and issues need to be updated
+        using the project API endpoint.
         """
-        service_client = api.ServiceAPIClient()
-        return service_client.update_ticket(
+        if self.record_type in [self.PROJECT_TICKET, self.PROJECT_ISSUE]:
+            api_client = api.ProjectAPIClient()
+        else:
+            api_client = api.ServiceAPIClient()
+
+        return api_client.update_ticket(
             self.id, self.closed_flag, self.priority, self.status
         )
 
