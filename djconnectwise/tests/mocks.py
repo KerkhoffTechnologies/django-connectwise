@@ -67,6 +67,35 @@ def project_api_get_project_call(return_value, raised=None):
     return create_mock_call(method_name, return_value, side_effect=raised)
 
 
+def _project_api_tickets_call(page=1, page_size=25, conditions=[]):
+    return_value = []
+    test_date = date(1948, 5, 14)
+    test_time = time(12, 0, 0, tzinfo=timezone.get_current_timezone())
+    test_datetime = datetime.combine(test_date, test_time)
+    conditions.append('lastUpdated>' + timezone.localtime(
+        value=test_datetime).isoformat()
+                      )
+    if page == 1:
+        return_value = [fixtures.API_PROJECT_TICKET]
+
+    return return_value
+
+
+def project_api_tickets_call():
+    method_name = 'djconnectwise.api.TicketAPIMixin.get_tickets'
+    mock_call, _patch = create_mock_call(
+        method_name,
+        None,
+        side_effect=_project_api_tickets_call)
+    return mock_call, _patch
+
+
+def project_api_tickets_test_command(return_value):
+    method_name = 'djconnectwise.api.TicketAPIMixin.get_tickets'
+    mock_call, _patch = create_mock_call(method_name, return_value)
+    return mock_call, _patch
+
+
 def sales_api_by_id_call(return_value, raised=None):
     method_name = 'djconnectwise.api.SalesAPIClient.by_id'
     return create_mock_call(method_name, return_value, side_effect=raised)
@@ -171,7 +200,7 @@ def _service_api_tickets_call(page=1, page_size=25, conditions=[]):
 
 
 def service_api_tickets_call():
-    method_name = 'djconnectwise.api.ServiceAPIClient.get_tickets'
+    method_name = 'djconnectwise.api.TicketAPIMixin.get_tickets'
     mock_call, _patch = create_mock_call(
         method_name,
         None,
@@ -184,7 +213,7 @@ def _service_api_get_ticket_call(ticket_id):
 
 
 def service_api_get_ticket_call(raised=None):
-    method_name = 'djconnectwise.api.ServiceAPIClient.get_ticket'
+    method_name = 'djconnectwise.api.TicketAPIMixin.get_ticket'
     mock_call, _patch = create_mock_call(
         method_name,
         None,

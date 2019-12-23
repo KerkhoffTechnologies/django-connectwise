@@ -1724,9 +1724,11 @@ class ProjectTicketSynchronizer(TicketSynchronizerMixin,
     client_class = api.ProjectAPIClient
 
     def _assign_field_data(self, instance, json_data):
+
         instance.id = json_data['id']
         instance.summary = json_data['summary']
         instance.closed_flag = json_data.get('closedFlag')
+        instance.last_updated_utc = json_data.get('_info').get('lastUpdated')
         instance.required_date_utc = json_data.get('requiredDate')
         instance.resources = json_data.get('resources')
         instance.budget_hours = json_data.get('budgetHours')

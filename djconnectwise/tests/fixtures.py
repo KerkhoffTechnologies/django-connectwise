@@ -842,7 +842,7 @@ API_ITEM_LIST = [API_ITEM]
 API_SERVICE_TICKET = {
     'id': 69,
     'summary': 'Schedule and Execute Conversion',
-    'recordType': 'ProjectTicket',
+    'recordType': 'ServiceTicket',
     'board': {
         'id': 1,
         'name': 'Service A',
@@ -855,14 +855,6 @@ API_SERVICE_TICKET = {
         'name': 'New',
         '_info': {
             'status_href': 'https://example.com/v4_6_release/apis/3.0/service/boards/1/statuses/1'
-        }
-    },
-    'project': API_PROJECT,
-    'phase': {
-        'id': API_PROJECT_PHASE['id'],
-        'name': API_PROJECT_PHASE['description'],
-        '_info': {
-            'phase_href': 'https://example.com/v4_6_release/apis/3.0/project/projects/5/phases/8'
         }
     },
     'wbsCode': '10.2',
@@ -986,6 +978,127 @@ API_SERVICE_TICKET_MAP = {
     t['id']: t
     for t in API_SERVICE_TICKET_LIST
 }
+
+
+API_PROJECT_TICKET = {
+    'id': 47,
+    'summary': "Senior Engineer Project Planning",
+    'isIssueFlag': False,
+    'board': {
+        'id': API_BOARD['id'],
+        'name': API_BOARD['name'],
+        '_info': {
+            'board_href': "https://connectwise.kerkhofftech.ca/v4_6_release/apis/3.0/service/boards/3"
+        }
+    },
+    'status': {
+        'id': 1,
+        'name': "New",
+        '_info': {
+            'status_href': "https://connectwise.kerkhofftech.ca/v4_6_release/apis/3.0/service/boards/3/statuses/1"
+        }
+    },
+    'project': API_PROJECT,
+    'phase': {
+        'id': API_PROJECT_PHASE['id'],
+        'name': API_PROJECT_PHASE['description'],
+        '_info': {
+            'phase_href': "https://connectwise.kerkhofftech.ca/v4_6_release/apis/3.0/project/projects/4/phases/1"
+        }
+    },
+    'wbsCode': "1.1",
+    'company': API_COMPANY,
+    'site': {
+        'id': 9,
+        'name': "Main",
+        '_info': {
+            'site_href': "https://connectwise.kerkhofftech.ca/v4_6_release/apis/3.0/company/companies/10/sites/9",
+            'mobileGuid': "7606ac88-1326-4dc6-a620-daf7d9ed3c70"
+        }
+    },
+    'siteName': "Main",
+    'addressLine1': "100 Hanrahan Ave.",
+    'city': "Atlanta",
+    'stateIdentifier': "GA",
+    'contact': {
+        'id': 26,
+        'name': "Gus Johnson",
+        '_info': {
+            'mobileGuid': "c5221fb2-6d13-4a5b-80a1-c06d714fd93d",
+            'contact_href': "https://connectwise.kerkhofftech.ca/v4_6_release/apis/3.0/company/contacts/26"
+        }
+    },
+    'contactName': "Gus Johnson",
+    'contactPhoneNumber': "8138318954",
+    'contactEmailAddress': "gus.johnson@digitaltorch.com",
+    'type': API_TYPE_LIST[0],
+    'subType': API_SUBTYPE_LIST[0],
+    'item': API_ITEM_LIST[0],
+    'owner': API_MEMBER,
+    'priority': API_SERVICE_PRIORITY,
+    'serviceLocation': {
+        'id': API_SERVICE_LOCATION['id'],
+        'name': API_SERVICE_LOCATION['name']
+    },
+    'source': {
+        'id': 2,
+        'name': "Phone",
+        '_info': {
+            'source_href': "https://connectwise.kerkhofftech.ca/v4_6_release/apis/3.0/service/sources/2"
+        }
+    },
+    'requiredDate': "2017-03-03T00:00:00Z",
+    'budgetHours': 12.00,
+    'allowAllClientsPortalView': False,
+    'customerUpdatedFlag': False,
+    'automaticEmailContactFlag': False,
+    'automaticEmailResourceFlag': False,
+    'automaticEmailCcFlag': False,
+    'automaticEmailCc': 'some_email@email.com',
+    'closedDate': "2018-08-30T19:28:23Z",
+    'closedBy': "kanban1",
+    'closedFlag': False,
+    'actualHours': 8.00,
+    'approved': True,
+    'resources': "User1, User10",
+    'billTime': "NoDefault",
+    'billExpenses': "Billable",
+    'billProducts': "Billable",
+    'agreement': None,
+    'location': {
+        'id': 2,
+        'name': "Tampa Office",
+        '_info': {
+            'location_href': "https://connectwise.kerkhofftech.ca/v4_6_release/apis/3.0/system/locations/2"
+        }
+    },
+    'department': {
+        'id': 10,
+        'identifier': "Services",
+        'name': "Professional Services",
+        '_info': {
+            'department_href': "https://connectwise.kerkhofftech.ca/v4_6_release/apis/3.0/system/departments/10"
+        }
+    },
+    'mobileGuid': "729d53ab-108e-4fbf-8ed3-5b0a260a8594",
+    'currency': {
+        'id': 7,
+        'symbol': "$",
+        'isoCode': "USD",
+        'name': "US Dollars",
+        '_info': {
+            'currency_href': "https://connectwise.kerkhofftech.ca/v4_6_release/apis/3.0/finance/currencies/7"
+        }
+    },
+    '_info': {
+        'lastUpdated': "2018-08-31T21:04:39Z",
+        'updatedBy': "kanban1",
+        'dateEntered': "2005-05-26T14:39:27Z",
+        'enteredBy': "User10"
+    }
+}
+
+API_PROJECT_TICKET_LIST = [API_PROJECT_TICKET]
 
 
 API_CW_VERSION = {

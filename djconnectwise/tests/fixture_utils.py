@@ -41,6 +41,12 @@ def init_tickets():
     return synchronizer.sync()
 
 
+def init_project_tickets():
+    mocks.project_api_tickets_call()
+    synchronizer = sync.ProjectTicketSynchronizer()
+    return synchronizer.sync()
+
+
 def init_service_notes():
     mocks.service_api_get_notes_call(fixtures.API_SERVICE_NOTE_LIST)
     synchronizer = sync.ServiceNoteSynchronizer()

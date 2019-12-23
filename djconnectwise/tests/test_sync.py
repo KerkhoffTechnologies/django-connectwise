@@ -1215,16 +1215,12 @@ class TestSLAPrioritySynchronizer(TestCase, SynchronizerTestMixin):
                          json_data['resolutionHours'])
 
 
-class TestTicketSynchronizer(TestCase):
-
+class TestTicketSynchronizerMixin:
     def setUp(self):
         super().setUp()
         mocks.system_api_get_members_call(fixtures.API_MEMBER_LIST)
         mocks.system_api_get_member_image_by_photo_id_call(
             (mocks.CW_MEMBER_IMAGE_FILENAME, mocks.get_member_avatar()))
-        mocks.service_api_tickets_call()
-
-        self._init_data()
 
     def _clean(self):
         Ticket.objects.all().delete()
@@ -1246,6 +1242,159 @@ class TestTicketSynchronizer(TestCase):
         fixture_utils.init_subtypes()
         fixture_utils.init_items()
         fixture_utils.init_agreements()
+
+    def test_sync_ticket(self):
+        """
+        Test to ensure ticket synchronizer saves a CW Ticket instance
+        locally.
+        """
+        synchronizer = self.sync_class()
+        synchronizer.sync()
+        self.assertGreater(Ticket.objects.all().count(), 0)
+
+        json_data = self.ticket_fixture
+        instance = Ticket.objects.get(id=json_data['id'])
+
+        self._assert_sync(instance, json_data)
+        assert_sync_job(Ticket)
+
+    def test_sync_ticket_truncates_automatic_cc_field(self):
+        """
+        Test to ensure ticket synchronizer truncates the automatic CC field
+        to 1000 characters.
+        """
+        synchronizer = self.sync_class()
+
+        instance = Ticket()
+
+        field_data = "kanban@kanban.com;"
+        for i in range(6):
+            # Make some field data with length 1152
+            field_data = field_data + field_data
+
+        json_data = deepcopy(self.ticket_fixture)
+        json_data['automaticEmailCc'] = field_data
+        instance = synchronizer._assign_field_data(instance, json_data)
+        self.assertEqual(len(instance.automatic_email_cc), 1000)
+
+    def test_sync_child_tickets(self):
+        """
+        Test to ensure that a ticket will sync related objects,
+        in its case schedule, note, and time entries
+        """
+        fixture_utils.init_schedule_entries()
+        fixture_utils.init_service_notes()
+        synchronizer = self.sync_class()
+
+        ticket = Ticket.objects.get(id=self.ticket_fixture['id'])
+
+        # Change some fields on all child objects
+        updated_fixture = deepcopy(fixtures.API_SERVICE_NOTE_LIST[0])
+        updated_fixture['ticketId'] = ticket.id
+        updated_fixture['text'] = 'Some new text'
+        fixture_list = [updated_fixture]
+
+        method_name = 'djconnectwise.api.ServiceAPIClient.get_notes'
+        mock_call, _patch = mocks.create_mock_call(method_name, fixture_list)
+
+        updated_fixture = deepcopy(fixtures.API_TIME_ENTRY)
+        updated_fixture['chargeToId'] = ticket.id
+        updated_fixture['text'] = 'Some new text'
+        updated_fixture['timeEnd'] = '2005-05-16T15:00:00Z'
+        fixture_list = [updated_fixture]
+
+        method_name = 'djconnectwise.api.TimeAPIClient.get_time_entries'
+        mock_call, _patch = mocks.create_mock_call(method_name, fixture_list)
+
+        updated_fixture = deepcopy(fixtures.API_SALES_ACTIVITY)
+        fixture_list = [updated_fixture]
+
+        method_name = 'djconnectwise.api.SalesAPIClient.get_activities'
+        mock_call, _patch = mocks.create_mock_call(method_name, fixture_list)
+
+        method_name = 'djconnectwise.api.TicketAPIMixin.get_ticket'
+        mock_call, _patch = \
+            mocks.create_mock_call(method_name, self.ticket_fixture)
+
+        # Trigger method called on callback
+        synchronizer.fetch_sync_by_id(ticket.id)
+
+        # Get the new Values from the db
+        updated_note = ServiceNote.objects.filter(ticket=ticket)[0]
+
+        updated_time = TimeEntry.objects.filter(charge_to_id=ticket)[0]
+
+        # Confirm that they have all been updated
+        self.assertEqual('Some new text', updated_note.text)
+        self.assertEqual(
+            datetime.datetime(
+                2005, 5, 16, 15, 0, tzinfo=datetime.timezone.utc),
+            updated_time.time_end
+            )
+
+    def test_sync_updated(self):
+
+        updated_ticket_fixture = deepcopy(self.ticket_fixture)
+        updated_ticket_fixture['summary'] = 'A new kind of summary'
+        fixture_list = [updated_ticket_fixture]
+
+        method_name = 'djconnectwise.api.TicketAPIMixin.get_tickets'
+        mock_call, _patch = mocks.create_mock_call(method_name, fixture_list)
+        synchronizer = self.sync_class()
+        # Synchronizer is called twice, as we are testing that synchronizers
+        # can be called twice and keep the same behaviour
+        synchronizer.sync()
+        created_count, updated_count, _ = synchronizer.sync()
+
+        self.assertEqual(created_count, 0)
+        self.assertEqual(updated_count, len(fixture_list))
+
+        instance = Ticket.objects.get(id=updated_ticket_fixture['id'])
+        self._assert_sync(instance, updated_ticket_fixture)
+
+    def test_sync_multiple_status_batches(self):
+        sync.MAX_URL_LENGTH = 330
+        sync.MIN_URL_LENGTH = 320
+        self._init_data()
+        fixture_utils.init_tickets()
+        updated_ticket_fixture = deepcopy(self.ticket_fixture)
+        updated_ticket_fixture['summary'] = 'A new kind of summary'
+        fixture_list = [updated_ticket_fixture]
+
+        method_name = 'djconnectwise.api.TicketAPIMixin.get_tickets'
+        mock_call, _patch = mocks.create_mock_call(method_name, fixture_list)
+        synchronizer = sync.TicketSynchronizer()
+        synchronizer.batch_condition_list.extend(
+            [234234, 345345, 234213, 2344523, 345645]
+        )
+        created_count, updated_count, _ = synchronizer.sync()
+
+        self.assertEqual(mock_call.call_count, 2)
+
+    def test_delete_stale_tickets(self):
+        """Local ticket should be deleted if omitted from sync"""
+        ticket_id = self.ticket_fixture['id']
+        ticket_qset = Ticket.objects.filter(id=ticket_id)
+        self.assertEqual(ticket_qset.count(), 1)
+
+        method_name = 'djconnectwise.api.TicketAPIMixin.get_tickets'
+        mock_call, _patch = mocks.create_mock_call(method_name, [])
+        synchronizer = self.sync_class(full=True)
+        synchronizer.sync()
+        self.assertEqual(ticket_qset.count(), 0)
+        _patch.stop()
+
+
+class TestTicketSynchronizer(TestTicketSynchronizerMixin, TestCase):
+    sync_class = sync.TicketSynchronizer
+    ticket_fixture = fixtures.API_SERVICE_TICKET
+
+    def setUp(self):
+        super().setUp()
+        mocks.service_api_tickets_call()
+
+        self._init_data()
+        fixture_utils.init_tickets()
 
     def _assert_sync(self, instance, json_data):
         self.assertEqual(instance.summary, json_data['summary'])
@@ -1284,10 +1433,6 @@ class TestTicketSynchronizer(TestCase):
         self.assertEqual(instance.location_id,
                          json_data['serviceLocation']['id'])
 
-        # verify assigned project
-        self.assertEqual(instance.project_id,
-                         json_data['project']['id'])
-
         # verify assigned status
         self.assertEqual(instance.status_id,
                          json_data['status']['id'])
@@ -1312,137 +1457,69 @@ class TestTicketSynchronizer(TestCase):
                          json_data['automaticEmailCc'])
         self.assertEqual(instance.agreement, json_data['agreement'])
 
-    def test_sync_ticket(self):
-        """
-        Test to ensure ticket synchronizer saves a CW Ticket instance
-        locally.
-        """
-        synchronizer = sync.TicketSynchronizer()
-        synchronizer.sync()
-        self.assertGreater(Ticket.objects.all().count(), 0)
 
-        json_data = fixtures.API_SERVICE_TICKET
-        instance = Ticket.objects.get(id=json_data['id'])
-        self._assert_sync(instance, json_data)
-        assert_sync_job(Ticket)
+class TestProjectTicketSynchronizer(TestTicketSynchronizerMixin, TestCase):
+    sync_class = sync.ProjectTicketSynchronizer
+    ticket_fixture = fixtures.API_PROJECT_TICKET
 
-    def test_sync_ticket_truncates_automatic_cc_field(self):
-        """
-        Test to ensure ticket synchronizer truncates the automatic CC field
-        to 1000 characters.
-        """
-        synchronizer = sync.TicketSynchronizer()
+    def setUp(self):
+        super().setUp()
+        mocks.project_api_tickets_call()
 
-        instance = Ticket()
-
-        field_data = "kanban@kanban.com;"
-        for i in range(6):
-            # Make some field data with length 1152
-            field_data = field_data + field_data
-
-        json_data = deepcopy(fixtures.API_SERVICE_TICKET)
-        json_data['automaticEmailCc'] = field_data
-        instance = synchronizer._assign_field_data(instance, json_data)
-        self.assertEqual(len(instance.automatic_email_cc), 1000)
-
-    def test_sync_child_tickets(self):
-        """
-        Test to ensure that a ticket will sync related objects,
-        in its case schedule, note, and time entries
-        """
         self._init_data()
-        fixture_utils.init_tickets()
-        fixture_utils.init_schedule_entries()
-        fixture_utils.init_service_notes()
-        synchronizer = sync.TicketSynchronizer()
+        fixture_utils.init_project_tickets()
 
-        ticket = Ticket.objects.get(id=fixtures.API_SERVICE_TICKET['id'])
+    def _assert_sync(self, instance, json_data):
+        self.assertEqual(instance.summary, json_data['summary'])
+        self.assertEqual(instance.closed_flag, json_data.get('closedFlag'))
+        self.assertEqual(instance.last_updated_utc,
+                         parse(json_data.get('_info').get('lastUpdated')))
+        self.assertEqual(instance.required_date_utc,
+                         parse(json_data.get('requiredDate')))
+        self.assertEqual(instance.resources, json_data.get('resources'))
+        self.assertEqual(instance.budget_hours, json_data.get('budgetHours'))
+        self.assertEqual(instance.actual_hours, json_data.get('actualHours'))
 
-        # Change some fields on all child objects
-        updated_fixture = deepcopy(fixtures.API_SERVICE_NOTE_LIST[0])
-        updated_fixture['text'] = 'Some new text'
-        fixture_list = [updated_fixture]
+        # verify assigned board
+        self.assertEqual(instance.board_id, json_data['board']['id'])
 
-        method_name = 'djconnectwise.api.ServiceAPIClient.get_notes'
-        mock_call, _patch = mocks.create_mock_call(method_name, fixture_list)
+        # verify assigned company
+        self.assertEqual(instance.company_id, json_data['company']['id'])
 
-        updated_fixture = deepcopy(fixtures.API_TIME_ENTRY)
-        updated_fixture['timeEnd'] = '2005-05-16T15:00:00Z'
-        fixture_list = [updated_fixture]
+        # verify assigned priority
+        self.assertEqual(instance.priority_id, json_data['priority']['id'])
 
-        method_name = 'djconnectwise.api.TimeAPIClient.get_time_entries'
-        mock_call, _patch = mocks.create_mock_call(method_name, fixture_list)
+        # verify assigned location
+        self.assertEqual(instance.location_id,
+                         json_data['serviceLocation']['id'])
 
-        # Trigger method called on callback
-        synchronizer.fetch_sync_by_id(ticket.id)
+        # verify assigned project
+        self.assertEqual(instance.project_id,
+                         json_data['project']['id'])
 
-        # Get the new Values from the db
-        updated_note = ServiceNote.objects.filter(ticket=ticket)[0]
+        # verify assigned status
+        self.assertEqual(instance.status_id,
+                         json_data['status']['id'])
 
-        updated_time = TimeEntry.objects.filter(charge_to_id=ticket)[0]
+        # verify assigned type
+        self.assertEqual(instance.type_id, json_data['type']['id'])
 
-        # Confirm that they have all been updated
-        self.assertEqual('Some new text', updated_note.text)
-        self.assertEqual(
-            datetime.datetime(
-                2005, 5, 16, 15, 0, tzinfo=datetime.timezone.utc),
-            updated_time.time_end
-            )
+        # verify assigned subtype
+        self.assertEqual(instance.sub_type_id, json_data['subType']['id'])
 
-    def test_sync_updated(self):
-        self._init_data()
-        fixture_utils.init_tickets()
-        updated_ticket_fixture = deepcopy(fixtures.API_SERVICE_TICKET)
-        updated_ticket_fixture['summary'] = 'A new kind of summary'
-        fixture_list = [updated_ticket_fixture]
+        # verify assigned subtype item
+        self.assertEqual(instance.sub_type_item_id, json_data['item']['id'])
 
-        method_name = 'djconnectwise.api.ServiceAPIClient.get_tickets'
-        mock_call, _patch = mocks.create_mock_call(method_name, fixture_list)
-        synchronizer = sync.TicketSynchronizer()
-        # Synchronizer is called twice, as we are testing that synchronizers
-        # can be called twice and keep the same behaviour
-        synchronizer.sync()
-        created_count, updated_count, _ = synchronizer.sync()
-
-        self.assertEqual(created_count, 0)
-        self.assertEqual(updated_count, len(fixture_list))
-
-        instance = Ticket.objects.get(id=updated_ticket_fixture['id'])
-        self._assert_sync(instance, updated_ticket_fixture)
-
-    def test_sync_multiple_status_batches(self):
-        sync.MAX_URL_LENGTH = 330
-        sync.MIN_URL_LENGTH = 320
-        self._init_data()
-        fixture_utils.init_tickets()
-        updated_ticket_fixture = deepcopy(fixtures.API_SERVICE_TICKET)
-        updated_ticket_fixture['summary'] = 'A new kind of summary'
-        fixture_list = [updated_ticket_fixture]
-
-        method_name = 'djconnectwise.api.ServiceAPIClient.get_tickets'
-        mock_call, _patch = mocks.create_mock_call(method_name, fixture_list)
-        synchronizer = sync.TicketSynchronizer()
-        synchronizer.batch_condition_list.extend(
-            [234234, 345345, 234213, 2344523, 345645]
-        )
-        created_count, updated_count, _ = synchronizer.sync()
-
-        self.assertEqual(mock_call.call_count, 2)
-
-    def test_delete_stale_tickets(self):
-        """Local ticket should be deleted if omitted from sync"""
-        fixture_utils.init_tickets()
-
-        ticket_id = fixtures.API_SERVICE_TICKET['id']
-        ticket_qset = Ticket.objects.filter(id=ticket_id)
-        self.assertEqual(ticket_qset.count(), 1)
-
-        method_name = 'djconnectwise.api.ServiceAPIClient.get_tickets'
-        mock_call, _patch = mocks.create_mock_call(method_name, [])
-        synchronizer = sync.TicketSynchronizer(full=True)
-        synchronizer.sync()
-        self.assertEqual(ticket_qset.count(), 0)
-        _patch.stop()
+        self.assertEqual(instance.bill_time, json_data['billTime'])
+        self.assertEqual(instance.automatic_email_cc_flag,
+                         json_data['automaticEmailCcFlag'])
+        self.assertEqual(instance.automatic_email_contact_flag,
+                         json_data['automaticEmailContactFlag'])
+        self.assertEqual(instance.automatic_email_resource_flag,
+                         json_data['automaticEmailResourceFlag'])
+        self.assertEqual(instance.automatic_email_cc,
+                         json_data['automaticEmailCc'])
+        self.assertEqual(instance.agreement, json_data['agreement'])
 
 
 class TestActivityStatusSynchronizer(TestCase, SynchronizerTestMixin):
