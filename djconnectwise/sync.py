@@ -1656,8 +1656,8 @@ class TicketSynchronizerMixin:
         )
 
 
-class TicketSynchronizer(TicketSynchronizerMixin,
-                         BatchConditionMixin, Synchronizer):
+class ServiceTicketSynchronizer(TicketSynchronizerMixin,
+                                BatchConditionMixin, Synchronizer):
     client_class = api.ServiceAPIClient
 
     def __init__(self, *args, **kwargs):

@@ -1363,7 +1363,7 @@ class TestTicketSynchronizerMixin:
 
         method_name = 'djconnectwise.api.TicketAPIMixin.get_tickets'
         mock_call, _patch = mocks.create_mock_call(method_name, fixture_list)
-        synchronizer = sync.TicketSynchronizer()
+        synchronizer = sync.ServiceTicketSynchronizer()
         synchronizer.batch_condition_list.extend(
             [234234, 345345, 234213, 2344523, 345645]
         )
@@ -1385,8 +1385,8 @@ class TestTicketSynchronizerMixin:
         _patch.stop()
 
 
-class TestTicketSynchronizer(TestTicketSynchronizerMixin, TestCase):
-    sync_class = sync.TicketSynchronizer
+class TestServiceTicketSynchronizer(TestTicketSynchronizerMixin, TestCase):
+    sync_class = sync.ServiceTicketSynchronizer
     ticket_fixture = fixtures.API_SERVICE_TICKET
 
     def setUp(self):

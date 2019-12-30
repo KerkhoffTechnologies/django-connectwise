@@ -64,7 +64,7 @@ class Command(BaseCommand):
              _('Sub Type')),
             ('item', sync.ItemSynchronizer,
              _('Item')),
-            ('ticket', sync.TicketSynchronizer, _('Ticket')),
+            ('ticket', sync.ServiceTicketSynchronizer, _('Ticket')),
             ('project_ticket', sync.ProjectTicketSynchronizer,
                 _('Project Ticket')),
             ('service_note', sync.ServiceNoteSynchronizer,

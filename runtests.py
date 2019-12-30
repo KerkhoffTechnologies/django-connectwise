@@ -61,7 +61,7 @@ settings.configure(
         'version': 1,
         'loggers': {
             'djconnectwise': {
-                'level': 'ERROR'
+                'level': 'WARN'
             }
         }
     },

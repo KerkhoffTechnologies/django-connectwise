@@ -27,12 +27,31 @@ CALLBACK_ACTIONS = (
 )
 
 
+def get_ticket_sync_class(entity):
+    project_ticket_types = [
+        models.Ticket.PROJECT_TICKET, models.Ticket.PROJECT_ISSUE
+    ]
+    if entity:
+        ticket_entity = json.loads(entity)
+        record_type = ticket_entity.get('recordType')
+    else:
+        record_type = None
+
+    if record_type in project_ticket_types:
+        sync_class = sync.ProjectTicketSynchronizer
+    else:
+        sync_class = sync.ServiceTicketSynchronizer
+
+    return sync_class
+
+
 class CallBackView(views.CsrfExemptMixin,
                    views.JsonRequestResponseMixin, View):
 
+    CALLBACK_TICKET_TYPE = 'ticket'
     CALLBACK_TYPES = {
         'ticket': (
-            sync.TicketSynchronizer, models.Ticket
+            get_ticket_sync_class, models.Ticket
         ),
         'project': (
             sync.ProjectSynchronizer, models.Project
@@ -86,8 +105,16 @@ class CallBackView(views.CsrfExemptMixin,
         entity_id = form.cleaned_data['entity_id']
         action = form.cleaned_data['action']
         callback_type = body.get('Type')
-        sync_class, model_class = \
-            self.CALLBACK_TYPES[callback_type]
+
+        if callback_type == self.CALLBACK_TICKET_TYPE:
+            entity = body.get('Entity')
+            get_synchronizer, model_class = \
+                self.CALLBACK_TYPES[callback_type]
+
+            sync_class = get_synchronizer(entity)
+        else:
+            sync_class, model_class = self.CALLBACK_TYPES[callback_type]
+
         synchronizer = sync_class()
 
         try:
