@@ -227,6 +227,8 @@ class TestTimeEntrySynchronizer(TestCase, SynchronizerTestMixin):
 
     def setUp(self):
         super().setUp()
+        fixture_utils.init_board_statuses()
+        fixture_utils.init_tickets()
         fixture_utils.init_time_entries()
 
     def call_api(self, return_data):
@@ -1457,6 +1459,34 @@ class TestServiceTicketSynchronizer(TestTicketSynchronizerMixin, TestCase):
                          json_data['automaticEmailCc'])
         self.assertEqual(instance.agreement, json_data['agreement'])
 
+    def test_project_tickets_not_deleted_during_sync(self):
+        """
+        Verify that during a sync of service tickets, no project tickets are
+        removed.
+        """
+        synchronizer = self.sync_class(full=True)
+        synchronizer.sync()
+
+        self.assertTrue(Ticket.objects.get(id=self.ticket_fixture['id']))
+
+        project_ticket = Ticket.objects.create(
+            summary='Project ticket',
+            record_type='ProjectTicket'
+        )
+        project_ticket.save()
+
+        method_name = 'djconnectwise.api.TicketAPIMixin.get_tickets'
+        mock_call, _patch = mocks.create_mock_call(method_name, [])
+        synchronizer = self.sync_class(full=True)
+        synchronizer.sync()
+
+        # Verify that the service ticket has been removed and project ticket
+        # still exists.
+        self.assertEqual(
+            Ticket.objects.get(id=project_ticket.id), project_ticket)
+        self.assertFalse(
+            Ticket.objects.filter(id=self.ticket_fixture['id']).exists())
+
 
 class TestProjectTicketSynchronizer(TestTicketSynchronizerMixin, TestCase):
     sync_class = sync.ProjectTicketSynchronizer
@@ -1520,6 +1550,33 @@ class TestProjectTicketSynchronizer(TestTicketSynchronizerMixin, TestCase):
         self.assertEqual(instance.automatic_email_cc,
                          json_data['automaticEmailCc'])
         self.assertEqual(instance.agreement, json_data['agreement'])
+
+    def test_service_tickets_not_deleted_during_sync(self):
+        """
+        Verify that during a sync of project tickets, no service tickets are
+        removed.
+        """
+        synchronizer = self.sync_class(full=True)
+        synchronizer.sync()
+        self.assertTrue(Ticket.objects.get(id=self.ticket_fixture['id']))
+
+        service_ticket = Ticket.objects.create(
+            summary='Service ticket',
+            record_type='ServiceTicket'
+        )
+        service_ticket.save()
+
+        method_name = 'djconnectwise.api.TicketAPIMixin.get_tickets'
+        mock_call, _patch = mocks.create_mock_call(method_name, [])
+        synchronizer = self.sync_class(full=True)
+        synchronizer.sync()
+
+        # Verify that the project ticket has been removed and service ticket
+        # still exists.
+        self.assertEqual(
+            Ticket.objects.get(id=service_ticket.id), service_ticket)
+        self.assertFalse(
+            Ticket.objects.filter(id=self.ticket_fixture['id']).exists())
 
 
 class TestActivityStatusSynchronizer(TestCase, SynchronizerTestMixin):
