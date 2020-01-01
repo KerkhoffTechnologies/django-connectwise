@@ -22,6 +22,8 @@ BILL_TYPES = (
         ('NoCharge', "No Charge"),
     )
 
+COMPANY_CHAR_LENGTH = 40
+
 
 class InvalidStatusError(Exception):
     pass
@@ -317,7 +319,9 @@ class Company(TimeStampedModel):
         ordering = ('identifier', )
 
     def __str__(self):
-        return self.get_identifier() or ''
+        name = self.name or ''
+        return (name[:COMPANY_CHAR_LENGTH] + '...') \
+            if len(name) > COMPANY_CHAR_LENGTH else name
 
     def get_identifier(self):
         return self.identifier
