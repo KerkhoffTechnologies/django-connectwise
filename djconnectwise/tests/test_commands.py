@@ -500,6 +500,22 @@ class TestSyncAgreementCommand(AbstractBaseSyncTest, TestCase):
     )
 
 
+class TestSyncProjectTicketCommand(AbstractBaseSyncTest, TestCase):
+    def setUp(self):
+        super().setUp()
+        mocks.system_api_get_member_image_by_photo_id_call(
+            (mocks.CW_MEMBER_IMAGE_FILENAME, mocks.get_member_avatar()))
+        fixture_utils.init_members()
+        fixture_utils.init_board_statuses()
+        fixture_utils.init_project_tickets()
+
+    args = (
+        mocks.project_api_tickets_test_command,
+        fixtures.API_PROJECT_TICKET_LIST,
+        'project_ticket'
+    )
+
+
 class TestSyncAllCommand(TestCase):
 
     def setUp(self):

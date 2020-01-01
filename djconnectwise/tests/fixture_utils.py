@@ -37,7 +37,13 @@ def init_members():
 
 def init_tickets():
     mocks.service_api_tickets_call()
-    synchronizer = sync.TicketSynchronizer()
+    synchronizer = sync.ServiceTicketSynchronizer()
+    return synchronizer.sync()
+
+
+def init_project_tickets():
+    mocks.project_api_tickets_call()
+    synchronizer = sync.ProjectTicketSynchronizer()
     return synchronizer.sync()
 
 
