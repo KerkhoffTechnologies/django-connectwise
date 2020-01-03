@@ -427,34 +427,6 @@ class ConnectWiseAPIClient(object):
         return url._replace(netloc=CW_CLOUD_URLS[url.netloc]).geturl()
 
 
-class ProjectAPIClient(ConnectWiseAPIClient):
-    API = 'project'
-    ENDPOINT_PROJECTS = 'projects/'
-    ENDPOINT_PROJECT_STATUSES = 'statuses/'
-    ENDPOINT_PROJECT_PHASES = 'phases/'
-
-    def get_project(self, project_id):
-        endpoint_url = '{}/{}'.format(self.ENDPOINT_PROJECTS, project_id)
-        return self.fetch_resource(endpoint_url)
-
-    def get_projects(self, *args, **kwargs):
-        return self.fetch_resource(self.ENDPOINT_PROJECTS, should_page=True,
-                                   *args, **kwargs)
-
-    def get_project_statuses(self, *args, **kwargs):
-        return self.fetch_resource(self.ENDPOINT_PROJECT_STATUSES,
-                                   should_page=True,
-                                   *args, **kwargs)
-
-    def get_project_phases(self, project_id, *args, **kwargs):
-        endpoint_url = '{}{}/{}'.format(
-            self.ENDPOINT_PROJECTS, project_id, self.ENDPOINT_PROJECT_PHASES
-        )
-        return self.fetch_resource(endpoint_url,
-                                   should_page=True,
-                                   *args, **kwargs)
-
-
 class CompanyAPIClient(ConnectWiseAPIClient):
     API = 'company'
     ENDPOINT_COMPANIES = 'companies'
@@ -929,13 +901,8 @@ class SystemAPIClient(ConnectWiseAPIClient):
         return m.group(1) if m else None
 
 
-class ServiceAPIClient(ConnectWiseAPIClient):
-    API = 'service'
+class TicketAPIMixin:
     ENDPOINT_TICKETS = 'tickets'
-    ENDPOINT_BOARDS = 'boards'
-    ENDPOINT_PRIORITIES = 'priorities'
-    ENDPOINT_LOCATIONS = 'locations'
-    ENDPOINT_SLAS = 'SLAs'
 
     def tickets_count(self):
         params = dict(
@@ -990,6 +957,14 @@ class ServiceAPIClient(ConnectWiseAPIClient):
             body.append(priority_body)
 
         return self.request('patch', endpoint_url, body)
+
+
+class ServiceAPIClient(TicketAPIMixin, ConnectWiseAPIClient):
+    API = 'service'
+    ENDPOINT_BOARDS = 'boards'
+    ENDPOINT_PRIORITIES = 'priorities'
+    ENDPOINT_LOCATIONS = 'locations'
+    ENDPOINT_SLAS = 'SLAs'
 
     def get_notes(self, ticket_id, *args, **kwargs):
         """
@@ -1078,6 +1053,34 @@ class ServiceAPIClient(ConnectWiseAPIClient):
     def get_items(self, board_id, *args, **kwargs):
         endpoint_url = '{}/{}/items/'.format(self.ENDPOINT_BOARDS, board_id)
         return self.fetch_resource(endpoint_url, should_page=True,
+                                   *args, **kwargs)
+
+
+class ProjectAPIClient(TicketAPIMixin, ConnectWiseAPIClient):
+    API = 'project'
+    ENDPOINT_PROJECTS = 'projects/'
+    ENDPOINT_PROJECT_STATUSES = 'statuses/'
+    ENDPOINT_PROJECT_PHASES = 'phases/'
+
+    def get_project(self, project_id):
+        endpoint_url = '{}/{}'.format(self.ENDPOINT_PROJECTS, project_id)
+        return self.fetch_resource(endpoint_url)
+
+    def get_projects(self, *args, **kwargs):
+        return self.fetch_resource(self.ENDPOINT_PROJECTS, should_page=True,
+                                   *args, **kwargs)
+
+    def get_project_statuses(self, *args, **kwargs):
+        return self.fetch_resource(self.ENDPOINT_PROJECT_STATUSES,
+                                   should_page=True,
+                                   *args, **kwargs)
+
+    def get_project_phases(self, project_id, *args, **kwargs):
+        endpoint_url = '{}{}/{}'.format(
+            self.ENDPOINT_PROJECTS, project_id, self.ENDPOINT_PROJECT_PHASES
+        )
+        return self.fetch_resource(endpoint_url,
+                                   should_page=True,
                                    *args, **kwargs)
 
 
