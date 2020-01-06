@@ -205,8 +205,13 @@ class Synchronizer:
         raise NotImplementedError
 
     def fetch_sync_by_id(self, instance_id):
+        instance = None
         api_instance = self.get_single(instance_id)
-        instance, created = self.update_or_create_instance(api_instance)
+        try:
+            instance, created = self.update_or_create_instance(api_instance)
+        except InvalidObjectException as e:
+            logger.warning('{}'.format(e))
+
         return instance
 
     def fetch_delete_by_id(self, instance_id, pre_delete_callback=None,
