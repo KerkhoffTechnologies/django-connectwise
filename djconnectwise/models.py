@@ -319,7 +319,7 @@ class Company(TimeStampedModel):
         ordering = ('identifier', )
 
     def __str__(self):
-        return self.get_identifier() or ''
+        return self.name or ''
 
     def get_identifier(self):
         return self.identifier
