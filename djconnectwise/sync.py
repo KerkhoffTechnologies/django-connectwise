@@ -1235,11 +1235,27 @@ class TimeEntrySynchronizer(BatchConditionMixin, Synchronizer):
             target_data['id'] = target.id
             target_data['type'] = target.record_type
         else:
-            raise InvalidObjectException("Invalid target type for TimeEntry \
-creation: " + str(target.__class__) + ".")
+            raise InvalidObjectException(
+                "Invalid target type for TimeEntry "
+                "creation: " + str(target.__class__) + "."
+            )
         time_client = api.TimeAPIClient()
         instance = time_client.post_time_entry(target_data, **kwargs)
         return self.update_or_create_instance(instance)
+
+    def callback_sync(self, filter_params):
+        sync_job_qset = self.get_sync_job_qset()
+
+        if sync_job_qset.exists():
+            last_sync_job_time = sync_job_qset.last().start_time.isoformat()
+            self.api_conditions.append(
+                "lastUpdated>[{0}]".format(last_sync_job_time)
+            )
+        results = SyncResults()
+        results = self.get(results, )
+
+        return results.created_count, results.updated_count, \
+            results.deleted_count
 
 
 class LocationSynchronizer(Synchronizer):
