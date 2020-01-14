@@ -1244,6 +1244,10 @@ class TimeEntrySynchronizer(BatchConditionMixin, Synchronizer):
         return self.update_or_create_instance(instance)
 
     def callback_sync(self, filter_params):
+        # If a ticket has many time entries they could all be fetched on
+        # callbacks which is not ideal. Instead only run a partial
+        # sync on callbacks. We will continue to return deleted_count
+        # even though it will always be zero in this case.
         sync_job_qset = self.get_sync_job_qset()
 
         if sync_job_qset.exists():
