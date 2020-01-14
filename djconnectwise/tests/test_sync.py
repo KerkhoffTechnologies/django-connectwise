@@ -1386,6 +1386,42 @@ class TestTicketSynchronizerMixin:
         self.assertEqual(ticket_qset.count(), 0)
         _patch.stop()
 
+    def test_callback_sync(self):
+        # Sync initial time entry
+        mocks.time_api_get_time_entries_call(fixtures.API_TIME_ENTRY_LIST)
+        time_entry_sync = sync.TimeEntrySynchronizer()
+        time_entry_sync.sync()
+        self.assertGreater(
+            SyncJob.objects.filter(entity_name='TimeEntry').count(), 0
+        )
+
+        # Mock the child class syncs
+        mocks.service_api_get_notes_call(fixtures.API_SERVICE_NOTE_LIST)
+        mocks.sales_api_get_activities_call(fixtures.API_SALES_ACTIVITIES)
+
+        method_name = 'djconnectwise.sync.TicketSynchronizerMixin.get_single'
+        mock_call, _patch = \
+            mocks.create_mock_call(method_name, self.ticket_fixture)
+
+        # Create new time entry to sync
+        new_time_entry = deepcopy(fixtures.API_TIME_ENTRY)
+        new_time_entry['id'] = 3
+        mocks.time_api_get_time_entries_call([new_time_entry,
+                                              fixtures.API_TIME_ENTRY])
+
+        ticket_id = self.ticket_fixture['id']
+        synchronizer = self.sync_class()
+        # Simulate ticket getting updated by a callback
+        synchronizer.fetch_sync_by_id(ticket_id)
+
+        # Verify that no time entries are removed,
+        # and that only one entry is added
+        last_sync_job = SyncJob.objects.filter(entity_name='TimeEntry').last()
+        self.assertEqual(last_sync_job.deleted, 0)
+        self.assertEqual(last_sync_job.updated, 0)
+        self.assertEqual(last_sync_job.added, 1)
+        self.assertEqual(last_sync_job.sync_type, 'partial')
+
 
 class TestServiceTicketSynchronizer(TestTicketSynchronizerMixin, TestCase):
     sync_class = sync.ServiceTicketSynchronizer
