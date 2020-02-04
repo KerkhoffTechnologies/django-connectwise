@@ -1079,7 +1079,8 @@ class Opportunity(TimeStampedModel):
                                           on_delete=models.SET_NULL)
     priority = models.ForeignKey('OpportunityPriority',
                                  on_delete=models.SET_NULL, null=True)
-    stage = models.ForeignKey('OpportunityStage', on_delete=models.CASCADE)
+    stage = models.ForeignKey('OpportunityStage', blank=True, null=True,
+                              on_delete=models.SET_NULL)
     status = models.ForeignKey('OpportunityStatus', blank=True, null=True,
                                on_delete=models.SET_NULL)
     secondary_sales_rep = models.ForeignKey(
