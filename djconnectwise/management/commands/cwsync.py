@@ -141,14 +141,6 @@ class Command(BaseCommand):
         failed_classes = 0
         error_messages = ''
 
-        num_synchronizers = len(self.synchronizer_map)
-        has_ticket_sync = 'ticket' in self.synchronizer_map
-        if full_option and num_synchronizers and has_ticket_sync:
-            sync_classes = list(sync_classes)
-            sync_classes.reverse()
-            # need to move ticket synchronizer to the tail of the list
-            sync_classes.append(sync_classes.pop(0))
-
         for sync_class, obj_name in sync_classes:
             try:
                 self.sync_by_class(sync_class, obj_name,

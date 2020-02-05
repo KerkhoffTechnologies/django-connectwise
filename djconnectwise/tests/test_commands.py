@@ -679,6 +679,19 @@ class TestSyncAllCommand(TestCase):
         output = self.run_sync_command(full_option=True)
 
         for apicall, fixture, cw_object in self.test_args:
+            if cw_object in (
+                    'team',
+                    'board_status',
+                    'opportunity_note',
+                    'sla_priority',
+                    'holiday',
+            ):
+                # Assert that there were objects to get deleted, then change
+                # to zero to verify the output formats correctly.
+                # We are just testing the command, there are sync tests to
+                # verify that the syncronizers work correctly
+                self.assertGreater(pre_full_sync_counts[cw_object], 0)
+                pre_full_sync_counts[cw_object] = 0
             summary = full_sync_summary(
                 slug_to_title(cw_object),
                 pre_full_sync_counts[cw_object]
