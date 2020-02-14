@@ -1,8 +1,9 @@
 import logging
+import datetime
+import math
 
 from dateutil.parser import parse
 from copy import deepcopy
-import math
 
 from django.core.files.storage import default_storage
 from django.core.exceptions import ObjectDoesNotExist
@@ -1006,13 +1007,26 @@ class ScheduleEntriesSynchronizer(BatchConditionMixin, Synchronizer):
             )
 
         # handle dates
+        # Connectwise handles schedule entries with a date and no time by
+        # leaving it as midnight UTC. This has the unfortunate side effect of
+        # looking like a completely valid time in other time zones. Ex, In
+        # UTC-8 it looks like 4pm - 4pm. Alter these midnight datetimes to
+        # appear as midnight in the local time, instead of midnight UTC.
         date_start = json_data.get('dateStart')
         if date_start:
             instance.date_start = parse(date_start)
 
-        date_end = json_data.get('dateEnd')
-        if date_end:
-            instance.date_end = parse(date_end)
+            date_end = json_data.get('dateEnd')
+
+            if instance.date_start.time() == datetime.time(0, 0) \
+                    and json_data.get('hours') == 0.0:
+                instance.date_start = parse(date_start) - \
+                    timezone.localtime().utcoffset()
+                if date_end:
+                    instance.date_end = parse(date_end) - \
+                        timezone.localtime().utcoffset()
+            elif date_end:
+                instance.date_end = parse(date_end)
 
         self.set_relations(instance, json_data)
 
