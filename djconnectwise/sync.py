@@ -1021,10 +1021,11 @@ class ScheduleEntriesSynchronizer(BatchConditionMixin, Synchronizer):
             if instance.date_start.time() == datetime.time(0, 0) \
                     and json_data.get('hours') == 0.0:
                 instance.date_start = parse(date_start) - \
-                                      timezone.localtime().utcoffset()
-                instance.date_end = parse(date_end) - \
-                                      timezone.localtime().utcoffset()
-            else:
+                    timezone.localtime().utcoffset()
+                if date_end:
+                    instance.date_end = parse(date_end) - \
+                        timezone.localtime().utcoffset()
+            elif date_end:
                 instance.date_end = parse(date_end)
 
         self.set_relations(instance, json_data)
