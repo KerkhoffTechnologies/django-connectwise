@@ -52,6 +52,11 @@ def projects_api_get_project_statuses_call(return_value, raised=None):
     return create_mock_call(method_name, return_value, side_effect=raised)
 
 
+def projects_api_get_project_types_call(return_value, raised=None):
+    method_name = 'djconnectwise.api.ProjectAPIClient.get_project_types'
+    return create_mock_call(method_name, return_value, side_effect=raised)
+
+
 def projects_api_get_project_phases_call(return_value, raised=None):
     method_name = 'djconnectwise.api.ProjectAPIClient.get_project_phases'
     return create_mock_call(method_name, return_value, side_effect=raised)

@@ -43,6 +43,7 @@ from djconnectwise.models import Item
 from djconnectwise.models import WorkType
 from djconnectwise.models import WorkRole
 from djconnectwise.models import Agreement
+from djconnectwise.models import ProjectType
 from djconnectwise.utils import get_hash
 
 from . import fixtures
@@ -405,6 +406,21 @@ class TestProjectStatusSynchronizer(TestCase, SynchronizerTestMixin):
         self.assertEqual(instance.default_flag, json_data['defaultFlag'])
         self.assertEqual(instance.inactive_flag, json_data['inactiveFlag'])
         self.assertEqual(instance.closed_flag, json_data['closedFlag'])
+
+
+class TestProjectTypeSynchronizer(TestCase, SynchronizerTestMixin):
+    synchronizer_class = sync.ProjectTypeSynchronizer
+    model_class = ProjectType
+    fixture = fixtures.API_PROJECT_TYPES
+
+    def call_api(self, return_data):
+        return mocks.projects_api_get_project_types_call(return_data)
+
+    def _assert_fields(self, instance, json_data):
+        self.assertEqual(instance.id, json_data['id'])
+        self.assertEqual(instance.name, json_data['name'])
+        self.assertEqual(instance.default_flag, json_data['defaultFlag'])
+        self.assertEqual(instance.inactive_flag, json_data['inactiveFlag'])
 
 
 class TestProjectPhaseSynchronizer(TestCase, SynchronizerTestMixin):

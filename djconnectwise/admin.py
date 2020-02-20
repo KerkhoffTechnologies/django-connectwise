@@ -161,6 +161,13 @@ class ProjectStatusAdmin(admin.ModelAdmin):
     search_fields = ['name']
 
 
+@admin.register(models.ProjectType)
+class ProjectTypeAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'default_flag', 'inactive_flag')
+    list_filter = ('default_flag', 'inactive_flag',)
+    search_fields = ['name']
+
+
 @admin.register(models.ProjectPhase)
 class ProjectPhase(admin.ModelAdmin):
     list_display = ('id', 'description', 'project')
@@ -169,8 +176,8 @@ class ProjectPhase(admin.ModelAdmin):
 
 @admin.register(models.Project)
 class ProjectAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'status', )
-    list_filter = ('status', )
+    list_display = ('id', 'name', 'status', 'type')
+    list_filter = ('status', 'type')
     search_fields = ['name']
 
 

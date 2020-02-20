@@ -183,6 +183,14 @@ class TestSyncProjectStatusesCommand(AbstractBaseSyncTest, TestCase):
     )
 
 
+class TestSyncProjectTypesCommand(AbstractBaseSyncTest, TestCase):
+    args = (
+        mocks.projects_api_get_project_types_call,
+        fixtures.API_PROJECT_TYPES,
+        'project_type',
+    )
+
+
 class TestSyncProjectsCommand(AbstractBaseSyncTest, TestCase):
     args = (
         mocks.project_api_get_projects_call,
@@ -563,7 +571,8 @@ class TestSyncAllCommand(TestCase):
             TestSyncItemCommand,
             TestSyncWorkTypeCommand,
             TestSyncWorkRoleCommand,
-            TestSyncAgreementCommand
+            TestSyncAgreementCommand,
+            TestSyncProjectTypesCommand
         ]
 
         self.test_args = []
@@ -655,6 +664,7 @@ class TestSyncAllCommand(TestCase):
             'work_type': models.WorkType,
             'work_role': models.WorkRole,
             'agreement': models.Agreement,
+            'project_type': models.ProjectType,
         }
 
         # Run partial sync first

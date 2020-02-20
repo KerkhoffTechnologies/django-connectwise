@@ -1398,13 +1398,29 @@ class ProjectPhaseSynchronizer(Synchronizer):
         return records
 
 
+class ProjectTypeSynchronizer(Synchronizer):
+    client_class = api.ProjectAPIClient
+    model_class = models.ProjectType
+
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data['id']
+        instance.name = json_data['name']
+        instance.default_flag = json_data.get('defaultFlag')
+        instance.inactive_flag = json_data.get('inactiveFlag')
+        return instance
+
+    def get_page(self, *args, **kwargs):
+        return self.client.get_project_types(*args, **kwargs)
+
+
 class ProjectSynchronizer(Synchronizer):
     client_class = api.ProjectAPIClient
     model_class = models.Project
     related_meta = {
         'status': (models.ProjectStatus, 'status'),
         'manager': (models.Member, 'manager'),
-        'company': (models.Company, 'company')
+        'company': (models.Company, 'company'),
+        'type': (models.ProjectType, 'type'),
     }
 
     def _assign_field_data(self, instance, json_data):

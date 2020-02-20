@@ -461,6 +461,39 @@ API_PROJECT_STATUSES = [
     }
 ]
 
+API_PROJECT_TYPES = [
+    {
+        'id': 6,
+        'name': 'Network',
+        'defaultFlag': True,
+        'inactiveFlag': False,
+        '_info': {
+            'lastUpdated': '2001-01-08T18:05:13Z',
+            'updatedBy': None
+        }
+    },
+    {
+        'id': 7,
+        'name': 'Contract Service',
+        'defaultFlag': False,
+        'inactiveFlag': False,
+        '_info': {
+            'lastUpdated': '2001-01-08T18:05:21Z',
+            'updatedBy': None
+        }
+    },
+    {
+        'id': 8,
+        'name': 'Implementations',
+        'defaultFlag': False,
+        'inactiveFlag': False,
+        '_info': {
+            'lastUpdated': '2001-01-08T18:05:40Z',
+            'updatedBy': None
+        }
+    },
+]
+
 
 API_PROJECT = {
     'id': 5,

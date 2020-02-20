@@ -913,6 +913,19 @@ class ProjectStatus(TimeStampedModel):
         return self.name
 
 
+class ProjectType(TimeStampedModel):
+    name = models.CharField(max_length=30)
+    default_flag = models.BooleanField(default=False)
+    inactive_flag = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ('name', )
+        verbose_name_plural = 'Project types'
+
+    def __str__(self):
+        return self.name
+
+
 class ProjectPhase(TimeStampedModel):
     description = models.CharField(max_length=100)
     scheduled_start = models.DateField(blank=True, null=True)
@@ -977,6 +990,12 @@ class Project(TimeStampedModel):
         blank=True,
         null=True,
         related_name='project_manager',
+        on_delete=models.SET_NULL
+    )
+    type = models.ForeignKey(
+        'ProjectType',
+        blank=True,
+        null=True,
         on_delete=models.SET_NULL
     )
 
