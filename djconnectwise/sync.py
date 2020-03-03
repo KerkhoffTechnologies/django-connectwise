@@ -147,13 +147,12 @@ class Synchronizer:
 
     def _instance_ids(self, filter_params=None):
         if not filter_params:
-            ids = self.model_class.objects.all().values_list(
-                self.lookup_key, flat=True
-            )
+            ids = self.model_class.objects.all().order_by(self.lookup_key)\
+                .values_list(self.lookup_key, flat=True)
         else:
-            ids = self.model_class.objects.filter(filter_params).values_list(
-                self.lookup_key, flat=True
-            )
+            ids = self.model_class.objects.filter(filter_params)\
+                .order_by(self.lookup_key)\
+                .values_list(self.lookup_key, flat=True)
         return set(ids)
 
     def get(self, results, conditions=None):
@@ -1685,7 +1684,7 @@ class TicketSynchronizerMixin:
         return instance
 
     def _instance_ids(self, filter_params=None):
-        tickets_qset = self.filter_by_record_type()
+        tickets_qset = self.filter_by_record_type().order_by(self.lookup_key)
 
         if not filter_params:
             ids = tickets_qset.values_list(self.lookup_key, flat=True)
