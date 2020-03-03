@@ -315,11 +315,13 @@ class Synchronizer:
                 "lastUpdated>[{0}]".format(last_sync_job_time)
             )
         results = SyncResults()
-        initial_ids = self._instance_ids()  # Set of IDs of all records prior
-        # to sync, to find stale records for deletion.
         results = self.get(results, )
 
         if self.full:
+            # Set of IDs of all records prior to sync,
+            # to find stale records for deletion.
+            initial_ids = self._instance_ids()
+
             results.deleted_count = self.prune_stale_records(
                 initial_ids, results.synced_ids
             )
