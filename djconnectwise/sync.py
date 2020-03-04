@@ -1424,6 +1424,11 @@ class ProjectSynchronizer(Synchronizer):
         'type': (models.ProjectType, 'type'),
     }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.api_conditions = ['closedFlag=False']
+
     def _assign_field_data(self, instance, json_data):
         actual_start = json_data.get('actualStart')
         actual_end = json_data.get('actualEnd')
