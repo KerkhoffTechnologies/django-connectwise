@@ -1,6 +1,7 @@
 from collections import OrderedDict
 
 from djconnectwise import sync, api
+from djconnectwise.utils import DjconnectwiseSettings
 
 from django.core.management.base import BaseCommand, CommandError
 from django.utils.translation import ugettext_lazy as _
@@ -27,10 +28,10 @@ class Command(BaseCommand):
             ('project_status', sync.ProjectStatusSynchronizer,
                 _('Project Status')),
             ('project_type', sync.ProjectTypeSynchronizer,
-             _('Project Type')),
+                _('Project Type')),
             ('project', sync.ProjectSynchronizer, _('Project')),
             ('project_phase', sync.ProjectPhaseSynchronizer,
-             _('Project Phase')),
+                _('Project Phase')),
             ('territory', sync.TerritorySynchronizer,
                 _('Territory')),
             ('company_status', sync.CompanyStatusSynchronizer,
@@ -61,24 +62,20 @@ class Command(BaseCommand):
             ('sla_priority', sync.SLAPrioritySynchronizer,
                 _('Sla Priority')),
             ('type', sync.TypeSynchronizer,
-             _('Type')),
+                _('Type')),
             ('sub_type', sync.SubTypeSynchronizer,
-             _('Sub Type')),
+                _('Sub Type')),
             ('item', sync.ItemSynchronizer,
-             _('Item')),
+                _('Item')),
             ('ticket', sync.ServiceTicketSynchronizer, _('Ticket')),
             ('project_ticket', sync.ProjectTicketSynchronizer,
                 _('Project Ticket')),
-            ('service_note', sync.ServiceNoteSynchronizer,
-                _('Service Note')),
-            ('opportunity_note', sync.OpportunityNoteSynchronizer,
-                _('Opportunity Note')),
             ('work_type', sync.WorkTypeSynchronizer,
-             _('Work Type')),
+                _('Work Type')),
             ('work_role', sync.WorkRoleSynchronizer,
-             _('Work Role')),
+                _('Work Role')),
             ('agreement', sync.AgreementSynchronizer,
-             _('Agreement')),
+                _('Agreement')),
             ('activity_status', sync.ActivityStatusSynchronizer,
                 _('Activity Status')),
             ('activity_type', sync.ActivityTypeSynchronizer,
@@ -91,9 +88,19 @@ class Command(BaseCommand):
                 _('Schedule Status')),
             ('schedule_entry', sync.ScheduleEntriesSynchronizer,
                 _('Schedule Entry')),
-            ('time_entry', sync.TimeEntrySynchronizer,
-                _('Time Entry')),
         )
+
+        settings = DjconnectwiseSettings().get_settings()
+        if settings['sync_time_and_note_entries']:
+            synchronizers = synchronizers + (
+                ('service_note', sync.ServiceNoteSynchronizer,
+                    _('Service Note')),
+                ('opportunity_note', sync.OpportunityNoteSynchronizer,
+                    _('Opportunity Note')),
+                ('time_entry', sync.TimeEntrySynchronizer,
+                    _('Time Entry'))
+            )
+
         self.synchronizer_map = OrderedDict()
         for name, synchronizer, obj_name in synchronizers:
             self.synchronizer_map[name] = (synchronizer, obj_name)
