@@ -88,6 +88,7 @@ class DjconnectwiseSettings:
             'schedule_entry_conditions_size': 0,
             'response_version': '2019.5',
             'sync_child_tickets': True,
+            'sync_time_and_note_entries': True,
         }
 
         if hasattr(settings, 'DJCONNECTWISE_CONF_CALLABLE'):
