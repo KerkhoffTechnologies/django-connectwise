@@ -485,7 +485,7 @@ class ServiceNoteSynchronizer(Synchronizer):
 
     def get_page(self, *args, **kwargs):
         records = []
-        ticket_qs = models.Ticket.objects.all()
+        ticket_qs = models.Ticket.objects.all().order_by(self.lookup_key)
 
         # We are using the conditions here to specify getting a single
         # tickets notes, and then overwriting it, because only a number
@@ -561,7 +561,8 @@ class OpportunityNoteSynchronizer(Synchronizer):
 
     def get_page(self, *args, **kwargs):
         records = []
-        opportunity_qs = models.Opportunity.objects.all()
+        opportunity_qs = models.Opportunity.objects.all()\
+            .order_by(self.lookup_key)
 
         for opportunity_id in opportunity_qs.values_list('id', flat=True):
             records += self.client_call(opportunity_id, *args, **kwargs)
@@ -618,7 +619,8 @@ class BoardChildSynchronizer(Synchronizer):
 
     def get_page(self, *args, **kwargs):
         records = []
-        board_qs = models.ConnectWiseBoard.objects.all()
+        board_qs = models.ConnectWiseBoard.objects.all()\
+            .order_by(self.lookup_key)
 
         for board_id in board_qs.values_list('id', flat=True):
             records += self.client_call(board_id, *args, **kwargs)
@@ -967,10 +969,12 @@ class ScheduleEntriesSynchronizer(BatchConditionMixin, Synchronizer):
         # Only get schedule entries for tickets or opportunities that we
         # already have in the DB.
         ticket_ids = set(
-            models.Ticket.objects.values_list('id', flat=True)
+            models.Ticket.objects.order_by(
+                self.lookup_key).values_list('id', flat=True)
         )
         opportunity_ids = set(
-            models.Opportunity.objects.values_list('id', flat=True)
+            models.Opportunity.objects.order_by(
+                self.lookup_key).values_list('id', flat=True)
         )
         self.batch_condition_list = list(ticket_ids | opportunity_ids)
 
@@ -1165,7 +1169,8 @@ class TimeEntrySynchronizer(BatchConditionMixin, Synchronizer):
         # Only get time entries for tickets that are already in the DB
         # Possibly Activities also in the future
         ticket_ids = set(
-            models.Ticket.objects.values_list('id', flat=True)
+            models.Ticket.objects.order_by(
+                self.lookup_key).values_list('id', flat=True)
         )
         self.batch_condition_list = list(ticket_ids)
 
@@ -1391,7 +1396,7 @@ class ProjectPhaseSynchronizer(Synchronizer):
 
     def get_page(self, *args, **kwargs):
         records = []
-        project_qs = models.Project.objects.all()
+        project_qs = models.Project.objects.all().order_by(self.lookup_key)
 
         for project_id in project_qs.values_list('id', flat=True):
             records += self.client_call(project_id, *args, **kwargs)
@@ -1423,6 +1428,11 @@ class ProjectSynchronizer(Synchronizer):
         'company': (models.Company, 'company'),
         'type': (models.ProjectType, 'type'),
     }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.api_conditions = ['closedFlag=False']
 
     def _assign_field_data(self, instance, json_data):
         actual_start = json_data.get('actualStart')
@@ -1632,7 +1642,7 @@ class TicketSynchronizerMixin:
         request_settings = DjconnectwiseSettings().get_settings()
         board_names = request_settings.get('board_status_filter')
         filtered_statuses = models.BoardStatus.available_objects.filter(
-            closed_status=False)
+            closed_status=False).order_by(self.lookup_key)
 
         if board_names:
             boards = [board.strip() for board in board_names.split(',')]
@@ -1984,6 +1994,7 @@ class OpportunitySynchronizer(Synchronizer):
         open_statuses = list(
             models.OpportunityStatus.objects.
             filter(closed_flag=False).
+            order_by(self.lookup_key).
             values_list('id', flat=True)
         )
         if open_statuses:
@@ -2118,7 +2129,8 @@ class TypeSynchronizer(Synchronizer):
 
     def get_page(self, *args, **kwargs):
         records = []
-        board_qs = models.ConnectWiseBoard.objects.all()
+        board_qs = models.ConnectWiseBoard.objects.all().\
+            order_by(self.lookup_key)
 
         for board_id in board_qs.values_list('id', flat=True):
             records += self.client_call(board_id, *args, **kwargs)
@@ -2146,7 +2158,8 @@ class SubTypeSynchronizer(Synchronizer):
 
     def get_page(self, *args, **kwargs):
         records = []
-        board_qs = models.ConnectWiseBoard.objects.all()
+        board_qs = models.ConnectWiseBoard.objects.all().\
+            order_by(self.lookup_key)
 
         for board_id in board_qs.values_list('id', flat=True):
             records += self.client_call(board_id, *args, **kwargs)
@@ -2174,7 +2187,8 @@ class ItemSynchronizer(Synchronizer):
 
     def get_page(self, *args, **kwargs):
         records = []
-        board_qs = models.ConnectWiseBoard.objects.all()
+        board_qs = models.ConnectWiseBoard.objects.all().\
+            order_by(self.lookup_key)
 
         for board_id in board_qs.values_list('id', flat=True):
             records += self.client_call(board_id, *args, **kwargs)
