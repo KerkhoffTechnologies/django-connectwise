@@ -1454,7 +1454,7 @@ class TestServiceTicketSynchronizer(TestTicketSynchronizerMixin, TestCase):
         self.assertEqual(instance.summary, json_data['summary'])
         self.assertEqual(instance.closed_flag, json_data.get('closedFlag'))
         self.assertEqual(instance.entered_date_utc,
-                         parse(json_data.get('dateEntered')))
+                         parse(json_data.get('_info').get('dateEntered')))
         self.assertEqual(instance.last_updated_utc,
                          parse(json_data.get('_info').get('lastUpdated')))
         self.assertEqual(instance.required_date_utc,

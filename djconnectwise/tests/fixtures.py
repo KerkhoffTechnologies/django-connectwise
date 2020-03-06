@@ -956,7 +956,6 @@ API_SERVICE_TICKET = {
     'closedDate': None,
     'closedBy': None,
     'closedFlag': False,
-    'dateEntered': '2005-05-27T17:30:19Z',
     'enteredBy': 'User10',
     'actualHours': None,
     'approved': True,
@@ -989,6 +988,7 @@ API_SERVICE_TICKET = {
     'mobileGuid': 'c5882071-79ac-4149-9088-3af3196a22f7',
     'sla': API_SERVICE_SLA,
     '_info': {
+        'dateEntered': '2005-05-27T17:30:19Z',
         'lastUpdated': '2016-03-08T21:59:20Z',
         'updatedBy': 'User1',
         'activities_href': 'https://example.com/v4_6_release/apis/3.0/service/tickets/69/activities',
