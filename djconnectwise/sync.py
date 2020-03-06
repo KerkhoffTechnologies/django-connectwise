@@ -1730,7 +1730,7 @@ class ServiceTicketSynchronizer(TicketSynchronizerMixin,
             self.api_conditions.append('parentTicketId=null')
 
     def _assign_field_data(self, instance, json_data):
-        entered_date_utc = json_data.get('dateEntered')
+        entered_date_utc = json_data.get('_info').get('dateEntered')
 
         instance.id = json_data['id']
         instance.summary = json_data['summary']
