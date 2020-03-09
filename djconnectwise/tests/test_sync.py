@@ -1402,7 +1402,7 @@ class TestTicketSynchronizerMixin:
         self.assertEqual(ticket_qset.count(), 0)
         _patch.stop()
 
-    def test_callback_sync(self):
+    def test_callback_sync_time_entry(self):
         # Sync initial time entry
         mocks.time_api_get_time_entries_call(fixtures.API_TIME_ENTRY_LIST)
         time_entry_sync = sync.TimeEntrySynchronizer()
@@ -1538,6 +1538,43 @@ class TestServiceTicketSynchronizer(TestTicketSynchronizerMixin, TestCase):
             Ticket.objects.get(id=project_ticket.id), project_ticket)
         self.assertFalse(
             Ticket.objects.filter(id=self.ticket_fixture['id']).exists())
+
+    def test_callback_sync_service_note(self):
+        # Sync initial service note
+        mocks.service_api_get_notes_call(fixtures.API_SERVICE_NOTE_LIST)
+        service_note_sync = sync.ServiceNoteSynchronizer()
+        service_note_sync.sync()
+        self.assertGreater(
+            SyncJob.objects.filter(entity_name='ServiceNote').count(), 0
+        )
+
+        # Mock the child class syncs
+        mocks.time_api_get_time_entries_call(fixtures.API_TIME_ENTRY_LIST)
+        mocks.sales_api_get_activities_call(fixtures.API_SALES_ACTIVITIES)
+
+        method_name = 'djconnectwise.sync.TicketSynchronizerMixin.get_single'
+        mock_call, _patch = \
+            mocks.create_mock_call(method_name, self.ticket_fixture)
+
+        # Create new service note to sync
+        new_service_note = deepcopy(fixtures.API_SERVICE_NOTE_LIST[0])
+        new_service_note['id'] = self.ticket_fixture['id']
+        mocks.service_api_get_notes_call(
+            [new_service_note, fixtures.API_SERVICE_NOTE_LIST[0]]
+        )
+
+        ticket_id = self.ticket_fixture['id']
+        synchronizer = self.sync_class()
+        # Simulate ticket getting updated by a callback
+        synchronizer.fetch_sync_by_id(ticket_id)
+
+        # Verify that no notes are removed, and that only one note is added
+        last_sync_job = \
+            SyncJob.objects.filter(entity_name='ServiceNote').last()
+        self.assertEqual(last_sync_job.deleted, 0)
+        self.assertEqual(last_sync_job.updated, 0)
+        self.assertEqual(last_sync_job.added, 1)
+        self.assertEqual(last_sync_job.sync_type, 'partial')
 
 
 class TestProjectTicketSynchronizer(TestTicketSynchronizerMixin, TestCase):

@@ -436,7 +436,31 @@ class BatchConditionMixin:
         return sum(len(str(i)) for i in condition_list[:size]) + 300 + size
 
 
-class ServiceNoteSynchronizer(Synchronizer):
+class CallbackPartialSyncMixin:
+    """
+    Run a partial sync on callbacks for related synchronizers. If a ticket
+    has many notes or time entries they could all be fetched
+    when a callback runs. This could mean a lot of time and resources spent
+    syncing old notes or time entries. We will continue to return
+    deleted_count even though it will always be zero in this case.
+    """
+    def callback_sync(self, filter_params):
+        sync_job_qset = self.get_sync_job_qset()
+
+        if sync_job_qset.exists():
+            last_sync_job_time = sync_job_qset.last().start_time.isoformat()
+            self.api_conditions.append(
+                "lastUpdated>[{0}]".format(last_sync_job_time)
+            )
+
+        results = SyncResults()
+        results = self.get(results, )
+
+        return \
+            results.created_count, results.updated_count, results.deleted_count
+
+
+class ServiceNoteSynchronizer(CallbackPartialSyncMixin, Synchronizer):
     client_class = api.ServiceAPIClient
     model_class = models.ServiceNote
 
@@ -488,21 +512,17 @@ class ServiceNoteSynchronizer(Synchronizer):
         ticket_qs = models.Ticket.objects.all().order_by(self.lookup_key)
 
         # We are using the conditions here to specify getting a single
-        # tickets notes, and then overwriting it, because only a number
-        # was supplied, which can't actually be used later on. When it is
-        # being synced by huey it will append a 'lastUpdated' condition
-        # after this point, so we are free to use conditions to select
-        # one ticket in this strange way without disrupting any other
-        # functionality.
-        # If in the future we DO want to add conditions, this will have to
-        # be modified. That may never happen though, so it is probably
-        # fine like this for the forseeable future.
-        if kwargs['conditions']:
+        # tickets notes. If conditions are supplied, like when a ticket
+        # callback is fired, then replace the conditions with the
+        # last updated sync time instead of syncing all notes all the time.
+        conditions = kwargs.get('conditions')
+        if conditions:
             try:
-                ticket_id = int(kwargs['conditions'][0])
-                kwargs['conditions'] = []
-                records += self.client_call(ticket_id, *args, **kwargs)
+                ticket_id = int(conditions[0])
+                kwargs['conditions'] = \
+                    [conditions[1]] if len(conditions) > 1 else []
 
+                records += self.client_call(ticket_id, *args, **kwargs)
                 return records
             except ValueError:
                 # Do nothing
@@ -1151,7 +1171,8 @@ class TerritorySynchronizer(Synchronizer):
         return self.client.get_territories(*args, **kwargs)
 
 
-class TimeEntrySynchronizer(BatchConditionMixin, Synchronizer):
+class TimeEntrySynchronizer(BatchConditionMixin,
+                            CallbackPartialSyncMixin, Synchronizer):
     client_class = api.TimeAPIClient
     model_class = models.TimeEntry
     batch_condition_list = []
@@ -1262,24 +1283,6 @@ class TimeEntrySynchronizer(BatchConditionMixin, Synchronizer):
         time_client = api.TimeAPIClient()
         instance = time_client.post_time_entry(target_data, **kwargs)
         return self.update_or_create_instance(instance)
-
-    def callback_sync(self, filter_params):
-        # If a ticket has many time entries they could all be fetched on
-        # callbacks which is not ideal. Instead only run a partial
-        # sync on callbacks. We will continue to return deleted_count
-        # even though it will always be zero in this case.
-        sync_job_qset = self.get_sync_job_qset()
-
-        if sync_job_qset.exists():
-            last_sync_job_time = sync_job_qset.last().start_time.isoformat()
-            self.api_conditions.append(
-                "lastUpdated>[{0}]".format(last_sync_job_time)
-            )
-        results = SyncResults()
-        results = self.get(results, )
-
-        return results.created_count, results.updated_count, \
-            results.deleted_count
 
 
 class LocationSynchronizer(Synchronizer):
