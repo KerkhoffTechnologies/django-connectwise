@@ -214,6 +214,11 @@ class Synchronizer:
                            post_delete_callback=None):
         try:
             self.get_single(instance_id)
+            logger.warning(
+                'ConnectWise API returned {} {} even though it was expected '
+                'to be deleted.'.format(self.model_class.__name__, instance_id)
+            )
+
         except api.ConnectWiseRecordNotFoundError:
             # This is what we expect to happen. Since it's gone in CW, we
             # are safe to delete it from here.
