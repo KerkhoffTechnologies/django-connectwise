@@ -1440,7 +1440,15 @@ class ProjectSynchronizer(Synchronizer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.api_conditions = ['closedFlag=False']
+        # Only sync projects in non-closed statuses. We could simply use
+        # closedFlag=False but API versions before 2019.5 don't support the
+        # closedFlag field and we need to support those versions for now.
+        self.api_conditions = ['status/id in ({})'.format(
+            ','.join(
+                str(i.id) for
+                i in models.ProjectStatus.objects.filter(closed_flag=False)
+            )
+        )]
 
     def _assign_field_data(self, instance, json_data):
         actual_start = json_data.get('actualStart')
