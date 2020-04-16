@@ -1851,6 +1851,7 @@ class WorkRole(TimeStampedModel):
 class Agreement(TimeStampedModel):
     name = models.CharField(max_length=100)
     agreement_type = models.CharField(max_length=50, null=True)
+    agreement_status = models.CharField(max_length=50, blank=True, null=True)
     cancelled_flag = models.BooleanField(default=False)
     bill_time = models.CharField(
         max_length=50, choices=BILL_TYPES, blank=True, null=True
