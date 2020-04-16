@@ -2261,6 +2261,7 @@ class AgreementSynchronizer(Synchronizer):
         instance.id = json_data['id']
         instance.name = json_data['name']
         instance.agreement_type = json_data['type']['name']
+        instance.agreement_status = json_data['agreementStatus']
         instance.cancelled_flag = json_data['cancelledFlag']
         if json_data['billTime'] == 'NoDefault':
             instance.bill_time = None

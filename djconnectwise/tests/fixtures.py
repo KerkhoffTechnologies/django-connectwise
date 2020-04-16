@@ -1193,7 +1193,8 @@ API_AGREEMENT = {
             "workType_href":
                 "https://cw.com/v4_6_release/apis/3.0/time/workTypes/3"
         }
-    }
+    },
+    "agreementStatus" : "Active"
 }
 
 API_AGREEMENT_LIST = [API_AGREEMENT]
