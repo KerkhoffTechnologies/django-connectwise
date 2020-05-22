@@ -754,16 +754,16 @@ class CompanySynchronizer(Synchronizer):
         else:
             company.calendar = calendar_id
 
-        type_json = company_json.get('type')
-        if type_json:
+        types_list = company_json.get('typeIds', [])
+        for type_id in types_list:
             try:
                 company_type = models.CompanyType.objects.get(
-                    pk=type_json['id'])
-                company.company_type = company_type
+                    pk=type_id)
+                company.company_types.add(company_type)
             except models.CompanyType.DoesNotExist:
                 logger.warning(
                     'Failed to find CompanyType: {}'.format(
-                        type_json['id']
+                        type_id
                     )
                 )
 
