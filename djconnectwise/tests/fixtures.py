@@ -137,7 +137,7 @@ API_COMPANY = {
     'identifier': 'YourCompany',
     'name': 'TestCompany',
     'status': API_COMPANY_STATUS,
-    'type': API_COMPANY_TYPES_LIST[0],
+    'typeIds': [API_COMPANY_TYPES_LIST[0]['id']],
     'addressLine1': None,
     'addressLine2': None,
     'city': None,

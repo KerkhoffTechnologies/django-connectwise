@@ -84,7 +84,7 @@ class TerritoryAdmin(admin.ModelAdmin):
 @admin.register(models.Company)
 class CompanyAdmin(admin.ModelAdmin):
     list_display = ('id', 'name',
-                    'identifier', 'company_type', 'status', 'deleted_flag')
+                    'identifier', 'status', 'deleted_flag')
     list_filter = ('status',)
     search_fields = ['name', 'identifier']
 
