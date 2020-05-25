@@ -298,12 +298,7 @@ class Company(TimeStampedModel):
         null=True,
         on_delete=models.SET_NULL
         )
-    company_type = models.ForeignKey(
-        'CompanyType',
-        blank=True,
-        null=True,
-        on_delete=models.SET_NULL
-        )
+    company_types = models.ManyToManyField('CompanyType')
     territory = models.ForeignKey(
         'Territory',
         blank=True,

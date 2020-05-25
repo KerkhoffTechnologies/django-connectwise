@@ -195,7 +195,8 @@ class TestCompanySynchronizer(TestCase, SynchronizerTestMixin):
         self.assertEqual(company.state_identifier, api_company['state'])
         self.assertEqual(company.zip, api_company['zip'])
         self.assertEqual(company.status.id, api_company['status']['id'])
-        self.assertEqual(company.company_type.id, api_company['type']['id'])
+        self.assertEqual(
+            company.company_types.first().id, api_company['typeIds'][0])
 
 
 class TestCompanyStatusSynchronizer(TestCase, SynchronizerTestMixin):
