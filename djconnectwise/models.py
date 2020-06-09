@@ -90,6 +90,7 @@ class ConnectWiseBoard(TimeStampedModel):
         choices=BILL_TYPES,
         blank=True, null=True
     )
+    project_flag = models.BooleanField(default=False)
 
     objects = models.Manager()
     available_objects = AvailableConnectWiseBoardManager()
@@ -974,7 +975,15 @@ class Project(TimeStampedModel):
     actual_end = models.DateField(blank=True, null=True)
     estimated_start = models.DateField(blank=True, null=True)
     estimated_end = models.DateField(blank=True, null=True)
+    percent_complete = models.DecimalField(
+        blank=True, null=True, decimal_places=2, max_digits=3)
 
+    board = models.ForeignKey(
+        'ConnectWiseBoard',
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE
+    )
     company = models.ForeignKey(
         'Company', on_delete=models.SET_NULL, blank=True, null=True
     )

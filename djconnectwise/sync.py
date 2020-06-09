@@ -504,7 +504,7 @@ class ServiceNoteSynchronizer(CallbackPartialSyncMixin, Synchronizer):
         except ObjectDoesNotExist as e:
             raise InvalidObjectException(
                 'Service note {} has a ticketId that does not exist.'
-                ' ObjectDoesNotExist Exception: '.format(instance.id, e)
+                ' ObjectDoesNotExist Exception: {}'.format(instance.id, e)
             )
 
         self.set_relations(instance, json_data)
@@ -618,6 +618,8 @@ class BoardSynchronizer(Synchronizer):
         else:
             # This is old, but keep for backwards-compatibility
             instance.inactive = json_data.get('inactive')
+
+        instance.project_flag = json_data.get('projectFlag', False)
 
         self.set_relations(instance, json_data)
         return instance
@@ -1393,7 +1395,7 @@ class ProjectPhaseSynchronizer(Synchronizer):
         except ObjectDoesNotExist as e:
             raise InvalidObjectException(
                 'Project phase {} has a projectId that does not exist.'
-                ' ObjectDoesNotExist Exception: '.format(instance.id, e)
+                ' ObjectDoesNotExist Exception: {}'.format(instance.id, e)
             )
 
         self.set_relations(instance, json_data)
@@ -1435,6 +1437,7 @@ class ProjectSynchronizer(Synchronizer):
         'manager': (models.Member, 'manager'),
         'company': (models.Company, 'company'),
         'type': (models.ProjectType, 'type'),
+        'board': (models.ConnectWiseBoard, 'board'),
     }
 
     def __init__(self, *args, **kwargs):
@@ -1461,6 +1464,7 @@ class ProjectSynchronizer(Synchronizer):
         instance.actual_hours = json_data.get('actualHours')
         instance.budget_hours = json_data.get('budgetHours')
         instance.scheduled_hours = json_data.get('scheduledHours')
+        instance.percent_complete = json_data.get('percentComplete')
 
         if actual_start:
             instance.actual_start = parse(actual_start).date()
