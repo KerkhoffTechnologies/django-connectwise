@@ -311,7 +311,7 @@ class ConnectWiseAPIClient(object):
                     timeout=self.timeout,
                     headers=self.get_headers(),
                 )
-                logger.info(" URL: {}".format(response.url))
+                logger.debug(" URL: {}".format(response.url))
 
             except requests.RequestException as e:
                 logger.error('Request failed: GET {}: {}'.format(endpoint, e))
