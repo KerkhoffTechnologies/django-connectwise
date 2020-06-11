@@ -1089,6 +1089,28 @@ class ProjectAPIClient(TicketAPIMixin, ConnectWiseAPIClient):
                                    should_page=True,
                                    *args, **kwargs)
 
+    def update_project(self, project_id, status):
+        """
+        Update the project's status on the server.
+        """
+        # Yeah, this schema is a bit bizarre. See CW docs at
+        # https://developer.connectwise.com/Manage/Developer_Guide#Patch
+        endpoint_url = self._endpoint(
+            '{}/{}'.format(self.ENDPOINT_PROJECTS, project_id)
+        )
+        body = [
+            {
+                'op': 'replace',
+                'path': 'status',
+                'value': {
+                    'id': status.id,
+                    'name': status.name,
+                },
+            },
+        ]
+
+        return self.request('patch', endpoint_url, body)
+
 
 class FinanceAPIClient(ConnectWiseAPIClient):
     API = 'finance'
