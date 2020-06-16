@@ -1020,18 +1020,6 @@ class Project(TimeStampedModel):
 
         return api_client.update_project(self.id, self.status)
 
-    def save(self, *args, **kwargs):
-        """
-        Save the object.
-
-        If update_cw as a kwarg is True, then update ConnectWise with changes.
-        """
-
-        update_cw = kwargs.pop('update_cw', False)
-        super().save(*args, **kwargs)
-        if update_cw:
-            self.update_cw()
-
 
 class OpportunityStage(TimeStampedModel):
     name = models.CharField(max_length=50)
