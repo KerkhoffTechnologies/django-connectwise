@@ -1012,6 +1012,14 @@ class Project(TimeStampedModel):
     def __str__(self):
         return self.name or ''
 
+    def update_cw(self):
+        """
+        Send project status updates to ConnectWise.
+        """
+        api_client = api.ProjectAPIClient()
+
+        return api_client.update_project(self.id, self.status)
+
 
 class OpportunityStage(TimeStampedModel):
     name = models.CharField(max_length=50)
