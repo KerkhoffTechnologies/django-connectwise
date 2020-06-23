@@ -1507,11 +1507,6 @@ class MemberSynchronizer(Synchronizer):
         instance.last_name = json_data.get('lastName')
         instance.identifier = json_data.get('identifier')
         instance.office_email = json_data.get('officeEmail')
-        if instance.office_email is None:
-            raise InvalidObjectException(
-                'Office email of user {} is null- skipping.'
-                .format(instance.identifier)
-            )
         instance.license_class = json_data.get('licenseClass')
         instance.inactive = json_data.get('inactiveFlag')
 
