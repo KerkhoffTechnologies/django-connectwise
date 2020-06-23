@@ -11,6 +11,6 @@ class Command(BaseCommand):
                 '{:15} {:20} {:43}'.format(
                     member.identifier,
                     member.__str__(),
-                    member.office_email,
+                    member.office_email if member.office_email else '',
                 )
             )
