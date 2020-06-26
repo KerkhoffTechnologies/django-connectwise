@@ -1458,6 +1458,8 @@ class ProjectSynchronizer(Synchronizer):
         actual_end = json_data.get('actualEnd')
         estimated_start = json_data.get('estimatedStart')
         estimated_end = json_data.get('estimatedEnd')
+        scheduled_start = json_data.get('scheduledStart')
+        scheduled_end = json_data.get('scheduledEnd')
 
         instance.id = json_data['id']
         instance.name = json_data['name']
@@ -1477,6 +1479,12 @@ class ProjectSynchronizer(Synchronizer):
 
         if estimated_end:
             instance.estimated_end = parse(estimated_end).date()
+
+        if scheduled_start:
+            instance.scheduled_start = parse(scheduled_start).date()
+
+        if scheduled_end:
+            instance.scheduled_end = parse(scheduled_end).date()
 
         self.set_relations(instance, json_data)
         return instance

@@ -544,6 +544,8 @@ API_PROJECT = {
     'estimatedProductRevenue': 0,
     'estimatedStart': '2005-05-02T00:00:00Z',
     'estimatedTimeRevenue': 0,
+    'scheduledStart': '2005-05-02T00:00:00Z',
+    'scheduledEnd': '2005-12-30T00:00:00Z',
     'expenseApprover': API_MEMBER,
     'includeDependenciesFlag': False,
     'includeEstimatesFlag': False,

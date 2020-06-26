@@ -977,6 +977,8 @@ class Project(TimeStampedModel):
     estimated_end = models.DateField(blank=True, null=True)
     percent_complete = models.DecimalField(
         blank=True, null=True, decimal_places=2, max_digits=3)
+    scheduled_start = models.DateField(blank=True, null=True)
+    scheduled_end = models.DateField(blank=True, null=True)
 
     board = models.ForeignKey(
         'ConnectWiseBoard',
@@ -1019,6 +1021,18 @@ class Project(TimeStampedModel):
         api_client = api.ProjectAPIClient()
 
         return api_client.update_project(self.id, self.status)
+
+    def get_connectwise_url(self):
+        params = dict(
+            recordType='ProjectHeaderFV',
+            recid=self.id,
+            companyName=settings.CONNECTWISE_CREDENTIALS['company_id']
+        )
+        return '{}/{}?{}'.format(
+            settings.CONNECTWISE_SERVER_URL,
+            settings.CONNECTWISE_TICKET_PATH,
+            urllib.parse.urlencode(params)
+        )
 
 
 class OpportunityStage(TimeStampedModel):
