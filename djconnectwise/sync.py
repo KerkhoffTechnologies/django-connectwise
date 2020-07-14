@@ -951,6 +951,16 @@ class ActivitySynchronizer(Synchronizer):
         if date_end:
             instance.date_end = parse(date_end, default=parse('00:00Z'))
 
+        # Creating activities in the ConnectWise UI and API requires that
+        # the 'assignTo' field is set. But we've seen cases where
+        # 'assignTo' is null. So skip the activity if it's 'assignTo' is null.
+        assign_to_id = json_data.get('assignTo')
+        if not assign_to_id:
+            raise InvalidObjectException(
+                'Activity {} has a null assignTo field - '
+                'skipping.'.format(instance.id)
+            )
+
         self.set_relations(instance, json_data)
         return instance
 
