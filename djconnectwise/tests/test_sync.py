@@ -45,6 +45,7 @@ from djconnectwise.models import WorkRole
 from djconnectwise.models import Agreement
 from djconnectwise.models import ProjectType
 from djconnectwise.utils import get_hash
+from djconnectwise.sync import InvalidObjectException
 
 from . import fixtures
 from . import fixture_utils
@@ -1714,6 +1715,9 @@ class TestActivitySynchronizer(TestCase, SynchronizerTestMixin):
     fixture = fixtures.API_SALES_ACTIVITIES
 
     def setUp(self):
+        mocks.system_api_get_member_image_by_photo_id_call(
+            (mocks.CW_MEMBER_IMAGE_FILENAME, mocks.get_member_avatar()))
+        fixture_utils.init_work_roles()
         fixture_utils.init_members()
         fixture_utils.init_tickets()
         fixture_utils.init_territories()
@@ -1778,11 +1782,32 @@ class TestActivitySynchronizer(TestCase, SynchronizerTestMixin):
         created_count, updated_count, deleted_count = \
             synchronizer.sync()
 
-        # The existing Activity (#47) should be deleted and
-        # null_member_activity should not be added to the db
+        # The existing Activity (#47) should be deleted since it is not
+        # returned from when the sync is run.
         self.assertEqual(created_count, 0)
         self.assertEqual(updated_count, 0)
         self.assertEqual(deleted_count, 1)
+
+    def test_sync_activity_null_assign_to(self):
+        """
+        Verify that an activity with a null 'assignTo' field is skipped.
+        """
+        null_assign_to_activity = deepcopy(fixtures.API_SALES_ACTIVITY)
+        null_assign_to_activity['id'] = 888
+        null_assign_to_activity['assignTo'] = None
+        activity_list = [null_assign_to_activity]
+
+        method_name = 'djconnectwise.api.SalesAPIClient.get_activities'
+        mock_call, _patch = \
+            mocks.create_mock_call(method_name, activity_list)
+        synchronizer = sync.ActivitySynchronizer(full=True)
+
+        created_count, updated_count, deleted_count = \
+            synchronizer.sync()
+
+        self.assertRaises(InvalidObjectException)
+        self.assertEqual(created_count, 0)
+        self.assertEqual(updated_count, 0)
 
 
 class TestSyncSettings(TestCase):
