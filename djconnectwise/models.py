@@ -967,6 +967,9 @@ class ProjectTeamMember(TimeStampedModel):
         'WorkRole', null=True, on_delete=models.SET_NULL
     )
 
+    def __str__(self):
+        return '{}/{}'.format(self.id, self.member)
+
 
 class AvailableProjectManager(models.Manager):
     """
