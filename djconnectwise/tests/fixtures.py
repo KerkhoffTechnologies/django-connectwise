@@ -1814,3 +1814,28 @@ API_HOSTED_SETUPS = [
         }
     }
 ]
+
+API_PROJECT_TEAM_MEMBER = {
+    'id': 4,
+    'projectId': API_PROJECT['id'],
+    'member': {
+        'id': API_MEMBER['id'],
+        'identifier': API_MEMBER['identifier'],
+        'name': API_MEMBER['firstName'],
+        '_info': {
+            'member_href': 'https://connectwise.kerkhofftech.ca/v4_6_release/apis/3.0/system/members/186' # noqa
+        }
+    },
+    'projectRole': {
+        'id': 5,
+        'identifier': 'Project Manager'
+    },
+    'workRole': API_WORK_ROLE_LIST[0],
+    'startDate': '2020-07-15T08:00:00Z',
+    'endDate': '2020-09-15T08:00:00Z',
+    '_info': {
+        'lastUpdated': '2005-05-26T14:39:26Z',
+        'updatedBy': 'User10'
+    }
+}
+API_PROJECT_TEAM_MEMBER_LIST = [API_PROJECT_TEAM_MEMBER]

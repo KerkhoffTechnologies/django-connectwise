@@ -72,6 +72,11 @@ def project_api_get_project_call(return_value, raised=None):
     return create_mock_call(method_name, return_value, side_effect=raised)
 
 
+def project_api_get_team_members_call(return_value):
+    method_name = 'djconnectwise.api.ProjectAPIClient.get_project_team_members'
+    return create_mock_call(method_name, return_value)
+
+
 def _project_api_tickets_call(page=1, page_size=25, conditions=[]):
     return_value = []
     test_date = date(1948, 5, 14)

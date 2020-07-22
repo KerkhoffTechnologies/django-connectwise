@@ -216,6 +216,24 @@ class TestSyncProjectPhaseCommand(AbstractBaseSyncTest, TestCase):
         fixture_utils.init_project_phases()
 
 
+class TestSyncProjectTeamMemberCommand(AbstractBaseSyncTest, TestCase):
+    args = (
+        mocks.project_api_get_team_members_call,
+        fixtures.API_PROJECT_TEAM_MEMBER_LIST,
+        'project_team_member'
+    )
+
+    def setUp(self):
+        super().setUp()
+        mocks.system_api_get_member_image_by_photo_id_call(
+            (mocks.CW_MEMBER_IMAGE_FILENAME, mocks.get_member_avatar()))
+        fixture_utils.init_members()
+        fixture_utils.init_work_roles()
+        fixture_utils.init_project_statuses()
+        fixture_utils.init_projects()
+        fixture_utils.init_project_team_members()
+
+
 class TestSyncBoardsStatusesCommand(AbstractBaseSyncTest, TestCase):
     args = (
         mocks.service_api_get_statuses_call,
@@ -572,7 +590,8 @@ class TestSyncAllCommand(TestCase):
             TestSyncWorkTypeCommand,
             TestSyncWorkRoleCommand,
             TestSyncAgreementCommand,
-            TestSyncProjectTypesCommand
+            TestSyncProjectTypesCommand,
+            TestSyncProjectTeamMemberCommand
         ]
 
         self.test_args = []
@@ -665,6 +684,7 @@ class TestSyncAllCommand(TestCase):
             'work_role': models.WorkRole,
             'agreement': models.Agreement,
             'project_type': models.ProjectType,
+            'project_team_member': models.ProjectTeamMember,
         }
 
         # Run partial sync first

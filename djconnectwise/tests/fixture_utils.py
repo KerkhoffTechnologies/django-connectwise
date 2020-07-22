@@ -282,3 +282,10 @@ def init_agreements():
         fixtures.API_AGREEMENT_LIST)
     synchronizer = sync.AgreementSynchronizer()
     return synchronizer.sync()
+
+
+def init_project_team_members():
+    mocks.project_api_get_team_members_call(
+        fixtures.API_PROJECT_TEAM_MEMBER_LIST)
+    synchronizer = sync.ProjectTeamMemberSynchronizer()
+    return synchronizer

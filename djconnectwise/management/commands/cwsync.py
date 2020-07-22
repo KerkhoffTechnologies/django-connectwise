@@ -88,6 +88,8 @@ class Command(BaseCommand):
                 _('Schedule Status')),
             ('schedule_entry', sync.ScheduleEntriesSynchronizer,
                 _('Schedule Entry')),
+            ('project_team_member', sync.ProjectTeamMemberSynchronizer,
+             _('Project Team Member')),
         )
 
         settings = DjconnectwiseSettings().get_settings()

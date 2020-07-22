@@ -170,9 +170,15 @@ class ProjectTypeAdmin(admin.ModelAdmin):
 
 
 @admin.register(models.ProjectPhase)
-class ProjectPhase(admin.ModelAdmin):
+class ProjectPhaseAdmin(admin.ModelAdmin):
     list_display = ('id', 'description', 'project')
     search_fields = ['description']
+
+
+@admin.register(models.ProjectTeamMember)
+class ProjectTeamMemberAdmin(admin.ModelAdmin):
+    list_display = ('id', 'member', 'project', 'start_date', 'end_date')
+    search_fields = ['member', 'project']
 
 
 @admin.register(models.Project)
