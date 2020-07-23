@@ -1439,6 +1439,53 @@ class ProjectTypeSynchronizer(Synchronizer):
         return self.client.get_project_types(*args, **kwargs)
 
 
+class ProjectTeamMemberSynchronizer(Synchronizer):
+    client_class = api.ProjectAPIClient
+    model_class = models.ProjectTeamMember
+
+    related_meta = {
+        'member': (models.Member, 'member'),
+        'workRole': (models.WorkRole, 'work_role')
+    }
+
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data['id']
+        instance.start_date = json_data.get('startDate')
+        instance.end_date = json_data.get('endDate')
+
+        try:
+            project_id = json_data['projectId']
+            related_project = models.Project.objects.get(pk=project_id)
+            setattr(instance, 'project', related_project)
+        except KeyError:
+            raise InvalidObjectException(
+                'Project team member {} has no projectId key to find its '
+                'target - skipping.'.format(instance.id)
+            )
+        except ObjectDoesNotExist as e:
+            raise InvalidObjectException(
+                'Project team member {} has a projectId that does not exist.'
+                ' ObjectDoesNotExist Exception: {}'.format(instance.id, e)
+            )
+
+        self.set_relations(instance, json_data)
+        return instance
+
+    def client_call(self, project_id, *args, **kwargs):
+        return self.client.get_project_team_members(
+            project_id, *args, **kwargs)
+
+    def get_page(self, *args, **kwargs):
+        records = []
+        project_qs = models.Project.objects.filter(
+            status__closed_flag=False).order_by(self.lookup_key)
+
+        for project_id in project_qs.values_list('id', flat=True):
+            records += self.client_call(project_id, *args, **kwargs)
+
+        return records
+
+
 class ProjectSynchronizer(Synchronizer):
     client_class = api.ProjectAPIClient
     model_class = models.Project

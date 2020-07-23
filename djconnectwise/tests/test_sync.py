@@ -44,6 +44,7 @@ from djconnectwise.models import WorkType
 from djconnectwise.models import WorkRole
 from djconnectwise.models import Agreement
 from djconnectwise.models import ProjectType
+from djconnectwise.models import ProjectTeamMember
 from djconnectwise.utils import get_hash
 from djconnectwise.sync import InvalidObjectException
 
@@ -1992,3 +1993,45 @@ class TestAgreementSynchronizer(TestCase, SynchronizerTestMixin):
         self.assertEqual(
             instance.work_type.name, json_data['workType']['name'])
         self.assertEqual(instance.company.name, json_data['company']['name'])
+
+
+class TestProjectTeamMemberSynchronizer(TestCase, SynchronizerTestMixin):
+    synchronizer_class = sync.ProjectTeamMemberSynchronizer
+    model_class = ProjectTeamMember
+    fixture = fixtures.API_PROJECT_TEAM_MEMBER_LIST
+
+    def setUp(self):
+        super().setUp()
+        mocks.system_api_get_member_image_by_photo_id_call(
+            (mocks.CW_MEMBER_IMAGE_FILENAME, mocks.get_member_avatar()))
+        fixture_utils.init_members()
+        fixture_utils.init_work_roles()
+        fixture_utils.init_project_statuses()
+        fixture_utils.init_projects()
+        fixture_utils.init_project_team_members()
+
+    def call_api(self, return_data):
+        return mocks.project_api_get_team_members_call(return_data)
+
+    def _assert_fields(self, instance, json_data):
+        self.assertEqual(instance.id, json_data['id'])
+
+    def test_sync_update(self):
+        self._sync(self.fixture)
+
+        json_data = self.fixture[0]
+
+        instance_id = json_data['id']
+        original = self.model_class.objects.get(id=instance_id)
+
+        end_date = '2020-10-15T08:00:00Z'
+        new_json = deepcopy(self.fixture[0])
+        new_json['endDate'] = end_date
+        new_json_list = [new_json]
+
+        self._sync(new_json_list)
+
+        changed = self.model_class.objects.get(id=instance_id)
+
+        self.assertNotEqual(original.end_date, end_date)
+        self._assert_fields(changed, new_json)

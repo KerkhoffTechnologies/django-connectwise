@@ -1062,6 +1062,7 @@ class ProjectAPIClient(TicketAPIMixin, ConnectWiseAPIClient):
     ENDPOINT_PROJECT_STATUSES = 'statuses/'
     ENDPOINT_PROJECT_PHASES = 'phases/'
     ENDPOINT_PROJECT_TYPES = 'projectTypes/'
+    ENDPOINT_PROJECT_TEAM_MEMBERS = 'teamMembers/'
 
     def get_project(self, project_id):
         endpoint_url = '{}/{}'.format(self.ENDPOINT_PROJECTS, project_id)
@@ -1085,6 +1086,13 @@ class ProjectAPIClient(TicketAPIMixin, ConnectWiseAPIClient):
         endpoint_url = '{}{}/{}'.format(
             self.ENDPOINT_PROJECTS, project_id, self.ENDPOINT_PROJECT_PHASES
         )
+        return self.fetch_resource(endpoint_url,
+                                   should_page=True,
+                                   *args, **kwargs)
+
+    def get_project_team_members(self, project_id, *args, **kwargs):
+        endpoint_url = '{}{}/{}'.format(self.ENDPOINT_PROJECTS, project_id,
+                                        self.ENDPOINT_PROJECT_TEAM_MEMBERS)
         return self.fetch_resource(endpoint_url,
                                    should_page=True,
                                    *args, **kwargs)

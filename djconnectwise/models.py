@@ -953,6 +953,24 @@ class ProjectPhase(TimeStampedModel):
         return self.description
 
 
+class ProjectTeamMember(TimeStampedModel):
+    start_date = models.DateTimeField(blank=True, null=True)
+    end_date = models.DateTimeField(blank=True, null=True)
+
+    project = models.ForeignKey(
+        'Project', null=True, on_delete=models.SET_NULL
+    )
+    member = models.ForeignKey(
+        'Member', null=True, on_delete=models.SET_NULL
+    )
+    work_role = models.ForeignKey(
+        'WorkRole', null=True, on_delete=models.SET_NULL
+    )
+
+    def __str__(self):
+        return '{}/{}'.format(self.id, self.member)
+
+
 class AvailableProjectManager(models.Manager):
     """
     Return only projects whose status closed field is False.
@@ -1003,6 +1021,9 @@ class Project(TimeStampedModel):
         blank=True,
         null=True,
         on_delete=models.SET_NULL
+    )
+    team_members = models.ManyToManyField(
+        'Member', through='ProjectTeamMember',
     )
 
     objects = models.Manager()
