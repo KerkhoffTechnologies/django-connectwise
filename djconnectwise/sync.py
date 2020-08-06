@@ -1291,7 +1291,15 @@ class TimeEntrySynchronizer(BatchConditionMixin,
         target_data = {}
         if isinstance(target, models.Ticket):
             target_data['id'] = target.id
-            target_data['type'] = target.record_type
+            record_type = target.record_type
+
+            # ConnectWise doesn't allow "ProjectIssue" as a valid chargeToType.
+            # See https://developer.connectwise.com/Products/Manage/REST#/TimeEntries # noqa
+            # for valid chargeToTypes.
+            if record_type == models.Ticket.PROJECT_ISSUE:
+                record_type = models.Ticket.PROJECT_TICKET
+
+            target_data['type'] = record_type
         else:
             raise InvalidObjectException(
                 "Invalid target type for TimeEntry "
