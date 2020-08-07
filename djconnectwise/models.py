@@ -117,11 +117,20 @@ class ConnectWiseBoard(TimeStampedModel):
                 closed_status=True,
             )
         except BoardStatus.DoesNotExist:
-            # There's nothing called "Closed".
-            # filter...first returns None if nothing is found.
+            # Using first this time because there could be many and we
+            # still don't know which one it could be, or just get None.
             closed_status = self.board_statuses.filter(
+                name__iregex=r'^[[:punct:]]*Closed[[:punct:]]*$',
                 closed_status=True,
             ).first()
+
+            if not closed_status:
+                # There's nothing called "Closed", or "Closed" surrounded by
+                # special charaters.
+                # filter...first returns None if nothing is found again.
+                closed_status = self.board_statuses.filter(
+                    closed_status=True,
+                ).first()
         return closed_status
 
 
