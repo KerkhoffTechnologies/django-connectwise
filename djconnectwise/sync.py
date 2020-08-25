@@ -2,8 +2,10 @@ import logging
 import datetime
 import math
 
+
 from dateutil.parser import parse
 from copy import deepcopy
+from decimal import Decimal
 
 from django.core.files.storage import default_storage
 from django.core.exceptions import ObjectDoesNotExist
@@ -23,6 +25,10 @@ DEFAULT_AVATAR_EXTENSION = 'jpg'
 MAX_URL_LENGTH = 2000
 MIN_URL_LENGTH = 1980
 
+CREATED = 1
+UPDATED = 2
+SKIPPED = 3
+
 logger = logging.getLogger(__name__)
 
 
@@ -38,7 +44,7 @@ class InvalidObjectException(Exception):
 def log_sync_job(f):
     def wrapper(*args, **kwargs):
         sync_instance = args[0]
-        created_count = updated_count = deleted_count = 0
+        created_count = updated_count = deleted_count = skipped_count = 0
         sync_job = models.SyncJob()
         sync_job.start_time = timezone.now()
         if sync_instance.full:
@@ -47,7 +53,8 @@ def log_sync_job(f):
             sync_job.sync_type = 'partial'
 
         try:
-            created_count, updated_count, deleted_count = f(*args, **kwargs)
+            created_count, updated_count, skipped_count, deleted_count = \
+                f(*args, **kwargs)
             sync_job.success = True
         except Exception as e:
             sync_job.message = str(e.args[0])
@@ -59,10 +66,11 @@ def log_sync_job(f):
             sync_job.synchronizer_class = sync_instance.__class__.__name__
             sync_job.added = created_count
             sync_job.updated = updated_count
+            sync_job.skipped = skipped_count
             sync_job.deleted = deleted_count
             sync_job.save()
 
-        return created_count, updated_count, deleted_count
+        return created_count, updated_count, skipped_count, deleted_count
     return wrapper
 
 
@@ -71,6 +79,7 @@ class SyncResults:
     def __init__(self):
         self.created_count = 0
         self.updated_count = 0
+        self.skipped_count = 0
         self.deleted_count = 0
         self.synced_ids = set()
 
@@ -186,11 +195,13 @@ class Synchronizer:
         for record in records:
             try:
                 with transaction.atomic():
-                    _, created = self.update_or_create_instance(record)
-                if created:
+                    instance, result = self.update_or_create_instance(record)
+                if result == CREATED:
                     results.created_count += 1
-                else:
+                elif result == UPDATED:
                     results.updated_count += 1
+                else:
+                    results.skipped_count += 1
             except InvalidObjectException as e:
                 logger.warning('{}'.format(e))
 
@@ -241,21 +252,29 @@ class Synchronizer:
         """
         Creates and returns an instance if it does not already exist.
         """
-        created = False
+        result = None
         api_instance = self.remove_null_characters(api_instance)
         try:
             instance_pk = api_instance[self.lookup_key]
             instance = self.model_class.objects.get(pk=instance_pk)
         except self.model_class.DoesNotExist:
             instance = self.model_class()
-            created = True
+            result = CREATED
 
         try:
             self._assign_field_data(instance, api_instance)
-            if created and self.model_class is models.Ticket:
-                instance.save(force_insert=True)
-            else:
+
+            # TODO comment explaining process
+            if result == CREATED:
+                if self.model_class is models.Ticket:
+                    instance.save(force_insert=True)
+                else:
+                    instance.save()
+            elif instance.tracker.changed():
                 instance.save()
+                result = UPDATED
+            else:
+                result = SKIPPED
         except IntegrityError as e:
             # This can happen when multiple threads are creating the
             # same ticket at once. See issue description for #991
@@ -265,15 +284,20 @@ class Synchronizer:
             logger.error(msg)
             raise InvalidObjectException(msg)
 
-        logger.info(
-            '{}: {} {}'.format(
-                'Created' if created else 'Updated',
-                self.model_class.__name__,
-                instance
-            )
-        )
+        if result == CREATED:
+            result_log = 'Created'
+        elif result == UPDATED:
+            result_log = 'Updated'
+        else:
+            result_log = 'Skipped'
 
-        return instance, created
+        logger.info('{}: {} {}'.format(
+            result_log,
+            self.model_class.__name__,
+            instance
+        ))
+
+        return instance, result
 
     def prune_stale_records(self, initial_ids, synced_ids):
         """
@@ -332,7 +356,7 @@ class Synchronizer:
             )
 
         return results.created_count, results.updated_count, \
-            results.deleted_count
+            results.skipped_count, results.deleted_count
 
     def callback_sync(self, filter_params):
 
@@ -353,17 +377,18 @@ class Synchronizer:
         )
 
         return results.created_count, results.updated_count, \
-            results.deleted_count
+            results.skipped_count, results.deleted_count
 
     def sync_children(self, *args):
         for synchronizer, filter_params in args:
-            created_count, updated_count, \
-                deleted_count = synchronizer.callback_sync(filter_params)
+            created_count, updated_count, skipped_count, deleted_count \
+                = synchronizer.callback_sync(filter_params)
             msg = '{} Child Sync - Created: {},'\
-                ' Updated: {}, Deleted: {}'.format(
+                ' Updated: {}, Skipped: {},Deleted: {}'.format(
                     synchronizer.model_class.__name__,
                     created_count,
                     updated_count,
+                    skipped_count,
                     deleted_count
                 )
             logger.info(msg)
@@ -461,8 +486,8 @@ class CallbackPartialSyncMixin:
         results = SyncResults()
         results = self.get(results, )
 
-        return \
-            results.created_count, results.updated_count, results.deleted_count
+        return results.created_count, results.updated_count, \
+            results.skipped_count, results.deleted_count
 
 
 class ServiceNoteSynchronizer(CallbackPartialSyncMixin, Synchronizer):
@@ -569,7 +594,10 @@ class OpportunityNoteSynchronizer(Synchronizer):
 
         opp_class = models.Opportunity
 
-        instance.date_created = json_data.get('_info').get('lastUpdated')
+        date_created = json_data.get('_info').get('lastUpdated')
+
+        if date_created:
+            instance.date_created = parse(date_created)
 
         try:
             opportunity_id = json_data.get('opportunityId')
@@ -1233,12 +1261,12 @@ class TimeEntrySynchronizer(BatchConditionMixin,
             instance.time_end = parse(time_end, default=parse('00:00Z'))
 
         hours_deduct = json_data.get('hoursDeduct')
-        if hours_deduct:
-            instance.hours_deduct = hours_deduct
+        instance.hours_deduct = Decimal(str(hours_deduct)) \
+            if hours_deduct is not None else None
 
         actual_hours = json_data.get('actualHours')
-        if actual_hours:
-            instance.actual_hours = actual_hours
+        instance.actual_hours = Decimal(str(actual_hours)) \
+            if actual_hours is not None else None
 
         detail_description_flag = json_data.get('addToDetailDescriptionFlag')
         if detail_description_flag:
@@ -1349,6 +1377,7 @@ class PrioritySynchronizer(Synchronizer):
 
 
 class ProjectStatusSynchronizer(Synchronizer):
+
     client_class = api.ProjectAPIClient
     model_class = models.ProjectStatus
 
@@ -1375,9 +1404,15 @@ class ProjectPhaseSynchronizer(Synchronizer):
         instance.id = json_data['id']
         instance.description = json_data['description']
         instance.notes = json_data.get('notes')
-        instance.scheduled_hours = json_data.get('scheduledHours')
-        instance.actual_hours = json_data.get('actualHours')
-        instance.budget_hours = json_data.get('budgetHours')
+        scheduled_hours = json_data.get('scheduledHours')
+        budget_hours = json_data.get('budgetHours')
+        actual_hours = json_data.get('actualHours')
+        instance.budget_hours = Decimal(str(budget_hours)) \
+            if budget_hours is not None else None
+        instance.actual_hours = Decimal(str(actual_hours)) \
+            if actual_hours is not None else None
+        instance.scheduled_hours = Decimal(str(scheduled_hours)) \
+            if scheduled_hours is not None else None
 
         if json_data['billTime'] == 'NoDefault':
             instance.bill_time = None
@@ -1458,8 +1493,13 @@ class ProjectTeamMemberSynchronizer(Synchronizer):
 
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
-        instance.start_date = json_data.get('startDate')
-        instance.end_date = json_data.get('endDate')
+        start_date = json_data.get('startDate')
+        end_date = json_data.get('endDate')
+
+        if start_date:
+            instance.start_date = parse(start_date)
+        if end_date:
+            instance.end_date = parse(end_date)
 
         try:
             project_id = json_data['projectId']
@@ -1528,10 +1568,19 @@ class ProjectSynchronizer(Synchronizer):
 
         instance.id = json_data['id']
         instance.name = json_data['name']
-        instance.actual_hours = json_data.get('actualHours')
-        instance.budget_hours = json_data.get('budgetHours')
-        instance.scheduled_hours = json_data.get('scheduledHours')
-        instance.percent_complete = json_data.get('percentComplete')
+        actual_hours = json_data.get('actualHours')
+        budget_hours = json_data.get('budgetHours')
+        scheduled_hours = json_data.get('scheduledHours')
+        percent_complete = json_data.get('percentComplete')
+
+        instance.actual_hours = Decimal(str(actual_hours)) \
+            if actual_hours is not None else None
+        instance.budget_hours = Decimal(str(budget_hours)) \
+            if budget_hours is not None else None
+        instance.scheduled_hours = Decimal(str(scheduled_hours)) \
+            if scheduled_hours is not None else None
+        instance.percent_complete = Decimal(str(percent_complete)) \
+            if percent_complete is not None else None
 
         if actual_start:
             instance.actual_start = parse(actual_start).date()
@@ -1637,7 +1686,7 @@ class MemberSynchronizer(Synchronizer):
         In addition to what the parent does, also update avatar if necessary.
         """
         try:
-            instance, created = super().update_or_create_instance(api_instance)
+            instance, result = super().update_or_create_instance(api_instance)
         except IntegrityError as e:
             raise InvalidObjectException(
                 'Failed to update member: {}'.format(e)
@@ -1678,7 +1727,7 @@ class MemberSynchronizer(Synchronizer):
                          not self.last_sync_job_time or
                          not bool(instance.avatar) or
                          member_stale or
-                         created):
+                         result == CREATED):
             logger.info(
                 'Fetching avatar for member {}.'.format(username)
             )
@@ -1694,7 +1743,7 @@ class MemberSynchronizer(Synchronizer):
                     logger.warning(msg)
             instance.save()
 
-        return instance, created
+        return instance, result
 
 
 class TicketSynchronizerMixin:
@@ -1826,8 +1875,6 @@ class ServiceTicketSynchronizer(TicketSynchronizerMixin,
         instance.last_updated_utc = json_data.get('_info').get('lastUpdated')
         instance.required_date_utc = json_data.get('requiredDate')
         instance.resources = json_data.get('resources')
-        instance.budget_hours = json_data.get('budgetHours')
-        instance.actual_hours = json_data.get('actualHours')
         instance.record_type = json_data.get('recordType')
         instance.parent_ticket_id = json_data.get('parentTicketId')
         instance.has_child_ticket = json_data.get('hasChildTicket')
@@ -1859,6 +1906,23 @@ class ServiceTicketSynchronizer(TicketSynchronizerMixin,
             # Parse the date here so that a datetime object is
             # available for SLA calculation.
             instance.entered_date_utc = parse(entered_date_utc)
+        if instance.last_updated_utc:
+            instance.last_updated_utc = parse(instance.last_updated_utc)
+        if instance.required_date_utc:
+            instance.required_date_utc = parse(instance.required_date_utc)
+        if instance.date_resolved_utc:
+            instance.date_resolved_utc = parse(instance.date_resolved_utc)
+        if instance.date_resplan_utc:
+            instance.date_resplan_utc = parse(instance.date_resplan_utc)
+        if instance.date_responded_utc:
+            instance.date_responded_utc = parse(instance.date_responded_utc)
+
+        budget_hours = json_data.get('budgetHours')
+        actual_hours = json_data.get('actualHours')
+        instance.budget_hours = Decimal(str(budget_hours)) \
+            if budget_hours is not None else None
+        instance.actual_hours = Decimal(str(actual_hours)) \
+            if actual_hours is not None else None
 
         self.set_relations(instance, json_data)
         return instance
@@ -1880,8 +1944,6 @@ class ProjectTicketSynchronizer(TicketSynchronizerMixin,
         instance.last_updated_utc = json_data.get('_info').get('lastUpdated')
         instance.required_date_utc = json_data.get('requiredDate')
         instance.resources = json_data.get('resources')
-        instance.budget_hours = json_data.get('budgetHours')
-        instance.actual_hours = json_data.get('actualHours')
         instance.customer_updated = json_data.get('customerUpdatedFlag')
         instance.bill_time = json_data.get('billTime')
 
@@ -1893,6 +1955,18 @@ class ProjectTicketSynchronizer(TicketSynchronizerMixin,
             json_data.get('automaticEmailResourceFlag', False)
         instance.automatic_email_cc = \
             json_data.get('automaticEmailCc')
+
+        if instance.last_updated_utc:
+            instance.last_updated_utc = parse(instance.last_updated_utc)
+        if instance.required_date_utc:
+            instance.required_date_utc = parse(instance.required_date_utc)
+
+        budget_hours = json_data.get('budgetHours')
+        actual_hours = json_data.get('actualHours')
+        instance.budget_hours = Decimal(str(budget_hours)) \
+            if budget_hours is not None else None
+        instance.actual_hours = Decimal(str(actual_hours)) \
+            if actual_hours is not None else None
 
         if instance.automatic_email_cc:
             # Truncate the field to 1000 characters as per CW docs for the
@@ -1928,20 +2002,48 @@ class CalendarSynchronizer(Synchronizer):
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
         instance.name = json_data['name']
-        instance.monday_start_time = json_data.get('mondayStartTime')
-        instance.monday_end_time = json_data.get('mondayEndTime')
-        instance.tuesday_start_time = json_data.get('tuesdayStartTime')
-        instance.tuesday_end_time = json_data.get('tuesdayEndTime')
-        instance.wednesday_start_time = json_data.get('wednesdayStartTime')
-        instance.wednesday_end_time = json_data.get('wednesdayEndTime')
-        instance.thursday_start_time = json_data.get('thursdayStartTime')
-        instance.thursday_end_time = json_data.get('thursdayEndTime')
-        instance.friday_start_time = json_data.get('fridayStartTime')
-        instance.friday_end_time = json_data.get('fridayEndTime')
-        instance.saturday_start_time = json_data.get('saturdayStartTime')
-        instance.saturday_end_time = json_data.get('saturdayEndTime')
-        instance.sunday_start_time = json_data.get('sundayStartTime')
-        instance.sunday_end_time = json_data.get('sundayEndTime')
+        instance.monday_start_time = \
+            parse(json_data.get('mondayStartTime')).time() \
+            if json_data.get('mondayStartTime') else None
+        instance.monday_end_time = \
+            parse(json_data.get('mondayEndTime')).time() \
+            if json_data.get('mondayEndTime') else None
+        instance.tuesday_start_time = \
+            parse(json_data.get('tuesdayStartTime')).time() \
+            if json_data.get('tuesdayStartTime') else None
+        instance.tuesday_end_time = \
+            parse(json_data.get('tuesdayEndTime')).time() \
+            if json_data.get('tuesdayEndTime') else None
+        instance.wednesday_start_time = \
+            parse(json_data.get('wednesdayStartTime')).time() \
+            if json_data.get('wednesdayStartTime') else None
+        instance.wednesday_end_time = \
+            parse(json_data.get('wednesdayEndTime')).time() \
+            if json_data.get('wednesdayEndTime') else None
+        instance.thursday_start_time = \
+            parse(json_data.get('thursdayStartTime')).time() \
+            if json_data.get('thursdayStartTime') else None
+        instance.thursday_end_time = \
+            parse(json_data.get('thursdayEndTime')).time() \
+            if json_data.get('thursdayEndTime') else None
+        instance.friday_start_time = \
+            parse(json_data.get('fridayStartTime')).time() \
+            if json_data.get('fridayStartTime') else None
+        instance.friday_end_time = \
+            parse(json_data.get('fridayEndTime')).time() \
+            if json_data.get('fridayEndTime') else None
+        instance.saturday_start_time = \
+            parse(json_data.get('saturdayStartTime')).time() \
+            if json_data.get('saturdayStartTime') else None
+        instance.saturday_end_time = \
+            parse(json_data.get('saturdayEndTime')).time() \
+            if json_data.get('saturdayEndTime') else None
+        instance.sunday_start_time = \
+            parse(json_data.get('sundayStartTime')).time() \
+            if json_data.get('sundayStartTime') else None
+        instance.sunday_end_time = \
+            parse(json_data.get('sundayEndTime')).time() \
+            if json_data.get('sundayEndTime') else None
 
         self._assign_relation(
             instance,
@@ -1966,9 +2068,13 @@ class HolidaySynchronizer(Synchronizer):
         instance.id = json_data['id']
         instance.name = json_data['name']
         instance.all_day_flag = json_data.get('allDayFlag')
-        instance.date = json_data.get('date')
-        instance.start_time = json_data.get('timeStart')
-        instance.end_time = json_data.get('timeEnd')
+        instance.date = parse(json_data.get('date')).date()
+        instance.start_time = \
+            parse(json_data.get('timeStart')).time() \
+            if json_data.get('timeStart') else None
+        instance.end_time = \
+            parse(json_data.get('timeEnd')).time() \
+            if json_data.get('timeEnd') else None
 
         self._assign_relation(
             instance,
