@@ -264,7 +264,8 @@ class Synchronizer:
         try:
             self._assign_field_data(instance, api_instance)
 
-            # TODO comment explaining process
+            # This will return the created instance, the updated instance, or
+            # if the instance is skipped an unsaved copy of the instance.
             if result == CREATED:
                 if self.model_class is models.Ticket:
                     instance.save(force_insert=True)
@@ -1260,6 +1261,12 @@ class TimeEntrySynchronizer(BatchConditionMixin,
         if time_end:
             instance.time_end = parse(time_end, default=parse('00:00Z'))
 
+        # Since django's `to_python` method builds the record from the DB
+        # by creating the decimal using a string we must also do this.
+        # Normally it would not matter too much, but since we want to compare
+        # them exactly it must be done this way. Otherwise due to floating
+        # point errors the decimal we create with a float vs a string will
+        # be different and fail comparison in the FieldTracker.
         hours_deduct = json_data.get('hoursDeduct')
         instance.hours_deduct = Decimal(str(hours_deduct)) \
             if hours_deduct is not None else None
