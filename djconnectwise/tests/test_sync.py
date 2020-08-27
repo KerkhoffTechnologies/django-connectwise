@@ -77,6 +77,12 @@ class SynchronizerTestMixin:
         self.synchronizer.sync()
         return _, get_patch
 
+    def _sync_with_results(self, return_data):
+        _, get_patch = self.call_api(return_data)
+        self.synchronizer = self.synchronizer_class()
+        self.synchronizer.sync()
+        return self.synchronizer.sync()
+
     def test_sync(self):
         self._sync(self.fixture)
         instance_dict = {c['id']: c for c in self.fixture}
@@ -106,6 +112,22 @@ class SynchronizerTestMixin:
 
         self.assertNotEqual(original.name, name)
         self._assert_fields(changed, new_json)
+
+    def test_sync_skips(self):
+        self._sync(self.fixture)
+
+        name = 'Some New Name'
+        new_json = deepcopy(self.fixture[0])
+        new_json['name'] = name
+        new_json_list = [new_json]
+
+        # Sync it twice to be sure that the data will be updated, then ignored
+        self._sync(new_json_list)
+        _, updated_count, skipped_count, _ = \
+            self._sync_with_results(new_json_list)
+
+        self.assertEqual(skipped_count, 1)
+        self.assertEqual(updated_count, 0)
 
 
 class TestBatchConditionMixin(TestCase):
@@ -257,6 +279,22 @@ class TestTimeEntrySynchronizer(TestCase, SynchronizerTestMixin):
         self.assertNotEqual(original.time_start,
                             start)
         self._assert_fields(changed, new_json)
+
+    def test_sync_skips(self):
+        self._sync(self.fixture)
+
+        start = '2003-10-06T14:48:18Z'
+        new_json = deepcopy(self.fixture[0])
+        new_json["timeStart"] = start
+        new_json_list = [new_json]
+
+        # Sync it twice to be sure that the data will be updated, then ignored
+        self._sync(new_json_list)
+        _, updated_count, skipped_count, _ = self._sync_with_results(
+            new_json_list)
+
+        self.assertEqual(skipped_count, 1)
+        self.assertEqual(updated_count, 0)
 
     def _assert_fields(self, instance, json_data):
         self.assertEqual(instance.id, json_data['id'])
@@ -482,6 +520,22 @@ class TestProjectPhaseSynchronizer(TestCase, SynchronizerTestMixin):
         self.assertNotEqual(original.description, description)
         self._assert_fields(changed, new_json)
 
+    def test_sync_skips(self):
+        self._sync(self.fixture)
+
+        description = 'Some New Description'
+        new_json = deepcopy(self.fixture[0])
+        new_json['description'] = description
+        new_json_list = [new_json]
+
+        # Sync it twice to be sure that the data will be updated, then ignored
+        self._sync(new_json_list)
+        _, updated_count, skipped_count, _ = \
+            self._sync_with_results(new_json_list)
+
+        self.assertEqual(skipped_count, 1)
+        self.assertEqual(updated_count, 0)
+
 
 class TestProjectSynchronizer(TestCase, SynchronizerTestMixin):
     synchronizer_class = sync.ProjectSynchronizer
@@ -682,6 +736,21 @@ class TestServiceNoteSynchronizer(TestCase, SynchronizerTestMixin):
                             flag)
         self._assert_fields(changed, new_json)
 
+    def test_sync_skips(self):
+        self._sync(self.fixture)
+
+        new_json = deepcopy(self.fixture[0])
+        new_json['detailDescriptionFlag'] = False
+        new_json_list = [new_json]
+
+        # Sync it twice to be sure that the data will be updated, then ignored
+        self._sync(new_json_list)
+        _, updated_count, skipped_count, _ = \
+            self._sync_with_results(new_json_list)
+
+        self.assertEqual(skipped_count, 1)
+        self.assertEqual(updated_count, 0)
+
 
 class TestOpportunityNoteSynchronizer(TestCase, SynchronizerTestMixin):
     synchronizer_class = sync.OpportunityNoteSynchronizer
@@ -721,6 +790,22 @@ class TestOpportunityNoteSynchronizer(TestCase, SynchronizerTestMixin):
         changed = self.model_class.objects.get(id=instance_id)
         self.assertNotEqual(original.text, text)
         self._assert_fields(changed, new_json)
+
+    def test_sync_skips(self):
+        self._sync(self.fixture)
+
+        text = "Different Text, not the same text, but new, better text."
+        new_json = deepcopy(self.fixture[0])
+        new_json['text'] = text
+        new_json_list = [new_json]
+
+        # Sync it twice to be sure that the data will be updated, then ignored
+        self._sync(new_json_list)
+        _, updated_count, skipped_count, _ = \
+            self._sync_with_results(new_json_list)
+
+        self.assertEqual(skipped_count, 1)
+        self.assertEqual(updated_count, 0)
 
 
 class TestMemberSynchronization(TransactionTestCase):
@@ -964,6 +1049,22 @@ class TestOpportunityTypeSynchronizer(TestCase, SynchronizerTestMixin):
                             description)
         self._assert_fields(changed, new_json)
 
+    def test_sync_skips(self):
+        self._sync(self.fixture)
+
+        description = 'Some New Description'
+        new_json = deepcopy(self.fixture[0])
+        new_json['description'] = description
+        new_json_list = [new_json]
+
+        # Sync it twice to be sure that the data will be updated, then ignored
+        self._sync(new_json_list)
+        _, updated_count, skipped_count, _ = \
+            self._sync_with_results(new_json_list)
+
+        self.assertEqual(skipped_count, 1)
+        self.assertEqual(updated_count, 0)
+
 
 class TestHolidaySynchronizer(TestCase, SynchronizerTestMixin):
     synchronizer_class = sync.HolidaySynchronizer
@@ -1151,6 +1252,21 @@ class TestMyCompanyOtherSynchronizer(TestCase, SynchronizerTestMixin):
         self.assertNotEqual(
             original.default_calendar, changed.default_calendar)
 
+    def test_sync_skips(self):
+        self._sync(self.fixture)
+
+        new_json = deepcopy(self.fixture[0])
+        new_json['defaultCalendar'] = None
+        new_json_list = [new_json]
+
+        # Sync it twice to be sure that the data will be updated, then ignored
+        self._sync(new_json_list)
+        _, updated_count, skipped_count, _ = \
+            self._sync_with_results(new_json_list)
+
+        self.assertEqual(skipped_count, 1)
+        self.assertEqual(updated_count, 0)
+
     def _assert_fields(self, instance, json_data):
         self.assertEqual(instance.id, json_data['id'])
 
@@ -1227,6 +1343,22 @@ class TestSLAPrioritySynchronizer(TestCase, SynchronizerTestMixin):
         changed = self.model_class.objects.get(id=instance_id)
         self.assertNotEqual(original.respond_hours, respond_hours)
         self._assert_fields(changed, new_json)
+
+    def test_sync_skips(self):
+        self._sync(self.fixture)
+
+        respond_hours = 500
+        new_json = deepcopy(self.fixture[0])
+        new_json['respondHours'] = respond_hours
+        new_json_list = [new_json]
+
+        # Sync it twice to be sure that the data will be updated, then ignored
+        self._sync(new_json_list)
+        _, updated_count, skipped_count, _ = \
+            self._sync_with_results(new_json_list)
+
+        self.assertEqual(skipped_count, 1)
+        self.assertEqual(updated_count, 0)
 
     def _assert_fields(self, instance, json_data):
         self.assertEqual(instance.id, json_data['id'])
@@ -1362,13 +1494,32 @@ class TestTicketSynchronizerMixin:
         method_name = 'djconnectwise.api.TicketAPIMixin.get_tickets'
         mock_call, _patch = mocks.create_mock_call(method_name, fixture_list)
         synchronizer = self.sync_class()
-        # Synchronizer is called twice, as we are testing that synchronizers
-        # can be called twice and keep the same behaviour
-        synchronizer.sync()
-        created_count, updated_count, _ = synchronizer.sync()
+        created_count, updated_count, _, _ = synchronizer.sync()
 
         self.assertEqual(created_count, 0)
         self.assertEqual(updated_count, len(fixture_list))
+
+        instance = Ticket.objects.get(id=updated_ticket_fixture['id'])
+        self._assert_sync(instance, updated_ticket_fixture)
+
+    def test_sync_skips(self):
+
+        # Update the ticket to know it skips it the second time
+        updated_ticket_fixture = deepcopy(self.ticket_fixture)
+        updated_ticket_fixture['summary'] = 'A new kind of summary'
+        fixture_list = [updated_ticket_fixture]
+
+        method_name = 'djconnectwise.api.TicketAPIMixin.get_tickets'
+        _, _patch = mocks.create_mock_call(method_name, fixture_list)
+        synchronizer = self.sync_class()
+        # Synchronizer is called twice, as we are testing that  when
+        # synchronizers are called twice it skips the record if no change is
+        # detected.
+        synchronizer.sync()
+        created_count, _, skipped_count, _ = synchronizer.sync()
+
+        self.assertEqual(created_count, 0)
+        self.assertEqual(skipped_count, len(fixture_list))
 
         instance = Ticket.objects.get(id=updated_ticket_fixture['id'])
         self._assert_sync(instance, updated_ticket_fixture)
@@ -1388,7 +1539,7 @@ class TestTicketSynchronizerMixin:
         synchronizer.batch_condition_list.extend(
             [234234, 345345, 234213, 2344523, 345645]
         )
-        created_count, updated_count, _ = synchronizer.sync()
+        created_count, updated_count, _, _ = synchronizer.sync()
 
         self.assertEqual(mock_call.call_count, 2)
 
@@ -1780,7 +1931,7 @@ class TestActivitySynchronizer(TestCase, SynchronizerTestMixin):
             mocks.create_mock_call(method_name, activity_list)
         synchronizer = sync.ActivitySynchronizer(full=True)
 
-        created_count, updated_count, deleted_count = \
+        created_count, updated_count, skipped_count, deleted_count = \
             synchronizer.sync()
 
         # The existing Activity (#47) should be deleted since it is not
@@ -1803,7 +1954,7 @@ class TestActivitySynchronizer(TestCase, SynchronizerTestMixin):
             mocks.create_mock_call(method_name, activity_list)
         synchronizer = sync.ActivitySynchronizer(full=True)
 
-        created_count, updated_count, deleted_count = \
+        created_count, updated_count, skipped_count, deleted_count = \
             synchronizer.sync()
 
         self.assertRaises(InvalidObjectException)
@@ -1839,7 +1990,7 @@ class MockSynchronizer:
 
     @log_sync_job
     def sync(self):
-        return 1, 2, 3
+        return 1, 2, 3, 4
 
     @log_sync_job
     def sync_with_error(self):
@@ -1851,10 +2002,12 @@ class TestSyncJob(TestCase):
     def setUp(self):
         self.synchronizer = MockSynchronizer()
 
-    def assert_sync_job(self, created, updated, deleted, message, success):
+    def assert_sync_job(self, created, updated, skipped, deleted, message,
+                        success):
         sync_job = SyncJob.objects.all().last()
         self.assertEqual(created, sync_job.added)
         self.assertEqual(updated, sync_job.updated)
+        self.assertEqual(skipped, sync_job.skipped)
         self.assertEqual(deleted, sync_job.deleted)
         self.assertEqual(self.synchronizer.model_class.__name__,
                          sync_job.entity_name)
@@ -1863,8 +2016,8 @@ class TestSyncJob(TestCase):
         self.assertEqual(sync_job.sync_type, "partial")
 
     def test_sync_successful(self):
-        created, updated, deleted = self.synchronizer.sync()
-        self.assert_sync_job(created, updated, deleted, None, True)
+        created, updated, skipped, deleted = self.synchronizer.sync()
+        self.assert_sync_job(created, updated, skipped, deleted, None, True)
 
     def test_sync_failed(self):
         try:
@@ -1872,7 +2025,8 @@ class TestSyncJob(TestCase):
         except Exception:
             pass
 
-        self.assert_sync_job(0, 0, 0, self.synchronizer.error_message, False)
+        self.assert_sync_job(
+            0, 0, 0, 0, self.synchronizer.error_message, False)
 
 
 class TestTypeSynchronizer(TestCase, SynchronizerTestMixin):
@@ -2035,3 +2189,19 @@ class TestProjectTeamMemberSynchronizer(TestCase, SynchronizerTestMixin):
 
         self.assertNotEqual(original.end_date, end_date)
         self._assert_fields(changed, new_json)
+
+    def test_sync_skips(self):
+        self._sync(self.fixture)
+
+        end_date = '2020-10-15T08:00:00Z'
+        new_json = deepcopy(self.fixture[0])
+        new_json['endDate'] = end_date
+        new_json_list = [new_json]
+
+        # Sync it twice to be sure that the data will be updated, then ignored
+        self._sync(new_json_list)
+        _, updated_count, skipped_count, _ = self._sync_with_results(
+            new_json_list)
+
+        self.assertEqual(skipped_count, 1)
+        self.assertEqual(updated_count, 0)

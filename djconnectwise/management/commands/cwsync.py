@@ -117,15 +117,18 @@ class Command(BaseCommand):
     def sync_by_class(self, sync_class, obj_name, full_option=False):
         synchronizer = sync_class(full=full_option)
 
-        created_count, updated_count, deleted_count = synchronizer.sync()
+        created_count, updated_count, skipped_count, deleted_count = \
+            synchronizer.sync()
 
-        msg = _('{} Sync Summary - Created: {}, Updated: {}')
-        fmt_msg = msg.format(obj_name, created_count, updated_count)
+        msg = _('{} Sync Summary - Created: {}, Updated: {}, Skipped: {}')
+        fmt_msg = msg.format(obj_name, created_count, updated_count,
+                             skipped_count)
 
         if full_option:
-            msg = _('{} Sync Summary - Created: {}, Updated: {}, Deleted: {}')
+            msg = _('{} Sync Summary - Created: {}, Updated: {}, '
+                    'Skipped: {}, Deleted: {}')
             fmt_msg = msg.format(obj_name, created_count, updated_count,
-                                 deleted_count)
+                                 skipped_count, deleted_count)
 
         self.stdout.write(fmt_msg)
 

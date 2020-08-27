@@ -12,15 +12,14 @@ from .. import sync
 
 
 def sync_summary(class_name, created_count):
-    return '{} Sync Summary - Created: {}, Updated: 0'.format(
+    return '{} Sync Summary - Created: {}, Updated: 0, Skipped: 0'.format(
         class_name, created_count
     )
 
 
 def full_sync_summary(class_name, deleted_count):
-    return '{} Sync Summary - Created: 0, Updated: 0, Deleted: {}'.format(
-        class_name, deleted_count
-    )
+    return '{} Sync Summary - Created: 0, Updated: 0, Skipped: 0, ' \
+           'Deleted: {}'.format(class_name, deleted_count)
 
 
 def slug_to_title(slug):
@@ -59,7 +58,8 @@ class AbstractBaseSyncTest(object):
 
         out = self._test_sync(*args, full_option=True)
         obj_label = self._title_for_cw_object(cw_object)
-        msg_tmpl = '{} Sync Summary - Created: 0, Updated: 0, Deleted: {}'
+        msg_tmpl = '{} Sync Summary - Created: 0, Updated: 0, Skipped: 0, ' \
+                   'Deleted: {}'
         msg = msg_tmpl.format(obj_label, len(return_value))
         self.assertEqual(msg, out.getvalue().strip())
 
