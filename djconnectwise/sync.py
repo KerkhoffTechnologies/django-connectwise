@@ -759,7 +759,6 @@ class CompanySynchronizer(Synchronizer):
         company.city = company_json.get('city')
         company.state_identifier = company_json.get('state')
         company.zip = company_json.get('zip')
-        company.created = timezone.now()
         company.deleted_flag = company_json.get('deletedFlag', False)
 
         status_json = company_json.get('status')
@@ -816,8 +815,6 @@ class CompanySynchronizer(Synchronizer):
                     company.id
                 )
             )
-
-        company.save()
         return company
 
     def get_page(self, *args, **kwargs):
@@ -2220,7 +2217,10 @@ class OpportunitySynchronizer(Synchronizer):
         if not created:
             # Ensure the name is up to date.
             child.name = child_name
-            child.save()
+
+            # Don't save it if there was no change
+            if child.tracker.changed():
+                child.save()
         return child
 
     def _assign_field_data(self, instance, json_data):
