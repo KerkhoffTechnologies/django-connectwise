@@ -10,8 +10,8 @@ from . import models
 class SyncJobAdmin(admin.ModelAdmin):
     list_display = (
         'id', 'start_time', 'end_time', 'duration_or_zero', 'entity_name',
-        'synchronizer_class', 'success', 'added', 'updated', 'deleted',
-        'sync_type',
+        'synchronizer_class', 'success', 'added', 'updated', 'skipped',
+        'deleted', 'sync_type',
     )
     list_filter = ('sync_type', 'success', 'entity_name', 'synchronizer_class')
 
