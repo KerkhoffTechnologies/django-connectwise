@@ -47,10 +47,14 @@ def log_sync_job(f):
         created_count = updated_count = deleted_count = skipped_count = 0
         sync_job = models.SyncJob()
         sync_job.start_time = timezone.now()
+        sync_job.entity_name = sync_instance.model_class.__name__
+
         if sync_instance.full:
             sync_job.sync_type = 'full'
         else:
             sync_job.sync_type = 'partial'
+
+        sync_job.save()
 
         try:
             created_count, updated_count, skipped_count, deleted_count = \
@@ -62,8 +66,6 @@ def log_sync_job(f):
             raise
         finally:
             sync_job.end_time = timezone.now()
-            sync_job.entity_name = sync_instance.model_class.__name__
-            sync_job.synchronizer_class = sync_instance.__class__.__name__
             sync_job.added = created_count
             sync_job.updated = updated_count
             sync_job.skipped = skipped_count
