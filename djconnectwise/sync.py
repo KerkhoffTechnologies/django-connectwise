@@ -66,6 +66,7 @@ def log_sync_job(f):
             raise
         finally:
             sync_job.end_time = timezone.now()
+            sync_job.synchronizer_class = sync_instance.__class__.__name__
             sync_job.added = created_count
             sync_job.updated = updated_count
             sync_job.skipped = skipped_count
