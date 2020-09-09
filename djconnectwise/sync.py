@@ -342,8 +342,11 @@ class Synchronizer:
     def sync(self):
         sync_job_qset = self.get_sync_job_qset()
 
-        if sync_job_qset.exists() and not self.full:
-            last_sync_job_time = sync_job_qset.last().start_time.isoformat()
+        # Since the job is created before it begins, make sure to exclude
+        # itself, and at least one other sync job exists.
+        if sync_job_qset.count() > 1 and not self.full:
+            last_sync_job_time = sync_job_qset.exclude(
+                id=sync_job_qset.last().id).last().start_time.isoformat()
             self.api_conditions.append(
                 "lastUpdated>[{0}]".format(last_sync_job_time)
             )
