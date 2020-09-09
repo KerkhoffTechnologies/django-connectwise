@@ -1411,6 +1411,7 @@ class ProjectPhaseSynchronizer(Synchronizer):
         instance.id = json_data['id']
         instance.description = json_data['description']
         instance.notes = json_data.get('notes')
+        instance.wbs_code = json_data.get('wbsCode')
         scheduled_hours = json_data.get('scheduledHours')
         budget_hours = json_data.get('budgetHours')
         actual_hours = json_data.get('actualHours')

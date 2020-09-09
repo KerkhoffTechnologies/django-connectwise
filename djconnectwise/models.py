@@ -978,6 +978,7 @@ class ProjectPhase(TimeStampedModel):
         blank=True, null=True, decimal_places=2, max_digits=9)
     budget_hours = models.DecimalField(
         blank=True, null=True, decimal_places=2, max_digits=9)
+    wbs_code = models.CharField(max_length=50, blank=True, null=True)
 
     project = models.ForeignKey(
         'Project', blank=True, null=True, on_delete=models.SET_NULL
