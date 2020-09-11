@@ -197,9 +197,9 @@ class ProjectTeamMemberAdmin(admin.ModelAdmin):
 
 @admin.register(models.Project)
 class ProjectAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'status', 'type')
+    list_display = ('id', 'name', 'status', 'type', 'description')
     list_filter = ('status', 'type')
-    search_fields = ['name']
+    search_fields = ['name', 'description']
 
 
 @admin.register(models.OpportunityStage)
