@@ -168,6 +168,9 @@ class Synchronizer:
         return set(ids)
 
     def get(self, results, conditions=None):
+        return self.fetch_records(results, conditions)
+
+    def fetch_records(self, results, conditions=None):
         """
         For all pages of results, save each page of results to the DB.
 
@@ -1030,22 +1033,35 @@ class ScheduleEntriesSynchronizer(BatchConditionMixin, Synchronizer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.settings = DjconnectwiseSettings().get_settings()
+        self.no_batch = kwargs.get('no_batch')
 
         self.api_conditions = [
-            "(type/identifier='S' or type/identifier='O')",
-            "doneFlag=false",
+            "(type/identifier='S' or type/identifier='O')"
         ]
-        # Only get schedule entries for tickets or opportunities that we
-        # already have in the DB.
-        ticket_ids = set(
-            models.Ticket.objects.order_by(
-                self.lookup_key).values_list('id', flat=True)
-        )
-        opportunity_ids = set(
-            models.Opportunity.objects.order_by(
-                self.lookup_key).values_list('id', flat=True)
-        )
-        self.batch_condition_list = list(ticket_ids | opportunity_ids)
+
+        if not self.no_batch:
+            self.api_conditions.append("doneFlag=false")
+
+            # Only get schedule entries for tickets or opportunities that we
+            # already have in the DB.
+            ticket_ids = set(
+                models.Ticket.objects.order_by(
+                    self.lookup_key).values_list('id', flat=True)
+            )
+            opportunity_ids = set(
+                models.Opportunity.objects.order_by(
+                    self.lookup_key).values_list('id', flat=True)
+            )
+            self.batch_condition_list = list(ticket_ids | opportunity_ids)
+
+    def get(self, results, conditions=None):
+
+        if self.no_batch:
+            self.fetch_records(results, conditions)
+        else:
+            super().get(results, conditions)
+
+        return results
 
     def get_optimal_size(self, condition_list):
         object_id_size = self.settings['schedule_entry_conditions_size']
