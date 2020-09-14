@@ -1595,6 +1595,7 @@ class ProjectSynchronizer(Synchronizer):
 
         instance.id = json_data['id']
         instance.name = json_data['name']
+        instance.description = json_data.get('description')
         actual_hours = json_data.get('actualHours')
         budget_hours = json_data.get('budgetHours')
         scheduled_hours = json_data.get('scheduledHours')

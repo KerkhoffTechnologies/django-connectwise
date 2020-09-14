@@ -1040,6 +1040,7 @@ class Project(TimeStampedModel):
         blank=True, null=True, decimal_places=2, max_digits=3)
     scheduled_start = models.DateField(blank=True, null=True)
     scheduled_end = models.DateField(blank=True, null=True)
+    description = models.TextField(blank=True, null=True)
 
     board = models.ForeignKey(
         'ConnectWiseBoard',
