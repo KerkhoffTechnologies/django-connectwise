@@ -1881,21 +1881,7 @@ class TicketSynchronizerMixin:
             synchronizer_class=self.__class__.__name__
         )
 
-
-class ServiceTicketSynchronizer(TicketSynchronizerMixin,
-                                BatchConditionMixin, Synchronizer):
-    client_class = api.ServiceAPIClient
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        request_settings = DjconnectwiseSettings().get_settings()
-
-        sync_child_tickets = request_settings.get('sync_child_tickets')
-        if not sync_child_tickets and sync_child_tickets is not None:
-            self.api_conditions.append('parentTicketId=null')
-
     def _assign_field_data(self, instance, json_data):
-        entered_date_utc = json_data.get('_info').get('dateEntered')
 
         instance.id = json_data['id']
         instance.summary = json_data['summary']
@@ -1903,17 +1889,9 @@ class ServiceTicketSynchronizer(TicketSynchronizerMixin,
         instance.last_updated_utc = json_data.get('_info').get('lastUpdated')
         instance.required_date_utc = json_data.get('requiredDate')
         instance.resources = json_data.get('resources')
-        instance.record_type = json_data.get('recordType')
-        instance.parent_ticket_id = json_data.get('parentTicketId')
-        instance.has_child_ticket = json_data.get('hasChildTicket')
-        instance.customer_updated = json_data.get('customerUpdatedFlag')
-        instance.respond_mins = json_data.get('respondMinutes')
-        instance.res_plan_mins = json_data.get('resPlanMinutes')
-        instance.resolve_mins = json_data.get('resolveMinutes')
-        instance.date_resolved_utc = json_data.get('dateResolved')
-        instance.date_resplan_utc = json_data.get('dateResplan')
-        instance.date_responded_utc = json_data.get('dateResponded')
         instance.bill_time = json_data.get('billTime')
+        instance.customer_updated = json_data.get('customerUpdatedFlag')
+
         instance.automatic_email_cc_flag = \
             json_data.get('automaticEmailCcFlag', False)
         instance.automatic_email_contact_flag = \
@@ -1929,6 +1907,50 @@ class ServiceTicketSynchronizer(TicketSynchronizerMixin,
             # DB schema in-line with the CW specifications, even if the
             # specifications are wrong.
             instance.automatic_email_cc = instance.automatic_email_cc[:1000]
+
+        budget_hours = json_data.get('budgetHours')
+        actual_hours = json_data.get('actualHours')
+        instance.budget_hours = Decimal(str(budget_hours)) \
+            if budget_hours is not None else None
+        instance.actual_hours = Decimal(str(actual_hours)) \
+            if actual_hours is not None else None
+
+        instance.predecessor_id = json_data.get('predecessorId')
+        instance.predecessor_type = json_data.get('predecessorType')
+
+        instance.lag_days = json_data.get('lagDays')
+        instance.lag_non_working_days_flag = \
+            json_data.get('lagNonworkingDaysFlag', False)
+
+        return instance
+
+
+class ServiceTicketSynchronizer(TicketSynchronizerMixin,
+                                BatchConditionMixin, Synchronizer):
+    client_class = api.ServiceAPIClient
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        request_settings = DjconnectwiseSettings().get_settings()
+
+        sync_child_tickets = request_settings.get('sync_child_tickets')
+        if not sync_child_tickets and sync_child_tickets is not None:
+            self.api_conditions.append('parentTicketId=null')
+
+    def _assign_field_data(self, instance, json_data):
+        instance = super()._assign_field_data(instance, json_data)
+
+        entered_date_utc = json_data.get('_info').get('dateEntered')
+
+        instance.record_type = json_data.get('recordType')
+        instance.parent_ticket_id = json_data.get('parentTicketId')
+        instance.has_child_ticket = json_data.get('hasChildTicket')
+        instance.respond_mins = json_data.get('respondMinutes')
+        instance.res_plan_mins = json_data.get('resPlanMinutes')
+        instance.resolve_mins = json_data.get('resolveMinutes')
+        instance.date_resolved_utc = json_data.get('dateResolved')
+        instance.date_resplan_utc = json_data.get('dateResplan')
+        instance.date_responded_utc = json_data.get('dateResponded')
 
         if entered_date_utc:
             # Parse the date here so that a datetime object is
@@ -1945,13 +1967,6 @@ class ServiceTicketSynchronizer(TicketSynchronizerMixin,
         if instance.date_responded_utc:
             instance.date_responded_utc = parse(instance.date_responded_utc)
 
-        budget_hours = json_data.get('budgetHours')
-        actual_hours = json_data.get('actualHours')
-        instance.budget_hours = Decimal(str(budget_hours)) \
-            if budget_hours is not None else None
-        instance.actual_hours = Decimal(str(actual_hours)) \
-            if actual_hours is not None else None
-
         self.set_relations(instance, json_data)
         return instance
 
@@ -1965,44 +1980,12 @@ class ProjectTicketSynchronizer(TicketSynchronizerMixin,
     client_class = api.ProjectAPIClient
 
     def _assign_field_data(self, instance, json_data):
-
-        instance.id = json_data['id']
-        instance.summary = json_data['summary']
-        instance.closed_flag = json_data.get('closedFlag')
-        instance.last_updated_utc = json_data.get('_info').get('lastUpdated')
-        instance.required_date_utc = json_data.get('requiredDate')
-        instance.resources = json_data.get('resources')
-        instance.customer_updated = json_data.get('customerUpdatedFlag')
-        instance.bill_time = json_data.get('billTime')
-
-        instance.automatic_email_cc_flag = \
-            json_data.get('automaticEmailCcFlag', False)
-        instance.automatic_email_contact_flag = \
-            json_data.get('automaticEmailContactFlag', False)
-        instance.automatic_email_resource_flag = \
-            json_data.get('automaticEmailResourceFlag', False)
-        instance.automatic_email_cc = \
-            json_data.get('automaticEmailCc')
+        instance = super()._assign_field_data(instance, json_data)
 
         if instance.last_updated_utc:
             instance.last_updated_utc = parse(instance.last_updated_utc)
         if instance.required_date_utc:
             instance.required_date_utc = parse(instance.required_date_utc)
-
-        budget_hours = json_data.get('budgetHours')
-        actual_hours = json_data.get('actualHours')
-        instance.budget_hours = Decimal(str(budget_hours)) \
-            if budget_hours is not None else None
-        instance.actual_hours = Decimal(str(actual_hours)) \
-            if actual_hours is not None else None
-
-        if instance.automatic_email_cc:
-            # Truncate the field to 1000 characters as per CW docs for the
-            # automatic_email_cc field, because in some cases more can be
-            # received which causes a DataError. It is preferred to keep the
-            # DB schema in-line with the CW specifications, even if the
-            # specifications are wrong.
-            instance.automatic_email_cc = instance.automatic_email_cc[:1000]
 
         # Tickets from the project/tickets API endpoint do not include the
         # record type field but we use the same Ticket model for project and
