@@ -1291,6 +1291,12 @@ class Ticket(TimeStampedModel):
             [type[0] for type in SLA_STAGE]
         )
     )
+    TICKET = 'Ticket'
+    PHASE = 'Phase'
+    PREDECESSOR_TYPES = (
+        (TICKET, 'Ticket'),
+        (PHASE, 'Phase')
+    )
 
     actual_hours = models.DecimalField(
         blank=True, null=True, decimal_places=2, max_digits=9)
@@ -1337,6 +1343,12 @@ class Ticket(TimeStampedModel):
                                           max_length=1000)
     automatic_email_contact_flag = models.BooleanField(default=False)
     automatic_email_resource_flag = models.BooleanField(default=False)
+
+    predecessor_id = models.IntegerField(blank=True, null=True)
+    predecessor_type = models.CharField(blank=True, null=True, max_length=10,
+                                        choices=PREDECESSOR_TYPES)
+    lag_days = models.IntegerField(blank=True, null=True)
+    lag_non_working_days_flag = models.BooleanField(default=False)
 
     board = models.ForeignKey(
         'ConnectwiseBoard', blank=True, null=True, on_delete=models.CASCADE)
