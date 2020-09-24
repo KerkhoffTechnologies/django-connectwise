@@ -1915,12 +1915,28 @@ class TicketSynchronizerMixin:
         instance.actual_hours = Decimal(str(actual_hours)) \
             if actual_hours is not None else None
 
-        instance.predecessor_id = json_data.get('predecessorId')
         instance.predecessor_type = json_data.get('predecessorType')
 
         instance.lag_days = json_data.get('lagDays')
         instance.lag_non_working_days_flag = \
             json_data.get('lagNonworkingDaysFlag', False)
+
+        try:
+            predecessor_id = json_data.get('predecessorId')
+
+            if predecessor_id:
+                if instance.predecessor_type == self.model_class.TICKET:
+                    instance.ticket_predecessor = \
+                        models.Ticket.objects.get(pk=predecessor_id)
+                else:
+                    instance.phase_predecessor = \
+                        models.ProjectPhase.objects.get(pk=predecessor_id)
+
+        except ObjectDoesNotExist as e:
+            logger.warning(
+                'Ticket {} has a predecessorId that does not exist. '
+                'ObjectDoesNotExist Exception: {}'.format(instance.id, e)
+            )
 
         return instance
 
