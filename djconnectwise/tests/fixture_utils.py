@@ -36,6 +36,7 @@ def init_members():
 
 
 def init_tickets():
+    models.Ticket.objects.all().delete()
     mocks.service_api_tickets_call()
     synchronizer = sync.ServiceTicketSynchronizer()
     return synchronizer.sync()
@@ -48,6 +49,7 @@ def init_project_tickets():
 
 
 def init_service_notes():
+    models.ServiceNote.objects.all().delete()
     mocks.service_api_get_notes_call(fixtures.API_SERVICE_NOTE_LIST)
     synchronizer = sync.ServiceNoteSynchronizer()
     return synchronizer.sync()
