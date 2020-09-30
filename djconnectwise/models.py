@@ -175,7 +175,8 @@ class BoardStatus(TimeStampedModel):
     display_on_board = models.BooleanField()
     inactive = models.BooleanField()
     closed_status = models.BooleanField()
-    board = models.ForeignKey('ConnectWiseBoard', on_delete=models.CASCADE)
+    board = models.ForeignKey(
+        'ConnectWiseBoard', blank=True, null=True, on_delete=models.SET_NULL)
     # Letting escalation_status allow blank/null rather than possibly having
     # and incorrect default value in some edge case
     escalation_status = models.CharField(
@@ -738,15 +739,16 @@ class ScheduleEntry(models.Model):
         'Ticket',
         blank=True,
         null=True,
-        on_delete=models.CASCADE
+        on_delete=models.SET_NULL
     )
     activity_object = models.ForeignKey(
         'Activity',
         blank=True,
         null=True,
-        on_delete=models.CASCADE
+        on_delete=models.SET_NULL
     )
-    member = models.ForeignKey('Member', on_delete=models.CASCADE)
+    member = models.ForeignKey(
+        'Member', blank=True, null=True, on_delete=models.SET_NULL)
     where = models.ForeignKey(
         'Location',
         blank=True,
@@ -832,7 +834,7 @@ class TimeEntry(models.Model):
     charge_to_id = models.ForeignKey(
         'Ticket', blank=True, null=True, on_delete=models.CASCADE)
     company = models.ForeignKey(
-        'Company', blank=True, null=True, on_delete=models.CASCADE)
+        'Company', blank=True, null=True, on_delete=models.SET_NULL)
     member = models.ForeignKey(
         'Member', blank=True, null=True, on_delete=models.CASCADE)
     work_type = models.ForeignKey(
@@ -1046,7 +1048,7 @@ class Project(TimeStampedModel):
         'ConnectWiseBoard',
         blank=True,
         null=True,
-        on_delete=models.CASCADE
+        on_delete=models.SET_NULL
     )
     company = models.ForeignKey(
         'Company', on_delete=models.SET_NULL, blank=True, null=True
@@ -1356,7 +1358,7 @@ class Ticket(TimeStampedModel):
         'ProjectPhase', blank=True, null=True, on_delete=models.SET_NULL
     )
     board = models.ForeignKey(
-        'ConnectwiseBoard', blank=True, null=True, on_delete=models.CASCADE)
+        'ConnectwiseBoard', blank=True, null=True, on_delete=models.SET_NULL)
     company = models.ForeignKey(
         'Company', blank=True, null=True, related_name='company_tickets',
         on_delete=models.SET_NULL)
@@ -1372,7 +1374,7 @@ class Ticket(TimeStampedModel):
         'TicketPriority', blank=True, null=True, on_delete=models.SET_NULL)
     project = models.ForeignKey(
         'Project', blank=True, null=True, related_name='project_tickets',
-        on_delete=models.CASCADE)
+        on_delete=models.SET_NULL)
     phase = models.ForeignKey(
         'ProjectPhase', blank=True, null=True, related_name='phase_tickets',
         on_delete=models.SET_NULL)
@@ -1723,7 +1725,7 @@ class Activity(TimeStampedModel):
     type = models.ForeignKey(
         'ActivityType', blank=True, null=True, on_delete=models.SET_NULL)
     company = models.ForeignKey(
-        'Company', blank=True, null=True, on_delete=models.CASCADE)
+        'Company', blank=True, null=True, on_delete=models.SET_NULL)
     agreement = models.ForeignKey(
         'Agreement', blank=True, null=True, on_delete=models.SET_NULL)
     tracker = FieldTracker()

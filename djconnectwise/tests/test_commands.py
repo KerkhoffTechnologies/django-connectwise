@@ -711,7 +711,7 @@ class TestSyncAllCommand(TestCase):
         for apicall, fixture, cw_object in self.test_args:
             if cw_object in (
                     'team',
-                    'board_status',
+                    'service_note',
                     'opportunity_note',
                     'sla_priority',
                     'holiday',
