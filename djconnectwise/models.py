@@ -1346,12 +1346,17 @@ class Ticket(TimeStampedModel):
     automatic_email_contact_flag = models.BooleanField(default=False)
     automatic_email_resource_flag = models.BooleanField(default=False)
 
-    predecessor_id = models.IntegerField(blank=True, null=True)
     predecessor_type = models.CharField(blank=True, null=True, max_length=10,
                                         choices=PREDECESSOR_TYPES)
     lag_days = models.IntegerField(blank=True, null=True)
     lag_non_working_days_flag = models.BooleanField(default=False)
 
+    ticket_predecessor = models.ForeignKey(
+        'self', blank=True, null=True, on_delete=models.SET_NULL
+    )
+    phase_predecessor = models.ForeignKey(
+        'ProjectPhase', blank=True, null=True, on_delete=models.SET_NULL
+    )
     board = models.ForeignKey(
         'ConnectwiseBoard', blank=True, null=True, on_delete=models.SET_NULL)
     company = models.ForeignKey(
