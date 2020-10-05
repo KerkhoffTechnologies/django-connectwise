@@ -1302,7 +1302,7 @@ class Ticket(TimeStampedModel):
 
     actual_hours = models.DecimalField(
         blank=True, null=True, decimal_places=2, max_digits=9)
-    approved = models.BooleanField(blank=True, null=True)
+    approved = models.BooleanField(null=True)
     budget_hours = models.DecimalField(
         blank=True, null=True, decimal_places=2, max_digits=9)
     closed_by = models.CharField(blank=True, null=True, max_length=250)
