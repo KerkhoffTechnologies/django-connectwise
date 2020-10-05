@@ -56,7 +56,7 @@ class SyncJob(models.Model):
     updated = models.PositiveIntegerField(null=True)
     deleted = models.PositiveIntegerField(null=True)
     skipped = models.PositiveIntegerField(null=True)
-    success = models.NullBooleanField()
+    success = models.BooleanField(null=True)
     message = models.TextField(blank=True, null=True)
     sync_type = models.CharField(max_length=32, default='full')
 
@@ -1302,20 +1302,20 @@ class Ticket(TimeStampedModel):
 
     actual_hours = models.DecimalField(
         blank=True, null=True, decimal_places=2, max_digits=9)
-    approved = models.NullBooleanField(blank=True, null=True)
+    approved = models.BooleanField(null=True)
     budget_hours = models.DecimalField(
         blank=True, null=True, decimal_places=2, max_digits=9)
     closed_by = models.CharField(blank=True, null=True, max_length=250)
     closed_date_utc = models.DateTimeField(blank=True, null=True)
-    closed_flag = models.NullBooleanField(blank=True, null=True)
+    closed_flag = models.BooleanField(null=True)
     customer_updated = models.BooleanField(default=False)
     date_resolved_utc = models.DateTimeField(blank=True, null=True)
     date_resplan_utc = models.DateTimeField(blank=True, null=True)
     date_responded_utc = models.DateTimeField(blank=True, null=True)
     entered_date_utc = models.DateTimeField(blank=True, null=True)
-    has_child_ticket = models.NullBooleanField()
+    has_child_ticket = models.BooleanField(null=True)
     impact = models.CharField(blank=True, null=True, max_length=250)
-    is_in_sla = models.NullBooleanField(blank=True, null=True)
+    is_in_sla = models.BooleanField(null=True)
     last_updated_utc = models.DateTimeField(blank=True, null=True)
     parent_ticket_id = models.IntegerField(blank=True, null=True)
     record_type = models.CharField(blank=True, null=True,
