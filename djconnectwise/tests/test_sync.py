@@ -9,42 +9,7 @@ from botocore.exceptions import NoCredentialsError
 import datetime
 
 from dateutil.parser import parse
-from djconnectwise.models import ActivityStatus, ActivityType, Activity
-from djconnectwise.models import BoardStatus
-from djconnectwise.models import Company, CompanyStatus, CompanyType
-from djconnectwise.models import ConnectWiseBoard
-from djconnectwise.models import Holiday
-from djconnectwise.models import HolidayList
-from djconnectwise.models import Location
-from djconnectwise.models import Member
-from djconnectwise.models import Opportunity
-from djconnectwise.models import OpportunityStatus
-from djconnectwise.models import OpportunityStage
-from djconnectwise.models import OpportunityType
-from djconnectwise.models import Project, ProjectStatus, ProjectPhase
-from djconnectwise.models import ScheduleEntry
-from djconnectwise.models import ScheduleStatus
-from djconnectwise.models import ScheduleType
-from djconnectwise.models import SyncJob
-from djconnectwise.models import Team
-from djconnectwise.models import ServiceNote
-from djconnectwise.models import Ticket
-from djconnectwise.models import TicketPriority
-from djconnectwise.models import OpportunityNote
-from djconnectwise.models import TimeEntry
-from djconnectwise.models import Territory
-from djconnectwise.models import Sla
-from djconnectwise.models import Calendar
-from djconnectwise.models import SlaPriority
-from djconnectwise.models import MyCompanyOther
-from djconnectwise.models import Type
-from djconnectwise.models import SubType
-from djconnectwise.models import Item
-from djconnectwise.models import WorkType
-from djconnectwise.models import WorkRole
-from djconnectwise.models import Agreement
-from djconnectwise.models import ProjectType
-from djconnectwise.models import ProjectTeamMember
+from djconnectwise import models
 from djconnectwise.utils import get_hash
 from djconnectwise.sync import InvalidObjectException
 
@@ -55,12 +20,17 @@ from .. import sync
 from ..sync import log_sync_job
 
 
-def assert_sync_job(model_class):
-    qset = SyncJob.objects.filter(entity_name=model_class.__name__)
-    assert qset.exists()
+class AssertSyncMixin:
+
+    def assert_sync_job(self):
+        qset = \
+            models.SyncJob.objects.filter(
+                entity_name=self.model_class.__bases__[0].__name__
+            )
+        assert qset.exists()
 
 
-class SynchronizerTestMixin:
+class SynchronizerTestMixin(AssertSyncMixin):
     synchronizer_class = None
     model_class = None
     fixture = None
@@ -91,7 +61,7 @@ class SynchronizerTestMixin:
             json_data = instance_dict[instance.id]
             self._assert_fields(instance, json_data)
 
-        assert_sync_job(self.model_class)
+        self.assert_sync_job()
 
     def test_sync_update(self):
         self._sync(self.fixture)
@@ -159,7 +129,7 @@ class TestBatchConditionMixin(TestCase):
 
 class TestTerritorySynchronizer(TestCase, SynchronizerTestMixin):
     synchronizer_class = sync.TerritorySynchronizer
-    model_class = Territory
+    model_class = models.TerritoryTracker
     fixture = fixtures.API_SYSTEM_TERRITORY_LIST
 
     def setUp(self):
@@ -195,7 +165,7 @@ class TestTerritorySynchronizer(TestCase, SynchronizerTestMixin):
 
 class TestCompanySynchronizer(TestCase, SynchronizerTestMixin):
     synchronizer_class = sync.CompanySynchronizer
-    model_class = Company
+    model_class = models.CompanyTracker
     fixture = fixtures.API_COMPANY_LIST
 
     def setUp(self):
@@ -225,7 +195,7 @@ class TestCompanySynchronizer(TestCase, SynchronizerTestMixin):
 
 class TestCompanyStatusSynchronizer(TestCase, SynchronizerTestMixin):
     synchronizer_class = sync.CompanyStatusSynchronizer
-    model_class = CompanyStatus
+    model_class = models.CompanyStatusTracker
     fixture = fixtures.API_COMPANY_STATUS_LIST
 
     def call_api(self, return_data):
@@ -248,7 +218,7 @@ class TestCompanyStatusSynchronizer(TestCase, SynchronizerTestMixin):
 
 class TestTimeEntrySynchronizer(TestCase, SynchronizerTestMixin):
     synchronizer_class = sync.TimeEntrySynchronizer
-    model_class = TimeEntry
+    model_class = models.TimeEntryTracker
     fixture = fixtures.API_TIME_ENTRY_LIST
 
     def setUp(self):
@@ -309,7 +279,7 @@ class TestTimeEntrySynchronizer(TestCase, SynchronizerTestMixin):
 
 class TestCompanyTypeSynchronizer(TestCase, SynchronizerTestMixin):
     synchronizer_class = sync.CompanyTypeSynchronizer
-    model_class = CompanyType
+    model_class = models.CompanyTypeTracker
     fixture = fixtures.API_COMPANY_TYPES_LIST
 
     def call_api(self, return_data):
@@ -323,12 +293,11 @@ class TestCompanyTypeSynchronizer(TestCase, SynchronizerTestMixin):
 
 class TestScheduleEntriesSynchronizer(TestCase, SynchronizerTestMixin):
     synchronizer_class = sync.ScheduleEntriesSynchronizer
-    model_class = ScheduleEntry
+    model_class = models.ScheduleEntryTracker
     fixture = fixtures.API_SCHEDULE_ENTRIES
 
     def setUp(self):
         super().setUp()
-        # self.synchronizer = self.synchronizer_class()
         fixture_utils.init_boards()
         fixture_utils.init_territories()
         fixture_utils.init_companies()
@@ -409,7 +378,7 @@ class TestScheduleEntriesSynchronizer(TestCase, SynchronizerTestMixin):
 
 class TestScheduleTypeSynchronizer(TestCase, SynchronizerTestMixin):
     synchronizer_class = sync.ScheduleTypeSynchronizer
-    model_class = ScheduleType
+    model_class = models.ScheduleTypeTracker
     fixture = fixtures.API_SCHEDULE_TYPE_LIST
 
     def call_api(self, return_data):
@@ -422,7 +391,7 @@ class TestScheduleTypeSynchronizer(TestCase, SynchronizerTestMixin):
 
 class TestScheduleStatusSynchronizer(TestCase, SynchronizerTestMixin):
     synchronizer_class = sync.ScheduleStatusSynchronizer
-    model_class = ScheduleStatus
+    model_class = models.ScheduleStatusTracker
     fixture = fixtures.API_SCHEDULE_STATUS_LIST
 
     def call_api(self, return_data):
@@ -435,7 +404,7 @@ class TestScheduleStatusSynchronizer(TestCase, SynchronizerTestMixin):
 
 class TestProjectStatusSynchronizer(TestCase, SynchronizerTestMixin):
     synchronizer_class = sync.ProjectStatusSynchronizer
-    model_class = ProjectStatus
+    model_class = models.ProjectStatusTracker
     fixture = fixtures.API_PROJECT_STATUSES
 
     def call_api(self, return_data):
@@ -451,7 +420,7 @@ class TestProjectStatusSynchronizer(TestCase, SynchronizerTestMixin):
 
 class TestProjectTypeSynchronizer(TestCase, SynchronizerTestMixin):
     synchronizer_class = sync.ProjectTypeSynchronizer
-    model_class = ProjectType
+    model_class = models.ProjectTypeTracker
     fixture = fixtures.API_PROJECT_TYPES
 
     def call_api(self, return_data):
@@ -466,7 +435,7 @@ class TestProjectTypeSynchronizer(TestCase, SynchronizerTestMixin):
 
 class TestProjectPhaseSynchronizer(TestCase, SynchronizerTestMixin):
     synchronizer_class = sync.ProjectPhaseSynchronizer
-    model_class = ProjectPhase
+    model_class = models.ProjectPhaseTracker
     fixture = fixtures.API_PROJECT_PHASE_LIST
 
     def setUp(self):
@@ -539,7 +508,7 @@ class TestProjectPhaseSynchronizer(TestCase, SynchronizerTestMixin):
 
 class TestProjectSynchronizer(TestCase, SynchronizerTestMixin):
     synchronizer_class = sync.ProjectSynchronizer
-    model_class = Project
+    model_class = models.ProjectTracker
     fixture = fixtures.API_PROJECT_LIST
 
     def setUp(self):
@@ -582,7 +551,7 @@ class TestProjectSynchronizer(TestCase, SynchronizerTestMixin):
 
 class TestTeamSynchronizer(TestCase, SynchronizerTestMixin):
     synchronizer_class = sync.TeamSynchronizer
-    model_class = Team
+    model_class = models.TeamTracker
     fixture = fixtures.API_SERVICE_TEAM_LIST
 
     def call_api(self, return_data):
@@ -601,7 +570,7 @@ class TestTeamSynchronizer(TestCase, SynchronizerTestMixin):
 
 class TestPrioritySynchronizer(TestCase, SynchronizerTestMixin):
     synchronizer_class = sync.PrioritySynchronizer
-    model_class = TicketPriority
+    model_class = models.TicketPriorityTracker
     fixture = fixtures.API_SERVICE_PRIORITY_LIST
 
     def _assert_fields(self, priority, api_priority):
@@ -619,8 +588,8 @@ class TestPrioritySynchronizer(TestCase, SynchronizerTestMixin):
     def setUp(self):
         self.synchronizer = sync.PrioritySynchronizer()
         self.valid_prio_colors = \
-            list(TicketPriority.DEFAULT_COLORS.values()) + \
-            [TicketPriority.DEFAULT_COLOR]
+            list(models.TicketPriority.DEFAULT_COLORS.values()) + \
+            [models.TicketPriority.DEFAULT_COLOR]
 
     def call_api(self, return_data):
         return mocks.service_api_get_priorities_call(return_data)
@@ -628,7 +597,7 @@ class TestPrioritySynchronizer(TestCase, SynchronizerTestMixin):
 
 class TestLocationSynchronizer(TestCase, SynchronizerTestMixin):
     synchronizer_class = sync.LocationSynchronizer
-    model_class = Location
+    model_class = models.LocationTracker
     fixture = fixtures.API_SERVICE_LOCATION_LIST
 
     def _assert_fields(self, location, api_location):
@@ -645,7 +614,7 @@ class TestLocationSynchronizer(TestCase, SynchronizerTestMixin):
 
 class TestBoardSynchronizer(TestCase, SynchronizerTestMixin):
     synchronizer_class = sync.BoardSynchronizer
-    model_class = ConnectWiseBoard
+    model_class = models.ConnectWiseBoardTracker
     fixture = fixtures.API_BOARD_LIST
 
     def call_api(self, return_data):
@@ -668,7 +637,7 @@ class TestBoardSynchronizer(TestCase, SynchronizerTestMixin):
 
 class TestBoardStatusSynchronizer(TestCase, SynchronizerTestMixin):
     synchronizer_class = sync.BoardStatusSynchronizer
-    model_class = BoardStatus
+    model_class = models.BoardStatusTracker
     fixture = fixtures.API_BOARD_STATUS_LIST
 
     def _assert_fields(self, instance, json_data):
@@ -688,7 +657,7 @@ class TestBoardStatusSynchronizer(TestCase, SynchronizerTestMixin):
 
 class TestServiceNoteSynchronizer(TestCase, SynchronizerTestMixin):
     synchronizer_class = sync.ServiceNoteSynchronizer
-    model_class = ServiceNote
+    model_class = models.ServiceNoteTracker
     fixture = fixtures.API_SERVICE_NOTE_LIST
 
     def _assert_fields(self, instance, json_data):
@@ -754,7 +723,7 @@ class TestServiceNoteSynchronizer(TestCase, SynchronizerTestMixin):
 
 class TestOpportunityNoteSynchronizer(TestCase, SynchronizerTestMixin):
     synchronizer_class = sync.OpportunityNoteSynchronizer
-    model_class = OpportunityNote
+    model_class = models.OpportunityNoteTracker
     fixture = fixtures.API_SALES_OPPORTUNITY_NOTE_LIST
 
     def _assert_fields(self, instance, json_data):
@@ -808,7 +777,8 @@ class TestOpportunityNoteSynchronizer(TestCase, SynchronizerTestMixin):
         self.assertEqual(updated_count, 0)
 
 
-class TestMemberSynchronization(TransactionTestCase):
+class TestMemberSynchronization(TransactionTestCase, AssertSyncMixin):
+    model_class = models.MemberTracker
 
     def setUp(self):
         self.identifier = 'User1'
@@ -823,7 +793,7 @@ class TestMemberSynchronization(TransactionTestCase):
         self.assertEqual(local_member.office_email, api_member['officeEmail'])
 
     def test_sync_member_update(self):
-        member = Member()
+        member = models.Member()
         member.id = 176
         member.identifier = self.identifier
         member.first_name = 'some stale first name'
@@ -831,16 +801,16 @@ class TestMemberSynchronization(TransactionTestCase):
         member.office_email = 'some@stale.com'
         member.save()
         self.synchronizer.sync()
-        local_member = Member.objects.get(identifier=self.identifier)
+        local_member = models.Member.objects.get(identifier=self.identifier)
         api_member = fixtures.API_MEMBER
         self._assert_member_fields(local_member, api_member)
 
     def test_sync_member_create(self):
         self.synchronizer.sync()
-        local_member = Member.objects.all().first()
+        local_member = models.Member.objects.all().first()
         api_member = fixtures.API_MEMBER
         self._assert_member_fields(local_member, api_member)
-        assert_sync_job(Member)
+        self.assert_sync_job()
 
     def test_sync_member_with_no_photo(self):
         member_without_photo = deepcopy(fixtures.API_MEMBER)
@@ -848,7 +818,7 @@ class TestMemberSynchronization(TransactionTestCase):
         mocks.system_api_get_members_call([member_without_photo])
         self.synchronizer = sync.MemberSynchronizer()
         self.synchronizer.sync()
-        local_member = Member.objects.get(identifier=self.identifier)
+        local_member = models.Member.objects.get(identifier=self.identifier)
         self._assert_member_fields(local_member, member_without_photo)
         local_avatar = local_member.avatar
         self.assertFalse(local_avatar)
@@ -857,7 +827,7 @@ class TestMemberSynchronization(TransactionTestCase):
         self.synchronizer = sync.MemberSynchronizer()
         self.synchronizer.sync()
 
-        member = Member.objects.get(identifier=self.identifier)
+        member = models.Member.objects.get(identifier=self.identifier)
         old_avatar = member.avatar
         member.avatar = 'new_image_name.png'
         self.synchronizer.sync()
@@ -867,7 +837,7 @@ class TestMemberSynchronization(TransactionTestCase):
     def test_avatar_thumbnails_are_in_storage(self):
         self.synchronizer = sync.MemberSynchronizer()
         self.synchronizer.sync()
-        member = Member.objects.get(identifier=self.identifier)
+        member = models.Member.objects.get(identifier=self.identifier)
 
         attachment_filename = 'some_new_image.png'
         avatar = mocks.get_member_avatar()
@@ -894,7 +864,7 @@ class TestMemberSynchronization(TransactionTestCase):
         # occur then there is still a problem.
         self.synchronizer = sync.MemberSynchronizer()
         self.synchronizer.sync()
-        member = Member.objects.get(identifier=self.identifier)
+        member = models.Member.objects.get(identifier=self.identifier)
 
         attachment_filename = 'some_new_image.png'
         avatar = mocks.get_member_avatar()
@@ -905,7 +875,7 @@ class TestMemberSynchronization(TransactionTestCase):
 
 class TestOpportunitySynchronizer(TestCase, SynchronizerTestMixin):
     synchronizer_class = sync.OpportunitySynchronizer
-    model_class = Opportunity
+    model_class = models.OpportunityTracker
     fixture = fixtures.API_SALES_OPPORTUNITIES
 
     def setUp(self):
@@ -988,7 +958,7 @@ class TestOpportunitySynchronizer(TestCase, SynchronizerTestMixin):
 
 class TestOpportunityStageSynchronizer(TestCase, SynchronizerTestMixin):
     synchronizer_class = sync.OpportunityStageSynchronizer
-    model_class = OpportunityStage
+    model_class = models.OpportunityStageTracker
     fixture = fixtures.API_SALES_OPPORTUNITY_STAGES
 
     def call_api(self, return_data):
@@ -1001,7 +971,7 @@ class TestOpportunityStageSynchronizer(TestCase, SynchronizerTestMixin):
 
 class TestOpportunityStatusSynchronizer(TestCase, SynchronizerTestMixin):
     synchronizer_class = sync.OpportunityStatusSynchronizer
-    model_class = OpportunityStatus
+    model_class = models.OpportunityStatusTracker
     fixture = fixtures.API_SALES_OPPORTUNITY_STATUSES
 
     def call_api(self, return_data):
@@ -1018,7 +988,7 @@ class TestOpportunityStatusSynchronizer(TestCase, SynchronizerTestMixin):
 
 class TestOpportunityTypeSynchronizer(TestCase, SynchronizerTestMixin):
     synchronizer_class = sync.OpportunityTypeSynchronizer
-    model_class = OpportunityType
+    model_class = models.OpportunityTypeTracker
     fixture = fixtures.API_SALES_OPPORTUNITY_TYPES
 
     def call_api(self, return_data):
@@ -1068,7 +1038,7 @@ class TestOpportunityTypeSynchronizer(TestCase, SynchronizerTestMixin):
 
 class TestHolidaySynchronizer(TestCase, SynchronizerTestMixin):
     synchronizer_class = sync.HolidaySynchronizer
-    model_class = Holiday
+    model_class = models.HolidayTracker
     fixture = fixtures.API_SCHEDULE_HOLIDAY_MODEL_LIST
 
     def setUp(self):
@@ -1107,7 +1077,7 @@ class TestHolidaySynchronizer(TestCase, SynchronizerTestMixin):
 
 class TestHolidayListSynchronizer(TestCase, SynchronizerTestMixin):
     synchronizer_class = sync.HolidayListSynchronizer
-    model_class = HolidayList
+    model_class = models.HolidayListTracker
     fixture = fixtures.API_SCHEDULE_HOLIDAY_LIST_LIST
 
     def _assert_fields(self, instance, json_data):
@@ -1135,7 +1105,7 @@ class TestHolidayListSynchronizer(TestCase, SynchronizerTestMixin):
 
 class TestCalendarSynchronizer(TestCase, SynchronizerTestMixin):
     synchronizer_class = sync.CalendarSynchronizer
-    model_class = Calendar
+    model_class = models.CalendarTracker
     fixture = fixtures.API_SCHEDULE_CALENDAR_LIST
 
     def call_api(self, return_data):
@@ -1224,7 +1194,7 @@ class TestCalendarSynchronizer(TestCase, SynchronizerTestMixin):
 
 class TestMyCompanyOtherSynchronizer(TestCase, SynchronizerTestMixin):
     synchronizer_class = sync.MyCompanyOtherSynchronizer
-    model_class = MyCompanyOther
+    model_class = models.MyCompanyOtherTracker
     fixture = fixtures.API_SYSTEM_OTHER_LIST
 
     def setUp(self):
@@ -1273,7 +1243,7 @@ class TestMyCompanyOtherSynchronizer(TestCase, SynchronizerTestMixin):
 
 class TestSLASynchronizer(TestCase, SynchronizerTestMixin):
     synchronizer_class = sync.SLASynchronizer
-    model_class = Sla
+    model_class = models.SlaTracker
     fixture = fixtures.API_SERVICE_SLA_LIST
 
     def setUp(self):
@@ -1313,7 +1283,7 @@ class TestSLASynchronizer(TestCase, SynchronizerTestMixin):
 
 class TestSLAPrioritySynchronizer(TestCase, SynchronizerTestMixin):
     synchronizer_class = sync.SLAPrioritySynchronizer
-    model_class = SlaPriority
+    model_class = models.SlaPriorityTracker
     fixture = fixtures.API_SERVICE_SLA_PRIORITY_LIST
 
     def setUp(self):
@@ -1368,7 +1338,9 @@ class TestSLAPrioritySynchronizer(TestCase, SynchronizerTestMixin):
                          json_data['resolutionHours'])
 
 
-class TestTicketSynchronizerMixin:
+class TestTicketSynchronizerMixin(AssertSyncMixin):
+    model_class = models.TicketTracker
+
     def setUp(self):
         super().setUp()
         mocks.system_api_get_members_call(fixtures.API_MEMBER_LIST)
@@ -1376,7 +1348,7 @@ class TestTicketSynchronizerMixin:
             (mocks.CW_MEMBER_IMAGE_FILENAME, mocks.get_member_avatar()))
 
     def _clean(self):
-        Ticket.objects.all().delete()
+        models.Ticket.objects.all().delete()
 
     def _init_data(self):
         self._clean()
@@ -1403,13 +1375,13 @@ class TestTicketSynchronizerMixin:
         """
         synchronizer = self.sync_class()
         synchronizer.sync()
-        self.assertGreater(Ticket.objects.all().count(), 0)
+        self.assertGreater(models.Ticket.objects.all().count(), 0)
 
         json_data = self.ticket_fixture
-        instance = Ticket.objects.get(id=json_data['id'])
+        instance = models.Ticket.objects.get(id=json_data['id'])
 
         self._assert_sync(instance, json_data)
-        assert_sync_job(Ticket)
+        self.assert_sync_job()
 
     def test_sync_ticket_truncates_automatic_cc_field(self):
         """
@@ -1418,7 +1390,7 @@ class TestTicketSynchronizerMixin:
         """
         synchronizer = self.sync_class()
 
-        instance = Ticket()
+        instance = models.Ticket()
 
         field_data = "kanban@kanban.com;"
         for i in range(6):
@@ -1439,7 +1411,7 @@ class TestTicketSynchronizerMixin:
         fixture_utils.init_service_notes()
         synchronizer = self.sync_class()
 
-        ticket = Ticket.objects.get(id=self.ticket_fixture['id'])
+        ticket = models.Ticket.objects.get(id=self.ticket_fixture['id'])
 
         # Change some fields on all child objects
         updated_fixture = deepcopy(fixtures.API_SERVICE_NOTE_LIST[0])
@@ -1473,9 +1445,9 @@ class TestTicketSynchronizerMixin:
         synchronizer.fetch_sync_by_id(ticket.id)
 
         # Get the new Values from the db
-        updated_note = ServiceNote.objects.filter(ticket=ticket)[0]
+        updated_note = models.ServiceNote.objects.filter(ticket=ticket)[0]
 
-        updated_time = TimeEntry.objects.filter(charge_to_id=ticket)[0]
+        updated_time = models.TimeEntry.objects.filter(charge_to_id=ticket)[0]
 
         # Confirm that they have all been updated
         self.assertEqual('Some new text', updated_note.text)
@@ -1499,7 +1471,7 @@ class TestTicketSynchronizerMixin:
         self.assertEqual(created_count, 0)
         self.assertEqual(updated_count, len(fixture_list))
 
-        instance = Ticket.objects.get(id=updated_ticket_fixture['id'])
+        instance = models.Ticket.objects.get(id=updated_ticket_fixture['id'])
         self._assert_sync(instance, updated_ticket_fixture)
 
     def test_sync_skips(self):
@@ -1521,7 +1493,7 @@ class TestTicketSynchronizerMixin:
         self.assertEqual(created_count, 0)
         self.assertEqual(skipped_count, len(fixture_list))
 
-        instance = Ticket.objects.get(id=updated_ticket_fixture['id'])
+        instance = models.Ticket.objects.get(id=updated_ticket_fixture['id'])
         self._assert_sync(instance, updated_ticket_fixture)
 
     def test_sync_multiple_status_batches(self):
@@ -1546,7 +1518,7 @@ class TestTicketSynchronizerMixin:
     def test_delete_stale_tickets(self):
         """Local ticket should be deleted if omitted from sync"""
         ticket_id = self.ticket_fixture['id']
-        ticket_qset = Ticket.objects.filter(id=ticket_id)
+        ticket_qset = models.Ticket.objects.filter(id=ticket_id)
         self.assertEqual(ticket_qset.count(), 1)
 
         method_name = 'djconnectwise.api.TicketAPIMixin.get_tickets'
@@ -1562,7 +1534,7 @@ class TestTicketSynchronizerMixin:
         time_entry_sync = sync.TimeEntrySynchronizer()
         time_entry_sync.sync()
         self.assertGreater(
-            SyncJob.objects.filter(entity_name='TimeEntry').count(), 0
+            models.SyncJob.objects.filter(entity_name='TimeEntry').count(), 0
         )
 
         # Mock the child class syncs
@@ -1586,7 +1558,8 @@ class TestTicketSynchronizerMixin:
 
         # Verify that no time entries are removed,
         # and that only one entry is added
-        last_sync_job = SyncJob.objects.filter(entity_name='TimeEntry').last()
+        last_sync_job = \
+            models.SyncJob.objects.filter(entity_name='TimeEntry').last()
         self.assertEqual(last_sync_job.deleted, 0)
         self.assertEqual(last_sync_job.updated, 0)
         self.assertEqual(last_sync_job.added, 1)
@@ -1673,9 +1646,10 @@ class TestServiceTicketSynchronizer(TestTicketSynchronizerMixin, TestCase):
         synchronizer = self.sync_class(full=True)
         synchronizer.sync()
 
-        self.assertTrue(Ticket.objects.get(id=self.ticket_fixture['id']))
+        self.assertTrue(
+            models.Ticket.objects.get(id=self.ticket_fixture['id']))
 
-        project_ticket = Ticket.objects.create(
+        project_ticket = models.Ticket.objects.create(
             summary='Project ticket',
             record_type='ProjectTicket'
         )
@@ -1689,9 +1663,10 @@ class TestServiceTicketSynchronizer(TestTicketSynchronizerMixin, TestCase):
         # Verify that the service ticket has been removed and project ticket
         # still exists.
         self.assertEqual(
-            Ticket.objects.get(id=project_ticket.id), project_ticket)
+            models.Ticket.objects.get(id=project_ticket.id), project_ticket)
         self.assertFalse(
-            Ticket.objects.filter(id=self.ticket_fixture['id']).exists())
+            models.Ticket.objects.filter(
+                id=self.ticket_fixture['id']).exists())
 
     def test_callback_sync_service_note(self):
         # Sync initial service note
@@ -1699,7 +1674,7 @@ class TestServiceTicketSynchronizer(TestTicketSynchronizerMixin, TestCase):
         service_note_sync = sync.ServiceNoteSynchronizer()
         service_note_sync.sync()
         self.assertGreater(
-            SyncJob.objects.filter(entity_name='ServiceNote').count(), 0
+            models.SyncJob.objects.filter(entity_name='ServiceNote').count(), 0
         )
 
         # Mock the child class syncs
@@ -1724,7 +1699,7 @@ class TestServiceTicketSynchronizer(TestTicketSynchronizerMixin, TestCase):
 
         # Verify that no notes are removed, and that only one note is added
         last_sync_job = \
-            SyncJob.objects.filter(entity_name='ServiceNote').last()
+            models.SyncJob.objects.filter(entity_name='ServiceNote').last()
         self.assertEqual(last_sync_job.deleted, 0)
         self.assertEqual(last_sync_job.updated, 0)
         self.assertEqual(last_sync_job.added, 1)
@@ -1801,9 +1776,10 @@ class TestProjectTicketSynchronizer(TestTicketSynchronizerMixin, TestCase):
         """
         synchronizer = self.sync_class(full=True)
         synchronizer.sync()
-        self.assertTrue(Ticket.objects.get(id=self.ticket_fixture['id']))
+        self.assertTrue(
+            models.Ticket.objects.get(id=self.ticket_fixture['id']))
 
-        service_ticket = Ticket.objects.create(
+        service_ticket = models.Ticket.objects.create(
             summary='Service ticket',
             record_type='ServiceTicket'
         )
@@ -1817,14 +1793,15 @@ class TestProjectTicketSynchronizer(TestTicketSynchronizerMixin, TestCase):
         # Verify that the project ticket has been removed and service ticket
         # still exists.
         self.assertEqual(
-            Ticket.objects.get(id=service_ticket.id), service_ticket)
+            models.Ticket.objects.get(id=service_ticket.id), service_ticket)
         self.assertFalse(
-            Ticket.objects.filter(id=self.ticket_fixture['id']).exists())
+            models.Ticket.objects.filter(
+                id=self.ticket_fixture['id']).exists())
 
 
 class TestActivityStatusSynchronizer(TestCase, SynchronizerTestMixin):
     synchronizer_class = sync.ActivityStatusSynchronizer
-    model_class = ActivityStatus
+    model_class = models.ActivityStatusTracker
     fixture = fixtures.API_SALES_ACTIVITY_STATUSES
 
     def call_api(self, return_data):
@@ -1844,7 +1821,7 @@ class TestActivityStatusSynchronizer(TestCase, SynchronizerTestMixin):
 
 class TestActivityTypeSynchronizer(TestCase, SynchronizerTestMixin):
     synchronizer_class = sync.ActivityTypeSynchronizer
-    model_class = ActivityType
+    model_class = models.ActivityTypeTracker
     fixture = fixtures.API_SALES_ACTIVITY_TYPES
 
     def call_api(self, return_data):
@@ -1863,7 +1840,7 @@ class TestActivityTypeSynchronizer(TestCase, SynchronizerTestMixin):
 
 class TestActivitySynchronizer(TestCase, SynchronizerTestMixin):
     synchronizer_class = sync.ActivitySynchronizer
-    model_class = Activity
+    model_class = models.ActivityTracker
     fixture = fixtures.API_SALES_ACTIVITIES
 
     def setUp(self):
@@ -1985,7 +1962,7 @@ class TestSyncSettings(TestCase):
 
 class MockSynchronizer:
     error_message = 'One heck of an error'
-    model_class = Ticket
+    model_class = models.TicketTracker
     full = False
 
     @log_sync_job
@@ -2004,12 +1981,12 @@ class TestSyncJob(TestCase):
 
     def assert_sync_job(self, created, updated, skipped, deleted, message,
                         success):
-        sync_job = SyncJob.objects.all().last()
+        sync_job = models.SyncJob.objects.all().last()
         self.assertEqual(created, sync_job.added)
         self.assertEqual(updated, sync_job.updated)
         self.assertEqual(skipped, sync_job.skipped)
         self.assertEqual(deleted, sync_job.deleted)
-        self.assertEqual(self.synchronizer.model_class.__name__,
+        self.assertEqual(self.synchronizer.model_class.__bases__[0].__name__,
                          sync_job.entity_name)
         self.assertEqual(message, sync_job.message)
         self.assertEqual(sync_job.success, success)
@@ -2031,7 +2008,7 @@ class TestSyncJob(TestCase):
 
 class TestTypeSynchronizer(TestCase, SynchronizerTestMixin):
     synchronizer_class = sync.TypeSynchronizer
-    model_class = Type
+    model_class = models.TypeTracker
     fixture = fixtures.API_TYPE_LIST
 
     def setUp(self):
@@ -2050,7 +2027,7 @@ class TestTypeSynchronizer(TestCase, SynchronizerTestMixin):
 
 class TestSubTypeSynchronizer(TestCase, SynchronizerTestMixin):
     synchronizer_class = sync.SubTypeSynchronizer
-    model_class = SubType
+    model_class = models.SubTypeTracker
     fixture = fixtures.API_SUBTYPE_LIST
 
     def setUp(self):
@@ -2069,7 +2046,7 @@ class TestSubTypeSynchronizer(TestCase, SynchronizerTestMixin):
 
 class TestItemSynchronizer(TestCase, SynchronizerTestMixin):
     synchronizer_class = sync.ItemSynchronizer
-    model_class = Item
+    model_class = models.ItemTracker
     fixture = fixtures.API_ITEM_LIST
 
     def setUp(self):
@@ -2088,7 +2065,7 @@ class TestItemSynchronizer(TestCase, SynchronizerTestMixin):
 
 class TestWorkTypeSynchronizer(TestCase, SynchronizerTestMixin):
     synchronizer_class = sync.WorkTypeSynchronizer
-    model_class = WorkType
+    model_class = models.WorkTypeTracker
     fixture = fixtures.API_WORK_TYPE_LIST
 
     def setUp(self):
@@ -2106,7 +2083,7 @@ class TestWorkTypeSynchronizer(TestCase, SynchronizerTestMixin):
 
 class TestWorkRoleSynchronizer(TestCase, SynchronizerTestMixin):
     synchronizer_class = sync.WorkRoleSynchronizer
-    model_class = WorkRole
+    model_class = models.WorkRoleTracker
     fixture = fixtures.API_WORK_ROLE_LIST
 
     def setUp(self):
@@ -2124,7 +2101,7 @@ class TestWorkRoleSynchronizer(TestCase, SynchronizerTestMixin):
 
 class TestAgreementSynchronizer(TestCase, SynchronizerTestMixin):
     synchronizer_class = sync.AgreementSynchronizer
-    model_class = Agreement
+    model_class = models.AgreementTracker
     fixture = fixtures.API_AGREEMENT_LIST
 
     def setUp(self):
@@ -2151,7 +2128,7 @@ class TestAgreementSynchronizer(TestCase, SynchronizerTestMixin):
 
 class TestProjectTeamMemberSynchronizer(TestCase, SynchronizerTestMixin):
     synchronizer_class = sync.ProjectTeamMemberSynchronizer
-    model_class = ProjectTeamMember
+    model_class = models.ProjectTeamMemberTracker
     fixture = fixtures.API_PROJECT_TEAM_MEMBER_LIST
 
     def setUp(self):

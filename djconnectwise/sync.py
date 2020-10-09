@@ -47,8 +47,9 @@ def log_sync_job(f):
         created_count = updated_count = deleted_count = skipped_count = 0
         sync_job = models.SyncJob()
         sync_job.start_time = timezone.now()
-        sync_job.entity_name = sync_instance.model_class.__name__
-        sync_job.synchronizer_class = sync_instance.__class__.__name__
+        sync_job.entity_name = sync_instance.model_class.__bases__[0].__name__
+        sync_job.synchronizer_class = \
+            sync_instance.__class__.__name__
 
         if sync_instance.full:
             sync_job.sync_type = 'full'
@@ -181,7 +182,8 @@ class Synchronizer:
         page = 1
         while True:
             logger.info(
-                'Fetching {} records, batch {}'.format(self.model_class, page)
+                'Fetching {} records, batch {}'.format(
+                    self.model_class.__bases__[0].__name__, page)
             )
             page_conditions = conditions or self.api_conditions
             page_records = self.get_page(
@@ -233,7 +235,8 @@ class Synchronizer:
             self.get_single(instance_id)
             logger.warning(
                 'ConnectWise API returned {} {} even though it was expected '
-                'to be deleted.'.format(self.model_class.__name__, instance_id)
+                'to be deleted.'.format(
+                    self.model_class.__bases__[0].__name__, instance_id)
             )
 
         except api.ConnectWiseRecordNotFoundError:
@@ -249,7 +252,7 @@ class Synchronizer:
                     post_delete_callback(pre_delete_result)
             logger.info(
                 'Deleted {} {} (if it existed).'.format(
-                    self.model_class.__name__,
+                    self.model_class.__bases__[0].__name__,
                     instance_id
                 )
             )
@@ -273,7 +276,7 @@ class Synchronizer:
             # This will return the created instance, the updated instance, or
             # if the instance is skipped an unsaved copy of the instance.
             if result == CREATED:
-                if self.model_class is models.Ticket:
+                if self.model_class is models.TicketTracker:
                     instance.save(force_insert=True)
                 else:
                     instance.save()
@@ -300,7 +303,7 @@ class Synchronizer:
 
         logger.info('{}: {} {}'.format(
             result_log,
-            self.model_class.__name__,
+            self.model_class.__bases__[0].__name__,
             instance
         ))
 
@@ -324,7 +327,7 @@ class Synchronizer:
                 )
             logger.info(
                 'Removing {} stale records for model: {}'.format(
-                    len(stale_ids), self.model_class,
+                    len(stale_ids), self.model_class.__bases__[0].__name__,
                 )
             )
             delete_qset.delete()
@@ -338,7 +341,7 @@ class Synchronizer:
 
     def get_sync_job_qset(self):
         return models.SyncJob.objects.filter(
-            entity_name=self.model_class.__name__
+            entity_name=self.model_class.__bases__[0].__name__
         )
 
     @log_sync_job
@@ -395,7 +398,7 @@ class Synchronizer:
                 = synchronizer.callback_sync(filter_params)
             msg = '{} Child Sync - Created: {},'\
                 ' Updated: {}, Skipped: {},Deleted: {}'.format(
-                    synchronizer.model_class.__name__,
+                    synchronizer.model_class.__bases__[0].__name__,
                     created_count,
                     updated_count,
                     skipped_count,
@@ -502,7 +505,7 @@ class CallbackPartialSyncMixin:
 
 class ServiceNoteSynchronizer(CallbackPartialSyncMixin, Synchronizer):
     client_class = api.ServiceAPIClient
-    model_class = models.ServiceNote
+    model_class = models.ServiceNoteTracker
 
     related_meta = {
         'member': (models.Member, 'member')
@@ -596,7 +599,7 @@ class ServiceNoteSynchronizer(CallbackPartialSyncMixin, Synchronizer):
 
 class OpportunityNoteSynchronizer(Synchronizer):
     client_class = api.SalesAPIClient
-    model_class = models.OpportunityNote
+    model_class = models.OpportunityNoteTracker
 
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
@@ -635,7 +638,7 @@ class OpportunityNoteSynchronizer(Synchronizer):
 
 class BoardSynchronizer(Synchronizer):
     client_class = api.ServiceAPIClient
-    model_class = models.ConnectWiseBoard
+    model_class = models.ConnectWiseBoardTracker
 
     related_meta = {
         'workRole': (models.WorkRole, 'work_role'),
@@ -695,7 +698,7 @@ class BoardChildSynchronizer(Synchronizer):
 
 class BoardStatusSynchronizer(BoardChildSynchronizer):
     client_class = api.ServiceAPIClient
-    model_class = models.BoardStatus
+    model_class = models.BoardStatusTracker
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -720,7 +723,7 @@ class BoardStatusSynchronizer(BoardChildSynchronizer):
 
 class TeamSynchronizer(BoardChildSynchronizer):
     client_class = api.ServiceAPIClient
-    model_class = models.Team
+    model_class = models.TeamTracker
 
     def _assign_field_data(self, instance, json_data):
         instance = super(TeamSynchronizer, self)._assign_field_data(
@@ -743,7 +746,7 @@ class TeamSynchronizer(BoardChildSynchronizer):
 
 class CompanySynchronizer(Synchronizer):
     client_class = api.CompanyAPIClient
-    model_class = models.Company
+    model_class = models.CompanyTracker
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -849,7 +852,7 @@ class CompanySynchronizer(Synchronizer):
 
 class CompanyStatusSynchronizer(Synchronizer):
     client_class = api.CompanyAPIClient
-    model_class = models.CompanyStatus
+    model_class = models.CompanyStatusTracker
 
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
@@ -875,7 +878,7 @@ class CompanyStatusSynchronizer(Synchronizer):
 
 class CompanyTypeSynchronizer(Synchronizer):
     client_class = api.CompanyAPIClient
-    model_class = models.CompanyType
+    model_class = models.CompanyTypeTracker
 
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
@@ -888,7 +891,7 @@ class CompanyTypeSynchronizer(Synchronizer):
 
 class MyCompanyOtherSynchronizer(Synchronizer):
     client_class = api.SystemAPIClient
-    model_class = models.MyCompanyOther
+    model_class = models.MyCompanyOtherTracker
 
     related_meta = {
         'defaultCalendar': (models.Calendar, 'default_calendar'),
@@ -905,7 +908,7 @@ class MyCompanyOtherSynchronizer(Synchronizer):
 
 class ActivityStatusSynchronizer(Synchronizer):
     client_class = api.SalesAPIClient
-    model_class = models.ActivityStatus
+    model_class = models.ActivityStatusTracker
 
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
@@ -923,7 +926,7 @@ class ActivityStatusSynchronizer(Synchronizer):
 
 class ActivityTypeSynchronizer(Synchronizer):
     client_class = api.SalesAPIClient
-    model_class = models.ActivityType
+    model_class = models.ActivityTypeTracker
 
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
@@ -943,7 +946,7 @@ class ActivityTypeSynchronizer(Synchronizer):
 
 class ActivitySynchronizer(Synchronizer):
     client_class = api.SalesAPIClient
-    model_class = models.Activity
+    model_class = models.ActivityTracker
 
     related_meta = {
         'opportunity': (models.Opportunity, 'opportunity'),
@@ -1008,7 +1011,7 @@ class ActivitySynchronizer(Synchronizer):
 
 class SalesProbabilitySynchronizer(Synchronizer):
     client_class = api.SalesAPIClient
-    model_class = models.SalesProbability
+    model_class = models.SalesProbabilityTracker
 
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
@@ -1020,7 +1023,7 @@ class SalesProbabilitySynchronizer(Synchronizer):
 
 class ScheduleEntriesSynchronizer(BatchConditionMixin, Synchronizer):
     client_class = api.ScheduleAPIClient
-    model_class = models.ScheduleEntry
+    model_class = models.ScheduleEntryTracker
     batch_condition_list = []
 
     related_meta = {
@@ -1195,7 +1198,7 @@ class ScheduleEntriesSynchronizer(BatchConditionMixin, Synchronizer):
 
 class ScheduleStatusSynchronizer(Synchronizer):
     client_class = api.ScheduleAPIClient
-    model_class = models.ScheduleStatus
+    model_class = models.ScheduleStatusTracker
 
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
@@ -1209,7 +1212,7 @@ class ScheduleStatusSynchronizer(Synchronizer):
 
 class ScheduleTypeSynchronizer(Synchronizer):
     client_class = api.ScheduleAPIClient
-    model_class = models.ScheduleType
+    model_class = models.ScheduleTypeTracker
 
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
@@ -1224,7 +1227,7 @@ class ScheduleTypeSynchronizer(Synchronizer):
 
 class TerritorySynchronizer(Synchronizer):
     client_class = api.SystemAPIClient
-    model_class = models.Territory
+    model_class = models.TerritoryTracker
 
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
@@ -1239,7 +1242,7 @@ class TerritorySynchronizer(Synchronizer):
 class TimeEntrySynchronizer(BatchConditionMixin,
                             CallbackPartialSyncMixin, Synchronizer):
     client_class = api.TimeAPIClient
-    model_class = models.TimeEntry
+    model_class = models.TimeEntryTracker
     batch_condition_list = []
 
     related_meta = {
@@ -1366,7 +1369,7 @@ class TimeEntrySynchronizer(BatchConditionMixin,
 
 class LocationSynchronizer(Synchronizer):
     client_class = api.ServiceAPIClient
-    model_class = models.Location
+    model_class = models.LocationTracker
 
     def _assign_field_data(self, location, location_json):
         """
@@ -1384,7 +1387,7 @@ class LocationSynchronizer(Synchronizer):
 
 class PrioritySynchronizer(Synchronizer):
     client_class = api.ServiceAPIClient
-    model_class = models.TicketPriority
+    model_class = models.TicketPriorityTracker
 
     def _assign_field_data(self, ticket_priority, api_priority):
         ticket_priority.id = api_priority['id']
@@ -1405,7 +1408,7 @@ class PrioritySynchronizer(Synchronizer):
 class ProjectStatusSynchronizer(Synchronizer):
 
     client_class = api.ProjectAPIClient
-    model_class = models.ProjectStatus
+    model_class = models.ProjectStatusTracker
 
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
@@ -1421,7 +1424,7 @@ class ProjectStatusSynchronizer(Synchronizer):
 
 class ProjectPhaseSynchronizer(Synchronizer):
     client_class = api.ProjectAPIClient
-    model_class = models.ProjectPhase
+    model_class = models.ProjectPhaseTracker
     related_meta = {
         'board': (models.ConnectWiseBoard, 'board')
     }
@@ -1496,7 +1499,7 @@ class ProjectPhaseSynchronizer(Synchronizer):
 
 class ProjectTypeSynchronizer(Synchronizer):
     client_class = api.ProjectAPIClient
-    model_class = models.ProjectType
+    model_class = models.ProjectTypeTracker
 
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
@@ -1511,7 +1514,7 @@ class ProjectTypeSynchronizer(Synchronizer):
 
 class ProjectTeamMemberSynchronizer(Synchronizer):
     client_class = api.ProjectAPIClient
-    model_class = models.ProjectTeamMember
+    model_class = models.ProjectTeamMemberTracker
 
     related_meta = {
         'member': (models.Member, 'member'),
@@ -1563,7 +1566,7 @@ class ProjectTeamMemberSynchronizer(Synchronizer):
 
 class ProjectSynchronizer(Synchronizer):
     client_class = api.ProjectAPIClient
-    model_class = models.Project
+    model_class = models.ProjectTracker
     related_meta = {
         'status': (models.ProjectStatus, 'status'),
         'manager': (models.Member, 'manager'),
@@ -1640,7 +1643,7 @@ class ProjectSynchronizer(Synchronizer):
 
 class MemberSynchronizer(Synchronizer):
     client_class = api.SystemAPIClient
-    model_class = models.Member
+    model_class = models.MemberTracker
 
     related_meta = {
         'workRole': (models.WorkRole, 'work_role'),
@@ -1775,7 +1778,7 @@ class MemberSynchronizer(Synchronizer):
 
 
 class TicketSynchronizerMixin:
-    model_class = models.Ticket
+    model_class = models.TicketTracker
     batch_condition_list = []
 
     related_meta = {
@@ -1877,7 +1880,7 @@ class TicketSynchronizerMixin:
 
     def get_sync_job_qset(self):
         return models.SyncJob.objects.filter(
-            entity_name=self.model_class.__name__,
+            entity_name=self.model_class.__bases__[0].__name__,
             synchronizer_class=self.__class__.__name__
         )
 
@@ -2024,7 +2027,7 @@ class ProjectTicketSynchronizer(TicketSynchronizerMixin,
 
 class CalendarSynchronizer(Synchronizer):
     client_class = api.ScheduleAPIClient
-    model_class = models.Calendar
+    model_class = models.CalendarTracker
 
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
@@ -2088,7 +2091,7 @@ class CalendarSynchronizer(Synchronizer):
 
 class HolidaySynchronizer(Synchronizer):
     client_class = api.ScheduleAPIClient
-    model_class = models.Holiday
+    model_class = models.HolidayTracker
 
     def _assign_field_data(self, instance, json_data):
 
@@ -2127,7 +2130,7 @@ class HolidaySynchronizer(Synchronizer):
 
 class HolidayListSynchronizer(Synchronizer):
     client_class = api.ScheduleAPIClient
-    model_class = models.HolidayList
+    model_class = models.HolidayListTracker
 
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
@@ -2141,7 +2144,7 @@ class HolidayListSynchronizer(Synchronizer):
 
 class SLAPrioritySynchronizer(Synchronizer):
     client_class = api.ServiceAPIClient
-    model_class = models.SlaPriority
+    model_class = models.SlaPriorityTracker
 
     related_meta = {
         'priority': (models.TicketPriority, 'priority'),
@@ -2172,7 +2175,7 @@ class SLAPrioritySynchronizer(Synchronizer):
 
 class SLASynchronizer(Synchronizer):
     client_class = api.ServiceAPIClient
-    model_class = models.Sla
+    model_class = models.SlaTracker
 
     related_meta = {
         'customCalendar': (models.Calendar, 'calendar'),
@@ -2196,7 +2199,7 @@ class SLASynchronizer(Synchronizer):
 
 class OpportunitySynchronizer(Synchronizer):
     client_class = api.SalesAPIClient
-    model_class = models.Opportunity
+    model_class = models.OpportunityTracker
     related_meta = {
         'type': (models.OpportunityType, 'opportunity_type'),
         'stage': (models.OpportunityStage, 'stage'),
@@ -2275,7 +2278,7 @@ class OpportunitySynchronizer(Synchronizer):
         priority = json_data.get('priority')
         if priority:
             instance.priority = self._update_or_create_child(
-                models.OpportunityPriority, priority
+                models.OpportunityPriorityTracker, priority
             )
 
         self.set_relations(instance, json_data)
@@ -2290,7 +2293,7 @@ class OpportunitySynchronizer(Synchronizer):
 
 class OpportunityStageSynchronizer(Synchronizer):
     client_class = api.SalesAPIClient
-    model_class = models.OpportunityStage
+    model_class = models.OpportunityStageTracker
 
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
@@ -2304,7 +2307,7 @@ class OpportunityStageSynchronizer(Synchronizer):
 
 class OpportunityStatusSynchronizer(Synchronizer):
     client_class = api.SalesAPIClient
-    model_class = models.OpportunityStatus
+    model_class = models.OpportunityStatusTracker
 
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
@@ -2321,7 +2324,7 @@ class OpportunityStatusSynchronizer(Synchronizer):
 
 class OpportunityTypeSynchronizer(Synchronizer):
     client_class = api.SalesAPIClient
-    model_class = models.OpportunityType
+    model_class = models.OpportunityTypeTracker
 
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
@@ -2335,7 +2338,7 @@ class OpportunityTypeSynchronizer(Synchronizer):
 
 class TypeSynchronizer(Synchronizer):
     client_class = api.ServiceAPIClient
-    model_class = models.Type
+    model_class = models.TypeTracker
 
     related_meta = {
         'board': (models.ConnectWiseBoard, 'board')
@@ -2364,7 +2367,7 @@ class TypeSynchronizer(Synchronizer):
 
 class SubTypeSynchronizer(Synchronizer):
     client_class = api.ServiceAPIClient
-    model_class = models.SubType
+    model_class = models.SubTypeTracker
 
     related_meta = {
         'board': (models.ConnectWiseBoard, 'board')
@@ -2393,7 +2396,7 @@ class SubTypeSynchronizer(Synchronizer):
 
 class ItemSynchronizer(Synchronizer):
     client_class = api.ServiceAPIClient
-    model_class = models.Item
+    model_class = models.ItemTracker
 
     related_meta = {
         'board': (models.ConnectWiseBoard, 'board')
@@ -2422,7 +2425,7 @@ class ItemSynchronizer(Synchronizer):
 
 class WorkTypeSynchronizer(Synchronizer):
     client_class = api.TimeAPIClient
-    model_class = models.WorkType
+    model_class = models.WorkTypeTracker
 
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
@@ -2442,7 +2445,7 @@ class WorkTypeSynchronizer(Synchronizer):
 
 class WorkRoleSynchronizer(Synchronizer):
     client_class = api.TimeAPIClient
-    model_class = models.WorkRole
+    model_class = models.WorkRoleTracker
 
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
@@ -2457,7 +2460,7 @@ class WorkRoleSynchronizer(Synchronizer):
 
 class AgreementSynchronizer(Synchronizer):
     client_class = api.FinanceAPIClient
-    model_class = models.Agreement
+    model_class = models.AgreementTracker
 
     related_meta = {
         'workRole': (models.WorkRole, 'work_role'),
