@@ -96,7 +96,6 @@ class ConnectWiseBoard(TimeStampedModel):
 
     objects = models.Manager()
     available_objects = AvailableConnectWiseBoardManager()
-    tracker = FieldTracker()
 
     class Meta:
         ordering = ('name',)
@@ -187,8 +186,6 @@ class BoardStatus(TimeStampedModel):
     objects = models.Manager()
     available_objects = AvailableBoardStatusManager()
 
-    tracker = FieldTracker()
-
     class Meta:
         ordering = ('board__name', 'sort_order', 'name')
         verbose_name_plural = 'Board statuses'
@@ -218,8 +215,6 @@ class BoardStatus(TimeStampedModel):
 class Location(TimeStampedModel):
     name = models.CharField(max_length=30)
     where = models.CharField(max_length=100, blank=True, null=True)
-
-    tracker = FieldTracker()
 
     class Meta:
         ordering = ('name',)
@@ -261,8 +256,6 @@ class Member(TimeStampedModel):
 
     objects = models.Manager()
     regular_objects = RegularMemberManager()
-
-    tracker = FieldTracker()
 
     class Meta:
         ordering = ('first_name', 'last_name')
@@ -328,7 +321,6 @@ class Company(TimeStampedModel):
 
     objects = models.Manager()
     available_objects = AvailableCompanyManager()
-    tracker = FieldTracker()
 
     class Meta:
         verbose_name_plural = 'companies'
@@ -355,7 +347,6 @@ class CompanyStatus(models.Model):
     custom_note_flag = models.BooleanField()
     cancel_open_tracks_flag = models.BooleanField()
     track_id = models.PositiveSmallIntegerField(blank=True, null=True)
-    tracker = FieldTracker()
 
     class Meta:
         verbose_name_plural = 'Company statuses'
@@ -367,7 +358,6 @@ class CompanyStatus(models.Model):
 class CompanyType(models.Model):
     name = models.CharField(max_length=50)
     vendor_flag = models.BooleanField()
-    tracker = FieldTracker()
 
     class Meta:
         ordering = ('name', )
@@ -383,7 +373,6 @@ class MyCompanyOther(models.Model):
         null=True,
         on_delete=models.SET_NULL
         )
-    tracker = FieldTracker()
 
 
 class Calendar(models.Model):
@@ -422,8 +411,6 @@ class Calendar(models.Model):
                                          blank=True, null=True)
     sunday_end_time = models.TimeField(auto_now=False, auto_now_add=False,
                                        blank=True, null=True)
-
-    tracker = FieldTracker()
 
     def __str__(self):
         return self.name
@@ -690,16 +677,12 @@ class Holiday(models.Model):
     holiday_list = models.ForeignKey(
         'HolidayList', on_delete=models.CASCADE)
 
-    tracker = FieldTracker()
-
     def __str__(self):
         return self.name
 
 
 class HolidayList(models.Model):
     name = models.CharField(max_length=200)
-
-    tracker = FieldTracker()
 
     def __str__(self):
         return self.name
@@ -708,8 +691,6 @@ class HolidayList(models.Model):
 class ScheduleType(models.Model):
     name = models.CharField(max_length=50)
     identifier = models.CharField(max_length=1)
-
-    tracker = FieldTracker()
 
     class Meta:
         ordering = ('name', )
@@ -720,7 +701,6 @@ class ScheduleType(models.Model):
 
 class ScheduleStatus(models.Model):
     name = models.CharField(max_length=30)
-    tracker = FieldTracker()
 
     class Meta:
         verbose_name_plural = 'Schedule statuses'
@@ -767,7 +747,6 @@ class ScheduleEntry(models.Model):
         null=True,
         on_delete=models.SET_NULL
     )
-    tracker = FieldTracker()
 
     class Meta:
         verbose_name_plural = 'Schedule entries'
@@ -786,7 +765,6 @@ class ScheduleEntry(models.Model):
 
 class Territory(models.Model):
     name = models.CharField(max_length=250, blank=True, null=True)
-    tracker = FieldTracker()
 
     class Meta:
         verbose_name_plural = 'Territories'
@@ -841,7 +819,6 @@ class TimeEntry(models.Model):
         'WorkType', blank=True, null=True, on_delete=models.SET_NULL)
     agreement = models.ForeignKey(
         'Agreement', blank=True, null=True, on_delete=models.SET_NULL)
-    tracker = FieldTracker()
 
     def get_entered_time(self):
         if self.time_end:
@@ -870,7 +847,6 @@ class Team(TimeStampedModel):
 
     objects = models.Manager()
     available_objects = AvailableBoardTeamManager()
-    tracker = FieldTracker()
 
     class Meta:
         verbose_name_plural = 'Teams'
@@ -889,7 +865,6 @@ class TicketPriority(TimeStampedModel):
     _color = models.CharField(
         max_length=50, null=True, blank=True, db_column='color'
     )
-    tracker = FieldTracker()
 
     DEFAULT_COLORS = {
         '1': 'red',
@@ -939,8 +914,6 @@ class ProjectStatus(TimeStampedModel):
     inactive_flag = models.BooleanField(default=False)
     closed_flag = models.BooleanField(default=False)
 
-    tracker = FieldTracker()
-
     class Meta:
         ordering = ('name', )
         verbose_name_plural = 'Project statuses'
@@ -953,8 +926,6 @@ class ProjectType(TimeStampedModel):
     name = models.CharField(max_length=30)
     default_flag = models.BooleanField(default=False)
     inactive_flag = models.BooleanField(default=False)
-
-    tracker = FieldTracker()
 
     class Meta:
         ordering = ('name', )
@@ -988,7 +959,6 @@ class ProjectPhase(TimeStampedModel):
     board = models.ForeignKey(
         'ConnectwiseBoard', blank=True, null=True, on_delete=models.SET_NULL
     )
-    tracker = FieldTracker()
 
     class Meta:
         verbose_name_plural = 'Project phases'
@@ -1010,7 +980,6 @@ class ProjectTeamMember(TimeStampedModel):
     work_role = models.ForeignKey(
         'WorkRole', null=True, on_delete=models.SET_NULL
     )
-    tracker = FieldTracker()
 
     def __str__(self):
         return '{}/{}'.format(self.id, self.member)
@@ -1074,7 +1043,6 @@ class Project(TimeStampedModel):
 
     objects = models.Manager()
     available_objects = AvailableProjectManager()
-    tracker = FieldTracker()
 
     class Meta:
         ordering = ('name', )
@@ -1105,7 +1073,6 @@ class Project(TimeStampedModel):
 
 class OpportunityStage(TimeStampedModel):
     name = models.CharField(max_length=50)
-    tracker = FieldTracker()
 
     class Meta:
         ordering = ('name', )
@@ -1133,7 +1100,6 @@ class OpportunityStatus(TimeStampedModel):
 
     objects = models.Manager()
     available_objects = AvailableOpportunityStatusManager()
-    tracker = FieldTracker()
 
     class Meta:
         ordering = ('name', )
@@ -1145,7 +1111,6 @@ class OpportunityStatus(TimeStampedModel):
 
 class OpportunityPriority(TimeStampedModel):
     name = models.CharField(max_length=50)
-    tracker = FieldTracker()
 
     class Meta:
         ordering = ('name', )
@@ -1158,7 +1123,6 @@ class OpportunityPriority(TimeStampedModel):
 class OpportunityType(TimeStampedModel):
     description = models.CharField(max_length=50)
     inactive_flag = models.BooleanField(default=False)
-    tracker = FieldTracker()
 
     class Meta:
         ordering = ('description', )
@@ -1208,7 +1172,6 @@ class Opportunity(TimeStampedModel):
     opportunity_type = models.ForeignKey('OpportunityType',
                                          blank=True, null=True,
                                          on_delete=models.SET_NULL)
-    tracker = FieldTracker()
 
     class Meta:
         ordering = ('name', )
@@ -1399,7 +1362,6 @@ class Ticket(TimeStampedModel):
     agreement = models.ForeignKey(
         'Agreement', blank=True, null=True, related_name='agreement_tickets',
         on_delete=models.SET_NULL)
-    tracker = FieldTracker()
 
     class Meta:
         verbose_name = 'Ticket'
@@ -1580,7 +1542,6 @@ class ServiceNote(TimeStampedModel):
     ticket = models.ForeignKey('Ticket', on_delete=models.CASCADE)
     member = models.ForeignKey(
         'Member', blank=True, null=True, on_delete=models.SET_NULL)
-    tracker = FieldTracker()
 
     class Meta:
         ordering = ('-date_created', 'id')
@@ -1613,7 +1574,6 @@ class Sla(TimeStampedModel, SlaGoalsMixin):
         null=True,
         on_delete=models.SET_NULL
         )
-    tracker = FieldTracker()
 
     class Meta:
         verbose_name_plural = 'SLAs'
@@ -1650,7 +1610,6 @@ class SlaPriority(TimeStampedModel, SlaGoalsMixin):
     respond_hours = models.FloatField()
     plan_within = models.FloatField()
     resolution_hours = models.FloatField()
-    tracker = FieldTracker()
 
     class Meta:
         verbose_name_plural = 'SLA Priorities'
@@ -1665,7 +1624,6 @@ class OpportunityNote(TimeStampedModel):
     text = models.TextField(blank=True, null=True, max_length=2000)
     date_created = models.DateTimeField(blank=True, null=True)
     opportunity = models.ForeignKey('Opportunity', on_delete=models.CASCADE)
-    tracker = FieldTracker()
 
     class Meta:
         ordering = ('-date_created', 'id', )
@@ -1682,7 +1640,6 @@ class ActivityStatus(TimeStampedModel):
     inactive_flag = models.BooleanField(default=False)
     spawn_followup_flag = models.BooleanField(default=False)
     closed_flag = models.BooleanField(default=False)
-    tracker = FieldTracker()
 
     class Meta:
         ordering = ('name', )
@@ -1700,7 +1657,6 @@ class ActivityType(TimeStampedModel):
     email_flag = models.BooleanField(default=False)
     memo_flag = models.BooleanField(default=False)
     history_flag = models.BooleanField(default=False)
-    tracker = FieldTracker()
 
     class Meta:
         ordering = ('name', )
@@ -1728,7 +1684,6 @@ class Activity(TimeStampedModel):
         'Company', blank=True, null=True, on_delete=models.SET_NULL)
     agreement = models.ForeignKey(
         'Agreement', blank=True, null=True, on_delete=models.SET_NULL)
-    tracker = FieldTracker()
 
     class Meta:
         verbose_name_plural = 'activities'
@@ -1771,7 +1726,6 @@ class Activity(TimeStampedModel):
 
 class SalesProbability(TimeStampedModel):
     probability = models.IntegerField()
-    tracker = FieldTracker()
 
     class Meta:
         verbose_name_plural = 'Sales probabilities'
@@ -1920,7 +1874,6 @@ class StateMachineManager(object):
 class Type(TimeStampedModel):
     name = models.CharField(max_length=50)
     board = models.ForeignKey('ConnectWiseBoard', on_delete=models.CASCADE)
-    tracker = FieldTracker()
 
     class Meta:
         verbose_name = 'Type'
@@ -1933,7 +1886,6 @@ class Type(TimeStampedModel):
 class SubType(TimeStampedModel):
     name = models.CharField(max_length=50)
     board = models.ForeignKey('ConnectWiseBoard', on_delete=models.CASCADE)
-    tracker = FieldTracker()
 
     class Meta:
         verbose_name = 'Subtype'
@@ -1946,7 +1898,6 @@ class SubType(TimeStampedModel):
 class Item(TimeStampedModel):
     name = models.CharField(max_length=50)
     board = models.ForeignKey('ConnectWiseBoard', on_delete=models.CASCADE)
-    tracker = FieldTracker()
 
     class Meta:
         verbose_name = 'Item'
@@ -1963,7 +1914,6 @@ class WorkType(TimeStampedModel):
     bill_time = models.CharField(
         max_length=50, choices=BILL_TYPES, blank=True, null=True
     )
-    tracker = FieldTracker()
 
     def __str__(self):
         return self.name
@@ -1972,7 +1922,6 @@ class WorkType(TimeStampedModel):
 class WorkRole(TimeStampedModel):
     name = models.CharField(max_length=50)
     inactive_flag = models.BooleanField(default=False)
-    tracker = FieldTracker()
 
     def __str__(self):
         return self.name
@@ -1992,7 +1941,350 @@ class Agreement(TimeStampedModel):
         'WorkRole', null=True, on_delete=models.SET_NULL)
     company = models.ForeignKey(
         'Company', null=True, on_delete=models.SET_NULL)
-    tracker = FieldTracker()
 
     def __str__(self):
         return '{}/{}'.format(self.agreement_type, self.name)
+
+
+class TicketTracker(Ticket):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djconnectwise_ticket'
+
+
+class ConnectWiseBoardTracker(ConnectWiseBoard):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djconnectwise_connectwiseboard'
+
+
+class BoardStatusTracker(BoardStatus):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djconnectwise_boardstatus'
+
+
+class LocationTracker(Location):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djconnectwise_location'
+
+
+class MemberTracker(Member):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djconnectwise_member'
+
+
+class CompanyTracker(Company):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djconnectwise_company'
+
+
+class CompanyStatusTracker(CompanyStatus):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djconnectwise_companystatus'
+
+
+class CompanyTypeTracker(CompanyType):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djconnectwise_companytype'
+
+
+class MyCompanyOtherTracker(MyCompanyOther):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djconnectwise_mycompanyother'
+
+
+class CalendarTracker(Calendar):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djconnectwise_calendar'
+
+
+class HolidayTracker(Holiday):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djconnectwise_holiday'
+
+
+class HolidayListTracker(HolidayList):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djconnectwise_holidaylist'
+
+
+class ScheduleTypeTracker(ScheduleType):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djconnectwise_scheduletype'
+
+
+class ScheduleStatusTracker(ScheduleStatus):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djconnectwise_schedulestatus'
+
+
+class ScheduleEntryTracker(ScheduleEntry):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djconnectwise_scheduleentry'
+
+
+class TerritoryTracker(Territory):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djconnectwise_territory'
+
+
+class TimeEntryTracker(TimeEntry):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djconnectwise_timeentry'
+
+
+class TeamTracker(Team):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djconnectwise_team'
+
+
+class TicketPriorityTracker(TicketPriority):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djconnectwise_ticketpriority'
+
+
+class ProjectStatusTracker(ProjectStatus):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djconnectwise_projectstatus'
+
+
+class ProjectTypeTracker(ProjectType):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djconnectwise_projecttype'
+
+
+class ProjectPhaseTracker(ProjectPhase):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djconnectwise_projectphase'
+
+
+class ProjectTeamMemberTracker(ProjectTeamMember):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djconnectwise_projectteammember'
+
+
+class ProjectTracker(Project):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djconnectwise_project'
+
+
+class OpportunityStageTracker(OpportunityStage):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djconnectwise_opportunitystage'
+
+
+class OpportunityStatusTracker(OpportunityStatus):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djconnectwise_opportunitystatus'
+
+
+class OpportunityPriorityTracker(OpportunityPriority):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djconnectwise_opportunitypriority'
+
+
+class OpportunityTypeTracker(OpportunityType):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djconnectwise_opportunitytype'
+
+
+class OpportunityTracker(Opportunity):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djconnectwise_opportunity'
+
+
+class ServiceNoteTracker(ServiceNote):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djconnectwise_servicenote'
+
+
+class SlaTracker(Sla):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djconnectwise_sla'
+
+
+class SlaPriorityTracker(SlaPriority):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djconnectwise_slapriority'
+
+
+class OpportunityNoteTracker(OpportunityNote):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djconnectwise_opportunitynote'
+
+
+class ActivityStatusTracker(ActivityStatus):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djconnectwise_activitystatus'
+
+
+class ActivityTypeTracker(ActivityType):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djconnectwise_activitytype'
+
+
+class ActivityTracker(Activity):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djconnectwise_activity'
+
+
+class SalesProbabilityTracker(SalesProbability):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djconnectwise_salesprobability'
+
+
+class TypeTracker(Type):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djconnectwise_type'
+
+
+class SubTypeTracker(SubType):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djconnectwise_subtype'
+
+
+class ItemTracker(Item):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djconnectwise_item'
+
+
+class WorkTypeTracker(WorkType):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djconnectwise_worktype'
+
+
+class WorkRoleTracker(WorkRole):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djconnectwise_workrole'
+
+
+class AgreementTracker(Agreement):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djconnectwise_agreement'
