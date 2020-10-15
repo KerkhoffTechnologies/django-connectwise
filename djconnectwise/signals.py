@@ -1,13 +1,14 @@
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
 
-from .models import Ticket
+from .models import Ticket, TicketTracker
 import logging
 
 
 logger = logging.getLogger(__name__)
 
 
+@receiver(pre_save, sender=TicketTracker)
 @receiver(pre_save, sender=Ticket)
 def handle_ticket_sla_update_pre_save(sender, instance, **kwargs):
     # Signal for updating a tickets SLA information if necessary
