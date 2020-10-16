@@ -1012,6 +1012,7 @@ class Project(TimeStampedModel):
     scheduled_start = models.DateField(blank=True, null=True)
     scheduled_end = models.DateField(blank=True, null=True)
     description = models.TextField(blank=True, null=True)
+    udf = models.JSONField(blank=True, null=True)
 
     board = models.ForeignKey(
         'ConnectWiseBoard',
@@ -1172,6 +1173,7 @@ class Opportunity(TimeStampedModel):
     opportunity_type = models.ForeignKey('OpportunityType',
                                          blank=True, null=True,
                                          on_delete=models.SET_NULL)
+    udf = models.JSONField(blank=True, null=True)
 
     class Meta:
         ordering = ('name', )
@@ -1313,6 +1315,7 @@ class Ticket(TimeStampedModel):
                                         choices=PREDECESSOR_TYPES)
     lag_days = models.IntegerField(blank=True, null=True)
     lag_non_working_days_flag = models.BooleanField(default=False)
+    udf = models.JSONField(blank=True, null=True)
 
     ticket_predecessor = models.ForeignKey(
         'self', blank=True, null=True, on_delete=models.SET_NULL
@@ -1684,6 +1687,7 @@ class Activity(TimeStampedModel):
         'Company', blank=True, null=True, on_delete=models.SET_NULL)
     agreement = models.ForeignKey(
         'Agreement', blank=True, null=True, on_delete=models.SET_NULL)
+    udf = models.JSONField(blank=True, null=True)
 
     class Meta:
         verbose_name_plural = 'activities'
@@ -1944,6 +1948,36 @@ class Agreement(TimeStampedModel):
 
     def __str__(self):
         return '{}/{}'.format(self.agreement_type, self.name)
+
+
+class BaseUDF(TimeStampedModel):
+    caption = models.CharField(max_length=50, blank=True, null=True)
+    type = models.CharField(max_length=50, blank=True, null=True)
+    entry_method = models.CharField(max_length=50, blank=True, null=True)
+    number_of_decimals = \
+        models.PositiveSmallIntegerField(blank=True, null=True)
+
+    class Meta:
+        abstract = True
+
+    def __str__(self):
+        return self.caption
+
+
+class TicketUDF(BaseUDF):
+    pass
+
+
+class ProjectUDF(BaseUDF):
+    pass
+
+
+class ActivityUDF(BaseUDF):
+    pass
+
+
+class OpportunityUDF(BaseUDF):
+    pass
 
 
 class TicketTracker(Ticket):
@@ -2288,3 +2322,35 @@ class AgreementTracker(Agreement):
     class Meta:
         proxy = True
         db_table = 'djconnectwise_agreement'
+
+
+class TicketUDFTracker(TicketUDF):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djconnectwise_ticketudf'
+
+
+class ProjectUDFTracker(ProjectUDF):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djconnectwise_projectudf'
+
+
+class ActivityUDFTracker(ActivityUDF):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djconnectwise_activityudf'
+
+
+class OpportunityUDFTracker(OpportunityUDF):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djconnectwise_opportunityudf'
