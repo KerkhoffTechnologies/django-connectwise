@@ -227,7 +227,6 @@ API_COMPANY = {
         'lastUpdated': '2015-12-24T22: 08: 22Z',
         'updatedBy': 'omnicorp'
     },
-    'customFields': None,
 }
 
 API_COMPANY_LIST = [API_COMPANY]
@@ -578,7 +577,17 @@ API_PROJECT = {
     'doNotDisplayInPortalFlag': False,
     'estimatedTimeCost': 0,
     'estimatedExpenseCost': 0,
-    'estimatedProductCost': 0
+    'estimatedProductCost': 0,
+    "customFields": [
+        {
+            "id": 1,
+            "caption": "Story Points",
+            "type": "Number",
+            "entryMethod": "EntryField",
+            "numberOfDecimals": 0,
+            "value": 5
+        },
+    ],
 }
 
 API_PROJECT_LIST = [API_PROJECT]
@@ -989,6 +998,16 @@ API_SERVICE_TICKET = {
     'businessUnitId': 10,
     'mobileGuid': 'c5882071-79ac-4149-9088-3af3196a22f7',
     'sla': API_SERVICE_SLA,
+    "customFields": [
+                {
+                    "id": 1,
+                    "caption": "Story Points",
+                    "type": "Number",
+                    "entryMethod": "EntryField",
+                    "numberOfDecimals": 0,
+                    "value": 5
+                },
+    ],
     '_info': {
         'dateEntered': '2005-05-27T17:30:19Z',
         'lastUpdated': '2016-03-08T21:59:20Z',
@@ -1002,7 +1021,6 @@ API_SERVICE_TICKET = {
         'tasks_href': 'https://example.com/v4_6_release/apis/3.0/service/tickets/69/tasks',
         'notes_href': 'https://example.com/v4_6_release/apis/3.0/service/tickets/69/notes'
     },
-    'customFields': None
 }
 
 
@@ -1307,7 +1325,16 @@ API_SALES_OPPORTUNITY = {
     'contact': {'_info': {'contact_href': 'https://example.com/v4_6_release/apis/3.0/company/contacts/20'},
                 'id': 20,
                 'name': 'Flin Storts'},
-    'customFields': None,
+    "customFields": [
+                {
+                    "id": 1,
+                    "caption": "Story Points",
+                    "type": "Number",
+                    "entryMethod": "EntryField",
+                    "numberOfDecimals": 0,
+                    "value": 5
+                },
+    ],
     'customerPO': None,
     'dateBecameLead': '2005-09-09T19:53:52Z',
     'expectedCloseDate': '2006-01-06T00:00:00Z',
@@ -1535,7 +1562,16 @@ API_SALES_ACTIVITY = {
         'lastUpdated': '2017-08-04T20:05:52Z',
         'updatedBy': 'User1'
     },
-    'customFields': None
+    "customFields": [
+                {
+                    "id": 1,
+                    "caption": "Story Points",
+                    "type": "Number",
+                    "entryMethod": "EntryField",
+                    "numberOfDecimals": 0,
+                    "value": 5
+                },
+    ],
 }
 
 API_SALES_ACTIVITIES = [

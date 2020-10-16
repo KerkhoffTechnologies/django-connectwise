@@ -372,3 +372,31 @@ class Agreement(admin.ModelAdmin):
                     'cancelled_flag', 'bill_time', 'work_type', 'work_role')
     list_filter = ['agreement_status', 'company']
     search_fields = ['name']
+
+
+@admin.register(models.TicketUDF)
+class TicketUDFAdmin(admin.ModelAdmin):
+    list_display = ('id', 'caption', 'type', 'entry_method',
+                    'number_of_decimals')
+    search_fields = ['caption', 'type']
+
+
+@admin.register(models.ProjectUDF)
+class ProjectUDFAdmin(admin.ModelAdmin):
+    list_display = ('id', 'caption', 'type', 'entry_method',
+                    'number_of_decimals')
+    search_fields = ['caption', 'type']
+
+
+@admin.register(models.ActivityUDF)
+class ActivityUDFAdmin(admin.ModelAdmin):
+    list_display = ('id', 'caption', 'type', 'entry_method',
+                    'number_of_decimals')
+    search_fields = ['caption', 'type']
+
+
+@admin.register(models.OpportunityUDF)
+class OpportunityUDFAdmin(admin.ModelAdmin):
+    list_display = ('id', 'caption', 'type', 'entry_method',
+                    'number_of_decimals')
+    search_fields = ['caption', 'type']

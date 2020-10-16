@@ -89,7 +89,12 @@ class Command(BaseCommand):
             ('schedule_entry', sync.ScheduleEntriesSynchronizer,
                 _('Schedule Entry')),
             ('project_team_member', sync.ProjectTeamMemberSynchronizer,
-             _('Project Team Member')),
+                _('Project Team Member')),
+            ('ticket_udf', sync.TicketUDFSynchronizer, _('Ticket UDF')),
+            ('project_udf', sync.ProjectUDFSynchronizer, _('Project UDF')),
+            ('activity_udf', sync.ActivityUDFSynchronizer, _('Activity UDF')),
+            ('opportunity_udf', sync.OpportunityUDFSynchronizer,
+                _('Opportunity UDF')),
         )
 
         settings = DjconnectwiseSettings().get_settings()

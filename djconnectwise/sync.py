@@ -223,6 +223,9 @@ class Synchronizer:
     def get_single(self, *args, **kwargs):
         raise NotImplementedError
 
+    def _assign_field_data(self, instance, api_instance):
+        raise NotImplementedError
+
     def fetch_sync_by_id(self, instance_id):
         api_instance = self.get_single(instance_id)
         instance, created = self.update_or_create_instance(api_instance)
@@ -999,6 +1002,9 @@ class ActivitySynchronizer(Synchronizer):
                 'skipping.'.format(instance.id)
             )
 
+        instance.udf = {str(item['id']): item
+                        for item in json_data.get('customFields', list())}
+
         self.set_relations(instance, json_data)
         return instance
 
@@ -1603,6 +1609,8 @@ class ProjectSynchronizer(Synchronizer):
         budget_hours = json_data.get('budgetHours')
         scheduled_hours = json_data.get('scheduledHours')
         percent_complete = json_data.get('percentComplete')
+        instance.udf = {str(item['id']): item
+                        for item in json_data.get('customFields', list())}
 
         instance.actual_hours = Decimal(str(actual_hours)) \
             if actual_hours is not None else None
@@ -1894,6 +1902,12 @@ class TicketSynchronizerMixin:
         instance.resources = json_data.get('resources')
         instance.bill_time = json_data.get('billTime')
         instance.customer_updated = json_data.get('customerUpdatedFlag')
+
+        # Key is comes out of db as string, so we add it as a string here
+        # so the tracker can compare it properly.
+        # TODO add udf to other models
+        instance.udf = {str(item['id']): item
+                        for item in json_data.get('customFields', list())}
 
         instance.automatic_email_cc_flag = \
             json_data.get('automaticEmailCcFlag', False)
@@ -2257,6 +2271,8 @@ class OpportunitySynchronizer(Synchronizer):
         instance.location_id = json_data.get('locationId')
         instance.business_unit_id = json_data.get('businessUnitId')
         instance.customer_po = json_data.get('customerPO')
+        instance.udf = {str(item['id']): item
+                        for item in json_data.get('customFields', list())}
 
         # handle dates
         expected_close_date = json_data.get('expectedCloseDate')
@@ -2484,3 +2500,68 @@ class AgreementSynchronizer(Synchronizer):
 
     def get_page(self, *args, **kwargs):
         return self.client.get_agreements(*args, **kwargs)
+
+
+class UDFSynchronizer(Synchronizer):
+
+    def fetch_records(self, results, conditions=None):
+        """
+        Only fetch one record. To ensure we get a record if one exists, just
+        make a call for tickets but only ask for 1 pages, with a page size of 1
+        """
+        page = 1
+        logger.info('Fetching {} records'.format(
+            self.model_class.__bases__[0].__name__))
+        page_records = self.get_page(
+            page=page,
+            page_size=page,
+        )
+        for record in page_records:
+            # Should only run once, or not at all if there are 0 records of
+            # requested type.
+            self.persist_page(record.get('customFields', list()), results)
+
+        return results
+
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data['id']
+        instance.caption = json_data.get('caption')
+        instance.type = json_data.get('type')
+        instance.entry_method = json_data.get('entryMethod')
+        instance.number_of_decimals = json_data.get('numberOfDecimals')
+
+        return instance
+
+
+class TicketUDFSynchronizer(UDFSynchronizer):
+    client_class = api.ServiceAPIClient
+    model_class = models.TicketUDFTracker
+
+    def get_page(self, *args, **kwargs):
+        # Using the Service API Client fine for both service and project
+        #   tickets as both ticket types have all UDFs returned in a request
+        return self.client.get_tickets(*args, **kwargs)
+
+
+class ProjectUDFSynchronizer(UDFSynchronizer):
+    client_class = api.ProjectAPIClient
+    model_class = models.ProjectUDFTracker
+
+    def get_page(self, *args, **kwargs):
+        return self.client.get_projects(*args, **kwargs)
+
+
+class ActivityUDFSynchronizer(UDFSynchronizer):
+    client_class = api.SalesAPIClient
+    model_class = models.ActivityUDFTracker
+
+    def get_page(self, *args, **kwargs):
+        return self.client.get_activities(*args, **kwargs)
+
+
+class OpportunityUDFSynchronizer(UDFSynchronizer):
+    client_class = api.SalesAPIClient
+    model_class = models.OpportunityUDFTracker
+
+    def get_page(self, *args, **kwargs):
+        return self.client.get_opportunities(*args, **kwargs)
