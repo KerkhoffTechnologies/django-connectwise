@@ -594,7 +594,10 @@ class ServiceNoteSynchronizer(CallbackPartialSyncMixin, Synchronizer):
                 "Invalid target type for note creation: {}.".format(
                     str(target.__class__))
             )
-        service_client = api.ServiceAPIClient()
+        service_client = api.ServiceAPIClient(
+            api_public_key=kwargs.get('api_public_key'),
+            api_private_key=kwargs.get('api_private_key')
+        )
         instance = service_client.post_note(target_data, **kwargs)
 
         return self.update_or_create_instance(instance)
@@ -1180,7 +1183,10 @@ class ScheduleEntriesSynchronizer(BatchConditionMixin, Synchronizer):
         create it in the local database from the response
 
         """
-        schedule_client = api.ScheduleAPIClient()
+        schedule_client = api.ScheduleAPIClient(
+            api_public_key=kwargs.get('api_public_key'),
+            api_private_key=kwargs.get('api_private_key')
+        )
         # Type defines if it is a service ticket, opportunity, or activity.
         # (There are more but we probably wont be using them).
         # In the context of schedule entry types, Service Tickets and
@@ -1368,7 +1374,11 @@ class TimeEntrySynchronizer(BatchConditionMixin,
                 "Invalid target type for TimeEntry "
                 "creation: " + str(target.__class__) + "."
             )
-        time_client = api.TimeAPIClient()
+
+        time_client = api.TimeAPIClient(
+            api_public_key=kwargs.get('api_public_key'),
+            api_private_key=kwargs.get('api_private_key')
+        )
         instance = time_client.post_time_entry(target_data, **kwargs)
         return self.update_or_create_instance(instance)
 
