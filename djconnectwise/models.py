@@ -1411,9 +1411,15 @@ class Ticket(TimeStampedModel):
         self._warn_invalid_status()
 
         update_cw = kwargs.pop('update_cw', False)
-        super().save(*args, **kwargs)
+        public_key = kwargs.pop('api_public_key', None)
+        private_key = kwargs.pop('api_private_key', None)
+
+        super().save(**kwargs)
         if update_cw:
-            self.update_cw()
+            self.update_cw(
+                api_public_key=public_key,
+                api_private_key=private_key
+            )
 
     def _warn_invalid_status(self):
         """
@@ -1438,16 +1444,21 @@ class Ticket(TimeStampedModel):
                 )
             )
 
-    def update_cw(self):
+    def update_cw(self, **kwargs):
         """
         Send ticket status or priority and closed_flag updates to ConnectWise.
         As of version 2019.3, project tickets and issues need to be updated
         using the project API endpoint.
         """
         if self.record_type in [self.PROJECT_TICKET, self.PROJECT_ISSUE]:
-            api_client = api.ProjectAPIClient()
+            api_class = api.ProjectAPIClient
         else:
-            api_client = api.ServiceAPIClient()
+            api_class = api.ServiceAPIClient
+
+        api_client = api_class(
+            api_public_key=kwargs.get('api_public_key'),
+            api_private_key=kwargs.get('api_private_key')
+        )
 
         return api_client.update_ticket(
             self.id, self.closed_flag, self.priority, self.status
