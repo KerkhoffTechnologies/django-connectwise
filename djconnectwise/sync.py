@@ -226,7 +226,7 @@ class Synchronizer:
     def _assign_field_data(self, instance, api_instance):
         raise NotImplementedError
 
-    def fetch_sync_by_id(self, instance_id):
+    def fetch_sync_by_id(self, instance_id, sync_config={}):
         api_instance = self.get_single(instance_id)
         instance, created = self.update_or_create_instance(api_instance)
         return instance
@@ -1857,28 +1857,32 @@ class TicketSynchronizerMixin:
     def get_single(self, ticket_id):
         return self.client.get_ticket(ticket_id)
 
-    def sync_related(self, instance):
+    # sync_config is read-only, so mutable argument is used for simplicity.
+    def sync_related(self, instance, sync_config={}):
         instance_id = instance.id
         sync_classes = []
 
-        note_sync = ServiceNoteSynchronizer()
-        note_sync.api_conditions = [instance_id]
-        sync_classes.append((note_sync, Q(ticket=instance)))
+        if sync_config.get('sync_service_note', True):
+            note_sync = ServiceNoteSynchronizer()
+            note_sync.api_conditions = [instance_id]
+            sync_classes.append((note_sync, Q(ticket=instance)))
 
-        time_sync = TimeEntrySynchronizer()
-        time_sync.batch_condition_list = [instance_id]
-        sync_classes.append((time_sync, Q(charge_to_id=instance)))
+        if sync_config.get('sync_time_entry', True):
+            time_sync = TimeEntrySynchronizer()
+            time_sync.batch_condition_list = [instance_id]
+            sync_classes.append((time_sync, Q(charge_to_id=instance)))
 
-        activity_sync = ActivitySynchronizer()
-        activity_sync.api_conditions = ['ticket/id={}'.format(instance_id)]
-        sync_classes.append((activity_sync, Q(ticket=instance)))
+        if sync_config.get('sync_activity', True):
+            activity_sync = ActivitySynchronizer()
+            activity_sync.api_conditions = ['ticket/id={}'.format(instance_id)]
+            sync_classes.append((activity_sync, Q(ticket=instance)))
 
         self.sync_children(*sync_classes)
 
-    def fetch_sync_by_id(self, instance_id):
+    def fetch_sync_by_id(self, instance_id, sync_config={}):
         instance = super().fetch_sync_by_id(instance_id)
         if not instance.closed_flag:
-            self.sync_related(instance)
+            self.sync_related(instance, sync_config)
         return instance
 
     def _instance_ids(self, filter_params=None):
