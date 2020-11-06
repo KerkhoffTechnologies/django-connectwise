@@ -1,6 +1,5 @@
 import logging
 import re
-import json
 import pytz
 from urllib.parse import urlparse
 
@@ -9,7 +8,7 @@ from retrying import retry
 
 from django.conf import settings
 from django.core.cache import cache
-from djconnectwise.utils import DjconnectwiseSettings
+from djconnectwise.utils import DjconnectwiseSettings, process_error_response
 
 # Cloud URLs:
 # https://developer.connectwise.com/Products/Manage/Developer_Guide#Cloud_URLs
@@ -198,36 +197,7 @@ class ConnectWiseAPIClient(object):
             response.url, response.status_code, response.content))
 
     def _prepare_error_response(self, response):
-        error = response.content.decode("utf-8")
-        # decode the bytes encoded error to a string
-        # error = error.args[0].decode("utf-8")
-        error = error.replace('\r\n', '')
-        messages = []
-
-        try:
-            error = json.loads(error)
-            stripped_message = error.get('message').rstrip('.') if \
-                error.get('message') else 'No message'
-            primary_error_msg = '{}.'.format(stripped_message)
-            if error.get('errors'):
-                for error_message in error.get('errors'):
-                    messages.append(
-                        '{}.'.format(error_message.get('message').rstrip('.'))
-                    )
-
-            messages = ' The error was: '.join(messages)
-
-            msg = '{} {}'.format(primary_error_msg, messages)
-
-        except json.decoder.JSONDecodeError:
-            # JSON decoding failed
-            msg = 'An error occurred: {} {}'.format(response.status_code,
-                                                    error)
-        except KeyError:
-            # 'code' or 'message' was not found in the error
-            msg = 'An error occurred: {} {}'.format(response.status_code,
-                                                    error)
-        return msg
+        return process_error_response(response)
 
     def build_api_base_url(self, force_fetch):
         api_codebase, codebase_updated = \
