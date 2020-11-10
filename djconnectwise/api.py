@@ -65,6 +65,11 @@ class ConnectWiseRecordNotFoundError(ConnectWiseAPIClientError):
     pass
 
 
+class ConnectWiseSecurityPermissionsException(ConnectWiseAPIClientError):
+    """The API credentials have insufficient security permissions."""
+    pass
+
+
 class CompanyInfoManager:
     COMPANYINFO_ENDPOINT = '{}/login/companyinfo/{}'
 
@@ -394,6 +399,10 @@ class ConnectWiseAPIClient(object):
             return None
         elif 200 <= response.status_code < 300:
             return response.json()
+        elif response.status_code == 403:
+            self._log_failed(response)
+            raise ConnectWiseSecurityPermissionsException(
+                self._prepare_error_response(response), response.status_code)
         elif response.status_code == 404:
             msg = 'Resource not found: {}'.format(response.url)
             logger.warning(msg)
