@@ -1,5 +1,4 @@
 import hashlib
-import json
 import re
 from io import BytesIO
 
@@ -77,39 +76,6 @@ def generate_thumbnail(avatar, size, extension, filename):
     avatar_file = ContentFile(byte_stream.getvalue())
 
     return avatar_file, filename
-
-
-def process_error_response(response):
-    error = response.content.decode("utf-8")
-    # decode the bytes encoded error to a string
-    # error = error.args[0].decode("utf-8")
-    error = error.replace('\r\n', '')
-    messages = []
-
-    try:
-        error = json.loads(error)
-        stripped_message = error.get('message').rstrip('.') if \
-            error.get('message') else 'No message'
-        primary_error_msg = '{}.'.format(stripped_message)
-        if error.get('errors'):
-            for error_message in error.get('errors'):
-                messages.append(
-                    '{}.'.format(error_message.get('message').rstrip('.'))
-                )
-
-        messages = ' The error was: '.join(messages)
-
-        msg = '{} {}'.format(primary_error_msg, messages)
-
-    except json.decoder.JSONDecodeError:
-        # JSON decoding failed
-        msg = 'An error occurred: {} {}'.format(response.status_code,
-                                                error)
-    except KeyError:
-        # 'code' or 'message' was not found in the error
-        msg = 'An error occurred: {} {}'.format(response.status_code,
-                                                error)
-    return msg
 
 
 class DjconnectwiseSettings:
