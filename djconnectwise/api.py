@@ -66,7 +66,7 @@ class ConnectWiseRecordNotFoundError(ConnectWiseAPIClientError):
 
 
 class ConnectWiseSecurityPermissionsException(ConnectWiseAPIClientError):
-    """The record was not found."""
+    """The API credentials have insufficient security permissions."""
     pass
 
 
