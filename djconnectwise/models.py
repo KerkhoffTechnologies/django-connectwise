@@ -755,11 +755,14 @@ class ScheduleEntry(models.Model):
     def __str__(self):
         return self.name or ''
 
-    def delete_entry(self):
+    def delete_entry(self, **kwargs):
         """
         Send Delete request to ConnectWise for this entry
         """
-        schedule_client = api.ScheduleAPIClient()
+        schedule_client = api.ScheduleAPIClient(
+            api_public_key=kwargs.get('api_public_key'),
+            api_private_key=kwargs.get('api_private_key')
+        )
         return schedule_client.delete_schedule_entry(self.id)
 
 
@@ -1051,11 +1054,14 @@ class Project(TimeStampedModel):
     def __str__(self):
         return self.name or ''
 
-    def update_cw(self):
+    def update_cw(self, **kwargs):
         """
         Send project status updates to ConnectWise.
         """
-        api_client = api.ProjectAPIClient()
+        api_client = api.ProjectAPIClient(
+            api_public_key=kwargs.get('api_public_key'),
+            api_private_key=kwargs.get('api_private_key')
+        )
 
         return api_client.update_project(self.id, self.status)
 
@@ -1208,11 +1214,14 @@ class Opportunity(TimeStampedModel):
         if update_cw:
             self.update_cw()
 
-    def update_cw(self):
+    def update_cw(self, **kwargs):
         """
         Send ticket status and closed_flag updates to ConnectWise.
         """
-        sales_client = api.SalesAPIClient()
+        sales_client = api.SalesAPIClient(
+            api_public_key=kwargs.get('api_public_key'),
+            api_private_key=kwargs.get('api_private_key')
+        )
         return sales_client.update_opportunity_stage(
             self.id, self.stage
         )
@@ -1717,11 +1726,14 @@ class Activity(TimeStampedModel):
         if update_cw:
             self.update_cw()
 
-    def update_cw(self):
+    def update_cw(self, **kwargs):
         """
         Send activity status and closed_flag updates to ConnectWise.
         """
-        sales_client = api.SalesAPIClient()
+        sales_client = api.SalesAPIClient(
+            api_public_key=kwargs.get('api_public_key'),
+            api_private_key=kwargs.get('api_private_key')
+        )
         return sales_client.update_activity_status(
             self.id, self.status
         )

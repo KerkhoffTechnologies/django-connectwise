@@ -1,14 +1,14 @@
+import json
 import logging
 import re
-import json
-import pytz
 from urllib.parse import urlparse
 
+import pytz
 import requests
-from retrying import retry
-
 from django.conf import settings
 from django.core.cache import cache
+from retrying import retry
+
 from djconnectwise.utils import DjconnectwiseSettings
 
 # Cloud URLs:

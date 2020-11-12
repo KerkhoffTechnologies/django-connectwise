@@ -1,11 +1,11 @@
 import hashlib
 import re
-from django.core.files.base import ContentFile
-from PIL import Image, ImageOps
 from io import BytesIO
 
-from django.core.files.storage import default_storage
+from PIL import Image, ImageOps
 from django.conf import settings
+from django.core.files.base import ContentFile
+from django.core.files.storage import default_storage
 
 _underscorer1 = re.compile(r'(.)([A-Z][a-z]+)')
 _underscorer2 = re.compile(r'([a-z0-9])([A-Z])')
