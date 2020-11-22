@@ -37,7 +37,7 @@ From source:
 1. Add to `urls.py`:
 
     ```
-    url(
+    re_path(
         r'^callback/',  # This can be whatever you want.
         include('djconnectwise.urls', namespace='connectwise')
     ),

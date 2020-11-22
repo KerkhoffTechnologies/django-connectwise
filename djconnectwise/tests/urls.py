@@ -1,7 +1,8 @@
-from django.conf.urls import url, include
+from django.urls import re_path, include
 
 urlpatterns = [
-    url(r'^callback/', include(
-        'djconnectwise.urls', namespace='djconnectwise')
-        ),
+    re_path(
+        r'^callback/',
+        include('djconnectwise.urls', namespace='djconnectwise')
+    ),
 ]
