@@ -1847,9 +1847,36 @@ class TicketSynchronizerMixin:
                 list(filtered_statuses.values_list('id', flat=True))
 
     def get_batch_condition(self, conditions):
-        return 'status/id in ({})'.format(
+        batch_condition = 'status/id in ({})'.format(
             ','.join([str(i) for i in conditions])
         )
+
+        request_settings = DjconnectwiseSettings().get_settings()
+        keep_closed = request_settings.get('keep_closed_ticket_days')
+        if keep_closed:
+            batch_condition = self.format_conditions(
+                keep_closed, batch_condition, request_settings)
+
+        return batch_condition
+
+    def format_conditions(self, keep_closed,
+                          batch_condition, request_settings):
+        closed_date = timezone.now() - timezone.timedelta(days=keep_closed)
+        condition = 'closedDate>[{}]'.format(closed_date)
+
+        keep_closed_board_ids = \
+            request_settings.get('keep_closed_status_board_ids')
+        if keep_closed_board_ids:
+            condition = '{} and board/id in ({})'.format(
+                condition, keep_closed_board_ids)
+
+        # lastUpdated is only present when running full syncs.
+        if not self.full:
+            last_updated = self.api_conditions[-1]
+            condition = '{} and {}'.format(condition, last_updated)
+
+        batch_condition = '{} or {}'.format(batch_condition, condition)
+        return batch_condition
 
     def get_page(self, *args, **kwargs):
         return self.client.get_tickets(*args, **kwargs)
