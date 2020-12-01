@@ -174,6 +174,7 @@ class BoardStatus(TimeStampedModel):
     display_on_board = models.BooleanField()
     inactive = models.BooleanField()
     closed_status = models.BooleanField()
+    time_entry_not_allowed = models.BooleanField(null=True)
     board = models.ForeignKey(
         'ConnectWiseBoard', blank=True, null=True, on_delete=models.SET_NULL)
     # Letting escalation_status allow blank/null rather than possibly having

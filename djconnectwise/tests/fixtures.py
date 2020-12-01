@@ -86,7 +86,8 @@ API_BOARD_STATUS_LIST = [
         'sortOrder': 0,
         'displayOnBoard': True,
         'inactive': False,
-        'closedStatus': False
+        'closedStatus': False,
+        'timeEntryNotAllowed': False
     },
     {
         'id': 2,
