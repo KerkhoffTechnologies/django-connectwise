@@ -1492,7 +1492,7 @@ class Ticket(TimeStampedModel):
         self.closed_flag = True
         return self.save(*args, **kwargs)
 
-    def calculate_sla_expiry(self):
+    def calculate_sla_expiry(self, priority_change=None):
         # We can't guarantee that entered_date_utc won't be null.
         # In the case that it is null, reset the date fields to prevent
         # incorrect SLA calculations.
@@ -1538,7 +1538,13 @@ class Ticket(TimeStampedModel):
             )
             return
 
-        self.change_sla_state(new_stage, calendar, sla)
+        if priority_change:
+            # When only the SLA priority has changed, we don't need to
+            # change the state, just re-calculate the next SLA expiry date.
+            sla_hours = sla.get_stage_hours(new_stage)
+            calendar.next_phase_expiry(sla_hours, self)
+        else:
+            self.change_sla_state(new_stage, calendar, sla)
 
     def change_sla_state(self, new_stage, calendar, sla):
         valid_stage = self.sla_state.get_valid_next_state(new_stage) \
