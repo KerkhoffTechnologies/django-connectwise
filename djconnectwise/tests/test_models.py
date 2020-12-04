@@ -1,12 +1,14 @@
-from djconnectwise.models import TicketPriority, BoardStatus
-from model_mommy import mommy
-from test_plus.test import TestCase
-from djconnectwise.models import Ticket, InvalidStatusError, Sla, Calendar
-from djconnectwise.models import MyCompanyOther, Holiday, HolidayList
+import datetime
 from unittest.mock import patch
+
 from django.utils import timezone
 from freezegun import freeze_time
-import datetime
+from model_mommy import mommy
+from test_plus.test import TestCase
+
+from djconnectwise.models import MyCompanyOther, Holiday, HolidayList, \
+    Ticket, InvalidStatusError, Sla, Calendar, SlaPriority, TicketPriority, \
+    BoardStatus
 
 ticket_statuses_names = [
     'New',
@@ -51,7 +53,7 @@ class ModelTestCase(TestCase):
             'djconnectwise.tests.connectwise_board',
             _quantity=3,
         )
-        Sla.objects.create(
+        sla = Sla.objects.create(
             name="Standard SLA",
             default_flag=True,
             respond_hours=2,
@@ -59,6 +61,24 @@ class ModelTestCase(TestCase):
             resolution_hours=96,
             based_on='MyCalendar'
         )
+
+        goal_times = [
+            (2.0, 4.0, 8.0),
+            (6.0, 12.0, 72.0),
+        ]
+        sla_priorities = []
+        # Don't set an SLA priority for the first ticket priority to ensure
+        # it uses the default SLA response goal hours.
+        for index, ticket_priority in enumerate(self.ticket_priorities[-2:]):
+            sla_priority = SlaPriority.objects.create(
+                sla=sla,
+                priority=ticket_priority,
+                respond_hours=goal_times[index][0],
+                plan_within=goal_times[index][1],
+                resolution_hours=goal_times[index][2]
+            )
+            sla_priorities.append(sla_priority)
+
         holiday_list = HolidayList.objects.create(
             name="Test List"
         )
@@ -613,3 +633,75 @@ class TestTicket(ModelTestCase):
         ticket.date_resplan_utc = timezone.now()
         result = ticket.sla_state._lowest_possible_stage('respond')
         self.assertEqual('resolve', result)
+
+    @freeze_time("2021-08-23 08:24:34", tz_offset=-7)
+    def test_calculate_sla_on_priority_change(self):
+        """
+        Verify that SLA expiry dates are re-calculated when only
+        the SLA priority is changed.
+        """
+        board = self.connectwise_boards[0]
+        ticket = Ticket.objects.create(
+            summary='test',
+            status=board.board_statuses.get(name='New'),
+            sla=Sla.objects.first(),
+            priority=self.ticket_priorities[2],
+            board=board,
+            company=self.companies[0],
+            entered_date_utc=timezone.now()
+        )
+
+        # Time in UTC-7 is 2021-08-23 01:24:34
+        self.assertEqual(
+            str(ticket.sla_expire_date.astimezone(tz=None)),
+            '2021-08-23 07:24:34-07:00'
+        )
+        self.assertEqual('respond', ticket.sla_stage)
+
+        # Change to a priority with less response hours
+        ticket.priority = self.ticket_priorities[1]
+        ticket.save()
+        self.assertEqual(
+            str(ticket.sla_expire_date.astimezone(tz=None)),
+            '2021-08-23 03:24:34-07:00'
+        )
+
+    @freeze_time("2021-08-23 00:24:34", tz_offset=-7)
+    def test_calculate_sla_on_status_and_priority_change(self):
+        """
+        Verify that SLA expiry dates are re-calculated correctly when priority
+        and status are changed.
+        """
+        board = self.connectwise_boards[0]
+        ticket = Ticket.objects.create(
+            summary='test',
+            status=board.board_statuses.get(name='New'),
+            sla=Sla.objects.first(),
+            priority=self.ticket_priorities[1],
+            board=board,
+            company=self.companies[0],
+            entered_date_utc=timezone.now()
+        )
+
+        # Time in UTC-7 is 2021-08-23 17:24:34
+        self.assertEqual(
+            str(ticket.sla_expire_date.astimezone(tz=None)),
+            '2021-08-23 10:00:34-07:00'
+        )
+        self.assertEqual('respond', ticket.sla_stage)
+
+        ticket.status = board.board_statuses.get(name='Scheduled')
+        ticket.save()
+
+        self.assertEqual('plan', ticket.sla_stage)
+        self.assertEqual(
+            str(ticket.sla_expire_date.astimezone(tz=None)),
+            '2021-08-23 12:00:34-07:00'
+        )
+
+        ticket.priority = self.ticket_priorities[2]
+        ticket.save()
+        self.assertEqual(
+            str(ticket.sla_expire_date.astimezone(tz=None)),
+            '2021-08-24 11:00:34-07:00'
+        )
