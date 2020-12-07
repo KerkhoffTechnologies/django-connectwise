@@ -691,16 +691,6 @@ class BoardChildSynchronizer(Synchronizer):
     def client_call(self, board_id):
         raise NotImplementedError
 
-    def get_page(self, *args, **kwargs):
-        records = []
-        board_qs = models.ConnectWiseBoard.objects.all()\
-            .order_by(self.lookup_key)
-
-        for board_id in board_qs.values_list('id', flat=True):
-            records += self.client_call(board_id, *args, **kwargs)
-
-        return records
-
 
 class BoardStatusSynchronizer(BoardChildSynchronizer):
     client_class = api.ServiceAPIClient
@@ -727,8 +717,42 @@ class BoardStatusSynchronizer(BoardChildSynchronizer):
         kwargs['conditions'] = self.api_conditions
         return self.client.get_statuses(board_id, *args, **kwargs)
 
+    def get_page(self, *args, **kwargs):
+        records = []
+        board_qs = models.ConnectWiseBoard.objects.all()\
+            .order_by(self.lookup_key)
 
-class TeamSynchronizer(BoardChildSynchronizer):
+        for board_id in board_qs.values_list('id', flat=True):
+            records += self.client_call(board_id, *args, **kwargs)
+
+        return records
+
+
+class BoardFilterMixin:
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        request_settings = DjconnectwiseSettings().get_settings()
+        board_names = request_settings.get('board_status_filter')
+        self.boards = [board.strip() for board in board_names.split(',')] \
+            if board_names else None
+
+    def get_page(self, *args, **kwargs):
+        records = []
+        if self.boards:
+            board_qs = models.ConnectWiseBoard.available_objects.filter(
+                name__in=self.boards).order_by(self.lookup_key)
+        else:
+            board_qs = models.ConnectWiseBoard.available_objects.all().\
+                order_by(self.lookup_key)
+
+        for board_id in board_qs.values_list('id', flat=True):
+            records += self.client_call(board_id, *args, **kwargs)
+
+        return records
+
+
+class TeamSynchronizer(BoardFilterMixin, BoardChildSynchronizer):
     client_class = api.ServiceAPIClient
     model_class = models.TeamTracker
 
@@ -2394,7 +2418,7 @@ class OpportunityTypeSynchronizer(Synchronizer):
         return self.client.get_opportunity_types(*args, **kwargs)
 
 
-class TypeSynchronizer(Synchronizer):
+class TypeSynchronizer(BoardFilterMixin, Synchronizer):
     client_class = api.ServiceAPIClient
     model_class = models.TypeTracker
 
@@ -2412,18 +2436,8 @@ class TypeSynchronizer(Synchronizer):
     def client_call(self, board_id, *args, **kwargs):
         return self.client.get_types(board_id, *args, **kwargs)
 
-    def get_page(self, *args, **kwargs):
-        records = []
-        board_qs = models.ConnectWiseBoard.objects.all().\
-            order_by(self.lookup_key)
 
-        for board_id in board_qs.values_list('id', flat=True):
-            records += self.client_call(board_id, *args, **kwargs)
-
-        return records
-
-
-class SubTypeSynchronizer(Synchronizer):
+class SubTypeSynchronizer(BoardFilterMixin, Synchronizer):
     client_class = api.ServiceAPIClient
     model_class = models.SubTypeTracker
 
@@ -2441,18 +2455,8 @@ class SubTypeSynchronizer(Synchronizer):
     def client_call(self, board_id, *args, **kwargs):
         return self.client.get_subtypes(board_id, *args, **kwargs)
 
-    def get_page(self, *args, **kwargs):
-        records = []
-        board_qs = models.ConnectWiseBoard.objects.all().\
-            order_by(self.lookup_key)
 
-        for board_id in board_qs.values_list('id', flat=True):
-            records += self.client_call(board_id, *args, **kwargs)
-
-        return records
-
-
-class ItemSynchronizer(Synchronizer):
+class ItemSynchronizer(BoardFilterMixin, Synchronizer):
     client_class = api.ServiceAPIClient
     model_class = models.ItemTracker
 
@@ -2469,16 +2473,6 @@ class ItemSynchronizer(Synchronizer):
 
     def client_call(self, board_id, *args, **kwargs):
         return self.client.get_items(board_id, *args, **kwargs)
-
-    def get_page(self, *args, **kwargs):
-        records = []
-        board_qs = models.ConnectWiseBoard.objects.all().\
-            order_by(self.lookup_key)
-
-        for board_id in board_qs.values_list('id', flat=True):
-            records += self.client_call(board_id, *args, **kwargs)
-
-        return records
 
 
 class WorkTypeSynchronizer(Synchronizer):
