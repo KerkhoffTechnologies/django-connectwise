@@ -1680,6 +1680,7 @@ class ProjectSynchronizer(Synchronizer):
         'status': (models.ProjectStatus, 'status'),
         'manager': (models.Member, 'manager'),
         'company': (models.Company, 'company'),
+        'contact': (models.Contact, 'contact'),
         'type': (models.ProjectType, 'type'),
         'board': (models.ConnectWiseBoard, 'board'),
     }
