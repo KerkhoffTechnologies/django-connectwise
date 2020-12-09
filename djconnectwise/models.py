@@ -1050,6 +1050,8 @@ class Project(TimeStampedModel):
     company = models.ForeignKey(
         'Company', on_delete=models.SET_NULL, blank=True, null=True
     )
+    contact = models.ForeignKey('Contact', blank=True, null=True,
+                                on_delete=models.SET_NULL)
     status = models.ForeignKey(
         'ProjectStatus', blank=True, null=True, on_delete=models.SET_NULL)
     manager = models.ForeignKey(
@@ -1184,6 +1186,8 @@ class Opportunity(TimeStampedModel):
                                   on_delete=models.SET_NULL)
     company = models.ForeignKey('Company', blank=True, null=True,
                                 related_name='company_opportunities',
+                                on_delete=models.SET_NULL)
+    contact = models.ForeignKey('Contact', blank=True, null=True,
                                 on_delete=models.SET_NULL)
     primary_sales_rep = models.ForeignKey('Member',
                                           blank=True, null=True,
@@ -1361,6 +1365,8 @@ class Ticket(TimeStampedModel):
     company = models.ForeignKey(
         'Company', blank=True, null=True, related_name='company_tickets',
         on_delete=models.SET_NULL)
+    contact = models.ForeignKey('Contact', blank=True, null=True,
+                                on_delete=models.SET_NULL)
     location = models.ForeignKey(
         'Location', blank=True, null=True, related_name='location_tickets',
         on_delete=models.SET_NULL)
@@ -1735,6 +1741,8 @@ class Activity(TimeStampedModel):
         'ActivityType', blank=True, null=True, on_delete=models.SET_NULL)
     company = models.ForeignKey(
         'Company', blank=True, null=True, on_delete=models.SET_NULL)
+    contact = models.ForeignKey('Contact', blank=True, null=True,
+                                on_delete=models.SET_NULL)
     agreement = models.ForeignKey(
         'Agreement', blank=True, null=True, on_delete=models.SET_NULL)
     udf = models.JSONField(blank=True, null=True)

@@ -1053,6 +1053,7 @@ class ActivitySynchronizer(Synchronizer):
         'status': (models.ActivityStatus, 'status'),
         'type': (models.ActivityType, 'type'),
         'company': (models.Company, 'company'),
+        'contact': (models.Contact, 'contact'),
         'agreement': (models.Agreement, 'agreement'),
     }
 
@@ -1895,6 +1896,7 @@ class TicketSynchronizerMixin:
         'team': (models.Team, 'team'),
         'board': (models.ConnectWiseBoard, 'board'),
         'company': (models.Company, 'company'),
+        'contact': (models.Contact, 'contact'),
         'priority': (models.TicketPriority, 'priority'),
         'project': (models.Project, 'project'),
         'phase': (models.ProjectPhase, 'phase'),
@@ -2355,6 +2357,7 @@ class OpportunitySynchronizer(Synchronizer):
         'primarySalesRep': (models.Member, 'primary_sales_rep'),
         'secondarySalesRep': (models.Member, 'secondary_sales_rep'),
         'company': (models.Company, 'company'),
+        'contact': (models.Contact, 'contact'),
         'closedBy': (models.Member, 'closed_by')
     }
 
