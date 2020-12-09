@@ -367,6 +367,29 @@ class CompanyType(models.Model):
         return self.name
 
 
+class Contact(models.Model):
+
+    def __str__(self):
+        return '{} {}'.format(self.first_name,
+                              self.last_name if self.last_name else '')
+
+    first_name = models.TextField(blank=True, null=True, max_length=30)
+    last_name = models.TextField(blank=True, null=True, max_length=30)
+    company = models.ForeignKey(
+        'Company', null=True, on_delete=models.CASCADE)
+    address_line1 = models.CharField(blank=True, null=True, max_length=250)
+    address_line2 = models.CharField(blank=True, null=True, max_length=250)
+    city = models.CharField(blank=True, null=True, max_length=250)
+    state_identifier = models.CharField(blank=True, null=True, max_length=250)
+    zip = models.CharField(blank=True, null=True, max_length=250)
+
+
+class ContactCommunication(models.Model):
+    contact = models.ForeignKey(
+        'Contact', null=True, on_delete=models.CASCADE)
+    value = models.CharField(blank=True, null=True, max_length=250)
+
+
 class MyCompanyOther(models.Model):
     default_calendar = models.ForeignKey(
         'Calendar',
@@ -2072,6 +2095,22 @@ class CompanyTypeTracker(CompanyType):
     class Meta:
         proxy = True
         db_table = 'djconnectwise_companytype'
+
+
+class ContactTracker(Contact):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djconnectwise_contact'
+
+
+class ContactCommunicationTracker(ContactCommunication):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djconnectwise_contactcommunication'
 
 
 class MyCompanyOtherTracker(MyCompanyOther):

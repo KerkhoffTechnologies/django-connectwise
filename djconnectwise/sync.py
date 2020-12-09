@@ -920,6 +920,73 @@ class CompanyTypeSynchronizer(Synchronizer):
         return self.client.get_company_types(*args, **kwargs)
 
 
+class ContactSynchronizer(Synchronizer):
+    client_class = api.CompanyAPIClient
+    model_class = models.ContactTracker
+
+    related_meta = {
+        'company': (models.Company, 'company'),
+    }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.api_conditions = ['inactiveFlag=False']
+
+    def _assign_field_data(self, instance, json_data):
+        instance.first_name = json_data.get('firstName')
+        instance.last_name = json_data.get('lastName')
+        instance.address_line1 = json_data.get('addressLine1')
+        instance.address_line2 = json_data.get('addressLine2')
+        instance.city = json_data.get('city')
+        instance.state_identifier = json_data.get('stateIdentifier')
+        instance.zip = json_data.get('zip')
+        self.set_relations(instance, json_data)
+
+        return instance
+
+    def get_page(self, *args, **kwargs):
+        return self.client.get_contacts(*args, **kwargs)
+
+
+class ContactCommunicationSynchronizer(Synchronizer):
+    client_class = api.CompanyAPIClient
+    model_class = models.ContactCommunicationTracker
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.api_conditions = ['communicationType=\'Email\'',
+                               'defaultFlag!=False']
+
+    def _assign_field_data(self, instance, json_data):
+        instance.value = json_data.get('value')
+        contact_id = json_data.get('contactId')
+        try:
+            contact_id = models.Contact.objects.get(id=contact_id)
+        except models.Contact.DoesNotExist:
+            contact_id = None
+            logger.warning(
+                'Failed to find contact: {}'.format(
+                    contact_id
+                )
+            )
+        instance.contact = contact_id
+        return instance
+
+    def client_call(self, contact_id, *args, **kwargs):
+        kwargs['conditions'] = self.api_conditions
+        return self.client.get_contact_communications(contact_id, *args,
+                                                      **kwargs)
+
+    def get_page(self, *args, **kwargs):
+        records = []
+        contact_qs = models.Contact.objects.all()
+
+        for contact_id in contact_qs.values_list('id', flat=True):
+            records += self.client_call(contact_id, *args, **kwargs)
+
+        return records
+
+
 class MyCompanyOtherSynchronizer(Synchronizer):
     client_class = api.SystemAPIClient
     model_class = models.MyCompanyOtherTracker
