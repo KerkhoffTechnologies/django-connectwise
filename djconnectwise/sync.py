@@ -935,11 +935,6 @@ class ContactSynchronizer(Synchronizer):
     def _assign_field_data(self, instance, json_data):
         instance.first_name = json_data.get('firstName')
         instance.last_name = json_data.get('lastName')
-        instance.address_line1 = json_data.get('addressLine1')
-        instance.address_line2 = json_data.get('addressLine2')
-        instance.city = json_data.get('city')
-        instance.state_identifier = json_data.get('stateIdentifier')
-        instance.zip = json_data.get('zip')
         self.set_relations(instance, json_data)
 
         return instance

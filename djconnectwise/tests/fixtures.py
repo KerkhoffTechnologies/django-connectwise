@@ -103,6 +103,69 @@ API_BOARD_STATUS_LIST = [
 ]
 
 
+API_CONTACT_COMMUNICATION_LIST = [
+    {
+        "id": 2,
+        "type": {
+            "id": 2,
+            "name": "Direct",
+        },
+        "value": "8139357100",
+        "extension": "401",
+        "defaultFlag": True,
+        "communicationType": "Phone"
+    },
+    {
+        "id": 3,
+        "type": {
+            "id": 1,
+            "name": "Email",
+        },
+        "value": "Arnie@ConnectWise.com",
+        "defaultFlag": True,
+        "domain": "@ConnectWise.com",
+        "communicationType": "Email"
+    }
+]
+
+
+API_COMPANY_CONTACT_LIST = [
+    {
+        "id": 2,
+        "firstName": "Arnie",
+        "lastName": "Bellini",
+        "company": {
+            "id": 3,
+            "identifier": "ConnectWise",
+            "name": "ConnectWise",
+        },
+        "site": {
+            "id": 2,
+            "name": "Main",
+        },
+        "inactiveFlag": False,
+        "title": "CPA, MBA",
+        "marriedFlag": False,
+        "childrenFlag": False,
+        "portalSecurityLevel": 6,
+        "disablePortalLoginFlag": True,
+        "unsubscribeFlag": False,
+        "mobileGuid": "1a977037-e97d-4565-93d9-90e5e485bdc4",
+        "defaultPhoneType": "Direct",
+        "defaultPhoneNbr": "8139357100",
+        "defaultPhoneExtension": "401",
+        "defaultBillingFlag": False,
+        "defaultFlag": True,
+        "companyLocation": {
+            "id": 2,
+            "name": "Tampa Office",
+        },
+        "communicationItems": API_CONTACT_COMMUNICATION_LIST,
+        "types": [],
+    },
+]
+
+
 API_COMPANY_STATUS = {
     "id": 1,
     "name": "Active",

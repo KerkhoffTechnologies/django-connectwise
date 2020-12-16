@@ -377,11 +377,6 @@ class Contact(models.Model):
     last_name = models.TextField(blank=True, null=True, max_length=30)
     company = models.ForeignKey(
         'Company', null=True, on_delete=models.CASCADE)
-    address_line1 = models.CharField(blank=True, null=True, max_length=250)
-    address_line2 = models.CharField(blank=True, null=True, max_length=250)
-    city = models.CharField(blank=True, null=True, max_length=250)
-    state_identifier = models.CharField(blank=True, null=True, max_length=250)
-    zip = models.CharField(blank=True, null=True, max_length=250)
 
 
 class ContactCommunication(models.Model):
