@@ -933,6 +933,7 @@ class ContactSynchronizer(Synchronizer):
         self.api_conditions = ['inactiveFlag=False']
 
     def _assign_field_data(self, instance, json_data):
+        instance.id = json_data['id']
         instance.first_name = json_data.get('firstName')
         instance.last_name = json_data.get('lastName')
         self.set_relations(instance, json_data)
@@ -953,6 +954,7 @@ class ContactCommunicationSynchronizer(Synchronizer):
                                'defaultFlag!=False']
 
     def _assign_field_data(self, instance, json_data):
+        instance.id = json_data['id']
         instance.value = json_data.get('value')
         contact_id = json_data.get('contactId')
         try:

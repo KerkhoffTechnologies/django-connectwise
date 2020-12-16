@@ -106,6 +106,7 @@ API_BOARD_STATUS_LIST = [
 API_CONTACT_COMMUNICATION_LIST = [
     {
         "id": 2,
+        "contactId": 1,
         "type": {
             "id": 2,
             "name": "Direct",
@@ -113,18 +114,26 @@ API_CONTACT_COMMUNICATION_LIST = [
         "value": "8139357100",
         "extension": "401",
         "defaultFlag": True,
-        "communicationType": "Phone"
+        "mobileGuid": "39378d37-1746-4c26-99b8-ff4faaef2590",
+        "communicationType": "Phone",
     },
     {
         "id": 3,
+        "contactId": 2,
         "type": {
             "id": 1,
             "name": "Email",
         },
         "value": "Arnie@ConnectWise.com",
         "defaultFlag": True,
+        "mobileGuid": "4e859105-2df6-4802-a57c-dd3ed4e641c6",
+        "communicationType": "Email",
         "domain": "@ConnectWise.com",
-        "communicationType": "Email"
+        "_info": {
+            "lastUpdated": "2005-11-30T03:53:25Z",
+            "updatedBy": "User1",
+            "contactMobileGuid": "1a977037-e97d-4565-93d9-90e5e485bdc4"
+        }
     }
 ]
 

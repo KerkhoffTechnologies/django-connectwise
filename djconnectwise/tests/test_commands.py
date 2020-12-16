@@ -122,6 +122,7 @@ class TestSyncContactsCommand(AbstractBaseSyncTest, TestCase):
 class TestSyncContactCommunicationsCommand(AbstractBaseSyncTest, TestCase):
     def setUp(self):
         super().setUp()
+        fixture_utils.init_contacts()
         fixture_utils.init_contact_communications()
 
     args = (
