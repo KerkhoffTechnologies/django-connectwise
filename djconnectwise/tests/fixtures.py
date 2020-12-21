@@ -119,21 +119,16 @@ API_CONTACT_COMMUNICATION_LIST = [
     },
     {
         "id": 3,
-        "contactId": 2,
+        "contactId": 1,
         "type": {
             "id": 1,
             "name": "Email",
         },
-        "value": "Arnie@ConnectWise.com",
+        "value": "Arnie@YourCompany.com",
         "defaultFlag": True,
         "mobileGuid": "4e859105-2df6-4802-a57c-dd3ed4e641c6",
         "communicationType": "Email",
-        "domain": "@ConnectWise.com",
-        "_info": {
-            "lastUpdated": "2005-11-30T03:53:25Z",
-            "updatedBy": "User1",
-            "contactMobileGuid": "1a977037-e97d-4565-93d9-90e5e485bdc4"
-        }
+        "domain": "@YourCompany.com",
     }
 ]
 
@@ -144,12 +139,12 @@ API_COMPANY_CONTACT_LIST = [
         "firstName": "Arnie",
         "lastName": "Bellini",
         "company": {
-            "id": 3,
-            "identifier": "ConnectWise",
-            "name": "ConnectWise",
+            "id": 12,
+            "identifier": "YourCompany",
+            "name": "TestCompany",
         },
         "site": {
-            "id": 2,
+            "id": 224,
             "name": "Main",
         },
         "inactiveFlag": False,
