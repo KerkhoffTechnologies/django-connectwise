@@ -1566,7 +1566,8 @@ class Ticket(TimeStampedModel):
             # When only the SLA priority has changed, we don't need to
             # change the state, just re-calculate the next SLA expiry date.
             sla_hours = sla.get_stage_hours(new_stage)
-            calendar.next_phase_expiry(sla_hours, self)
+            if sla_hours:
+                calendar.next_phase_expiry(sla_hours, self)
         else:
             self.change_sla_state(new_stage, calendar, sla)
 
