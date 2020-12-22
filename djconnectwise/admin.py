@@ -111,6 +111,31 @@ class CompanyTypeAdmin(admin.ModelAdmin):
     search_fields = ['name']
 
 
+@admin.register(models.Contact)
+class ContactAdmin(admin.ModelAdmin):
+    list_display = ('id', 'full_name')
+    search_fields = ('id', 'first_name', 'last_name')
+    list_filter = ('company__name', )
+
+    def full_name(self, obj):
+        return str(obj)
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.select_related('company')
+
+
+@admin.register(models.ContactCommunication)
+class ContactCommunicationAdmin(admin.ModelAdmin):
+    list_display = ('id', 'contact', 'value')
+    search_fields = ['contact__first_name', 'contact__last_name', 'value']
+    list_filter = ('contact__company__name', )
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.select_related('contact', 'contact__company')
+
+
 @admin.register(models.ScheduleType)
 class ScheduleTypeAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'identifier')

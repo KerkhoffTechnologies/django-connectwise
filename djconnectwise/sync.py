@@ -920,6 +920,70 @@ class CompanyTypeSynchronizer(Synchronizer):
         return self.client.get_company_types(*args, **kwargs)
 
 
+class ContactSynchronizer(Synchronizer):
+    client_class = api.CompanyAPIClient
+    model_class = models.ContactTracker
+
+    related_meta = {
+        'company': (models.Company, 'company'),
+    }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.api_conditions = ['inactiveFlag=False']
+
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data['id']
+        instance.first_name = json_data.get('firstName')
+        instance.last_name = json_data.get('lastName')
+        self.set_relations(instance, json_data)
+
+        return instance
+
+    def get_page(self, *args, **kwargs):
+        return self.client.get_contacts(*args, **kwargs)
+
+
+class ContactCommunicationSynchronizer(Synchronizer):
+    client_class = api.CompanyAPIClient
+    model_class = models.ContactCommunicationTracker
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.api_conditions = ['communicationType=\'Email\'',
+                               'defaultFlag!=False']
+
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data['id']
+        instance.value = json_data.get('value')
+        contact_id = json_data.get('contactId')
+        try:
+            contact_id = models.Contact.objects.get(id=contact_id)
+        except models.Contact.DoesNotExist:
+            contact_id = None
+            logger.warning(
+                'Failed to find contact: {}'.format(
+                    contact_id
+                )
+            )
+        instance.contact = contact_id
+        return instance
+
+    def client_call(self, contact_id, *args, **kwargs):
+        kwargs['conditions'] = self.api_conditions
+        return self.client.get_contact_communications(contact_id, *args,
+                                                      **kwargs)
+
+    def get_page(self, *args, **kwargs):
+        records = []
+        contact_qs = models.Contact.objects.all()
+
+        for contact_id in contact_qs.values_list('id', flat=True):
+            records += self.client_call(contact_id, *args, **kwargs)
+
+        return records
+
+
 class MyCompanyOtherSynchronizer(Synchronizer):
     client_class = api.SystemAPIClient
     model_class = models.MyCompanyOtherTracker
@@ -986,6 +1050,7 @@ class ActivitySynchronizer(Synchronizer):
         'status': (models.ActivityStatus, 'status'),
         'type': (models.ActivityType, 'type'),
         'company': (models.Company, 'company'),
+        'contact': (models.Contact, 'contact'),
         'agreement': (models.Agreement, 'agreement'),
     }
 
@@ -1612,6 +1677,7 @@ class ProjectSynchronizer(Synchronizer):
         'status': (models.ProjectStatus, 'status'),
         'manager': (models.Member, 'manager'),
         'company': (models.Company, 'company'),
+        'contact': (models.Contact, 'contact'),
         'type': (models.ProjectType, 'type'),
         'board': (models.ConnectWiseBoard, 'board'),
     }
@@ -1828,6 +1894,7 @@ class TicketSynchronizerMixin:
         'team': (models.Team, 'team'),
         'board': (models.ConnectWiseBoard, 'board'),
         'company': (models.Company, 'company'),
+        'contact': (models.Contact, 'contact'),
         'priority': (models.TicketPriority, 'priority'),
         'project': (models.Project, 'project'),
         'phase': (models.ProjectPhase, 'phase'),
@@ -2288,6 +2355,7 @@ class OpportunitySynchronizer(Synchronizer):
         'primarySalesRep': (models.Member, 'primary_sales_rep'),
         'secondarySalesRep': (models.Member, 'secondary_sales_rep'),
         'company': (models.Company, 'company'),
+        'contact': (models.Contact, 'contact'),
         'closedBy': (models.Member, 'closed_by')
     }
 

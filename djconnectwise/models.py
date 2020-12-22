@@ -367,6 +367,24 @@ class CompanyType(models.Model):
         return self.name
 
 
+class Contact(models.Model):
+
+    def __str__(self):
+        return '{} {}'.format(self.first_name,
+                              self.last_name if self.last_name else '')
+
+    first_name = models.TextField(blank=True, null=True, max_length=30)
+    last_name = models.TextField(blank=True, null=True, max_length=30)
+    company = models.ForeignKey(
+        'Company', null=True, on_delete=models.CASCADE)
+
+
+class ContactCommunication(models.Model):
+    contact = models.ForeignKey(
+        'Contact', null=True, on_delete=models.CASCADE)
+    value = models.CharField(blank=True, null=True, max_length=250)
+
+
 class MyCompanyOther(models.Model):
     default_calendar = models.ForeignKey(
         'Calendar',
@@ -1027,6 +1045,8 @@ class Project(TimeStampedModel):
     company = models.ForeignKey(
         'Company', on_delete=models.SET_NULL, blank=True, null=True
     )
+    contact = models.ForeignKey('Contact', blank=True, null=True,
+                                on_delete=models.SET_NULL)
     status = models.ForeignKey(
         'ProjectStatus', blank=True, null=True, on_delete=models.SET_NULL)
     manager = models.ForeignKey(
@@ -1161,6 +1181,8 @@ class Opportunity(TimeStampedModel):
                                   on_delete=models.SET_NULL)
     company = models.ForeignKey('Company', blank=True, null=True,
                                 related_name='company_opportunities',
+                                on_delete=models.SET_NULL)
+    contact = models.ForeignKey('Contact', blank=True, null=True,
                                 on_delete=models.SET_NULL)
     primary_sales_rep = models.ForeignKey('Member',
                                           blank=True, null=True,
@@ -1338,6 +1360,8 @@ class Ticket(TimeStampedModel):
     company = models.ForeignKey(
         'Company', blank=True, null=True, related_name='company_tickets',
         on_delete=models.SET_NULL)
+    contact = models.ForeignKey('Contact', blank=True, null=True,
+                                on_delete=models.SET_NULL)
     location = models.ForeignKey(
         'Location', blank=True, null=True, related_name='location_tickets',
         on_delete=models.SET_NULL)
@@ -1713,6 +1737,8 @@ class Activity(TimeStampedModel):
         'ActivityType', blank=True, null=True, on_delete=models.SET_NULL)
     company = models.ForeignKey(
         'Company', blank=True, null=True, on_delete=models.SET_NULL)
+    contact = models.ForeignKey('Contact', blank=True, null=True,
+                                on_delete=models.SET_NULL)
     agreement = models.ForeignKey(
         'Agreement', blank=True, null=True, on_delete=models.SET_NULL)
     udf = models.JSONField(blank=True, null=True)
@@ -2073,6 +2099,22 @@ class CompanyTypeTracker(CompanyType):
     class Meta:
         proxy = True
         db_table = 'djconnectwise_companytype'
+
+
+class ContactTracker(Contact):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djconnectwise_contact'
+
+
+class ContactCommunicationTracker(ContactCommunication):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djconnectwise_contactcommunication'
 
 
 class MyCompanyOtherTracker(MyCompanyOther):

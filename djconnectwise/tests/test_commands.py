@@ -107,6 +107,31 @@ class TestSyncTerritoriesCommand(AbstractBaseSyncTest, TestCase):
     )
 
 
+class TestSyncContactsCommand(AbstractBaseSyncTest, TestCase):
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_contacts()
+
+    args = (
+        mocks.company_api_get_contacts,
+        fixtures.API_COMPANY_CONTACT_LIST,
+        'contact',
+    )
+
+
+class TestSyncContactCommunicationsCommand(AbstractBaseSyncTest, TestCase):
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_contacts()
+        fixture_utils.init_contact_communications()
+
+    args = (
+        mocks.company_api_get_contact_communications,
+        fixtures.API_CONTACT_COMMUNICATION_LIST,
+        'contact_communication',
+    )
+
+
 class TestSyncCompaniesCommand(AbstractBaseSyncTest, TestCase):
     def setUp(self):
         super().setUp()
@@ -553,6 +578,8 @@ class TestSyncAllCommand(TestCase):
         mocks.service_api_tickets_call()
         sync_test_cases = [
             TestSyncCompanyStatusesCommand,
+            TestSyncContactsCommand,
+            TestSyncContactCommunicationsCommand,
             TestSyncCompaniesCommand,
             TestSyncCompanyTypesCommand,
             TestSyncLocationsCommand,
@@ -625,6 +652,10 @@ class TestSyncAllCommand(TestCase):
 
         self.assertEqual(models.Team.objects.all().count(),
                          len(fixtures.API_SERVICE_TEAM_LIST))
+        self.assertEqual(models.Contact.objects.all().count(),
+                         len(fixtures.API_COMPANY_CONTACT_LIST))
+        self.assertEqual(models.ContactCommunication.objects.all().count(),
+                         len(fixtures.API_CONTACT_COMMUNICATION_LIST))
         self.assertEqual(models.CompanyStatus.objects.all().count(),
                          len(fixtures.API_COMPANY_STATUS_LIST))
 
@@ -658,6 +689,8 @@ class TestSyncAllCommand(TestCase):
             'ticket': models.Ticket,
             'service_note': models.ServiceNote,
             'opportunity_note': models.OpportunityNote,
+            'contact': models.Contact,
+            'contact_communication': models.ContactCommunication,
             'company': models.Company,
             'opportunity': models.Opportunity,
             'opportunity_status': models.OpportunityStatus,
