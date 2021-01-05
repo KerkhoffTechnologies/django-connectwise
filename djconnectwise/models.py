@@ -380,8 +380,17 @@ class Contact(models.Model):
 
 
 class ContactCommunication(models.Model):
+    COMMUNICATION_TYPES = (
+        (1, 'Email'),
+        (2, 'Direct'),
+        (3, 'Fax'),
+        (4, 'Cell'),
+    )
+
     contact = models.ForeignKey(
         'Contact', null=True, on_delete=models.CASCADE)
+    type = models.SmallIntegerField(
+        choices=COMMUNICATION_TYPES, blank=True, null=True)
     value = models.CharField(blank=True, null=True, max_length=250)
 
 
