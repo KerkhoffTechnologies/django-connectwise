@@ -385,6 +385,11 @@ class ContactCommunication(models.Model):
         (2, 'Direct'),
         (3, 'Fax'),
         (4, 'Cell'),
+        (5, 'Pager'),
+        (6, 'Home'),
+        (7, 'Fax/Home'),
+        (8, 'Home Email'),
+        (11, 'Private Email'),
     )
 
     contact = models.ForeignKey(
