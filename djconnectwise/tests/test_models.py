@@ -705,3 +705,14 @@ class TestTicket(ModelTestCase):
             str(ticket.sla_expire_date.astimezone(tz=None)),
             '2021-08-24 11:00:34-07:00'
         )
+
+        # When the ticket is resolved, no further SLA calculation is
+        # necessary. Verify that ticket priority can be changed while in
+        # the resolved SLA stage.
+        ticket.status = board.board_statuses.get(name='Completed')
+        ticket.save()
+        self.assertEqual('resolved', ticket.sla_stage)
+
+        ticket.priority = self.ticket_priorities[1]
+        ticket.save()
+        self.assertEqual(ticket.sla_expire_date, None)
