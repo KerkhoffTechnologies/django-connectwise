@@ -950,12 +950,12 @@ class ContactCommunicationSynchronizer(Synchronizer):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.api_conditions = ['defaultFlag!=False']
 
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
         instance.type = json_data.get('type')['id']
         instance.value = json_data.get('value')
+        instance.default_flag = json_data.get('defaultFlag')
         contact_id = json_data.get('contactId')
         try:
             contact_id = models.Contact.objects.get(id=contact_id)

@@ -407,6 +407,7 @@ class ContactCommunication(models.Model):
     type = models.SmallIntegerField(
         choices=COMMUNICATION_TYPES, blank=True, null=True)
     value = models.CharField(blank=True, null=True, max_length=250)
+    default_flag = models.BooleanField(blank=True, null=True)
 
 
 class MyCompanyOther(models.Model):
