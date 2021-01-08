@@ -380,16 +380,26 @@ class Contact(models.Model):
 
 
 class ContactCommunication(models.Model):
+    TYPE_EMAIL = 1
+    TYPE_DIRECT = 2
+    TYPE_FAX = 3
+    TYPE_CELL = 4
+    TYPE_PAGER = 5
+    TYPE_HOME = 6
+    TYPE_FAX_HOME = 7
+    TYPE_HOME_EMAIL = 8
+    TYPE_PRIV_EMAIL = 11
+
     COMMUNICATION_TYPES = (
-        (1, 'Email'),
-        (2, 'Direct'),
-        (3, 'Fax'),
-        (4, 'Cell'),
-        (5, 'Pager'),
-        (6, 'Home'),
-        (7, 'Fax/Home'),
-        (8, 'Home Email'),
-        (11, 'Private Email'),
+        (TYPE_EMAIL, 'Email'),
+        (TYPE_DIRECT, 'Direct'),
+        (TYPE_FAX, 'Fax'),
+        (TYPE_CELL, 'Cell'),
+        (TYPE_PAGER, 'Pager'),
+        (TYPE_HOME, 'Home'),
+        (TYPE_FAX_HOME, 'Fax/Home'),
+        (TYPE_HOME_EMAIL, 'Home Email'),
+        (TYPE_PRIV_EMAIL, 'Private Email'),
     )
 
     contact = models.ForeignKey(
