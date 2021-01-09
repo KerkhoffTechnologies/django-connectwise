@@ -442,6 +442,7 @@ class CompanyAPIClient(ConnectWiseAPIClient):
     ENDPOINT_CONTACTS = 'contacts'
     ENDPOINT_COMPANY_STATUSES = '{}/statuses'.format(ENDPOINT_COMPANIES)
     ENDPOINT_COMPANY_TYPES = '{}/types'.format(ENDPOINT_COMPANIES)
+    ENDPOINT_COMPANY_COMMUNICATION_TYPES = 'communicationTypes'
 
     def by_id(self, company_id):
         endpoint_url = '{}/{}'.format(self.ENDPOINT_COMPANIES, company_id)
@@ -470,6 +471,10 @@ class CompanyAPIClient(ConnectWiseAPIClient):
                                                      contact_id)
         return self.fetch_resource(endpoint_url, should_page=True,
                                    *args, **kwargs)
+
+    def get_communication_types(self, *args, **kwargs):
+        return self.fetch_resource(self.ENDPOINT_COMPANY_COMMUNICATION_TYPES,
+                                   should_page=True, *args, **kwargs)
 
 
 class ScheduleAPIClient(ConnectWiseAPIClient):

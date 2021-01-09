@@ -42,6 +42,8 @@ class Command(BaseCommand):
             ('contact_communication',
                 sync.ContactCommunicationSynchronizer,
                 _('Contact Communication')),
+            ('communication_type', sync.CommunicationTypeSynchronizer,
+                _('Communication Type')),
             ('location', sync.LocationSynchronizer, _('Location')),
             ('opportunity_status', sync.OpportunityStatusSynchronizer,
                 _('Opportunity Status')),

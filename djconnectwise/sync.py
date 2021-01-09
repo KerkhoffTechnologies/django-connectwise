@@ -984,6 +984,22 @@ class ContactCommunicationSynchronizer(Synchronizer):
         return records
 
 
+class CommunicationTypeSynchronizer(Synchronizer):
+    client_class = api.CompanyAPIClient
+    model_class = models.CommunicationTypeTracker
+
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data['id']
+        instance.phone_flag = json_data.get('phoneFlag')
+        instance.fax_flag = json_data.get('faxFlag')
+        instance.email_flag = json_data.get('emailFlag')
+        instance.default_flag = json_data.get('defaultFlag')
+        return instance
+
+    def get_page(self, *args, **kwargs):
+        return self.client.get_communication_types(*args, **kwargs)
+
+
 class MyCompanyOtherSynchronizer(Synchronizer):
     client_class = api.SystemAPIClient
     model_class = models.MyCompanyOtherTracker
