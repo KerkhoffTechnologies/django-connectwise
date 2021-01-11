@@ -383,7 +383,8 @@ class ContactCommunication(models.Model):
     contact = models.ForeignKey(
         'Contact', null=True, on_delete=models.CASCADE)
     value = models.CharField(blank=True, null=True, max_length=250)
-
+    communication_type = models.ForeignKey(
+        'CommunicationType', null=True, on_delete=models.SET_NULL)
 
 class CommunicationType(models.Model):
     description = models.CharField(blank=False, null=False, max_length=250)

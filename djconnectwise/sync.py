@@ -948,6 +948,10 @@ class ContactCommunicationSynchronizer(Synchronizer):
     client_class = api.CompanyAPIClient
     model_class = models.ContactCommunicationTracker
 
+    related_meta = {
+        'contact': (models.Contact, 'contact'),
+    }
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.api_conditions = ['communicationType=\'Email\'',
@@ -956,6 +960,8 @@ class ContactCommunicationSynchronizer(Synchronizer):
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
         instance.value = json_data.get('value')
+        # TODO change this to use set_relations, use set relations for the
+        #   communication type as well
         contact_id = json_data.get('contactId')
         try:
             contact_id = models.Contact.objects.get(id=contact_id)
