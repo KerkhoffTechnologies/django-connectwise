@@ -990,6 +990,7 @@ class CommunicationTypeSynchronizer(Synchronizer):
 
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
+        instance.description = json_data.get('description')
         instance.phone_flag = json_data.get('phoneFlag')
         instance.fax_flag = json_data.get('faxFlag')
         instance.email_flag = json_data.get('emailFlag')
