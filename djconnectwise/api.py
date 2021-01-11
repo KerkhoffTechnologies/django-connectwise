@@ -248,10 +248,14 @@ class ConnectWiseAPIClient(object):
 
         return codebase_updated
 
-    def get_headers(self):
+    def get_headers(self, is_new_api=False):
         headers = {}
 
-        response_version = self.request_settings.get('response_version')
+        if is_new_api:
+            response_version = self.request_settings.get('response_version_new')
+        else:
+            response_version = self.request_settings.get('response_version')
+
         if response_version:
             headers['Accept'] = \
                 'application/vnd.connectwise.com+json; version={}' \
@@ -310,11 +314,16 @@ class ConnectWiseAPIClient(object):
                 else:
                     endpoint += "?" + conditions_str
 
+                if kwargs.get('new_response_api'):
+                    headers = self.get_headers(is_new_api=True)
+                else:
+                    headers = self.get_headers()
+
                 response = requests.get(
                     endpoint,
                     auth=self.auth,
                     timeout=self.timeout,
-                    headers=self.get_headers(),
+                    headers=headers,
                 )
                 logger.debug(" URL: {}".format(response.url))
 
@@ -473,6 +482,7 @@ class CompanyAPIClient(ConnectWiseAPIClient):
                                    *args, **kwargs)
 
     def get_communication_types(self, *args, **kwargs):
+        kwargs['new_response_api'] = True
         return self.fetch_resource(self.ENDPOINT_COMPANY_COMMUNICATION_TYPES,
                                    should_page=True, *args, **kwargs)
 
