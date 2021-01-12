@@ -703,6 +703,7 @@ class TestSyncAllCommand(TestCase):
             'service_note': models.ServiceNote,
             'opportunity_note': models.OpportunityNote,
             'contact': models.Contact,
+            'communication_type': models.CommunicationType,
             'contact_communication': models.ContactCommunication,
             'company': models.Company,
             'opportunity': models.Opportunity,
