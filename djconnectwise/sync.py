@@ -962,14 +962,15 @@ class ContactCommunicationSynchronizer(Synchronizer):
         instance.value = json_data.get('value')
         contact_id = json_data.get('contactId')
 
-        try:
-            related_contact = models.Contact.objects.get(pk=contact_id)
-            setattr(instance, 'contact', related_contact)
-        except ObjectDoesNotExist as e:
-            logger.warning(
-                'Contact not found for {}.'.format(instance.id) +
-                ' ObjectDoesNotExist Exception: {}.'.format(e)
-            )
+        if contact_id:
+            try:
+                related_contact = models.Contact.objects.get(pk=contact_id)
+                setattr(instance, 'contact', related_contact)
+            except ObjectDoesNotExist as e:
+                logger.warning(
+                    'Contact not found for {}.'.format(instance.id) +
+                    ' ObjectDoesNotExist Exception: {}.'.format(e)
+                )
 
         self.set_relations(instance, json_data)
         return instance
