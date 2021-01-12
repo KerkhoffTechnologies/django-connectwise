@@ -948,6 +948,10 @@ class ContactCommunicationSynchronizer(Synchronizer):
     client_class = api.CompanyAPIClient
     model_class = models.ContactCommunicationTracker
 
+    related_meta = {
+        'type': (models.CommunicationType, 'type'),
+    }
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.api_conditions = ['communicationType=\'Email\'',
@@ -957,16 +961,18 @@ class ContactCommunicationSynchronizer(Synchronizer):
         instance.id = json_data['id']
         instance.value = json_data.get('value')
         contact_id = json_data.get('contactId')
-        try:
-            contact_id = models.Contact.objects.get(id=contact_id)
-        except models.Contact.DoesNotExist:
-            contact_id = None
-            logger.warning(
-                'Failed to find contact: {}'.format(
-                    contact_id
+
+        if contact_id:
+            try:
+                related_contact = models.Contact.objects.get(pk=contact_id)
+                setattr(instance, 'contact', related_contact)
+            except ObjectDoesNotExist as e:
+                logger.warning(
+                    'Contact not found for {}.'.format(instance.id) +
+                    ' ObjectDoesNotExist Exception: {}.'.format(e)
                 )
-            )
-        instance.contact = contact_id
+
+        self.set_relations(instance, json_data)
         return instance
 
     def client_call(self, contact_id, *args, **kwargs):
@@ -982,6 +988,23 @@ class ContactCommunicationSynchronizer(Synchronizer):
             records += self.client_call(contact_id, *args, **kwargs)
 
         return records
+
+
+class CommunicationTypeSynchronizer(Synchronizer):
+    client_class = api.CompanyAPIClient
+    model_class = models.CommunicationTypeTracker
+
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data['id']
+        instance.description = json_data.get('description')
+        instance.phone_flag = json_data.get('phoneFlag')
+        instance.fax_flag = json_data.get('faxFlag')
+        instance.email_flag = json_data.get('emailFlag')
+        instance.default_flag = json_data.get('defaultFlag')
+        return instance
+
+    def get_page(self, *args, **kwargs):
+        return self.client.get_communication_types(*args, **kwargs)
 
 
 class MyCompanyOtherSynchronizer(Synchronizer):

@@ -383,6 +383,16 @@ class ContactCommunication(models.Model):
     contact = models.ForeignKey(
         'Contact', null=True, on_delete=models.CASCADE)
     value = models.CharField(blank=True, null=True, max_length=250)
+    type = models.ForeignKey(
+        'CommunicationType', null=True, on_delete=models.SET_NULL)
+
+
+class CommunicationType(models.Model):
+    description = models.CharField(blank=False, null=False, max_length=250)
+    phone_flag = models.BooleanField(default=False)
+    fax_flag = models.BooleanField(default=False)
+    email_flag = models.BooleanField(default=False)
+    default_flag = models.BooleanField(default=False)
 
 
 class MyCompanyOther(models.Model):
@@ -2115,6 +2125,14 @@ class ContactCommunicationTracker(ContactCommunication):
     class Meta:
         proxy = True
         db_table = 'djconnectwise_contactcommunication'
+
+
+class CommunicationTypeTracker(CommunicationType):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djconnectwise_communicationtype'
 
 
 class MyCompanyOtherTracker(MyCompanyOther):

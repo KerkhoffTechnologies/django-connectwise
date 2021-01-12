@@ -27,6 +27,11 @@ def company_api_get_contacts(return_value):
     return create_mock_call(method_name, return_value)
 
 
+def company_api_get_communication_types(return_value):
+    method_name = 'djconnectwise.api.CompanyAPIClient.get_communication_types'
+    return create_mock_call(method_name, return_value)
+
+
 def company_api_get_contact_communications(return_value):
     method_name = 'djconnectwise.api.CompanyAPIClient.' \
                   'get_contact_communications'

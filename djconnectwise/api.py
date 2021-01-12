@@ -252,6 +252,7 @@ class ConnectWiseAPIClient(object):
         headers = {}
 
         response_version = self.request_settings.get('response_version')
+
         if response_version:
             headers['Accept'] = \
                 'application/vnd.connectwise.com+json; version={}' \
@@ -442,6 +443,14 @@ class CompanyAPIClient(ConnectWiseAPIClient):
     ENDPOINT_CONTACTS = 'contacts'
     ENDPOINT_COMPANY_STATUSES = '{}/statuses'.format(ENDPOINT_COMPANIES)
     ENDPOINT_COMPANY_TYPES = '{}/types'.format(ENDPOINT_COMPANIES)
+    ENDPOINT_COMPANY_COMMUNICATION_TYPES = 'communicationTypes'
+
+    def __init__(self, *args, **kwargs):
+        # TODO This init method is temporary, remove in 1840 as well as
+        #   references to self.communication_type_endpoint
+        super().__init__(*args, **kwargs)
+
+        self.communication_type_endpoint = False
 
     def by_id(self, company_id):
         endpoint_url = '{}/{}'.format(self.ENDPOINT_COMPANIES, company_id)
@@ -470,6 +479,29 @@ class CompanyAPIClient(ConnectWiseAPIClient):
                                                      contact_id)
         return self.fetch_resource(endpoint_url, should_page=True,
                                    *args, **kwargs)
+
+    def get_communication_types(self, *args, **kwargs):
+        self.communication_type_endpoint = True
+        return self.fetch_resource(self.ENDPOINT_COMPANY_COMMUNICATION_TYPES,
+                                   should_page=True, *args, **kwargs)
+
+    def get_headers(self):
+        """
+        This is a temporary fix for setting the response version for the
+        communication type endpoint. It does not accept our currently supported
+        response version (2019.5). This will be fixed in an upcoming issue
+        """
+        headers = super().get_headers()
+
+        if self.communication_type_endpoint:
+            # Just checking if the response version exists
+            response_version = self.request_settings.get('response_version')
+
+            if response_version:
+                headers['Accept'] = \
+                    'application/vnd.connectwise.com+json; version=2020.4'
+
+        return headers
 
 
 class ScheduleAPIClient(ConnectWiseAPIClient):
