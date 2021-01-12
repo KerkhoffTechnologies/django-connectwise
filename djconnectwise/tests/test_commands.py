@@ -119,6 +119,18 @@ class TestSyncContactsCommand(AbstractBaseSyncTest, TestCase):
     )
 
 
+class TestSyncCommunicationTypesCommand(AbstractBaseSyncTest, TestCase):
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_communication_types()
+
+    args = (
+        mocks.company_api_get_communication_types,
+        fixtures.API_COMMUNICATION_TYPE_LIST,
+        'communication_type',
+    )
+
+
 class TestSyncContactCommunicationsCommand(AbstractBaseSyncTest, TestCase):
     def setUp(self):
         super().setUp()
@@ -579,6 +591,7 @@ class TestSyncAllCommand(TestCase):
         sync_test_cases = [
             TestSyncCompanyStatusesCommand,
             TestSyncContactsCommand,
+            TestSyncCommunicationTypesCommand,
             TestSyncContactCommunicationsCommand,
             TestSyncCompaniesCommand,
             TestSyncCompanyTypesCommand,
@@ -690,6 +703,7 @@ class TestSyncAllCommand(TestCase):
             'service_note': models.ServiceNote,
             'opportunity_note': models.OpportunityNote,
             'contact': models.Contact,
+            'communication_type': models.CommunicationType,
             'contact_communication': models.ContactCommunication,
             'company': models.Company,
             'opportunity': models.Opportunity,

@@ -380,34 +380,20 @@ class Contact(models.Model):
 
 
 class ContactCommunication(models.Model):
-    TYPE_EMAIL = 1
-    TYPE_DIRECT = 2
-    TYPE_FAX = 3
-    TYPE_CELL = 4
-    TYPE_PAGER = 5
-    TYPE_HOME = 6
-    TYPE_FAX_HOME = 7
-    TYPE_HOME_EMAIL = 8
-    TYPE_PRIV_EMAIL = 11
-
-    COMMUNICATION_TYPES = (
-        (TYPE_EMAIL, 'Email'),
-        (TYPE_DIRECT, 'Direct'),
-        (TYPE_FAX, 'Fax'),
-        (TYPE_CELL, 'Cell'),
-        (TYPE_PAGER, 'Pager'),
-        (TYPE_HOME, 'Home'),
-        (TYPE_FAX_HOME, 'Fax/Home'),
-        (TYPE_HOME_EMAIL, 'Home Email'),
-        (TYPE_PRIV_EMAIL, 'Private Email'),
-    )
-
     contact = models.ForeignKey(
         'Contact', null=True, on_delete=models.CASCADE)
-    type = models.SmallIntegerField(
-        choices=COMMUNICATION_TYPES, blank=True, null=True)
     value = models.CharField(blank=True, null=True, max_length=250)
     default_flag = models.BooleanField(blank=True, null=True)
+    type = models.ForeignKey(
+        'CommunicationType', null=True, on_delete=models.SET_NULL)
+
+
+class CommunicationType(models.Model):
+    description = models.CharField(blank=False, null=False, max_length=250)
+    phone_flag = models.BooleanField(default=False)
+    fax_flag = models.BooleanField(default=False)
+    email_flag = models.BooleanField(default=False)
+    default_flag = models.BooleanField(default=False)
 
 
 class MyCompanyOther(models.Model):
@@ -2140,6 +2126,14 @@ class ContactCommunicationTracker(ContactCommunication):
     class Meta:
         proxy = True
         db_table = 'djconnectwise_contactcommunication'
+
+
+class CommunicationTypeTracker(CommunicationType):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djconnectwise_communicationtype'
 
 
 class MyCompanyOtherTracker(MyCompanyOther):

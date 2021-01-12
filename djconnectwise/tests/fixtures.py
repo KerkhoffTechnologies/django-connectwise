@@ -1943,3 +1943,19 @@ API_PROJECT_TEAM_MEMBER = {
     }
 }
 API_PROJECT_TEAM_MEMBER_LIST = [API_PROJECT_TEAM_MEMBER]
+
+API_COMMUNICATION_TYPE = {
+        "id": 2,
+        "description": "Direct",
+        "phoneFlag": True,
+        "faxFlag": False,
+        "emailFlag": False,
+        "defaultFlag": True,
+        "exchangeXref": "Business",
+        "_info": {
+            "lastUpdated": "2003-06-16T19:03:39Z",
+            "dateEntered": "2003-06-16T23:03:39Z",
+        }
+    }
+
+API_COMMUNICATION_TYPE_LIST = [API_COMMUNICATION_TYPE]
