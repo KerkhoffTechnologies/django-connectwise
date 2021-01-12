@@ -949,7 +949,7 @@ class ContactCommunicationSynchronizer(Synchronizer):
     model_class = models.ContactCommunicationTracker
 
     related_meta = {
-        'contact': (models.Contact, 'contact'),
+        'type': (models.CommunicationType, 'type'),
     }
 
     def __init__(self, *args, **kwargs):
@@ -960,19 +960,18 @@ class ContactCommunicationSynchronizer(Synchronizer):
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
         instance.value = json_data.get('value')
-        # TODO change this to use set_relations, use set relations for the
-        #   communication type as well
         contact_id = json_data.get('contactId')
+
         try:
-            contact_id = models.Contact.objects.get(id=contact_id)
-        except models.Contact.DoesNotExist:
-            contact_id = None
+            related_contact = models.Contact.objects.get(pk=contact_id)
+            setattr(instance, 'contact', related_contact)
+        except ObjectDoesNotExist as e:
             logger.warning(
-                'Failed to find contact: {}'.format(
-                    contact_id
-                )
+                'Contact not found for {}.'.format(instance.id) +
+                ' ObjectDoesNotExist Exception: {}.'.format(e)
             )
-        instance.contact = contact_id
+
+        self.set_relations(instance, json_data)
         return instance
 
     def client_call(self, contact_id, *args, **kwargs):

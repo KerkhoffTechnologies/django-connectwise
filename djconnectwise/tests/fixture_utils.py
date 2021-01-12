@@ -148,6 +148,13 @@ def init_contacts():
     return synchronizer.sync()
 
 
+def init_communication_types():
+    mocks.company_api_get_communication_types(
+        fixtures.API_COMMUNICATION_TYPE_LIST)
+    synchronizer = sync.CommunicationTypeSynchronizer()
+    return synchronizer.sync()
+
+
 def init_contact_communications():
     mocks.company_api_get_contact_communications(
         fixtures.API_CONTACT_COMMUNICATION_LIST)
