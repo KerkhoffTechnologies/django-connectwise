@@ -86,7 +86,7 @@ class DjconnectwiseSettings:
             'batch_size': 50,
             'max_attempts': 3,
             'schedule_entry_conditions_size': 0,
-            'response_version': '2019.5',
+            'response_version': '2020.4',
             'sync_child_tickets': True,
             'sync_time_and_note_entries': True,
             'keep_closed_ticket_days': 0,
