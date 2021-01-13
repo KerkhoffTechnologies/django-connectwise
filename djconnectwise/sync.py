@@ -957,7 +957,6 @@ class ContactCommunicationSynchronizer(Synchronizer):
 
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
-        instance.type = json_data.get('type')['id']
         instance.value = json_data.get('value')
         instance.default_flag = json_data.get('defaultFlag')
         contact_id = json_data.get('contactId')
