@@ -385,6 +385,7 @@ class ContactCommunication(models.Model):
     contact = models.ForeignKey(
         'Contact', null=True, on_delete=models.CASCADE)
     value = models.CharField(blank=True, null=True, max_length=250)
+    default_flag = models.BooleanField(blank=True, null=True)
     type = models.ForeignKey(
         'CommunicationType', null=True, on_delete=models.SET_NULL)
 

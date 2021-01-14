@@ -954,12 +954,11 @@ class ContactCommunicationSynchronizer(Synchronizer):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.api_conditions = ['communicationType=\'Email\'',
-                               'defaultFlag!=False']
 
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
         instance.value = json_data.get('value')
+        instance.default_flag = json_data.get('defaultFlag')
         contact_id = json_data.get('contactId')
 
         if contact_id:
