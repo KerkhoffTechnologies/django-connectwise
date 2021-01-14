@@ -234,6 +234,8 @@ class Member(TimeStampedModel):
     LICENSE_CLASSES = (
         ('F', 'Full license'),
         ('A', 'API license'),
+        ('C', 'StreamlineIT license'),
+        ('X', 'Subcontractor license'),
     )
     identifier = models.CharField(  # This is the CW username
         max_length=15, blank=False, unique=True
