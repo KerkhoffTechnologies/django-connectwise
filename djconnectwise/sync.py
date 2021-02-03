@@ -2052,11 +2052,21 @@ class TicketSynchronizerMixin:
         instance.id = json_data['id']
         instance.summary = json_data['summary']
         instance.closed_flag = json_data.get('closedFlag')
+        instance.entered_date_utc = json_data.get('_info').get('dateEntered')
         instance.last_updated_utc = json_data.get('_info').get('lastUpdated')
         instance.required_date_utc = json_data.get('requiredDate')
         instance.resources = json_data.get('resources')
         instance.bill_time = json_data.get('billTime')
         instance.customer_updated = json_data.get('customerUpdatedFlag')
+
+        if instance.entered_date_utc:
+            # Parse the date here so that a datetime object is
+            # available for SLA calculation.
+            instance.entered_date_utc = parse(instance.entered_date_utc)
+        if instance.last_updated_utc:
+            instance.last_updated_utc = parse(instance.last_updated_utc)
+        if instance.required_date_utc:
+            instance.required_date_utc = parse(instance.required_date_utc)
 
         # Key is comes out of db as string, so we add it as a string here
         # so the tracker can compare it properly.
@@ -2128,8 +2138,6 @@ class ServiceTicketSynchronizer(TicketSynchronizerMixin,
     def _assign_field_data(self, instance, json_data):
         instance = super()._assign_field_data(instance, json_data)
 
-        entered_date_utc = json_data.get('_info').get('dateEntered')
-
         instance.record_type = json_data.get('recordType')
         instance.parent_ticket_id = json_data.get('parentTicketId')
         instance.has_child_ticket = json_data.get('hasChildTicket')
@@ -2140,14 +2148,6 @@ class ServiceTicketSynchronizer(TicketSynchronizerMixin,
         instance.date_resplan_utc = json_data.get('dateResplan')
         instance.date_responded_utc = json_data.get('dateResponded')
 
-        if entered_date_utc:
-            # Parse the date here so that a datetime object is
-            # available for SLA calculation.
-            instance.entered_date_utc = parse(entered_date_utc)
-        if instance.last_updated_utc:
-            instance.last_updated_utc = parse(instance.last_updated_utc)
-        if instance.required_date_utc:
-            instance.required_date_utc = parse(instance.required_date_utc)
         if instance.date_resolved_utc:
             instance.date_resolved_utc = parse(instance.date_resolved_utc)
         if instance.date_resplan_utc:
@@ -2169,11 +2169,6 @@ class ProjectTicketSynchronizer(TicketSynchronizerMixin,
 
     def _assign_field_data(self, instance, json_data):
         instance = super()._assign_field_data(instance, json_data)
-
-        if instance.last_updated_utc:
-            instance.last_updated_utc = parse(instance.last_updated_utc)
-        if instance.required_date_utc:
-            instance.required_date_utc = parse(instance.required_date_utc)
 
         # Tickets from the project/tickets API endpoint do not include the
         # record type field but we use the same Ticket model for project and
