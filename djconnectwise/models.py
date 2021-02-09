@@ -380,6 +380,30 @@ class Contact(models.Model):
     company = models.ForeignKey(
         'Company', null=True, on_delete=models.CASCADE)
 
+    def get_email_address(self):
+        email = None
+        if self.contactcommunication_set.exists():
+            email = self.contactcommunication_set. \
+                filter(default_flag=True, type_id__email_flag=True)
+            email = email[0].value if email else None
+        return email
+
+    def get_phone_number(self):
+        phone = None
+        if self.contactcommunication_set.exists():
+            phone = self.contactcommunication_set. \
+                filter(default_flag=True, type_id__phone_flag=True)
+            phone = phone[0].value if phone else None
+        return phone
+
+    def get_fax_number(self):
+        fax = None
+        if self.contactcommunication_set.exists():
+            fax = self.contactcommunication_set. \
+                filter(default_flag=True, type_id__fax_flag=True)
+            fax = fax[0].value if fax else None
+        return fax
+
 
 class ContactCommunication(models.Model):
     contact = models.ForeignKey(
