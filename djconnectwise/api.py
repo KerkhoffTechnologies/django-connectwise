@@ -456,6 +456,10 @@ class CompanyAPIClient(ConnectWiseAPIClient):
         endpoint_url = '{}/{}'.format(self.ENDPOINT_COMPANIES, company_id)
         return self.fetch_resource(endpoint_url)
 
+    def get_single_contact(self, contact_id):
+        endpoint_url = '{}/{}'.format(self.ENDPOINT_CONTACTS, contact_id)
+        return self.fetch_resource(endpoint_url)
+
     def get_companies(self, *args, **kwargs):
         return self.fetch_resource(self.ENDPOINT_COMPANIES, should_page=True,
                                    *args, **kwargs)

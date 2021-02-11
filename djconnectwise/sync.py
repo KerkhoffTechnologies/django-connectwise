@@ -943,6 +943,9 @@ class ContactSynchronizer(Synchronizer):
     def get_page(self, *args, **kwargs):
         return self.client.get_contacts(*args, **kwargs)
 
+    def get_single(self, contact_id):
+        return self.client.get_single_contact(contact_id)
+
 
 class ContactCommunicationSynchronizer(Synchronizer):
     client_class = api.CompanyAPIClient

@@ -59,6 +59,9 @@ class CallBackView(views.CsrfExemptMixin,
         'company': (
             sync.CompanySynchronizer, models.Company
         ),
+        'contact': (
+            sync.ContactSynchronizer, models.Contact
+        ),
         'opportunity': (
             sync.OpportunitySynchronizer, models.Opportunity
         ),
