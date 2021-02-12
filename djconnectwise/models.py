@@ -892,6 +892,22 @@ class TimeEntry(models.Model):
 
         return entered_time
 
+    def get_note(self, note_flag):
+        if note_flag == 'detail':
+            return self.get_detail_note()
+        elif note_flag == 'resolution':
+            return self.get_resolution_note()
+        return None
+
+    def get_detail_note(self):
+        return self.notes if self.detail_description_flag else None
+
+    def get_resolution_note(self):
+        return self.notes if self.resolution_flag else None
+
+    def get_time_entry_note(self):
+        return self.notes
+
 
 class AvailableBoardTeamManager(models.Manager):
     """Return only teams whose ConnectWise board is active."""
@@ -1641,6 +1657,22 @@ class ServiceNote(TimeStampedModel):
 
     def __str__(self):
         return 'Ticket {} note: {}'.format(self.ticket, str(self.date_created))
+
+    def get_entered_time(self):
+        return self.date_created
+
+    def get_note(self, note_flag):
+        if note_flag == 'detail':
+            return self.get_detail_note()
+        elif note_flag == 'resolution':
+            return self.get_resolution_note()
+        return None
+
+    def get_detail_note(self):
+        return self.text if self.detail_description_flag else None
+
+    def get_resolution_note(self):
+        return self.text if self.resolution_flag else None
 
 
 class Sla(TimeStampedModel, SlaGoalsMixin):
