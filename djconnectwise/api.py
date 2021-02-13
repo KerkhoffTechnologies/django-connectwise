@@ -444,6 +444,7 @@ class CompanyAPIClient(ConnectWiseAPIClient):
     ENDPOINT_COMPANY_STATUSES = '{}/statuses'.format(ENDPOINT_COMPANIES)
     ENDPOINT_COMPANY_TYPES = '{}/types'.format(ENDPOINT_COMPANIES)
     ENDPOINT_COMPANY_COMMUNICATION_TYPES = 'communicationTypes'
+    ENDPOINT_CONTACT_COMMUNICATIONs = 'communications'
 
     def __init__(self, *args, **kwargs):
         # TODO This init method is temporary, remove in 1840 as well as
@@ -458,6 +459,12 @@ class CompanyAPIClient(ConnectWiseAPIClient):
 
     def get_single_contact(self, contact_id):
         endpoint_url = '{}/{}'.format(self.ENDPOINT_CONTACTS, contact_id)
+        return self.fetch_resource(endpoint_url)
+
+    def get_single_communication(self, communication_id):
+        endpoint_url = '{}/{}/{}'.format(self.ENDPOINT_CONTACTS,
+                                         self.ENDPOINT_CONTACT_COMMUNICATIONs,
+                                         communication_id)
         return self.fetch_resource(endpoint_url)
 
     def get_companies(self, *args, **kwargs):

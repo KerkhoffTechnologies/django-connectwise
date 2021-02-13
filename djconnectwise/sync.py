@@ -946,6 +946,21 @@ class ContactSynchronizer(Synchronizer):
     def get_single(self, contact_id):
         return self.client.get_single_contact(contact_id)
 
+    def fetch_sync_by_id(self, instance_id, sync_config={}):
+        instance = super().fetch_sync_by_id(instance_id)
+        self.sync_related(instance)
+        return instance
+
+    def sync_related(self, instance):
+        instance_id = instance.id
+        sync_classes = []
+        contact_communication_sync = ContactCommunicationSynchronizer()
+        contact_communication_sync.api_conditions = \
+            ['contactId='+str(instance_id)]
+        sync_classes.append((contact_communication_sync,
+                             Q(contact=instance_id)))
+        self.sync_children(*sync_classes)
+
 
 class ContactCommunicationSynchronizer(Synchronizer):
     client_class = api.CompanyAPIClient
@@ -990,6 +1005,9 @@ class ContactCommunicationSynchronizer(Synchronizer):
             records += self.client_call(contact_id, *args, **kwargs)
 
         return records
+
+    def get_single(self, communication_id):
+        return self.client.get_single_communication(communication_id)
 
 
 class CommunicationTypeSynchronizer(Synchronizer):
