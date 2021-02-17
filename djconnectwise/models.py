@@ -375,8 +375,9 @@ class Contact(models.Model):
         return '{} {}'.format(self.first_name,
                               self.last_name if self.last_name else '')
 
-    first_name = models.TextField(blank=True, null=True, max_length=30)
-    last_name = models.TextField(blank=True, null=True, max_length=30)
+    first_name = models.CharField(blank=True, null=True, max_length=30)
+    last_name = models.CharField(blank=True, null=True, max_length=30)
+    title = models.CharField(blank=True, null=True, max_length=50)
     company = models.ForeignKey(
         'Company', null=True, on_delete=models.CASCADE)
 
@@ -391,6 +392,12 @@ class Contact(models.Model):
             default_flag=True, type_id__phone_flag=True).first()
 
     @property
+    def default_phone_ext(self):
+        phone = self.contactcommunication_set.filter(
+            default_flag=True, type_id__phone_flag=True).first()
+        return phone.extension if phone else None
+
+    @property
     def default_fax_number(self):
         return self.contactcommunication_set.filter(
             default_flag=True, type_id__fax_flag=True).first()
@@ -400,6 +407,7 @@ class ContactCommunication(models.Model):
     contact = models.ForeignKey(
         'Contact', null=True, on_delete=models.CASCADE)
     value = models.CharField(blank=True, null=True, max_length=250)
+    extension = models.CharField(blank=True, null=True, max_length=15)
     default_flag = models.BooleanField(blank=True, null=True)
     type = models.ForeignKey(
         'CommunicationType', null=True, on_delete=models.SET_NULL)
