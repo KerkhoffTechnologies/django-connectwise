@@ -380,29 +380,20 @@ class Contact(models.Model):
     company = models.ForeignKey(
         'Company', null=True, on_delete=models.CASCADE)
 
-    def get_email_address(self):
-        email = None
-        if self.contactcommunication_set.exists():
-            email = self.contactcommunication_set. \
-                filter(default_flag=True, type_id__email_flag=True)
-            email = email[0].value if email else None
-        return email
+    @property
+    def default_email_address(self):
+        return self.contactcommunication_set.filter(
+            default_flag=True, type_id__email_flag=True).first()
 
-    def get_phone_number(self):
-        phone = None
-        if self.contactcommunication_set.exists():
-            phone = self.contactcommunication_set. \
-                filter(default_flag=True, type_id__phone_flag=True)
-            phone = phone[0].value if phone else None
-        return phone
+    @property
+    def default_phone_number(self):
+        return self.contactcommunication_set.filter(
+            default_flag=True, type_id__phone_flag=True).first()
 
-    def get_fax_number(self):
-        fax = None
-        if self.contactcommunication_set.exists():
-            fax = self.contactcommunication_set. \
-                filter(default_flag=True, type_id__fax_flag=True)
-            fax = fax[0].value if fax else None
-        return fax
+    @property
+    def default_fax_number(self):
+        return self.contactcommunication_set.filter(
+            default_flag=True, type_id__fax_flag=True).first()
 
 
 class ContactCommunication(models.Model):
@@ -412,6 +403,11 @@ class ContactCommunication(models.Model):
     default_flag = models.BooleanField(blank=True, null=True)
     type = models.ForeignKey(
         'CommunicationType', null=True, on_delete=models.SET_NULL)
+
+    def __str__(self):
+        # Do not change this __str__ definition without good reason,
+        # email templates rely on it being the value.
+        return self.value
 
 
 class CommunicationType(models.Model):
@@ -892,20 +888,8 @@ class TimeEntry(models.Model):
 
         return entered_time
 
-    def get_note(self, note_flag):
-        if note_flag == 'detail':
-            return self.get_detail_note()
-        elif note_flag == 'resolution':
-            return self.get_resolution_note()
-        return None
-
-    def get_detail_note(self):
-        return self.notes if self.detail_description_flag else None
-
-    def get_resolution_note(self):
-        return self.notes if self.resolution_flag else None
-
-    def get_time_entry_note(self):
+    @property
+    def note(self):
         return self.notes
 
 
@@ -1661,18 +1645,9 @@ class ServiceNote(TimeStampedModel):
     def get_entered_time(self):
         return self.date_created
 
-    def get_note(self, note_flag):
-        if note_flag == 'detail':
-            return self.get_detail_note()
-        elif note_flag == 'resolution':
-            return self.get_resolution_note()
-        return None
-
-    def get_detail_note(self):
-        return self.text if self.detail_description_flag else None
-
-    def get_resolution_note(self):
-        return self.text if self.resolution_flag else None
+    @property
+    def note(self):
+        return self.text
 
 
 class Sla(TimeStampedModel, SlaGoalsMixin):
