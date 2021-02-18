@@ -380,6 +380,21 @@ class Contact(models.Model):
     company = models.ForeignKey(
         'Company', null=True, on_delete=models.CASCADE)
 
+    @property
+    def default_email_address(self):
+        return self.contactcommunication_set.filter(
+            default_flag=True, type_id__email_flag=True).first()
+
+    @property
+    def default_phone_number(self):
+        return self.contactcommunication_set.filter(
+            default_flag=True, type_id__phone_flag=True).first()
+
+    @property
+    def default_fax_number(self):
+        return self.contactcommunication_set.filter(
+            default_flag=True, type_id__fax_flag=True).first()
+
 
 class ContactCommunication(models.Model):
     contact = models.ForeignKey(
@@ -388,6 +403,11 @@ class ContactCommunication(models.Model):
     default_flag = models.BooleanField(blank=True, null=True)
     type = models.ForeignKey(
         'CommunicationType', null=True, on_delete=models.SET_NULL)
+
+    def __str__(self):
+        # Do not change this __str__ definition without good reason,
+        # email templates rely on it being the value.
+        return self.value
 
 
 class CommunicationType(models.Model):
@@ -867,6 +887,10 @@ class TimeEntry(models.Model):
             entered_time = self.time_start
 
         return entered_time
+
+    @property
+    def note(self):
+        return self.notes
 
 
 class AvailableBoardTeamManager(models.Manager):
@@ -1617,6 +1641,13 @@ class ServiceNote(TimeStampedModel):
 
     def __str__(self):
         return 'Ticket {} note: {}'.format(self.ticket, str(self.date_created))
+
+    def get_entered_time(self):
+        return self.date_created
+
+    @property
+    def note(self):
+        return self.text
 
 
 class Sla(TimeStampedModel, SlaGoalsMixin):
