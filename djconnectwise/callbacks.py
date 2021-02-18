@@ -30,6 +30,13 @@ NEEDED_CALLBACKS = [
     "level": "owner",
   },
   {
+    "type": "contact",
+    "description": "Kanban application contact callback",
+    "url": None,
+    "objectId": 1,
+    "level": "owner",
+  },
+  {
     "type": "opportunity",
     "description": "Kanban application opportunity callback",
     "url": None,
