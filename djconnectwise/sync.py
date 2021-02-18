@@ -999,8 +999,20 @@ class ContactCommunicationSynchronizer(Synchronizer):
 
     def get_page(self, *args, **kwargs):
         records = []
-        contact_qs = models.Contact.objects.all()
 
+        conditions = kwargs.get('conditions')
+        # When a contact callback is fired or lastUpdated condition is delivered
+        if conditions:
+            try:
+                if conditions[0].startswith("contactId"):
+                    contact_id = int(conditions[0][10:])
+                    records += self.client_call(contact_id, *args, **kwargs)
+                    return records
+            except ValueError:
+                # Do nothing
+                pass
+
+        contact_qs = models.Contact.objects.all()
         for contact_id in contact_qs.values_list('id', flat=True):
             records += self.client_call(contact_id, *args, **kwargs)
 
