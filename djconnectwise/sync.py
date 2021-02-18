@@ -943,6 +943,24 @@ class ContactSynchronizer(Synchronizer):
     def get_page(self, *args, **kwargs):
         return self.client.get_contacts(*args, **kwargs)
 
+    def get_single(self, contact_id):
+        return self.client.get_single_contact(contact_id)
+
+    def fetch_sync_by_id(self, instance_id, sync_config={}):
+        instance = super().fetch_sync_by_id(instance_id)
+        self.sync_related(instance)
+        return instance
+
+    def sync_related(self, instance):
+        instance_id = instance.id
+        sync_classes = []
+
+        contact_communication_sync = ContactCommunicationSynchronizer()
+        contact_communication_sync.api_conditions = [instance_id]
+        sync_classes.append((contact_communication_sync,
+                             Q(contact=instance_id)))
+        self.sync_children(*sync_classes)
+
 
 class ContactCommunicationSynchronizer(Synchronizer):
     client_class = api.CompanyAPIClient
@@ -975,18 +993,32 @@ class ContactCommunicationSynchronizer(Synchronizer):
         return instance
 
     def client_call(self, contact_id, *args, **kwargs):
-        kwargs['conditions'] = self.api_conditions
         return self.client.get_contact_communications(contact_id, *args,
                                                       **kwargs)
 
     def get_page(self, *args, **kwargs):
         records = []
-        contact_qs = models.Contact.objects.all()
+        conditions = kwargs.get('conditions')
+        if conditions:
+            try:
+                contact_id = int(conditions[0])
+                kwargs['conditions'] = [conditions[1]] if len(
+                    conditions) > 1 else []
 
+                records += self.client_call(contact_id, *args, **kwargs)
+                return records
+            except ValueError:
+                # Do nothing
+                pass
+
+        contact_qs = models.Contact.objects.all()
         for contact_id in contact_qs.values_list('id', flat=True):
             records += self.client_call(contact_id, *args, **kwargs)
 
         return records
+
+    def get_single(self, communication_id):
+        return self.client.get_single_communication(communication_id)
 
 
 class CommunicationTypeSynchronizer(Synchronizer):
