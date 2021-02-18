@@ -954,9 +954,9 @@ class ContactSynchronizer(Synchronizer):
     def sync_related(self, instance):
         instance_id = instance.id
         sync_classes = []
+
         contact_communication_sync = ContactCommunicationSynchronizer()
-        contact_communication_sync.api_conditions = \
-            ['contactId='+str(instance_id)]
+        contact_communication_sync.api_conditions = [instance_id]
         sync_classes.append((contact_communication_sync,
                              Q(contact=instance_id)))
         self.sync_children(*sync_classes)
@@ -993,21 +993,20 @@ class ContactCommunicationSynchronizer(Synchronizer):
         return instance
 
     def client_call(self, contact_id, *args, **kwargs):
-        kwargs['conditions'] = self.api_conditions
         return self.client.get_contact_communications(contact_id, *args,
                                                       **kwargs)
 
     def get_page(self, *args, **kwargs):
         records = []
-
         conditions = kwargs.get('conditions')
-        # When a contact callback is fired or lastUpdated condition is delivered
         if conditions:
             try:
-                if conditions[0].startswith("contactId"):
-                    contact_id = int(conditions[0][10:])
-                    records += self.client_call(contact_id, *args, **kwargs)
-                    return records
+                contact_id = int(conditions[0])
+                kwargs['conditions'] = [conditions[1]] if len(
+                    conditions) > 1 else []
+
+                records += self.client_call(contact_id, *args, **kwargs)
+                return records
             except ValueError:
                 # Do nothing
                 pass
