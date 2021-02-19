@@ -896,6 +896,19 @@ class TimeEntry(models.Model):
 
         return entered_time
 
+    def get_time_start(self):
+        time_start = self.time_start
+
+        # CW allows creating a time entry with actual hours set
+        # but no start or end time. In this case, the API returns time_start
+        # with the date and time as UTC midnight and time_end as null.
+        # Use a naive date instead to prevent conversion problems in the
+        # templates.
+        if self.time_start and not self.time_end:
+            time_start = time_start.date()
+
+        return time_start
+
     @property
     def note(self):
         return self.notes
