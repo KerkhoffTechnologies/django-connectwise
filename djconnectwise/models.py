@@ -375,9 +375,9 @@ class Contact(models.Model):
         return '{} {}'.format(self.first_name,
                               self.last_name if self.last_name else '')
 
-    first_name = models.CharField(blank=True, null=True, max_length=30)
-    last_name = models.CharField(blank=True, null=True, max_length=30)
-    title = models.CharField(blank=True, null=True, max_length=50)
+    first_name = models.CharField(blank=True, null=True, max_length=200)
+    last_name = models.CharField(blank=True, null=True, max_length=200)
+    title = models.CharField(blank=True, null=True, max_length=200)
     company = models.ForeignKey(
         'Company', null=True, on_delete=models.CASCADE)
 
