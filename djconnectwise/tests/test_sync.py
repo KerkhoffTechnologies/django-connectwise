@@ -15,7 +15,7 @@ from djconnectwise.sync import InvalidObjectException
 
 from . import fixtures
 from . import fixture_utils
-from kanban.board.tests import mocks
+from . import mocks
 from .. import sync
 from ..sync import log_sync_job
 

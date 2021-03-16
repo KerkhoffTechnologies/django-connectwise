@@ -10,7 +10,7 @@ from django.utils import timezone
 from .. import api
 
 from . import fixtures
-from kanban.board.tests import mocks as mk
+from . import mocks as mk
 
 from djconnectwise.api import ConnectWiseAPIError, ConnectWiseAPIClientError
 from djconnectwise.api import ConnectWiseRecordNotFoundError

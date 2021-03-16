@@ -1,5 +1,5 @@
 from . import fixtures
-from kanban.board.tests import mocks
+from . import mocks
 from djconnectwise import models
 from djconnectwise import sync
 

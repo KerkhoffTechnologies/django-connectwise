@@ -5,7 +5,7 @@ from django.test import TestCase
 
 from djconnectwise import models
 
-from kanban.board.tests import mocks
+from . import mocks
 from . import fixtures
 from . import fixture_utils
 from .. import sync
