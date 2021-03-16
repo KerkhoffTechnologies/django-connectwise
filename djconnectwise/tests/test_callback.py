@@ -1,7 +1,7 @@
 from django.test import TestCase
 
 from . import fixtures
-from . import mocks
+from kanban.board.tests import mocks
 
 from djconnectwise.callbacks import CallbacksHandler
 

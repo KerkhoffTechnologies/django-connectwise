@@ -12,6 +12,10 @@ _underscorer2 = re.compile(r'([a-z0-9])([A-Z])')
 FILENAME_EXTENSION_RE = re.compile(r'\.([\w]*)$')
 
 
+def xstr(s):
+    return '' if s is None else str(s)
+
+
 def camel_to_snake(s):
     """
     Is it ironic that this function is written in camel case, yet it

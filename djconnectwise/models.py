@@ -11,6 +11,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from model_utils import FieldTracker
 
 from . import api
+from .utils import xstr
 
 logger = logging.getLogger(__name__)
 
@@ -415,7 +416,7 @@ class ContactCommunication(models.Model):
     def __str__(self):
         # Do not change this __str__ definition without good reason,
         # email templates rely on it being the value.
-        return self.value
+        return xstr(self.value)
 
 
 class CommunicationType(models.Model):

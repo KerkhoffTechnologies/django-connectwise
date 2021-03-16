@@ -1,5 +1,5 @@
 from django.test import TestCase
-from . import mocks
+from kanban.board.tests import mocks
 from django.core.files.base import ContentFile
 from djconnectwise.utils import get_hash, get_filename_extension, \
                                 generate_thumbnail, generate_filename
