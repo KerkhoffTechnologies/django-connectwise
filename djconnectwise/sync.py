@@ -296,13 +296,6 @@ class Synchronizer:
                   " Error: {}".format(self.model_class, e)
             logger.error(msg)
             raise InvalidObjectException(msg)
-        except ValueError as e:
-            # ContactCommunication syncs don't fail with a record
-            # that has this kind of invalid data
-            msg = "ValueError while attempting to sync {}." \
-                  " Error: {}".format(self.model_class, e)
-            logger.error(msg)
-            pass
 
         if result == CREATED:
             result_log = 'Created'
@@ -984,9 +977,6 @@ class ContactCommunicationSynchronizer(Synchronizer):
         instance.extension = json_data.get('extension')
         instance.default_flag = json_data.get('defaultFlag')
         contact_id = json_data.get('contactId')
-
-        if not instance.value:
-            raise ValueError('"value" cannot be null')
 
         if contact_id:
             try:

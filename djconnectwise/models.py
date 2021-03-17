@@ -406,7 +406,7 @@ class Contact(models.Model):
 class ContactCommunication(models.Model):
     contact = models.ForeignKey(
         'Contact', null=True, on_delete=models.CASCADE)
-    value = models.CharField(blank=True, null=True, max_length=250)
+    value = models.CharField(default='', max_length=250)
     extension = models.CharField(blank=True, null=True, max_length=15)
     default_flag = models.BooleanField(blank=True, null=True)
     type = models.ForeignKey(
