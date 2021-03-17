@@ -971,9 +971,6 @@ class ContactCommunicationSynchronizer(Synchronizer):
         'type': (models.CommunicationType, 'type'),
     }
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
         instance.value = json_data.get('value')
