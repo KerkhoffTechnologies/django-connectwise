@@ -1738,15 +1738,16 @@ class ProjectSynchronizer(Synchronizer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # Only sync projects in non-closed statuses. We could simply use
-        # closedFlag=False but API versions before 2019.5 don't support the
-        # closedFlag field and we need to support those versions for now.
-        self.api_conditions = ['status/id in ({})'.format(
-            ','.join(
-                str(i.id) for
-                i in models.ProjectStatus.objects.filter(closed_flag=False)
-            )
-        )]
+        if self.full:
+            # Only sync projects in non-closed statuses. We could simply use
+            # closedFlag=False but API versions before 2019.5 don't support the
+            # closedFlag field and we need to support those versions for now.
+            self.api_conditions = ['status/id in ({})'.format(
+                ','.join(
+                    str(i.id) for
+                    i in models.ProjectStatus.objects.filter(closed_flag=False)
+                )
+            )]
 
     def _assign_field_data(self, instance, json_data):
         actual_start = json_data.get('actualStart')
@@ -1964,7 +1965,8 @@ class TicketSynchronizerMixin:
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.api_conditions = ['closedFlag=False']
+        if self.full:
+            self.api_conditions = ['closedFlag=False']
         # To get all open tickets, we can simply supply a `closedFlag=False`
         # condition for on-premise ConnectWise. But for hosted ConnectWise,
         # this results in timeouts for requests, so we also need to add a
