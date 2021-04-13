@@ -1355,6 +1355,20 @@ class Ticket(TimeStampedModel):
         (PHASE, 'Phase')
     )
 
+    EDITABLE_FIELDS = {
+        'summary': 'summary',
+        'required_date_utc': 'requiredDate',
+        'budget_hours': 'budgetHours',
+        'closed_flag': 'closedFlag',
+        'owner': 'owner',
+        'type': 'type',
+        'sub_type': 'subType',
+        'sub_type_item': 'item',
+        'project': 'project',
+        'agreement': 'agreement',
+        'status': 'status',
+        'priority': 'priority',
+    }
     actual_hours = models.DecimalField(
         blank=True, null=True, decimal_places=2, max_digits=9)
     approved = models.BooleanField(null=True)
@@ -1505,13 +1519,17 @@ class Ticket(TimeStampedModel):
         update_cw = kwargs.pop('update_cw', False)
         public_key = kwargs.pop('api_public_key', None)
         private_key = kwargs.pop('api_private_key', None)
+        changed_fields = kwargs.pop('changed_fields', None)
 
-        super().save(**kwargs)
         if update_cw:
             self.update_cw(
                 api_public_key=public_key,
-                api_private_key=private_key
+                api_private_key=private_key,
+                changed_fields=changed_fields
             )
+
+        super().save(**kwargs)
+        # if not update_cw or update_cw and updated:
 
     def _warn_invalid_status(self):
         """
@@ -1552,9 +1570,22 @@ class Ticket(TimeStampedModel):
             api_private_key=kwargs.get('api_private_key')
         )
 
-        return api_client.update_ticket(
-            self.id, self.closed_flag, self.priority, self.status
-        )
+        tracker = getattr(self, 'tracker', None)
+        if tracker:
+            changed_fields = tracker.changed()
+
+        else:
+            changed_fields = kwargs.get('changed_fields')
+
+        # At this point, any updated fields have been set on the Ticket
+        # object (but not saved locally yet). Prepare the updated fields
+        # to be sent to CW.
+        updated_objects = {}
+        for field in changed_fields:
+            field = field.replace('_id', '')
+            updated_objects[field] = getattr(self, field)
+
+        return api_client.update_ticket(self, updated_objects)
 
     def close(self, *args, **kwargs):
         """
@@ -1572,6 +1603,10 @@ class Ticket(TimeStampedModel):
 
         self.status = closed_status
         self.closed_flag = True
+
+        kwargs['changed_fields'] = {
+            'status': closed_status, 'closed_flag': True
+        }
         return self.save(*args, **kwargs)
 
     def calculate_sla_expiry(self, priority_change=None):

@@ -1,3 +1,4 @@
+import datetime
 import json
 import logging
 import re
@@ -7,6 +8,7 @@ import pytz
 import requests
 from django.conf import settings
 from django.core.cache import cache
+from django.db import models
 from retrying import retry
 
 from djconnectwise.utils import DjconnectwiseSettings
@@ -983,43 +985,58 @@ class TicketAPIMixin:
         return self.fetch_resource(self.ENDPOINT_TICKETS, should_page=True,
                                    *args, **kwargs)
 
-    def update_ticket(self, ticket_id, closed_flag, priority, status):
+    def update_ticket(self, ticket, changed_fields):
         """
         Update the ticket's closedFlag and priority or status on the server.
         """
         # Yeah, this schema is a bit bizarre. See CW docs at
         # https://developer.connectwise.com/Manage/Developer_Guide#Patch
         endpoint_url = self._endpoint(
-            '{}/{}'.format(self.ENDPOINT_TICKETS, ticket_id)
+            '{}/{}'.format(self.ENDPOINT_TICKETS, ticket.id)
         )
-        body = [
-            {
-                'op': 'replace',
-                'path': 'closedFlag',
-                'value': closed_flag
-            },
-            {
-                'op': 'replace',
-                'path': 'status',
-                'value': {
-                    'id': status.id,
-                    'name': status.name,
-                },
-            },
-        ]
-
-        if priority:
-            priority_body = {
-                'op': 'replace',
-                'path': 'priority',
-                'value': {
-                    'id': priority.id,
-                    'name': priority.name,
-                },
-            }
-            body.append(priority_body)
+        body = self._format_request_body(ticket, changed_fields)
+        print(body)
 
         return self.request('patch', endpoint_url, body)
+
+    def _format_request_body(self, ticket, changed_fields):
+        editable_fields = ticket.EDITABLE_FIELDS
+        body = []
+
+        for field, value in changed_fields.items():
+
+            # FieldTracker tracks Foreign Keys by database column name.
+            # Remove _id to use the Django model field name.
+            field = field.replace('_id', '')
+
+            if field in editable_fields:
+                field_update = {
+                    'op': 'replace',
+                    'path': editable_fields[field],
+                }
+
+                if isinstance(value, datetime.datetime):
+                    field_update.update({
+                        'value': value.astimezone(
+                            pytz.timezone('UTC')).strftime(
+                                "%Y-%m-%dT%H:%M:%SZ")
+                    })
+
+                elif isinstance(value, models.Model):
+                    field_update.update({
+                        'value': {
+                            'id': value.id,
+                        }
+                    })
+                else:
+                    field_update.update({'value': value})
+
+                body.append(field_update)
+
+            else:
+                logger.debug('handle error')
+
+        return body
 
 
 class ServiceAPIClient(TicketAPIMixin, ConnectWiseAPIClient):
