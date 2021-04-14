@@ -1528,8 +1528,8 @@ class Ticket(TimeStampedModel):
                 changed_fields=changed_fields
             )
 
+        # Ensure save is not run before update_cw returns successfully
         super().save(**kwargs)
-        # if not update_cw or update_cw and updated:
 
     def _warn_invalid_status(self):
         """
@@ -1570,6 +1570,8 @@ class Ticket(TimeStampedModel):
             api_private_key=kwargs.get('api_private_key')
         )
 
+        # Get any fields changed since last save when called from a
+        # TicketTracker instance.
         tracker = getattr(self, 'tracker', None)
         if tracker:
             changed_fields = tracker.changed()

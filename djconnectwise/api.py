@@ -995,7 +995,6 @@ class TicketAPIMixin:
             '{}/{}'.format(self.ENDPOINT_TICKETS, ticket.id)
         )
         body = self._format_request_body(ticket, changed_fields)
-        print(body)
 
         return self.request('patch', endpoint_url, body)
 
@@ -1032,9 +1031,6 @@ class TicketAPIMixin:
                     field_update.update({'value': value})
 
                 body.append(field_update)
-
-            else:
-                logger.debug('handle error')
 
         return body
 
