@@ -1583,9 +1583,10 @@ class Ticket(TimeStampedModel):
         # object (but not saved locally yet). Prepare the updated fields
         # to be sent to CW.
         updated_objects = {}
-        for field in changed_fields:
-            field = field.replace('_id', '')
-            updated_objects[field] = getattr(self, field)
+        if changed_fields:
+            for field in changed_fields:
+                field = field.replace('_id', '')
+                updated_objects[field] = getattr(self, field)
 
         return api_client.update_ticket(self, updated_objects)
 
