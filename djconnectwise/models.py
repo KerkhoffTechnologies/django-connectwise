@@ -1556,9 +1556,8 @@ class Ticket(TimeStampedModel):
 
     def update_cw(self, **kwargs):
         """
-        Send ticket updates to ConnectWise. As of version 2019.3,
-        project tickets and issues need to be updated using the project
-        API endpoint.
+        Send ticket updates to ConnectWise. Project tickets and issues
+        need to be updated using the project API endpoint.
         """
         if self.record_type in [self.PROJECT_TICKET, self.PROJECT_ISSUE]:
             api_class = api.ProjectAPIClient
@@ -1570,14 +1569,12 @@ class Ticket(TimeStampedModel):
             api_private_key=kwargs.get('api_private_key')
         )
 
-        # Get any fields changed since last save when called from a
-        # TicketTracker instance.
-        tracker = getattr(self, 'tracker', None)
-        if tracker:
-            changed_fields = tracker.changed()
+        changed_fields = kwargs.get('changed_fields')
+        updated_objects = self.get_changed_attributes(changed_fields)
 
-        else:
-            changed_fields = kwargs.get('changed_fields')
+        return api_client.update_ticket(self, updated_objects)
+
+    def get_changed_attributes(self, changed_fields):
 
         # At this point, any updated fields have been set on the Ticket
         # object (but not saved locally yet). Prepare the updated fields
@@ -1588,7 +1585,7 @@ class Ticket(TimeStampedModel):
                 field = field.replace('_id', '')
                 updated_objects[field] = getattr(self, field)
 
-        return api_client.update_ticket(self, updated_objects)
+        return updated_objects
 
     def close(self, *args, **kwargs):
         """
