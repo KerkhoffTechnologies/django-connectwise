@@ -1521,7 +1521,7 @@ class Ticket(TimeStampedModel):
         private_key = kwargs.pop('api_private_key', None)
         changed_fields = kwargs.pop('changed_fields', None)
 
-        if update_cw:
+        if update_cw and changed_fields:
             self.update_cw(
                 api_public_key=public_key,
                 api_private_key=private_key,
@@ -1556,9 +1556,9 @@ class Ticket(TimeStampedModel):
 
     def update_cw(self, **kwargs):
         """
-        Send ticket status or priority and closed_flag updates to ConnectWise.
-        As of version 2019.3, project tickets and issues need to be updated
-        using the project API endpoint.
+        Send ticket updates to ConnectWise. As of version 2019.3,
+        project tickets and issues need to be updated using the project
+        API endpoint.
         """
         if self.record_type in [self.PROJECT_TICKET, self.PROJECT_ISSUE]:
             api_class = api.ProjectAPIClient
