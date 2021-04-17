@@ -1556,8 +1556,10 @@ class Ticket(TimeStampedModel):
 
     def update_cw(self, **kwargs):
         """
-        Send ticket updates to ConnectWise. Project tickets and issues
-        need to be updated using the project API endpoint.
+        Send ticket updates to ConnectWise. Accepts a changed_fields
+        argument which is a list of fields that have been changed and
+        should be updated in CW. Project tickets and issues need to be
+        updated using the project API endpoint.
         """
         if self.record_type in [self.PROJECT_TICKET, self.PROJECT_ISSUE]:
             api_class = api.ProjectAPIClient
@@ -1570,18 +1572,18 @@ class Ticket(TimeStampedModel):
         )
 
         changed_fields = kwargs.get('changed_fields')
-        updated_objects = self.get_changed_attributes(changed_fields)
+        updated_objects = self.get_changed_values(changed_fields)
 
         return api_client.update_ticket(self, updated_objects)
 
-    def get_changed_attributes(self, changed_fields):
+    def get_changed_values(self, changed_field_keys):
 
         # At this point, any updated fields have been set on the Ticket
         # object (but not saved locally yet). Prepare the updated fields
         # to be sent to CW.
         updated_objects = {}
-        if changed_fields:
-            for field in changed_fields:
+        if changed_field_keys:
+            for field in changed_field_keys:
                 field = field.replace('_id', '')
                 updated_objects[field] = getattr(self, field)
 
@@ -1604,9 +1606,8 @@ class Ticket(TimeStampedModel):
         self.status = closed_status
         self.closed_flag = True
 
-        kwargs['changed_fields'] = {
-            'status': closed_status, 'closed_flag': True
-        }
+        kwargs['changed_fields'] = ['status', 'closed_flag']
+
         return self.save(*args, **kwargs)
 
     def calculate_sla_expiry(self, priority_change=None):
