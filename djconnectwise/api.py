@@ -999,8 +999,12 @@ class TicketAPIMixin:
         return self.request('patch', endpoint_url, body)
 
     def _format_request_body(self, ticket, changed_fields):
-        editable_fields = ticket.EDITABLE_FIELDS
         body = []
+        editable_fields = ticket.EDITABLE_FIELDS
+
+        # Project is not a valid field for service tickets
+        if ticket.record_type == ticket.SERVICE_TICKET:
+            editable_fields.pop('project')
 
         for field, value in changed_fields.items():
 

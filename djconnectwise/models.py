@@ -1365,6 +1365,7 @@ class Ticket(TimeStampedModel):
         'sub_type': 'subType',
         'sub_type_item': 'item',
         'project': 'project',
+        'phase': 'phase',
         'agreement': 'agreement',
         'status': 'status',
         'priority': 'priority',
