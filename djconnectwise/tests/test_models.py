@@ -299,7 +299,7 @@ class TestTicket(ModelTestCase):
             ticket.save()
             self.assertFalse(instance.update_ticket.called)
             # Now call it with 'update_cw'
-            ticket.save(update_cw=True)
+            ticket.save(update_cw=True, changed_fields={'summary': 'New'})
             self.assertTrue(instance.update_ticket.called)
 
     def test_update_cw(self):
