@@ -12,7 +12,6 @@ from django.db import models
 from retrying import retry
 
 from djconnectwise.utils import DjconnectwiseSettings
-# from djconnectwise.models import Ticket
 
 # Cloud URLs:
 # https://developer.connectwise.com/Products/Manage/Developer_Guide#Cloud_URLs
