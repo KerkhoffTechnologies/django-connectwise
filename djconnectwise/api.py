@@ -12,6 +12,7 @@ from django.db import models
 from retrying import retry
 
 from djconnectwise.utils import DjconnectwiseSettings
+# from djconnectwise.models import Ticket
 
 # Cloud URLs:
 # https://developer.connectwise.com/Products/Manage/Developer_Guide#Cloud_URLs
@@ -1000,11 +1001,6 @@ class TicketAPIMixin:
 
     def _format_request_body(self, ticket, changed_fields):
         body = []
-        editable_fields = ticket.EDITABLE_FIELDS
-
-        # Project is not a valid field for service tickets
-        if ticket.record_type == ticket.SERVICE_TICKET:
-            editable_fields.pop('project')
 
         for field, value in changed_fields.items():
 
@@ -1012,10 +1008,11 @@ class TicketAPIMixin:
             # Remove _id to use the Django model field name.
             field = field.replace('_id', '')
 
-            if field in editable_fields:
+            if field and ticket.record_type and \
+                    field in ticket.EDITABLE_FIELDS[ticket.record_type]:
                 field_update = {
                     'op': 'replace',
-                    'path': editable_fields[field],
+                    'path': ticket.EDITABLE_FIELDS[ticket.record_type][field],
                 }
 
                 if isinstance(value, datetime.datetime):

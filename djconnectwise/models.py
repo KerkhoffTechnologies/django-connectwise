@@ -1355,7 +1355,7 @@ class Ticket(TimeStampedModel):
         (PHASE, 'Phase')
     )
 
-    EDITABLE_FIELDS = {
+    VALID_UPDATE_FIELDS = {
         'summary': 'summary',
         'required_date_utc': 'requiredDate',
         'budget_hours': 'budgetHours',
@@ -1364,12 +1364,23 @@ class Ticket(TimeStampedModel):
         'type': 'type',
         'sub_type': 'subType',
         'sub_type_item': 'item',
-        'project': 'project',
-        'phase': 'phase',
         'agreement': 'agreement',
         'status': 'status',
         'priority': 'priority',
     }
+
+    SERVICE_EDITABLE_FIELDS = VALID_UPDATE_FIELDS
+    PROJECT_EDITABLE_FIELDS = VALID_UPDATE_FIELDS
+    PROJECT_EDITABLE_FIELDS.update({
+        'project': 'project',
+        'phase': 'phase'
+    })
+    EDITABLE_FIELDS = {
+        PROJECT_TICKET: PROJECT_EDITABLE_FIELDS,
+        PROJECT_ISSUE: PROJECT_EDITABLE_FIELDS,
+        SERVICE_TICKET: SERVICE_EDITABLE_FIELDS,
+    }
+
     actual_hours = models.DecimalField(
         blank=True, null=True, decimal_places=2, max_digits=9)
     approved = models.BooleanField(null=True)
