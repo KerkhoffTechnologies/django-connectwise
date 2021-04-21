@@ -9,6 +9,7 @@ from django.utils.translation import gettext_lazy as _
 from django_extensions.db.models import TimeStampedModel
 from django.core.exceptions import ObjectDoesNotExist
 from model_utils import FieldTracker
+from copy import deepcopy
 
 from . import api
 
@@ -1370,7 +1371,7 @@ class Ticket(TimeStampedModel):
     }
 
     SERVICE_EDITABLE_FIELDS = VALID_UPDATE_FIELDS
-    PROJECT_EDITABLE_FIELDS = VALID_UPDATE_FIELDS
+    PROJECT_EDITABLE_FIELDS = deepcopy(VALID_UPDATE_FIELDS)
     PROJECT_EDITABLE_FIELDS.update({
         'project': 'project',
         'phase': 'phase'
