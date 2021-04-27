@@ -1028,7 +1028,7 @@ class TicketAPIMixin:
                         }
                     })
                 else:
-                    field_update.update({'value': value})
+                    field_update.update({'value': str(value) if value else ''})
 
                 body.append(field_update)
 
