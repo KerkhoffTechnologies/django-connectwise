@@ -1699,7 +1699,7 @@ class ServiceNote(TimeStampedModel):
     internal_analysis_flag = models.BooleanField(blank=True)
     internal_flag = models.BooleanField(blank=True)
     resolution_flag = models.BooleanField(blank=True)
-    text = models.TextField(blank=True, null=True, max_length=2000)
+    text = models.TextField(blank=True, null=True, max_length=4000)
 
     ticket = models.ForeignKey('Ticket', on_delete=models.CASCADE)
     member = models.ForeignKey(
