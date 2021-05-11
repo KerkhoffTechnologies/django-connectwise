@@ -838,7 +838,22 @@ class Territory(models.Model):
         return self.name
 
 
-class TimeEntry(models.Model):
+class UpdateRecordMixin:
+
+    def save(self, *args, **kwargs):
+        update_cw = kwargs.pop('update_cw', False)
+        public_key = kwargs.pop('api_public_key', None)
+        private_key = kwargs.pop('api_private_key', None)
+
+        if update_cw:
+            self.update_cw(
+                api_public_key=public_key,
+                api_private_key=private_key,
+            )
+        super().save(**kwargs)
+
+
+class TimeEntry(UpdateRecordMixin, models.Model):
     CHARGE_TYPES = (
         ('ServiceTicket', "Service Ticket"),
         ('ProjectTicket', "Project Ticket"),
@@ -913,6 +928,14 @@ class TimeEntry(models.Model):
     @property
     def note(self):
         return self.notes
+
+    def update_cw(self, **kwargs):
+
+        api_client = api.TimeAPIClient(
+            api_public_key=kwargs.get('api_public_key'),
+            api_private_key=kwargs.get('api_private_key')
+        )
+        return api_client.update_time_entry(self)
 
 
 class AvailableBoardTeamManager(models.Manager):
@@ -1574,10 +1597,7 @@ class Ticket(TimeStampedModel):
         should be updated in CW. Project tickets and issues need to be
         updated using the project API endpoint.
         """
-        if self.record_type in [self.PROJECT_TICKET, self.PROJECT_ISSUE]:
-            api_class = api.ProjectAPIClient
-        else:
-            api_class = api.ServiceAPIClient
+        api_class = self.get_api_class()
 
         api_client = api_class(
             api_public_key=kwargs.get('api_public_key'),
@@ -1689,8 +1709,16 @@ class Ticket(TimeStampedModel):
             self.sla_state = new_state
             self.sla_state.enter(valid_stage, calendar, sla)
 
+    def get_api_class(self):
+        if self.record_type in [self.PROJECT_TICKET, self.PROJECT_ISSUE]:
+            api_class = api.ProjectAPIClient
+        else:
+            api_class = api.ServiceAPIClient
 
-class ServiceNote(TimeStampedModel):
+        return api_class
+
+
+class ServiceNote(UpdateRecordMixin, TimeStampedModel):
 
     created_by = models.TextField(blank=True, null=True, max_length=250)
     date_created = models.DateTimeField(blank=True, null=True)
@@ -1718,6 +1746,15 @@ class ServiceNote(TimeStampedModel):
     @property
     def note(self):
         return self.text
+
+    def update_cw(self, **kwargs):
+        api_class = self.ticket.get_api_class()
+
+        api_client = api_class(
+            api_public_key=kwargs.get('api_public_key'),
+            api_private_key=kwargs.get('api_private_key')
+        )
+        return api_client.update_note(self)
 
 
 class Sla(TimeStampedModel, SlaGoalsMixin):

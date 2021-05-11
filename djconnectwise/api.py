@@ -743,6 +743,17 @@ class TimeAPIClient(ConnectWiseAPIClient):
 
         return self.request('post', endpoint_url, body)
 
+    def update_time_entry(self, time_entry):
+        endpoint_url = self._endpoint(
+            '{}/{}'.format(self.ENDPOINT_ENTRIES, time_entry.id)
+        )
+        body = [{
+            'op': 'replace',
+            'path': 'notes',
+            'value': time_entry.notes
+        }]
+        return self.request('patch', endpoint_url, body)
+
 
 class SalesAPIClient(ConnectWiseAPIClient):
     API = 'sales'
@@ -1033,6 +1044,18 @@ class TicketAPIMixin:
                 body.append(field_update)
 
         return body
+
+    def update_note(self, note):
+        endpoint_url = self._endpoint(
+            '{}/{}/notes/{}'.format(
+                self.ENDPOINT_TICKETS, note.ticket.id, note.id)
+        )
+        body = [{
+            'op': 'replace',
+            'path': 'text',
+            'value': note.text
+        }]
+        return self.request('patch', endpoint_url, body)
 
 
 class ServiceAPIClient(TicketAPIMixin, ConnectWiseAPIClient):
