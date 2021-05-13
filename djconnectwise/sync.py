@@ -1871,6 +1871,10 @@ class MemberSynchronizer(Synchronizer):
                     logger.info("Saving member '{}' avatar to {}.".format(
                         member.identifier, filename))
                     default_storage.save(filename, avatar_file)
+                else:
+                    # If there were any problems saving the avatar clear the
+                    # filename from the member
+                    member.avatar = ""
 
     def get_page(self, *args, **kwargs):
         return self.client.get_members(*args, **kwargs)
@@ -1935,6 +1939,9 @@ class MemberSynchronizer(Synchronizer):
                           ' NoCredentialsError Exception: {}.' \
                           .format(username, e)
                     logger.warning(msg)
+                    # If there were any problems saving the avatar clear the
+                    # filename from the member
+                    instance.avatar = ""
             instance.save()
 
         return instance, result
