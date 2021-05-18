@@ -172,7 +172,7 @@ class TimeEntryAdmin(admin.ModelAdmin):
                     'internal_notes')
     list_filter = ('member', 'charge_to_type')
     search_fields = ['id', 'charge_to_id__id', 'member__identifier',
-                     'charge_to_type']
+                     'charge_to_type', 'notes']
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
@@ -265,7 +265,8 @@ class ScheduleEntryInline(admin.StackedInline):
 class TicketAdmin(admin.ModelAdmin):
     list_display = ('id', 'summary', 'status', 'record_type',)
     list_filter = ('record_type',)
-    search_fields = ['id', 'summary', 'company__name', 'status__name']
+    search_fields = \
+        ['id', 'summary', 'company__name', 'status__name', 'board__name']
 
     inlines = [
         ScheduleEntryInline
