@@ -9,20 +9,6 @@ logger = logging.getLogger(__name__)
 # See https://developer.connectwise.com/Products/Manage/Developer_Guide#Callbacks_(Webhooks)  # noqa
 NEEDED_CALLBACKS = [
   {
-    "type": "ticket",
-    "description": "Kanban application ticket callback",
-    "url": None,
-    "objectId": 1,
-    "level": "owner",
-  },
-  {
-    "type": "project",
-    "description": "Kanban application project callback",
-    "url": None,
-    "objectId": 1,
-    "level": "owner",
-  },
-  {
     "type": "company",
     "description": "Kanban application company callback",
     "url": None,
@@ -32,20 +18,6 @@ NEEDED_CALLBACKS = [
   {
     "type": "contact",
     "description": "Kanban application contact callback",
-    "url": None,
-    "objectId": 1,
-    "level": "owner",
-  },
-  {
-    "type": "opportunity",
-    "description": "Kanban application opportunity callback",
-    "url": None,
-    "objectId": 1,
-    "level": "owner",
-  },
-  {
-    "type": "activity",
-    "description": "Kanban application activity callback",
     "url": None,
     "objectId": 1,
     "level": "owner",
@@ -65,6 +37,43 @@ class CallbacksHandler:
         super().__init__()
         self.system_client = SystemAPIClient()
         self.settings = DjconnectwiseSettings().get_settings()
+
+        if self.settings['sync_service_tickets'] or \
+                self.settings['sync_project_tickets']:
+            NEEDED_CALLBACKS.append({
+                "type": "ticket",
+                "description": "Kanban application ticket callback",
+                "url": None,
+                "objectId": 1,
+                "level": "owner",
+            })
+
+        if self.settings['sync_activities']:
+            NEEDED_CALLBACKS.append({
+                "type": "activity",
+                "description": "Kanban application activity callback",
+                "url": None,
+                "objectId": 1,
+                "level": "owner",
+            })
+
+        if self.settings['sync_opportunities']:
+            NEEDED_CALLBACKS.append({
+                "type": "opportunity",
+                "description": "Kanban application opportunity callback",
+                "url": None,
+                "objectId": 1,
+                "level": "owner",
+            })
+
+        if self.settings['sync_projects']:
+            NEEDED_CALLBACKS.append({
+                "type": "project",
+                "description": "Kanban application project callback",
+                "url": None,
+                "objectId": 1,
+                "level": "owner",
+            })
 
     def get_callbacks(self):
         results = []
