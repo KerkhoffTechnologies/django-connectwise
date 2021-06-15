@@ -2098,6 +2098,7 @@ class TicketSynchronizerMixin:
         instance.resources = json_data.get('resources')
         instance.bill_time = json_data.get('billTime')
         instance.customer_updated = json_data.get('customerUpdatedFlag')
+        instance.estimated_start_date = json_data.get('estimatedStartDate')
 
         if instance.entered_date_utc:
             # Parse the date here so that a datetime object is
@@ -2107,6 +2108,9 @@ class TicketSynchronizerMixin:
             instance.last_updated_utc = parse(instance.last_updated_utc)
         if instance.required_date_utc:
             instance.required_date_utc = parse(instance.required_date_utc)
+        if instance.estimated_start_date:
+            instance.estimated_start_date = \
+                parse(instance.estimated_start_date)
 
         # Key is comes out of db as string, so we add it as a string here
         # so the tracker can compare it properly.
@@ -2210,6 +2214,7 @@ class ProjectTicketSynchronizer(TicketSynchronizerMixin,
     def _assign_field_data(self, instance, json_data):
         instance = super()._assign_field_data(instance, json_data)
 
+        instance.wbs_code = json_data.get('wbsCode')
         # Tickets from the project/tickets API endpoint do not include the
         # record type field but we use the same Ticket model for project and
         # service tickets so we need to set the record type here.

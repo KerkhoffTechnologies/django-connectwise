@@ -969,7 +969,6 @@ API_SERVICE_TICKET = {
             'status_href': 'https://example.com/v4_6_release/apis/3.0/service/boards/1/statuses/1'
         }
     },
-    'wbsCode': '10.2',
     'company': API_COMPANY,
     'site': {
         'id': 28,
@@ -1061,7 +1060,7 @@ API_SERVICE_TICKET = {
     'predecessorClosedFlag': None,
     'lagDays': 0,
     'lagNonworkingDaysFlag': False,
-    'estimatedStartDate': None,
+    'estimatedStartDate': "2017-03-04T00:00:00Z",
     'duration': None,
     'businessUnitId': 10,
     'mobileGuid': 'c5882071-79ac-4149-9088-3af3196a22f7',
@@ -1169,6 +1168,7 @@ API_PROJECT_TICKET = {
         }
     },
     'requiredDate': "2017-03-03T00:00:00Z",
+    'estimatedStartDate': "2017-03-04T00:00:00Z",
     'budgetHours': 12.00,
     'allowAllClientsPortalView': False,
     'customerUpdatedFlag': False,
