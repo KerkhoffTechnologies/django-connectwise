@@ -1572,8 +1572,6 @@ class TestServiceTicketSynchronizer(TestTicketSynchronizerMixin, TestCase):
 
     def setUp(self):
         super().setUp()
-        mocks.service_api_tickets_call()
-
         self._init_data()
         fixture_utils.init_tickets()
 

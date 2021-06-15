@@ -2108,6 +2108,9 @@ class TicketSynchronizerMixin:
             instance.last_updated_utc = parse(instance.last_updated_utc)
         if instance.required_date_utc:
             instance.required_date_utc = parse(instance.required_date_utc)
+        if instance.estimated_start_date:
+            instance.estimated_start_date = \
+                parse(instance.estimated_start_date)
 
         # Key is comes out of db as string, so we add it as a string here
         # so the tracker can compare it properly.
