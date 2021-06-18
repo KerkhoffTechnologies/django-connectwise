@@ -25,6 +25,62 @@ BILL_TYPES = (
     )
 
 
+class UpdateConnectWiseMixin:
+
+    def save(self, *args, **kwargs):
+        """
+        Save the object.
+        If update_cw as a kwarg is True, then update ConnectWise with changes.
+        """
+        update_cw = kwargs.pop('update_cw', False)
+        public_key = kwargs.pop('api_public_key', None)
+        private_key = kwargs.pop('api_private_key', None)
+        changed_fields = kwargs.pop('changed_fields', None)
+
+        if update_cw and changed_fields:
+            self.update_cw(
+                api_public_key=public_key,
+                api_private_key=private_key,
+                changed_fields=changed_fields
+            )
+
+        # Ensure save is not run before update_cw returns successfully
+        super().save(**kwargs)
+
+    def update_cw(self, **kwargs):
+        """
+        Send ticket updates to ConnectWise. Accepts a changed_fields
+        argument which is a list of fields that have been changed and
+        should be updated in CW.
+        """
+        api_class = self.get_api_class()
+
+        api_client = api_class(
+            api_public_key=kwargs.get('api_public_key'),
+            api_private_key=kwargs.get('api_private_key')
+        )
+
+        changed_fields = kwargs.get('changed_fields')
+        updated_objects = self.get_changed_values(changed_fields)
+
+        method = getattr(api_client, self.update_method_name)
+        return method(self, updated_objects)
+
+    def get_changed_values(self, changed_field_keys):
+        # Prepare the updated fields to be sent to CW. At this point, any
+        # updated fields have been set on the object, but not in local DB yet.
+        updated_objects = {}
+        if changed_field_keys:
+            for field in changed_field_keys:
+                field = field.replace('_id', '')
+                updated_objects[field] = getattr(self, field)
+
+        return updated_objects
+
+    def get_api_class(self):
+        return getattr(api, self.api_class_name)
+
+
 class InvalidStatusError(Exception):
     pass
 
@@ -1099,7 +1155,7 @@ class AvailableProjectManager(models.Manager):
         )
 
 
-class Project(TimeStampedModel):
+class Project(UpdateConnectWiseMixin, TimeStampedModel):
     name = models.CharField(max_length=200)
     actual_hours = models.DecimalField(
         blank=True, null=True, decimal_places=2, max_digits=9)
@@ -1151,22 +1207,28 @@ class Project(TimeStampedModel):
     objects = models.Manager()
     available_objects = AvailableProjectManager()
 
+    EDITABLE_FIELDS = {
+        'name': 'name',
+        'status': 'status',
+        'type': 'type',
+        'estimated_start': 'estimatedStart',
+        'estimated_end': 'estimatedEnd',
+        'manager': 'manager',
+        'percent_complete': 'percentComplete',
+        'description': 'description',
+        'contact': 'contact',
+    }
+
     class Meta:
         ordering = ('name', )
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.update_method_name = 'update_project'
+        self.api_class_name = 'ProjectAPIClient'
+
     def __str__(self):
         return self.name or ''
-
-    def update_cw(self, **kwargs):
-        """
-        Send project status updates to ConnectWise.
-        """
-        api_client = api.ProjectAPIClient(
-            api_public_key=kwargs.get('api_public_key'),
-            api_private_key=kwargs.get('api_private_key')
-        )
-
-        return api_client.update_project(self.id, self.status)
 
     def get_connectwise_url(self):
         params = dict(
@@ -1241,7 +1303,7 @@ class OpportunityType(TimeStampedModel):
         return self.description
 
 
-class Opportunity(TimeStampedModel):
+class Opportunity(UpdateConnectWiseMixin, TimeStampedModel):
     business_unit_id = models.IntegerField(null=True)
     closed_date = models.DateTimeField(blank=True, null=True)
     customer_po = models.CharField(max_length=100, blank=True, null=True)
@@ -1286,9 +1348,28 @@ class Opportunity(TimeStampedModel):
                                          on_delete=models.SET_NULL)
     udf = models.JSONField(blank=True, null=True)
 
+    EDITABLE_FIELDS = {
+        'name': 'name',
+        'stage': 'stage',
+        'notes': 'notes',
+        'contact': 'contact',
+        'expected_close_date': 'expectedCloseDate',
+        'opportunity_type': 'type',
+        'status': 'status',
+        'source': 'source',
+        'primary_sales_rep': 'primarySalesRep',
+        'secondary_sales_rep': 'secondarySalesRep',
+        'location_id': 'locationId',
+    }
+
     class Meta:
         ordering = ('name', )
         verbose_name_plural = 'Opportunities'
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.update_method_name = 'update_opportunity_stage'
+        self.api_class_name = 'SalesAPIClient'
 
     def __str__(self):
         return self.name
@@ -1308,31 +1389,8 @@ class Opportunity(TimeStampedModel):
             urllib.parse.urlencode(params)
         )
 
-    def save(self, *args, **kwargs):
-        """
-        Save the object.
 
-        If update_cw as a kwarg is True, then update ConnectWise with changes.
-        """
-        update_cw = kwargs.pop('update_cw', False)
-        super().save(*args, **kwargs)
-        if update_cw:
-            self.update_cw()
-
-    def update_cw(self, **kwargs):
-        """
-        Send ticket status and closed_flag updates to ConnectWise.
-        """
-        sales_client = api.SalesAPIClient(
-            api_public_key=kwargs.get('api_public_key'),
-            api_private_key=kwargs.get('api_private_key')
-        )
-        return sales_client.update_opportunity_stage(
-            self.id, self.stage
-        )
-
-
-class Ticket(TimeStampedModel):
+class Ticket(UpdateConnectWiseMixin, TimeStampedModel):
     SCHEDULE_ENTRY_TYPE = "S"
 
     PROJECT_TICKET = 'ProjectTicket'
@@ -1517,6 +1575,7 @@ class Ticket(TimeStampedModel):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.update_method_name = 'update_ticket'
         self.state_manager = StateMachineManager
         state_class = self.state_manager.get(self.sla_stage)
         self.sla_state = state_class(self) if state_class else None
@@ -1547,26 +1606,7 @@ class Ticket(TimeStampedModel):
         )
 
     def save(self, *args, **kwargs):
-        """
-        Save the object.
-
-        If update_cw as a kwarg is True, then update ConnectWise with changes.
-        """
         self._warn_invalid_status()
-
-        update_cw = kwargs.pop('update_cw', False)
-        public_key = kwargs.pop('api_public_key', None)
-        private_key = kwargs.pop('api_private_key', None)
-        changed_fields = kwargs.pop('changed_fields', None)
-
-        if update_cw and changed_fields:
-            self.update_cw(
-                api_public_key=public_key,
-                api_private_key=private_key,
-                changed_fields=changed_fields
-            )
-
-        # Ensure save is not run before update_cw returns successfully
         super().save(**kwargs)
 
     def _warn_invalid_status(self):
@@ -1591,38 +1631,6 @@ class Ticket(TimeStampedModel):
                     self.board.id,
                 )
             )
-
-    def update_cw(self, **kwargs):
-        """
-        Send ticket updates to ConnectWise. Accepts a changed_fields
-        argument which is a list of fields that have been changed and
-        should be updated in CW. Project tickets and issues need to be
-        updated using the project API endpoint.
-        """
-        api_class = self.get_api_class()
-
-        api_client = api_class(
-            api_public_key=kwargs.get('api_public_key'),
-            api_private_key=kwargs.get('api_private_key')
-        )
-
-        changed_fields = kwargs.get('changed_fields')
-        updated_objects = self.get_changed_values(changed_fields)
-
-        return api_client.update_ticket(self, updated_objects)
-
-    def get_changed_values(self, changed_field_keys):
-
-        # At this point, any updated fields have been set on the Ticket
-        # object (but not saved locally yet). Prepare the updated fields
-        # to be sent to CW.
-        updated_objects = {}
-        if changed_field_keys:
-            for field in changed_field_keys:
-                field = field.replace('_id', '')
-                updated_objects[field] = getattr(self, field)
-
-        return updated_objects
 
     def close(self, *args, **kwargs):
         """
@@ -1873,7 +1881,7 @@ class ActivityType(TimeStampedModel):
         return self.name
 
 
-class Activity(TimeStampedModel):
+class Activity(UpdateConnectWiseMixin, TimeStampedModel):
     name = models.CharField(max_length=250)
     notes = models.TextField(blank=True, null=True, max_length=2000)
     date_start = models.DateTimeField(blank=True, null=True)
@@ -1896,34 +1904,31 @@ class Activity(TimeStampedModel):
         'Agreement', blank=True, null=True, on_delete=models.SET_NULL)
     udf = models.JSONField(blank=True, null=True)
 
+    EDITABLE_FIELDS = {
+        'name': 'name',
+        'status': 'status',
+        'notes': 'notes',
+        'type': 'type',
+        'assign_to': 'assignTo',
+        'company': 'company',
+        'contact': 'contact',
+        'agreement': 'agreement',
+        'opportunity': 'opportunity',
+        'ticket': 'ticket',
+        'date_start': 'dateStart',
+        'date_end': 'dateEnd',
+    }
+
     class Meta:
         verbose_name_plural = 'activities'
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.update_method_name = 'update_activity_status'
+        self.api_class_name = 'SalesAPIClient'
+
     def __str__(self):
         return self.name or ''
-
-    def save(self, *args, **kwargs):
-        """
-        Save the object.
-
-        If update_cw as a kwarg is True, then update ConnectWise with changes.
-        """
-        update_cw = kwargs.pop('update_cw', False)
-        super().save(*args, **kwargs)
-        if update_cw:
-            self.update_cw()
-
-    def update_cw(self, **kwargs):
-        """
-        Send activity status and closed_flag updates to ConnectWise.
-        """
-        sales_client = api.SalesAPIClient(
-            api_public_key=kwargs.get('api_public_key'),
-            api_private_key=kwargs.get('api_private_key')
-        )
-        return sales_client.update_activity_status(
-            self.id, self.status
-        )
 
     def get_connectwise_url(self):
         params = dict(

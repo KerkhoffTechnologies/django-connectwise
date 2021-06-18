@@ -438,6 +438,47 @@ class ConnectWiseAPIClient(object):
 
         return url._replace(netloc=CW_CLOUD_URLS[url.netloc]).geturl()
 
+    def update_instance(self, instance, changed_fields, endpoint_url):
+        # Yeah, this schema is a bit bizarre. See CW docs at
+        # https://developer.connectwise.com/Manage/Developer_Guide#Patch
+        body = self._format_request_body(instance, changed_fields)
+        return self.request('patch', endpoint_url, body)
+
+    def _format_request_body(self, instance, changed_fields):
+        body = []
+
+        for field, value in changed_fields.items():
+
+            # FieldTracker tracks Foreign Keys by database column name.
+            # Remove _id to use the Django model field name.
+            field = field.replace('_id', '')
+
+            if field and field in instance.EDITABLE_FIELDS:
+                field_update = {
+                    'op': 'replace',
+                    'path': instance.EDITABLE_FIELDS[field],
+                }
+
+                if isinstance(value, datetime.datetime):
+                    field_update.update({
+                        'value': value.astimezone(
+                            pytz.timezone('UTC')).strftime(
+                                "%Y-%m-%dT%H:%M:%SZ")
+                    })
+
+                elif isinstance(value, models.Model):
+                    field_update.update({
+                        'value': {
+                            'id': value.id,
+                        }
+                    })
+                else:
+                    field_update.update({'value': str(value) if value else ''})
+
+                body.append(field_update)
+
+        return body
+
 
 class CompanyAPIClient(ConnectWiseAPIClient):
     API = 'company'
@@ -828,47 +869,17 @@ class SalesAPIClient(ConnectWiseAPIClient):
         return self.fetch_resource(endpoint_url, should_page=True,
                                    *args, **kwargs)
 
-    def update_opportunity_stage(self, obj_id, stage):
-        """
-        Update the opportunities' stage on the server.
-        """
-        # Yeah, this schema is a bit bizarre. See CW docs at
-        # https://developer.connectwise.com/Manage/Developer_Guide#Patch
+    def update_opportunity_stage(self, obj, changed_fields):
         endpoint_url = self._endpoint(
-            '{}/{}'.format(self.ENDPOINT_OPPORTUNITIES, obj_id)
+            '{}/{}'.format(self.ENDPOINT_OPPORTUNITIES, obj.id)
         )
-        body = [
-            {
-                'op': 'replace',
-                'path': 'stage',
-                'value': {
-                    'id': stage.id,
-                    'name': stage.name,
-                },
-            },
-        ]
-        return self.request('patch', endpoint_url, body)
+        return self.update_instance(obj, changed_fields, endpoint_url)
 
-    def update_activity_status(self, obj_id, status):
-        """
-        Update the activities' status on the server.
-        """
-        # Yeah, this schema is a bit bizarre. See CW docs at
-        # https://developer.connectwise.com/Manage/Developer_Guide#Patch
+    def update_activity_status(self, obj, changed_fields):
         endpoint_url = self._endpoint(
-            '{}/{}'.format(self.ENDPOINT_ACTIVITIES, obj_id)
+            '{}/{}'.format(self.ENDPOINT_ACTIVITIES, obj.id)
         )
-        body = [
-            {
-                'op': 'replace',
-                'path': 'status',
-                'value': {
-                    'id': status.id,
-                    'name': status.name,
-                },
-            },
-        ]
-        return self.request('patch', endpoint_url, body)
+        return self.update_instance(obj, changed_fields, endpoint_url)
 
 
 class SystemAPIClient(ConnectWiseAPIClient):
@@ -997,19 +1008,13 @@ class TicketAPIMixin:
                                    *args, **kwargs)
 
     def update_ticket(self, ticket, changed_fields):
-        """
-        Update the ticket's closedFlag and priority or status on the server.
-        """
-        # Yeah, this schema is a bit bizarre. See CW docs at
-        # https://developer.connectwise.com/Manage/Developer_Guide#Patch
         endpoint_url = self._endpoint(
             '{}/{}'.format(self.ENDPOINT_TICKETS, ticket.id)
         )
-        body = self._format_request_body(ticket, changed_fields)
-
+        body = self._format_ticket_request_body(ticket, changed_fields)
         return self.request('patch', endpoint_url, body)
 
-    def _format_request_body(self, ticket, changed_fields):
+    def _format_ticket_request_body(self, ticket, changed_fields):
         body = []
 
         for field, value in changed_fields.items():
@@ -1196,27 +1201,11 @@ class ProjectAPIClient(TicketAPIMixin, ConnectWiseAPIClient):
                                    should_page=True,
                                    *args, **kwargs)
 
-    def update_project(self, project_id, status):
-        """
-        Update the project's status on the server.
-        """
-        # Yeah, this schema is a bit bizarre. See CW docs at
-        # https://developer.connectwise.com/Manage/Developer_Guide#Patch
+    def update_project(self, project, changed_fields):
         endpoint_url = self._endpoint(
-            '{}/{}'.format(self.ENDPOINT_PROJECTS, project_id)
+            '{}/{}'.format(self.ENDPOINT_PROJECTS, project.id)
         )
-        body = [
-            {
-                'op': 'replace',
-                'path': 'status',
-                'value': {
-                    'id': status.id,
-                    'name': status.name,
-                },
-            },
-        ]
-
-        return self.request('patch', endpoint_url, body)
+        return self.update_instance(project, changed_fields, endpoint_url)
 
 
 class FinanceAPIClient(ConnectWiseAPIClient):
