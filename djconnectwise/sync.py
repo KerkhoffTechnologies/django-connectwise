@@ -2114,7 +2114,6 @@ class TicketSynchronizerMixin:
 
         # Key is comes out of db as string, so we add it as a string here
         # so the tracker can compare it properly.
-        # TODO add udf to other models
         instance.udf = {str(item['id']): item
                         for item in json_data.get('customFields', list())}
 
@@ -2731,3 +2730,98 @@ class OpportunityUDFSynchronizer(UDFSynchronizer):
 
     def get_page(self, *args, **kwargs):
         return self.client.get_opportunities(*args, **kwargs)
+
+
+###################################################################
+# Dummy Synchronizers                                             #
+###################################################################
+
+
+class DummySynchronizer:
+    # Use FIELDS to list fields we submit to create or update a record, used
+    # as a kind of validation method and way to link the snake_case field
+    # names to their camelCase api names
+    FIELDS = {}
+
+    def __init__(self):
+        self.api_conditions = []
+        self.client = self.client_class()
+        request_settings = DjconnectwiseSettings().get_settings()
+        self.batch_size = request_settings['batch_size']
+
+    def get(self, parent=None, conditions=None):
+        """
+        If conditions is supplied in the call, then use only those conditions
+        while fetching pages of records. If it's omitted, then use
+        self.api_conditions.
+        """
+        page = 1
+        records = []
+
+        while True:
+            logger.info(
+                'Fetching {} records, batch {}'.format(
+                    self.record_name, page)
+            )
+            page_conditions = conditions or self.api_conditions
+            page_records = self.get_page(
+                parent=parent, page=page, page_size=self.batch_size,
+                conditions=page_conditions,
+            )
+
+            records += page_records
+            page += 1
+            if len(page_records) < self.batch_size:
+                # This page wasn't full, so there's no more records after
+                # this page.
+                break
+        return records
+
+    def update(self, record_id, parent=None, **kwargs):
+        raise NotImplementedError
+
+    def create(self, parent=None, **kwargs):
+        raise NotImplementedError
+
+    def get_page(self, parent=None, **kwargs):
+        raise NotImplementedError
+
+    def _format_record(self, **kwargs):
+        record = {}
+        for key, value in kwargs.items():
+            # Only consider fields of the record, discard anything else
+            if key in self.FIELDS.keys():
+                record[self.FIELDS[key]] = value
+
+        return record
+
+
+class TicketTaskSynchronizer:
+    FIELDS = {
+        'ticket': 'ticketId',
+        'closed_flag': 'closedFlag',
+        'priority': 'priority',
+        'task': 'notes'
+    }
+    record_name = "TicketTask"
+
+    def update(self, record_id, parent=None, **kwargs):
+        record = self._format_record(**kwargs)
+
+        return self.client.update_ticket_tasks(record_id, parent, **record)
+
+    def create(self, parent=None, **kwargs):
+        record = self._format_record(**kwargs)
+
+        return self.client.create_ticket_tasks(parent, **record)
+
+    def get_page(self, parent=None, **kwargs):
+        return self.client.get_ticket_tasks(parent)
+
+
+class ServiceTicketTaskSynchronizer(TicketTaskSynchronizer, DummySynchronizer):
+    client_class = api.ServiceAPIClient
+
+
+class ProjectTicketTaskSynchronizer(TicketTaskSynchronizer, DummySynchronizer):
+    client_class = api.ProjectAPIClient
