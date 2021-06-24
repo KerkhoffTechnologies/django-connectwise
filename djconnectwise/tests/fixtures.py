@@ -951,6 +951,46 @@ API_ITEM = {
 API_ITEM_LIST = [API_ITEM]
 
 
+API_TYPE_SUBTYPE_ITEM_ASSOCIATION = {
+    "id": 20045,
+    "type": {
+        "id": 275,
+        "name": "Server",
+        "_info": {
+            "type_href":
+                "https://v4_6_release/apis/3.0/service/boards/23/types/275"
+        }
+    },
+    "subType": {
+        "id": 1895,
+        "name": "Active Directory",
+        "_info": {
+            "subType_href":
+                "https://v4_6_release/apis/3.0/service/boards/23/subtypes/1895"
+        }
+    },
+    "item": {
+        "id": 267,
+        "name": "Alert",
+        "_info": {
+            "inactiveFlag": "True",
+            "item_href":
+                "https://v4_6_release/apis/3.0/service/boards/23/items/267"
+        }
+    },
+    "board": {
+        "id": 23,
+        "name": "Triage Board",
+        "_info": {
+            "board_href": "https://v4_6_release/apis/3.0/service/boards/23"
+        }
+    },
+    "_info": {}
+}
+
+API_TYPE_SUBTYPE_ITEM_ASSOCIATION_LIST = [API_TYPE_SUBTYPE_ITEM_ASSOCIATION]
+
+
 API_SERVICE_TICKET = {
     'id': 69,
     'summary': 'Schedule and Execute Conversion',

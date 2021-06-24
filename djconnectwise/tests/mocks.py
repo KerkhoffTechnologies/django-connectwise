@@ -302,6 +302,12 @@ def service_api_get_items_call(return_value):
     return create_mock_call(method_name, return_value)
 
 
+def service_api_get_type_subtype_item_associations_call(return_value):
+    method_name = \
+        'djconnectwise.api.ServiceAPIClient.get_type_subtype_item_associations'
+    return create_mock_call(method_name, return_value)
+
+
 def sales_api_get_opportunity_notes_call(return_value):
     method_name = 'djconnectwise.api.SalesAPIClient.get_notes'
     return create_mock_call(method_name, return_value)
