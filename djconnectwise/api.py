@@ -479,6 +479,22 @@ class ConnectWiseAPIClient(object):
 
         return body
 
+    def _format_patch_body(self, **kwargs):
+        """
+        Formats patch requests for dummy synchronizers to match CWs bizarre
+        schema:
+        # https://developer.connectwise.com/Manage/Developer_Guide#Patch
+        """
+        body = []
+        for path, value in kwargs.items():
+            body.append({
+                'op': 'replace',
+                'path': path,
+                'value': value
+            })
+
+        return body
+
 
 class CompanyAPIClient(ConnectWiseAPIClient):
     API = 'company'
@@ -1002,6 +1018,22 @@ class TicketAPIMixin:
     def get_ticket(self, ticket_id):
         endpoint_url = '{}/{}'.format(self.ENDPOINT_TICKETS, ticket_id)
         return self.fetch_resource(endpoint_url)
+
+    def get_ticket_tasks(self, ticket_id):
+        endpoint_url = '{}/{}/tasks'.format(
+            self.ENDPOINT_TICKETS, ticket_id)
+        return self.fetch_resource(endpoint_url, should_page=True)
+
+    def create_ticket_task(self, ticket_id, **kwargs):
+        endpoint_url = '{}/{}/tasks'.format(
+            self.ENDPOINT_TICKETS, ticket_id)
+        return self.request('post', self._endpoint(endpoint_url), kwargs)
+
+    def update_ticket_task(self, task_id, ticket_id, **kwargs):
+        endpoint_url = '{}/{}/tasks/{}'.format(
+            self.ENDPOINT_TICKETS, ticket_id, task_id)
+        body = self._format_patch_body(**kwargs)
+        return self.request('patch', self._endpoint(endpoint_url), body)
 
     def get_tickets(self, *args, **kwargs):
         return self.fetch_resource(self.ENDPOINT_TICKETS, should_page=True,
