@@ -2798,7 +2798,6 @@ class DummySynchronizer:
 
 class TicketTaskSynchronizer:
     FIELDS = {
-        'ticket': 'ticketId',
         'closed_flag': 'closedFlag',
         'priority': 'priority',
         'task': 'notes'
@@ -2813,7 +2812,7 @@ class TicketTaskSynchronizer:
     def create(self, parent=None, **kwargs):
         record = self._format_record(**kwargs)
 
-        return self.client.create_ticket_tasks(parent, **record)
+        return self.client.create_ticket_task(parent, **record)
 
     def get_page(self, parent=None, **kwargs):
         return self.client.get_ticket_tasks(parent)

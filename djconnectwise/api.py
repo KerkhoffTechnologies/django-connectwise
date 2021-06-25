@@ -1024,7 +1024,7 @@ class TicketAPIMixin:
             self.ENDPOINT_TICKETS, ticket_id)
         return self.fetch_resource(endpoint_url, should_page=True)
 
-    def create_ticket_tasks(self, ticket_id, **kwargs):
+    def create_ticket_task(self, ticket_id, **kwargs):
         endpoint_url = '{}/{}/tasks'.format(
             self.ENDPOINT_TICKETS, ticket_id)
         return self.request('post', self._endpoint(endpoint_url), kwargs)
