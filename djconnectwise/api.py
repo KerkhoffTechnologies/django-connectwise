@@ -1029,7 +1029,7 @@ class TicketAPIMixin:
             self.ENDPOINT_TICKETS, ticket_id)
         return self.request('post', self._endpoint(endpoint_url), kwargs)
 
-    def update_ticket_tasks(self, task_id, ticket_id, **kwargs):
+    def update_ticket_task(self, task_id, ticket_id, **kwargs):
         endpoint_url = '{}/{}/tasks/{}'.format(
             self.ENDPOINT_TICKETS, ticket_id, task_id)
         body = self._format_patch_body(**kwargs)

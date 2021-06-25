@@ -2807,7 +2807,7 @@ class TicketTaskSynchronizer:
     def update(self, record_id, parent=None, **kwargs):
         record = self._format_record(**kwargs)
 
-        return self.client.update_ticket_tasks(record_id, parent, **record)
+        return self.client.update_ticket_task(record_id, parent, **record)
 
     def create(self, parent=None, **kwargs):
         record = self._format_record(**kwargs)
