@@ -93,6 +93,7 @@ class Synchronizer:
 
     def __init__(self, full=False, *args, **kwargs):
         self.api_conditions = []
+        self.partial_sync_support = True
         self.client = self.client_class()
         request_settings = DjconnectwiseSettings().get_settings()
         self.batch_size = request_settings['batch_size']
@@ -353,7 +354,8 @@ class Synchronizer:
 
         # Since the job is created before it begins, make sure to exclude
         # itself, and at least one other sync job exists.
-        if sync_job_qset.count() > 1 and not self.full:
+        if sync_job_qset.count() > 1 and not self.full and \
+                self.partial_sync_support:
             last_sync_job_time = sync_job_qset.exclude(
                 id=sync_job_qset.last().id).last().start_time.isoformat()
             self.api_conditions.append(
@@ -2558,6 +2560,7 @@ class TypeSynchronizer(BoardFilterMixin, Synchronizer):
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
         instance.name = json_data['name']
+        instance.inactive_flag = json_data.get('inactiveFlag')
 
         self.set_relations(instance, json_data)
         return instance
@@ -2577,6 +2580,7 @@ class SubTypeSynchronizer(BoardFilterMixin, Synchronizer):
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
         instance.name = json_data['name']
+        instance.inactive_flag = json_data.get('inactiveFlag')
 
         self.set_relations(instance, json_data)
         return instance
@@ -2596,12 +2600,40 @@ class ItemSynchronizer(BoardFilterMixin, Synchronizer):
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
         instance.name = json_data['name']
+        instance.inactive_flag = json_data.get('inactiveFlag')
 
         self.set_relations(instance, json_data)
         return instance
 
     def client_call(self, board_id, *args, **kwargs):
         return self.client.get_items(board_id, *args, **kwargs)
+
+
+class TypeSubTypeItemAssociationSynchronizer(BoardFilterMixin, Synchronizer):
+    client_class = api.ServiceAPIClient
+    model_class = models.TypeSubTypeItemAssociationTracker
+
+    related_meta = {
+        'type': (models.Type, 'type'),
+        'subType': (models.SubType, 'sub_type'),
+        'item': (models.Item, 'item'),
+        'board': (models.ConnectWiseBoard, 'board')
+    }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # This endpoint does not have a lastUpdated field available.
+        # So we cannot use the regular partial sync pattern.
+        self.partial_sync_support = False
+
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data.get('id')
+
+        self.set_relations(instance, json_data)
+
+    def client_call(self, board_id, *args, **kwargs):
+        return self.client.get_type_subtype_item_associations(
+            board_id, *args, **kwargs)
 
 
 class WorkTypeSynchronizer(Synchronizer):

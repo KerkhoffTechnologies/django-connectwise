@@ -1191,6 +1191,12 @@ class ServiceAPIClient(TicketAPIMixin, ConnectWiseAPIClient):
         return self.fetch_resource(endpoint_url, should_page=True,
                                    *args, **kwargs)
 
+    def get_type_subtype_item_associations(self, board_id, *args, **kwargs):
+        endpoint_url = '{}/{}/typeSubTypeItemAssociations/'.format(
+            self.ENDPOINT_BOARDS, board_id)
+        return self.fetch_resource(endpoint_url, should_page=True,
+                                   *args, **kwargs)
+
 
 class ProjectAPIClient(TicketAPIMixin, ConnectWiseAPIClient):
     API = 'project'

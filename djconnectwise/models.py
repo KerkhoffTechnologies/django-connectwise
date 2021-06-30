@@ -2093,6 +2093,7 @@ class StateMachineManager(object):
 class Type(TimeStampedModel):
     name = models.CharField(max_length=50)
     board = models.ForeignKey('ConnectWiseBoard', on_delete=models.CASCADE)
+    inactive_flag = models.BooleanField(default=False)
 
     class Meta:
         verbose_name = 'Type'
@@ -2105,6 +2106,7 @@ class Type(TimeStampedModel):
 class SubType(TimeStampedModel):
     name = models.CharField(max_length=50)
     board = models.ForeignKey('ConnectWiseBoard', on_delete=models.CASCADE)
+    inactive_flag = models.BooleanField(default=False)
 
     class Meta:
         verbose_name = 'Subtype'
@@ -2117,6 +2119,7 @@ class SubType(TimeStampedModel):
 class Item(TimeStampedModel):
     name = models.CharField(max_length=50)
     board = models.ForeignKey('ConnectWiseBoard', on_delete=models.CASCADE)
+    inactive_flag = models.BooleanField(default=False)
 
     class Meta:
         verbose_name = 'Item'
@@ -2124,6 +2127,20 @@ class Item(TimeStampedModel):
 
     def __str__(self):
         return self.name
+
+
+class TypeSubTypeItemAssociation(TimeStampedModel):
+    type = models.ForeignKey('Type', blank=True, null=True,
+                             related_name='associations',
+                             on_delete=models.CASCADE)
+    sub_type = models.ForeignKey('SubType', blank=True,
+                                 related_name='associations',
+                                 null=True, on_delete=models.CASCADE)
+    item = models.ForeignKey('Item', blank=True,
+                             related_name='associations',
+                             null=True, on_delete=models.CASCADE)
+    board = models.ForeignKey('ConnectWiseBoard', blank=True,
+                              null=True, on_delete=models.CASCADE)
 
 
 class WorkType(TimeStampedModel):
@@ -2537,6 +2554,14 @@ class ItemTracker(Item):
     class Meta:
         proxy = True
         db_table = 'djconnectwise_item'
+
+
+class TypeSubTypeItemAssociationTracker(TypeSubTypeItemAssociation):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djconnectwise_type_subtype_item_association'
 
 
 class WorkTypeTracker(WorkType):

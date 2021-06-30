@@ -527,6 +527,20 @@ class TestSyncItemCommand(AbstractBaseSyncTest, TestCase):
     )
 
 
+class TestSyncTypeSubTypeItemAssociationCommand(AbstractBaseSyncTest,
+                                                TestCase):
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_types()
+        fixture_utils.init_boards()
+
+    args = (
+        mocks.service_api_get_type_subtype_item_associations_call,
+        fixtures.API_TYPE_SUBTYPE_ITEM_ASSOCIATION_LIST,
+        'type_subtype_item_association'
+    )
+
+
 class TestSyncWorkTypeCommand(AbstractBaseSyncTest, TestCase):
     def setUp(self):
         super().setUp()
@@ -627,6 +641,7 @@ class TestSyncAllCommand(TestCase):
             TestSyncTypeCommand,
             TestSyncSubTypeCommand,
             TestSyncItemCommand,
+            TestSyncTypeSubTypeItemAssociationCommand,
             TestSyncWorkTypeCommand,
             TestSyncWorkRoleCommand,
             TestSyncAgreementCommand,
@@ -727,6 +742,7 @@ class TestSyncAllCommand(TestCase):
             'type': models.Type,
             'sub_type': models.SubType,
             'item': models.Item,
+            'type_subtype_item_association': models.TypeSubTypeItemAssociation,
             'work_type': models.WorkType,
             'work_role': models.WorkRole,
             'agreement': models.Agreement,
