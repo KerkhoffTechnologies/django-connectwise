@@ -383,7 +383,8 @@ class Item(admin.ModelAdmin):
 @admin.register(models.TypeSubTypeItemAssociation)
 class TypeSubTypeItemAssociationAdmin(admin.ModelAdmin):
     list_display = ('id', 'board', 'type', 'sub_type', 'item')
-    search_fields = ['board', 'type', 'sub_type', 'item']
+    search_fields = [
+        'board__name', 'type__name', 'sub_type__name', 'item__name']
 
 
 @admin.register(models.WorkType)
