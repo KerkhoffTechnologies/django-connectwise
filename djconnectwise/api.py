@@ -1035,6 +1035,11 @@ class TicketAPIMixin:
         body = self._format_patch_body(**kwargs)
         return self.request('patch', self._endpoint(endpoint_url), body)
 
+    def delete_ticket_task(self, ticket_id, **kwargs):
+        endpoint_url = '{}/{}/tasks/{}'.format(
+            self.ENDPOINT_TICKETS, ticket_id, kwargs['id'])
+        return self.request('delete', self._endpoint(endpoint_url))
+
     def get_tickets(self, *args, **kwargs):
         return self.fetch_resource(self.ENDPOINT_TICKETS, should_page=True,
                                    *args, **kwargs)
