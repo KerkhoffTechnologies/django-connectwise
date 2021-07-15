@@ -1242,6 +1242,15 @@ class Project(UpdateConnectWiseMixin, TimeStampedModel):
             urllib.parse.urlencode(params)
         )
 
+    def get_changed_values(self, changed_field_keys):
+        updated_objects = super().get_changed_values(changed_field_keys)
+
+        percent_complete = updated_objects.get('percent_complete')
+        if percent_complete:
+            updated_objects['percent_complete'] = str(percent_complete)
+
+        return updated_objects
+
 
 class OpportunityStage(TimeStampedModel):
     name = models.CharField(max_length=50)
