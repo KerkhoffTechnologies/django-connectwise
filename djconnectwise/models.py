@@ -1471,6 +1471,7 @@ class Ticket(UpdateConnectWiseMixin, TimeStampedModel):
         'agreement': 'agreement',
         'status': 'status',
         'priority': 'priority',
+        'board': 'board',
     }
 
     SERVICE_EDITABLE_FIELDS = VALID_UPDATE_FIELDS
