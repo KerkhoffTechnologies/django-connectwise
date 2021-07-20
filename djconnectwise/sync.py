@@ -2807,12 +2807,27 @@ class DummySynchronizer:
                 # This page wasn't full, so there's no more records after
                 # this page.
                 break
-        return records
 
-    def update(self, record_id, parent=None, **kwargs):
+        inverted = {v: k for k, v in self.FIELDS.items()}
+        formatted_records = []
+
+        # Convert the results from camelCase back to snake_case
+        for record in records:
+            converted = {}
+            for k, v in record.items():
+                if inverted.get(k, None):
+                    converted[inverted[k]] = v
+            formatted_records.append(converted)
+
+        return formatted_records
+
+    def update(self, parent=None, **kwargs):
         raise NotImplementedError
 
     def create(self, parent=None, **kwargs):
+        raise NotImplementedError
+
+    def delete(self, parent=None, **kwargs):
         raise NotImplementedError
 
     def get_page(self, parent=None, **kwargs):
@@ -2830,21 +2845,26 @@ class DummySynchronizer:
 
 class TicketTaskSynchronizer:
     FIELDS = {
+        'id': 'id',
         'closed_flag': 'closedFlag',
         'priority': 'priority',
         'task': 'notes'
     }
     record_name = "TicketTask"
 
-    def update(self, record_id, parent=None, **kwargs):
+    def update(self, parent=None, **kwargs):
         record = self._format_record(**kwargs)
 
-        return self.client.update_ticket_task(record_id, parent, **record)
+        return self.client.update_ticket_task(
+            kwargs.get('id'), parent, **record)
 
     def create(self, parent=None, **kwargs):
         record = self._format_record(**kwargs)
 
         return self.client.create_ticket_task(parent, **record)
+
+    def delete(self, parent=None, **kwargs):
+        return self.client.delete_ticket_task(parent, **kwargs)
 
     def get_page(self, parent=None, **kwargs):
         return self.client.get_ticket_tasks(parent)
