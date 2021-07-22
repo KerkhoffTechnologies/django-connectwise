@@ -2200,12 +2200,33 @@ class ServiceTicketSynchronizer(TicketSynchronizerMixin,
         if instance.date_responded_utc:
             instance.date_responded_utc = parse(instance.date_responded_utc)
 
+        try:
+            merged_parent_id = json_data.get('mergedParentTicket')
+            if merged_parent_id:
+                instance.merged_parent_ticket = \
+                    models.Ticket.objects.get(pk=merged_parent_id)
+        except ObjectDoesNotExist as e:
+            logger.warning(
+                'Merged parent ticket not found for ticket {}. {}'.format(
+                    instance.id, e)
+            )
+
         self.set_relations(instance, json_data)
         return instance
 
     def filter_by_record_type(self):
         return self.model_class.objects.filter(
             record_type=models.Ticket.SERVICE_TICKET)
+
+    def merge_ticket(self, merge_data, **kwargs):
+        """
+        Send POST request to ConnectWise to merge tickets.
+        """
+        service_client = api.ServiceAPIClient(
+            api_public_key=kwargs.get('api_public_key'),
+            api_private_key=kwargs.get('api_private_key')
+        )
+        return service_client.post_merge_ticket(merge_data, **kwargs)
 
 
 class ProjectTicketSynchronizer(TicketSynchronizerMixin,
