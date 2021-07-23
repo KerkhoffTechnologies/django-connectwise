@@ -1590,10 +1590,6 @@ class Ticket(UpdateConnectWiseMixin, TimeStampedModel):
     agreement = models.ForeignKey(
         'Agreement', blank=True, null=True, related_name='agreement_tickets',
         on_delete=models.SET_NULL)
-    merged_parent_ticket = models.ForeignKey(
-        'self', blank=True, null=True, related_name='merged_parent_tickets',
-        on_delete=models.SET_NULL
-    )
 
     class Meta:
         verbose_name = 'Ticket'

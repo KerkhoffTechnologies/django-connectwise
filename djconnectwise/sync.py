@@ -2200,17 +2200,6 @@ class ServiceTicketSynchronizer(TicketSynchronizerMixin,
         if instance.date_responded_utc:
             instance.date_responded_utc = parse(instance.date_responded_utc)
 
-        try:
-            merged_parent_id = json_data.get('mergedParentTicket')
-            if merged_parent_id:
-                instance.merged_parent_ticket = \
-                    models.Ticket.objects.get(pk=merged_parent_id)
-        except ObjectDoesNotExist as e:
-            logger.warning(
-                'Merged parent ticket not found for ticket {}. {}'.format(
-                    instance.id, e)
-            )
-
         self.set_relations(instance, json_data)
         return instance
 
