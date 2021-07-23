@@ -341,7 +341,8 @@ class AvailableCompanyManager(models.Manager):
 
 
 class Company(TimeStampedModel):
-    name = models.CharField(blank=True, null=True, max_length=250)
+    name = models.CharField(blank=True, null=True, max_length=250,
+                            db_index=True)
     identifier = models.CharField(
         blank=True, null=True, max_length=250)
     phone_number = models.CharField(blank=True, null=True, max_length=250)
@@ -1472,6 +1473,7 @@ class Ticket(UpdateConnectWiseMixin, TimeStampedModel):
         'status': 'status',
         'priority': 'priority',
         'board': 'board',
+        'company': 'company',
     }
 
     SERVICE_EDITABLE_FIELDS = VALID_UPDATE_FIELDS
