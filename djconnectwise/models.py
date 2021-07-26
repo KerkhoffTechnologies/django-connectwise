@@ -441,6 +441,9 @@ class Contact(models.Model):
     company = models.ForeignKey(
         'Company', null=True, on_delete=models.CASCADE)
 
+    class Meta:
+        ordering = ('first_name', 'last_name')
+
     @property
     def default_email_address(self):
         return self.contactcommunication_set.filter(
