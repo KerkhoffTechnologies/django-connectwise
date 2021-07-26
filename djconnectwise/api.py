@@ -1143,6 +1143,23 @@ class ServiceAPIClient(TicketAPIMixin, ConnectWiseAPIClient):
 
         return self.request('post', endpoint_url, body)
 
+    def post_merge_ticket(self, merge_data, **kwargs):
+        parent_id = merge_data.get('parent_ticket_id')
+        child_id = merge_data.get('child_ticket_id')
+        status = merge_data.get('status')
+
+        endpoint_url = self._endpoint(
+            '{}/{}/merge'.format(self.ENDPOINT_TICKETS, parent_id))
+
+        body = {
+            "mergeTicketIds": [child_id],
+            "status": {
+                "id": status.id,
+                "name": status.name
+            }
+        }
+        return self.request('post', endpoint_url, body)
+
     def get_statuses(self, board_id, *args, **kwargs):
         """
         Returns the status types associated with the specified board.
