@@ -2346,6 +2346,16 @@ class ServiceTicketSynchronizer(TicketSynchronizerMixin,
         return self.model_class.objects.filter(
             record_type=models.Ticket.SERVICE_TICKET)
 
+    def merge_ticket(self, merge_data, **kwargs):
+        """
+        Send POST request to ConnectWise to merge tickets.
+        """
+        service_client = api.ServiceAPIClient(
+            api_public_key=kwargs.get('api_public_key'),
+            api_private_key=kwargs.get('api_private_key')
+        )
+        return service_client.post_merge_ticket(merge_data, **kwargs)
+
 
 class ProjectTicketSynchronizer(TicketSynchronizerMixin,
                                 BatchConditionMixin, Synchronizer):
