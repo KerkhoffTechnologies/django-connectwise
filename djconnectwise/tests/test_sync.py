@@ -1422,6 +1422,11 @@ class TestTicketSynchronizerMixin(AssertSyncMixin):
         method_name = 'djconnectwise.api.ServiceAPIClient.get_notes'
         mock_call, _patch = mocks.create_mock_call(method_name, fixture_list)
 
+        _, _task_patch = mocks.create_mock_call(
+            "djconnectwise.sync.TicketTaskSynchronizer.sync_tasks",
+            None
+        )
+
         updated_fixture = deepcopy(fixtures.API_TIME_ENTRY)
         updated_fixture['chargeToId'] = ticket.id
         updated_fixture['text'] = 'Some new text'
@@ -1448,6 +1453,8 @@ class TestTicketSynchronizerMixin(AssertSyncMixin):
         updated_note = models.ServiceNote.objects.filter(ticket=ticket)[0]
 
         updated_time = models.TimeEntry.objects.filter(charge_to_id=ticket)[0]
+
+        _task_patch.stop()
 
         # Confirm that they have all been updated
         self.assertEqual('Some new text', updated_note.text)
@@ -1540,6 +1547,10 @@ class TestTicketSynchronizerMixin(AssertSyncMixin):
         # Mock the child class syncs
         mocks.service_api_get_notes_call(fixtures.API_SERVICE_NOTE_LIST)
         mocks.sales_api_get_activities_call(fixtures.API_SALES_ACTIVITIES)
+        _, _task_patch = mocks.create_mock_call(
+            "djconnectwise.sync.TicketTaskSynchronizer.sync_tasks",
+            None
+        )
 
         method_name = 'djconnectwise.sync.TicketSynchronizerMixin.get_single'
         mock_call, _patch = \
@@ -1560,6 +1571,9 @@ class TestTicketSynchronizerMixin(AssertSyncMixin):
         # and that only one entry is added
         last_sync_job = \
             models.SyncJob.objects.filter(entity_name='TimeEntry').last()
+
+        _task_patch.stop()
+
         self.assertEqual(last_sync_job.deleted, 0)
         self.assertEqual(last_sync_job.updated, 0)
         self.assertEqual(last_sync_job.added, 1)
@@ -1679,6 +1693,11 @@ class TestServiceTicketSynchronizer(TestTicketSynchronizerMixin, TestCase):
         mocks.time_api_get_time_entries_call(fixtures.API_TIME_ENTRY_LIST)
         mocks.sales_api_get_activities_call(fixtures.API_SALES_ACTIVITIES)
 
+        _, _task_patch = mocks.create_mock_call(
+            "djconnectwise.sync.TicketTaskSynchronizer.sync_tasks",
+            None
+        )
+
         method_name = 'djconnectwise.sync.TicketSynchronizerMixin.get_single'
         mock_call, _patch = \
             mocks.create_mock_call(method_name, self.ticket_fixture)
@@ -1698,6 +1717,9 @@ class TestServiceTicketSynchronizer(TestTicketSynchronizerMixin, TestCase):
         # Verify that no notes are removed, and that only one note is added
         last_sync_job = \
             models.SyncJob.objects.filter(entity_name='ServiceNote').last()
+
+        _task_patch.stop()
+
         self.assertEqual(last_sync_job.deleted, 0)
         self.assertEqual(last_sync_job.updated, 0)
         self.assertEqual(last_sync_job.added, 1)
@@ -1935,6 +1957,35 @@ class TestActivitySynchronizer(TestCase, SynchronizerTestMixin):
         self.assertRaises(InvalidObjectException)
         self.assertEqual(created_count, 0)
         self.assertEqual(updated_count, 0)
+
+
+class TestSyncTicketTasks(TestCase):
+
+    def setUp(self):
+        self.ticket = models.Ticket()
+        self.ticket.save()
+
+    def tearDown(self):
+        self.ticket.delete()
+
+    def test_sync_tasks(self):
+        mocks.create_mock_call(
+            "djconnectwise.sync.ServiceTicketTaskSynchronizer.get",
+            [
+                {'closed_flag': False},
+                {'closed_flag': True},
+                {'closed_flag': False}
+            ]
+        )
+
+        self.assertIsNone(self.ticket.tasks_total)
+        self.assertIsNone(self.ticket.tasks_completed)
+
+        synchronizer = sync.ServiceTicketTaskSynchronizer()
+        synchronizer.sync_tasks(self.ticket)
+
+        self.assertEqual(3, self.ticket.tasks_total)
+        self.assertEqual(1, self.ticket.tasks_completed)
 
 
 class TestSyncSettings(TestCase):
