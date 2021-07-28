@@ -77,9 +77,6 @@ class UpdateConnectWiseMixin:
 
         return updated_objects
 
-    def get_api_class(self):
-        return getattr(api, self.api_class_name)
-
 
 class InvalidStatusError(Exception):
     pass
@@ -1226,7 +1223,6 @@ class Project(UpdateConnectWiseMixin, TimeStampedModel):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.update_method_name = 'update_project'
-        self.api_class_name = 'ProjectAPIClient'
 
     def __str__(self):
         return self.name or ''
@@ -1264,6 +1260,9 @@ class Project(UpdateConnectWiseMixin, TimeStampedModel):
                 self.calculate_percentage(percent_complete)
 
         return updated_objects
+
+    def get_api_class(self):
+        return api.ProjectAPIClient
 
 
 class OpportunityStage(TimeStampedModel):
@@ -1391,8 +1390,7 @@ class Opportunity(UpdateConnectWiseMixin, TimeStampedModel):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.update_method_name = 'update_opportunity_stage'
-        self.api_class_name = 'SalesAPIClient'
+        self.update_method_name = 'update_opportunity'
 
     def __str__(self):
         return self.name
@@ -1411,6 +1409,9 @@ class Opportunity(UpdateConnectWiseMixin, TimeStampedModel):
             settings.CONNECTWISE_TICKET_PATH,
             urllib.parse.urlencode(params)
         )
+
+    def get_api_class(self):
+        return api.SalesAPIClient
 
 
 class Ticket(UpdateConnectWiseMixin, TimeStampedModel):
@@ -1951,8 +1952,7 @@ class Activity(UpdateConnectWiseMixin, TimeStampedModel):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.update_method_name = 'update_activity_status'
-        self.api_class_name = 'SalesAPIClient'
+        self.update_method_name = 'update_activity'
 
     def __str__(self):
         return self.name or ''
@@ -1968,6 +1968,9 @@ class Activity(UpdateConnectWiseMixin, TimeStampedModel):
             settings.CONNECTWISE_TICKET_PATH,
             urllib.parse.urlencode(params)
         )
+
+    def get_api_class(self):
+        return api.SalesAPIClient
 
 
 class SalesProbability(TimeStampedModel):
