@@ -605,6 +605,142 @@ class ServiceNoteSynchronizer(CallbackPartialSyncMixin, Synchronizer):
         return self.update_or_create_instance(instance)
 
 
+###################################################################
+# Dummy Synchronizers                                             #
+###################################################################
+
+
+class DummySynchronizer:
+    # Use FIELDS to list fields we submit to create or update a record, used
+    # as a kind of validation method and way to link the snake_case field
+    # names to their camelCase api names
+    FIELDS = {}
+
+    def __init__(self, *args, **kwargs):
+        self.api_conditions = []
+        self.client = self.client_class()
+        request_settings = DjconnectwiseSettings().get_settings()
+        self.batch_size = request_settings['batch_size']
+
+    def get(self, parent=None, conditions=None):
+        """
+        If conditions is supplied in the call, then use only those conditions
+        while fetching pages of records. If it's omitted, then use
+        self.api_conditions.
+        """
+        page = 1
+        records = []
+
+        while True:
+            logger.info(
+                'Fetching {} records, batch {}'.format(
+                    self.RECORD_NAME, page)
+            )
+            page_conditions = conditions or self.api_conditions
+            page_records = self.get_page(
+                parent=parent, page=page, page_size=self.batch_size,
+                conditions=page_conditions,
+            )
+
+            records += page_records
+            page += 1
+            if len(page_records) < self.batch_size:
+                # This page wasn't full, so there's no more records after
+                # this page.
+                break
+
+        inverted = {v: k for k, v in self.FIELDS.items()}
+        formatted_records = []
+
+        # Convert the results from camelCase back to snake_case
+        for record in records:
+            converted = {}
+            for k, v in record.items():
+                if inverted.get(k, None):
+                    converted[inverted[k]] = v
+            formatted_records.append(converted)
+
+        return formatted_records
+
+    def update(self, parent=None, **kwargs):
+        raise NotImplementedError
+
+    def create(self, parent=None, **kwargs):
+        raise NotImplementedError
+
+    def delete(self, parent=None, **kwargs):
+        raise NotImplementedError
+
+    def get_page(self, parent=None, **kwargs):
+        raise NotImplementedError
+
+    def _format_record(self, **kwargs):
+        record = {}
+        for key, value in kwargs.items():
+            # Only consider fields of the record, discard anything else
+            if key in self.FIELDS.keys():
+                record[self.FIELDS[key]] = value
+
+        return record
+
+
+class TicketTaskSynchronizer:
+    FIELDS = {
+        'id': 'id',
+        'closed_flag': 'closedFlag',
+        'priority': 'priority',
+        'task': 'notes'
+    }
+    RECORD_TYPE = models.Ticket.SERVICE_TICKET
+    RECORD_NAME = "TicketTask"
+
+    def update(self, parent=None, **kwargs):
+        record = self._format_record(**kwargs)
+
+        return self.client.update_ticket_task(
+            kwargs.get('id'), parent, **record)
+
+    def create(self, parent=None, **kwargs):
+        record = self._format_record(**kwargs)
+
+        return self.client.create_ticket_task(parent, **record)
+
+    def delete(self, parent=None, **kwargs):
+        return self.client.delete_ticket_task(parent, **kwargs)
+
+    def get_page(self, parent=None, **kwargs):
+        return self.client.get_ticket_tasks(parent, **kwargs)
+
+    def sync(self):
+        ticket_qs = self._get_queryset()
+
+        for ticket in ticket_qs:
+            self.sync_tasks(ticket)
+
+    def sync_tasks(self, instance):
+        tasks = self.get(parent=instance.id)
+        instance.tasks_total = len(tasks)
+        instance.tasks_completed = sum(task['closed_flag'] for task in tasks)
+
+        instance.save()
+
+
+class ServiceTicketTaskSynchronizer(TicketTaskSynchronizer, DummySynchronizer):
+    client_class = api.ServiceAPIClient
+
+    def _get_queryset(self):
+        return models.Ticket.objects.filter(
+            record_type=self.RECORD_TYPE).order_by('id')
+
+
+class ProjectTicketTaskSynchronizer(TicketTaskSynchronizer, DummySynchronizer):
+    client_class = api.ProjectAPIClient
+
+    def _get_queryset(self):
+        return models.Ticket.objects.exclude(
+            record_type=self.RECORD_TYPE).order_by('id')
+
+
 class OpportunityNoteSynchronizer(Synchronizer):
     client_class = api.SalesAPIClient
     model_class = models.OpportunityNoteTracker
@@ -2060,6 +2196,8 @@ class TicketSynchronizerMixin:
             activity_sync.api_conditions = ['ticket/id={}'.format(instance_id)]
             sync_classes.append((activity_sync, Q(ticket=instance)))
 
+        self.task_synchronizer_class().sync_tasks(instance)
+
         self.sync_children(*sync_classes)
 
     def fetch_sync_by_id(self, instance_id, sync_config={}):
@@ -2171,6 +2309,7 @@ class TicketSynchronizerMixin:
 class ServiceTicketSynchronizer(TicketSynchronizerMixin,
                                 BatchConditionMixin, Synchronizer):
     client_class = api.ServiceAPIClient
+    task_synchronizer_class = ServiceTicketTaskSynchronizer
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -2207,10 +2346,21 @@ class ServiceTicketSynchronizer(TicketSynchronizerMixin,
         return self.model_class.objects.filter(
             record_type=models.Ticket.SERVICE_TICKET)
 
+    def merge_ticket(self, merge_data, **kwargs):
+        """
+        Send POST request to ConnectWise to merge tickets.
+        """
+        service_client = api.ServiceAPIClient(
+            api_public_key=kwargs.get('api_public_key'),
+            api_private_key=kwargs.get('api_private_key')
+        )
+        return service_client.post_merge_ticket(merge_data, **kwargs)
+
 
 class ProjectTicketSynchronizer(TicketSynchronizerMixin,
                                 BatchConditionMixin, Synchronizer):
     client_class = api.ProjectAPIClient
+    task_synchronizer_class = ProjectTicketTaskSynchronizer
 
     def _assign_field_data(self, instance, json_data):
         instance = super()._assign_field_data(instance, json_data)
@@ -2762,117 +2912,3 @@ class OpportunityUDFSynchronizer(UDFSynchronizer):
 
     def get_page(self, *args, **kwargs):
         return self.client.get_opportunities(*args, **kwargs)
-
-
-###################################################################
-# Dummy Synchronizers                                             #
-###################################################################
-
-
-class DummySynchronizer:
-    # Use FIELDS to list fields we submit to create or update a record, used
-    # as a kind of validation method and way to link the snake_case field
-    # names to their camelCase api names
-    FIELDS = {}
-
-    def __init__(self):
-        self.api_conditions = []
-        self.client = self.client_class()
-        request_settings = DjconnectwiseSettings().get_settings()
-        self.batch_size = request_settings['batch_size']
-
-    def get(self, parent=None, conditions=None):
-        """
-        If conditions is supplied in the call, then use only those conditions
-        while fetching pages of records. If it's omitted, then use
-        self.api_conditions.
-        """
-        page = 1
-        records = []
-
-        while True:
-            logger.info(
-                'Fetching {} records, batch {}'.format(
-                    self.record_name, page)
-            )
-            page_conditions = conditions or self.api_conditions
-            page_records = self.get_page(
-                parent=parent, page=page, page_size=self.batch_size,
-                conditions=page_conditions,
-            )
-
-            records += page_records
-            page += 1
-            if len(page_records) < self.batch_size:
-                # This page wasn't full, so there's no more records after
-                # this page.
-                break
-
-        inverted = {v: k for k, v in self.FIELDS.items()}
-        formatted_records = []
-
-        # Convert the results from camelCase back to snake_case
-        for record in records:
-            converted = {}
-            for k, v in record.items():
-                if inverted.get(k, None):
-                    converted[inverted[k]] = v
-            formatted_records.append(converted)
-
-        return formatted_records
-
-    def update(self, parent=None, **kwargs):
-        raise NotImplementedError
-
-    def create(self, parent=None, **kwargs):
-        raise NotImplementedError
-
-    def delete(self, parent=None, **kwargs):
-        raise NotImplementedError
-
-    def get_page(self, parent=None, **kwargs):
-        raise NotImplementedError
-
-    def _format_record(self, **kwargs):
-        record = {}
-        for key, value in kwargs.items():
-            # Only consider fields of the record, discard anything else
-            if key in self.FIELDS.keys():
-                record[self.FIELDS[key]] = value
-
-        return record
-
-
-class TicketTaskSynchronizer:
-    FIELDS = {
-        'id': 'id',
-        'closed_flag': 'closedFlag',
-        'priority': 'priority',
-        'task': 'notes'
-    }
-    record_name = "TicketTask"
-
-    def update(self, parent=None, **kwargs):
-        record = self._format_record(**kwargs)
-
-        return self.client.update_ticket_task(
-            kwargs.get('id'), parent, **record)
-
-    def create(self, parent=None, **kwargs):
-        record = self._format_record(**kwargs)
-
-        return self.client.create_ticket_task(parent, **record)
-
-    def delete(self, parent=None, **kwargs):
-        return self.client.delete_ticket_task(parent, **kwargs)
-
-    def get_page(self, parent=None, **kwargs):
-        return self.client.get_ticket_tasks(parent)
-
-
-class ServiceTicketTaskSynchronizer(TicketTaskSynchronizer, DummySynchronizer):
-    client_class = api.ServiceAPIClient
-
-
-class ProjectTicketTaskSynchronizer(TicketTaskSynchronizer, DummySynchronizer):
-    client_class = api.ProjectAPIClient

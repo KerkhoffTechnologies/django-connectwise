@@ -1549,6 +1549,8 @@ class Ticket(UpdateConnectWiseMixin, TimeStampedModel):
     estimated_start_date = models.DateTimeField(blank=True, null=True)
     wbs_code = models.CharField(blank=True, null=True, max_length=50)
     udf = models.JSONField(blank=True, null=True)
+    tasks_completed = models.PositiveSmallIntegerField(blank=True, null=True)
+    tasks_total = models.PositiveSmallIntegerField(blank=True, null=True)
 
     ticket_predecessor = models.ForeignKey(
         'self', blank=True, null=True, on_delete=models.SET_NULL

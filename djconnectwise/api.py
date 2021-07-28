@@ -1019,10 +1019,10 @@ class TicketAPIMixin:
         endpoint_url = '{}/{}'.format(self.ENDPOINT_TICKETS, ticket_id)
         return self.fetch_resource(endpoint_url)
 
-    def get_ticket_tasks(self, ticket_id):
+    def get_ticket_tasks(self, ticket_id, **kwargs):
         endpoint_url = '{}/{}/tasks'.format(
             self.ENDPOINT_TICKETS, ticket_id)
-        return self.fetch_resource(endpoint_url, should_page=True)
+        return self.fetch_resource(endpoint_url, should_page=True, **kwargs)
 
     def create_ticket_task(self, ticket_id, **kwargs):
         endpoint_url = '{}/{}/tasks'.format(
@@ -1141,6 +1141,23 @@ class ServiceAPIClient(TicketAPIMixin, ConnectWiseAPIClient):
         if text:
             body.update({"text": text})
 
+        return self.request('post', endpoint_url, body)
+
+    def post_merge_ticket(self, merge_data, **kwargs):
+        parent_id = merge_data.get('parent_ticket_id')
+        child_id = merge_data.get('child_ticket_id')
+        status = merge_data.get('status')
+
+        endpoint_url = self._endpoint(
+            '{}/{}/merge'.format(self.ENDPOINT_TICKETS, parent_id))
+
+        body = {
+            "mergeTicketIds": [child_id],
+            "status": {
+                "id": status.id,
+                "name": status.name
+            }
+        }
         return self.request('post', endpoint_url, body)
 
     def get_statuses(self, board_id, *args, **kwargs):
