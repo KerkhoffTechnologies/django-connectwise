@@ -211,9 +211,7 @@ class Synchronizer:
                     results.updated_count += 1
                 else:
                     results.skipped_count += 1
-            except IntegrityError as e:
-                logger.warning('{}'.format(e))
-            except InvalidObjectException as e:
+            except (IntegrityError, InvalidObjectException) as e:
                 logger.warning('{}'.format(e))
 
             results.synced_ids.add(record['id'])
