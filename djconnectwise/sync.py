@@ -1997,22 +1997,26 @@ class MemberSynchronizer(Synchronizer):
                     avatar_file, filename = generate_thumbnail(
                         avatar, thumbnail_size[size],
                         extension, filename)
+
+                    # Just delete the currently saved avatar image
+                    # so we don't need to worry about cleaning up
+                    # duplicates or old thumbnails
+                    if avatar_file and filename:
+                        default_storage.delete(current_filename)
+
+                        logger.info("Saving member '{}' avatar to {}.".format(
+                            member.identifier, filename))
+                        default_storage.save(filename, avatar_file)
+                    else:
+                        # If there were any problems saving the avatar clear
+                        # the filename from the member
+                        member.avatar = ""
+                except NoCredentialsError as e:
+                    # NoCredentialsError should be raised
+                    e.fmt = 'During saving member avatar: ' + e.fmt
+                    raise e
                 except Exception as e:
                     logger.warning("Error saving member avatar. {}".format(e))
-
-                # Just delete the currently saved avatar image
-                # so we don't need to worry about cleaning up
-                # duplicates or old thumbnails
-                if avatar_file and filename:
-                    default_storage.delete(current_filename)
-
-                    logger.info("Saving member '{}' avatar to {}.".format(
-                        member.identifier, filename))
-                    default_storage.save(filename, avatar_file)
-                else:
-                    # If there were any problems saving the avatar clear the
-                    # filename from the member
-                    member.avatar = ""
 
     def get_page(self, *args, **kwargs):
         return self.client.get_members(*args, **kwargs)
