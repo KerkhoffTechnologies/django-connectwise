@@ -429,11 +429,16 @@ class Contact(models.Model):
         return '{} {}'.format(self.first_name,
                               self.last_name if self.last_name else '')
 
-    first_name = models.CharField(blank=True, null=True, max_length=200)
-    last_name = models.CharField(blank=True, null=True, max_length=200)
+    first_name = models.CharField(blank=True, null=True, max_length=200,
+                                  db_index=True)
+    last_name = models.CharField(blank=True, null=True, max_length=200,
+                                 db_index=True)
     title = models.CharField(blank=True, null=True, max_length=200)
     company = models.ForeignKey(
         'Company', null=True, on_delete=models.CASCADE)
+
+    class Meta:
+        ordering = ('first_name', 'last_name')
 
     @property
     def default_email_address(self):
@@ -1473,7 +1478,6 @@ class Ticket(UpdateConnectWiseMixin, TimeStampedModel):
         'status': 'status',
         'priority': 'priority',
         'board': 'board',
-        'company': 'company',
     }
 
     SERVICE_EDITABLE_FIELDS = VALID_UPDATE_FIELDS
@@ -1481,6 +1485,10 @@ class Ticket(UpdateConnectWiseMixin, TimeStampedModel):
     PROJECT_EDITABLE_FIELDS.update({
         'project': 'project',
         'phase': 'phase'
+    })
+    SERVICE_EDITABLE_FIELDS.update({
+        'company': 'company',
+        'contact': 'contact',
     })
     EDITABLE_FIELDS = {
         PROJECT_TICKET: PROJECT_EDITABLE_FIELDS,
