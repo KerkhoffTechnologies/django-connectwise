@@ -885,13 +885,13 @@ class SalesAPIClient(ConnectWiseAPIClient):
         return self.fetch_resource(endpoint_url, should_page=True,
                                    *args, **kwargs)
 
-    def update_opportunity_stage(self, obj, changed_fields):
+    def update_opportunity(self, obj, changed_fields):
         endpoint_url = self._endpoint(
             '{}/{}'.format(self.ENDPOINT_OPPORTUNITIES, obj.id)
         )
         return self.update_instance(obj, changed_fields, endpoint_url)
 
-    def update_activity_status(self, obj, changed_fields):
+    def update_activity(self, obj, changed_fields):
         endpoint_url = self._endpoint(
             '{}/{}'.format(self.ENDPOINT_ACTIVITIES, obj.id)
         )
