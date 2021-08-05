@@ -1076,8 +1076,8 @@ class TicketAPIMixin:
                     })
 
                 elif field == \
-                        ticket.EDITABLE_FIELDS[ticket.record_type]['contact'] \
-                        and value is None:
+                        ticket.EDITABLE_FIELDS[ticket.record_type].get(
+                            'contact') and value is None:
                     # If a contact is being cleared on a ticket, CW requires
                     # that the following fields be cleared as well.
                     contact_fields = [
