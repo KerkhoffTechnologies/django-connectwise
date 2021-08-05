@@ -53,7 +53,7 @@ class UpdateConnectWiseMixin:
         argument which is a list of fields that have been changed and
         should be updated in CW.
         """
-        api_class = self.get_api_class()
+        api_class = self.api_class
 
         api_client = api_class(
             api_public_key=kwargs.get('api_public_key'),
@@ -63,8 +63,7 @@ class UpdateConnectWiseMixin:
         changed_fields = kwargs.get('changed_fields')
         updated_objects = self.get_changed_values(changed_fields)
 
-        method = getattr(api_client, self.update_method_name)
-        return method(self, updated_objects)
+        return self._update_cw(api_client, updated_objects)
 
     def get_changed_values(self, changed_field_keys):
         # Prepare the updated fields to be sent to CW. At this point, any
@@ -76,9 +75,6 @@ class UpdateConnectWiseMixin:
                 updated_objects[field] = getattr(self, field)
 
         return updated_objects
-
-    def get_api_class(self):
-        return getattr(api, self.api_class_name)
 
 
 class InvalidStatusError(Exception):
@@ -433,11 +429,16 @@ class Contact(models.Model):
         return '{} {}'.format(self.first_name,
                               self.last_name if self.last_name else '')
 
-    first_name = models.CharField(blank=True, null=True, max_length=200)
-    last_name = models.CharField(blank=True, null=True, max_length=200)
+    first_name = models.CharField(blank=True, null=True, max_length=200,
+                                  db_index=True)
+    last_name = models.CharField(blank=True, null=True, max_length=200,
+                                 db_index=True)
     title = models.CharField(blank=True, null=True, max_length=200)
     company = models.ForeignKey(
         'Company', null=True, on_delete=models.CASCADE)
+
+    class Meta:
+        ordering = ('first_name', 'last_name')
 
     @property
     def default_email_address(self):
@@ -1223,13 +1224,15 @@ class Project(UpdateConnectWiseMixin, TimeStampedModel):
     class Meta:
         ordering = ('name', )
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.update_method_name = 'update_project'
-        self.api_class_name = 'ProjectAPIClient'
-
     def __str__(self):
         return self.name or ''
+
+    @property
+    def api_class(self):
+        return api.ProjectAPIClient
+
+    def _update_cw(self, api_client, updated_objects):
+        return api_client.update_project(self, updated_objects)
 
     def get_connectwise_url(self):
         params = dict(
@@ -1389,13 +1392,15 @@ class Opportunity(UpdateConnectWiseMixin, TimeStampedModel):
         ordering = ('name', )
         verbose_name_plural = 'Opportunities'
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.update_method_name = 'update_opportunity_stage'
-        self.api_class_name = 'SalesAPIClient'
-
     def __str__(self):
         return self.name
+
+    @property
+    def api_class(self):
+        return api.SalesAPIClient
+
+    def _update_cw(self, api_client, updated_objects):
+        return api_client.update_opportunity(self, updated_objects)
 
     def get_descriptor(self):
         return self.name
@@ -1473,7 +1478,6 @@ class Ticket(UpdateConnectWiseMixin, TimeStampedModel):
         'status': 'status',
         'priority': 'priority',
         'board': 'board',
-        'company': 'company',
     }
 
     SERVICE_EDITABLE_FIELDS = VALID_UPDATE_FIELDS
@@ -1481,6 +1485,10 @@ class Ticket(UpdateConnectWiseMixin, TimeStampedModel):
     PROJECT_EDITABLE_FIELDS.update({
         'project': 'project',
         'phase': 'phase'
+    })
+    SERVICE_EDITABLE_FIELDS.update({
+        'company': 'company',
+        'contact': 'contact',
     })
     EDITABLE_FIELDS = {
         PROJECT_TICKET: PROJECT_EDITABLE_FIELDS,
@@ -1602,13 +1610,24 @@ class Ticket(UpdateConnectWiseMixin, TimeStampedModel):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.update_method_name = 'update_ticket'
         self.state_manager = StateMachineManager
         state_class = self.state_manager.get(self.sla_stage)
         self.sla_state = state_class(self) if state_class else None
 
     def __str__(self):
         return '{}-{}'.format(self.id, self.summary)
+
+    @property
+    def api_class(self):
+        if self.record_type in [self.PROJECT_TICKET, self.PROJECT_ISSUE]:
+            api_class = api.ProjectAPIClient
+        else:
+            api_class = api.ServiceAPIClient
+
+        return api_class
+
+    def _update_cw(self, api_client, updated_objects):
+        return api_client.update_ticket(self, updated_objects)
 
     def get_descriptor(self):
         return self.summary
@@ -1746,14 +1765,6 @@ class Ticket(UpdateConnectWiseMixin, TimeStampedModel):
             self.sla_state = new_state
             self.sla_state.enter(valid_stage, calendar, sla)
 
-    def get_api_class(self):
-        if self.record_type in [self.PROJECT_TICKET, self.PROJECT_ISSUE]:
-            api_class = api.ProjectAPIClient
-        else:
-            api_class = api.ServiceAPIClient
-
-        return api_class
-
 
 class ServiceNote(UpdateRecordMixin, TimeStampedModel):
 
@@ -1785,7 +1796,7 @@ class ServiceNote(UpdateRecordMixin, TimeStampedModel):
         return self.text
 
     def update_cw(self, **kwargs):
-        api_class = self.ticket.get_api_class()
+        api_class = self.ticket.api_class
 
         api_client = api_class(
             api_public_key=kwargs.get('api_public_key'),
@@ -1949,13 +1960,15 @@ class Activity(UpdateConnectWiseMixin, TimeStampedModel):
     class Meta:
         verbose_name_plural = 'activities'
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.update_method_name = 'update_activity_status'
-        self.api_class_name = 'SalesAPIClient'
-
     def __str__(self):
         return self.name or ''
+
+    @property
+    def api_class(self):
+        return api.SalesAPIClient
+
+    def _update_cw(self, api_client, updated_objects):
+        return api_client.update_activity(self, updated_objects)
 
     def get_connectwise_url(self):
         params = dict(
