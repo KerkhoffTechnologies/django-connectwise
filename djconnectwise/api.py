@@ -1062,6 +1062,7 @@ class TicketAPIMixin:
 
             if field and ticket.record_type and \
                     field in ticket.EDITABLE_FIELDS[ticket.record_type]:
+                extra_field_updates = []
                 field_update = {
                     'op': 'replace',
                     'path': ticket.EDITABLE_FIELDS[ticket.record_type][field],
@@ -1074,6 +1075,27 @@ class TicketAPIMixin:
                                 "%Y-%m-%dT%H:%M:%SZ")
                     })
 
+                elif field == \
+                        ticket.EDITABLE_FIELDS[ticket.record_type].get(
+                            'contact') and value is None:
+                    # If a contact is being cleared on a ticket, CW requires
+                    # that the following fields be cleared as well.
+                    contact_fields = [
+                        'contactName', 'contactPhoneNumber',
+                        'contactEmailAddress'
+                    ]
+                    field_update.update({
+                        'value': ''
+                    })
+
+                    for contact_field in contact_fields:
+                        extra_field_updates.append(
+                            {
+                                'op': 'remove',
+                                'path': contact_field
+                            }
+                        )
+
                 elif isinstance(value, models.Model):
                     field_update.update({
                         'value': {
@@ -1084,6 +1106,9 @@ class TicketAPIMixin:
                     field_update.update({'value': str(value) if value else ''})
 
                 body.append(field_update)
+
+                if extra_field_updates:
+                    body.extend(extra_field_updates)
 
         return body
 
