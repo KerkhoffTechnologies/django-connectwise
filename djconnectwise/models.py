@@ -1336,7 +1336,7 @@ class Opportunity(UpdateConnectWiseMixin, TimeStampedModel):
     date_became_lead = models.DateTimeField(blank=True, null=True)
     expected_close_date = models.DateField()
     location_id = models.IntegerField()
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, db_index=True)
     notes = models.TextField(blank=True, null=True)
     pipeline_change_date = models.DateTimeField(blank=True, null=True)
     probability = models.ForeignKey('SalesProbability',
@@ -1525,7 +1525,8 @@ class Ticket(UpdateConnectWiseMixin, TimeStampedModel):
     severity = models.CharField(blank=True, null=True, max_length=250)
     site_name = models.CharField(blank=True, null=True, max_length=250)
     source = models.CharField(blank=True, null=True, max_length=250)
-    summary = models.CharField(blank=True, null=True, max_length=250)
+    summary = models.CharField(blank=True, null=True, db_index=True,
+                               max_length=250)
     updated_by = models.CharField(blank=True, null=True, max_length=250)
     sla_expire_date = models.DateTimeField(blank=True, null=True)
     do_not_escalate_date = models.DateTimeField(blank=True, null=True)
