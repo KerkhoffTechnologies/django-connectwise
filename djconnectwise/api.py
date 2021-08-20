@@ -349,6 +349,13 @@ class ConnectWiseAPIClient(object):
                         raise ConnectWiseAPIError(response.content)
                 raise ConnectWiseRecordNotFoundError(msg)
 
+            elif response.status_code == 403:
+                self._log_failed(response)
+                raise ConnectWiseSecurityPermissionsException(
+                    self._prepare_error_response(response),
+                    response.status_code
+                )
+
             elif 400 <= response.status_code < 499:
                 self._log_failed(response)
                 raise ConnectWiseAPIClientError(
