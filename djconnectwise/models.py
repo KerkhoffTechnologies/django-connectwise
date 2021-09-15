@@ -1129,6 +1129,22 @@ class ProjectPhase(TimeStampedModel):
         return self.description
 
 
+class AvailableProjectTeamMemberManager(models.Manager):
+    """Return only project team members whose ConnectWise board is active."""
+    def get_queryset(self):
+        return super().get_queryset()\
+            .exclude(
+                start_date__isnull=False,
+                start_date__gt=(
+                    datetime.datetime.now() + datetime.timedelta(days=1)
+                ).date()
+            )\
+            .exclude(
+                end_date__isnull=False,
+                end_date__lt=datetime.datetime.now().date()
+            )
+
+
 class ProjectTeamMember(TimeStampedModel):
     start_date = models.DateTimeField(blank=True, null=True)
     end_date = models.DateTimeField(blank=True, null=True)
@@ -1143,8 +1159,14 @@ class ProjectTeamMember(TimeStampedModel):
         'WorkRole', null=True, on_delete=models.SET_NULL
     )
 
+    objects = models.Manager()
+    available_objects = AvailableProjectTeamMemberManager()
+
+    class Meta:
+        ordering = ('project__name', 'member')
+
     def __str__(self):
-        return '{}/{}'.format(self.id, self.member)
+        return '{}/{}'.format(self.project, self.member)
 
 
 class AvailableProjectManager(models.Manager):
