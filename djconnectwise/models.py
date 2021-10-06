@@ -175,7 +175,8 @@ class ConnectWiseBoard(TimeStampedModel):
             # Using first this time because there could be many and we
             # still don't know which one it could be, or just get None.
             closed_status = self.board_statuses.filter(
-                name__iregex=r'^[[:punct:]]*Closed[[:punct:]]*$',
+                name__iregex=r'^([[:space:]]|[[:punct:]])*Closed'
+                             r'([[:space:]]|[[:punct:]])*$',
                 closed_status=True,
             ).first()
 
