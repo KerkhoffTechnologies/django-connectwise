@@ -1095,7 +1095,7 @@ class ContactSynchronizer(Synchronizer):
         sync_classes = []
 
         settings = DjconnectwiseSettings().get_settings()
-        if settings['sync_time_and_note_entries']:
+        if settings['sync_contact_communications']:
             contact_communication_sync = ContactCommunicationSynchronizer()
             contact_communication_sync.api_conditions = [instance_id]
             sync_classes.append((contact_communication_sync,
