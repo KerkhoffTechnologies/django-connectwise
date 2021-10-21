@@ -1,25 +1,23 @@
-import logging
 import datetime
+import logging
 import math
-
-
-from dateutil.parser import parse
 from copy import deepcopy
 from decimal import Decimal
 
-from django.core.files.storage import default_storage
+from botocore.exceptions import NoCredentialsError
+from dateutil.parser import parse
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.files.storage import default_storage
 from django.db import transaction, IntegrityError
-from django.utils import timezone
 from django.db.models import Q
+from django.utils import timezone
+from django.utils.text import normalize_newlines
 
 from djconnectwise import api
 from djconnectwise import models
+from djconnectwise.utils import DjconnectwiseSettings
 from djconnectwise.utils import get_hash, get_filename_extension, \
     generate_thumbnail, generate_filename, remove_thumbnail
-from djconnectwise.utils import DjconnectwiseSettings
-
-from botocore.exceptions import NoCredentialsError
 
 DEFAULT_AVATAR_EXTENSION = 'jpg'
 MAX_URL_LENGTH = 2000
@@ -518,7 +516,10 @@ class ServiceNoteSynchronizer(CallbackPartialSyncMixin, Synchronizer):
 
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
-        instance.text = json_data.get('text')
+
+        text = json_data.get('text')
+        if text:
+            instance.text = normalize_newlines(text)
         instance.detail_description_flag = json_data.get(
             'detailDescriptionFlag')
         instance.internal_analysis_flag = json_data.get(
@@ -1567,7 +1568,10 @@ class TimeEntrySynchronizer(BatchConditionMixin,
         instance.id = json_data['id']
         instance.charge_to_type = json_data['chargeToType']
         instance.billable_option = json_data.get('billableOption')
-        instance.notes = json_data.get('notes')
+
+        notes = json_data.get('notes')
+        if notes:
+            instance.notes = normalize_newlines(notes)
         instance.internal_notes = json_data.get('internalNotes')
 
         time_start = json_data.get('timeStart')
