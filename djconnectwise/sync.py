@@ -506,9 +506,63 @@ class CallbackPartialSyncMixin:
             results.skipped_count, results.deleted_count
 
 
-class ServiceNoteSynchronizer(CallbackPartialSyncMixin, Synchronizer):
+class ChildFetchRecordsMixin:
+    parent_model_class = None
+
+    def get_total_pages(self, results, conditions=None, object_id=None):
+        """
+        For all pages of results, save each page of results to the DB.
+
+        If conditions is supplied in the call, then use only those conditions
+        while fetching pages of records. If it's omitted, then use
+        self.api_conditions.
+        """
+        page_conditions = conditions or self.api_conditions
+        page = 1
+        while True:
+            logger.info(
+                'Fetching {} records: {} id {}, page {}'.format(
+                    self.model_class.__bases__[0].__name__,
+                    self.parent_model_class.__name__,
+                    object_id, page)
+            )
+            page_records = self.get_page(
+                page=page, page_size=self.batch_size,
+                conditions=page_conditions,
+                object_id=object_id,
+            )
+            self.persist_page(page_records, results)
+            page += 1
+
+            if len(page_records) < self.batch_size:
+                # This page wasn't full, so there's no more records after
+                # this page.
+                break
+        return results
+
+    def fetch_records(self, results, conditions=None):
+        parent_object_qs = self.parent_model_class.objects.all().order_by(
+            self.lookup_key)
+        for object_id in parent_object_qs.values_list(
+                self.lookup_key, flat=True):
+            results = self.get_total_pages(
+                results,
+                conditions=conditions,
+                object_id=object_id,
+            )
+
+        return results
+
+    def get_page(self, *args, **kwargs):
+        object_id = kwargs.get('object_id')
+        return self.client_call(object_id, *args, **kwargs)
+
+
+class ServiceNoteSynchronizer(ChildFetchRecordsMixin, CallbackPartialSyncMixin,
+                              Synchronizer):
     client_class = api.ServiceAPIClient
     model_class = models.ServiceNoteTracker
+    parent_model_class = models.Ticket
 
     related_meta = {
         'member': (models.Member, 'member')
@@ -558,7 +612,7 @@ class ServiceNoteSynchronizer(CallbackPartialSyncMixin, Synchronizer):
 
     def get_page(self, *args, **kwargs):
         records = []
-        ticket_qs = models.Ticket.objects.all().order_by(self.lookup_key)
+        ticket_id = kwargs.get('object_id')
 
         # We are using the conditions here to specify getting a single
         # tickets notes. If conditions are supplied, like when a ticket
@@ -576,8 +630,8 @@ class ServiceNoteSynchronizer(CallbackPartialSyncMixin, Synchronizer):
             except ValueError:
                 # Do nothing
                 pass
-        for ticket_id in ticket_qs.values_list('id', flat=True):
-            records += self.client_call(ticket_id, *args, **kwargs)
+
+        records += self.client_call(ticket_id, *args, **kwargs)
 
         return records
 
@@ -831,9 +885,10 @@ class BoardChildSynchronizer(Synchronizer):
         raise NotImplementedError
 
 
-class BoardStatusSynchronizer(BoardChildSynchronizer):
+class BoardStatusSynchronizer(ChildFetchRecordsMixin, BoardChildSynchronizer):
     client_class = api.ServiceAPIClient
     model_class = models.BoardStatusTracker
+    parent_model_class = models.ConnectWiseBoard
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -853,18 +908,7 @@ class BoardStatusSynchronizer(BoardChildSynchronizer):
         return instance
 
     def client_call(self, board_id, *args, **kwargs):
-        kwargs['conditions'] = self.api_conditions
         return self.client.get_statuses(board_id, *args, **kwargs)
-
-    def get_page(self, *args, **kwargs):
-        records = []
-        board_qs = models.ConnectWiseBoard.objects.all()\
-            .order_by(self.lookup_key)
-
-        for board_id in board_qs.values_list('id', flat=True):
-            records += self.client_call(board_id, *args, **kwargs)
-
-        return records
 
 
 class BoardFilterMixin:
