@@ -541,9 +541,7 @@ class ChildFetchRecordsMixin:
         return results
 
     def fetch_records(self, results, conditions=None):
-        parent_object_qs = self.parent_model_class.objects.all().order_by(
-            self.lookup_key)
-        for object_id in parent_object_qs.values_list(
+        for object_id in self.parent_object_qs.values_list(
                 self.lookup_key, flat=True):
             results = self.get_total_pages(
                 results,
@@ -556,6 +554,10 @@ class ChildFetchRecordsMixin:
     def get_page(self, *args, **kwargs):
         object_id = kwargs.get('object_id')
         return self.client_call(object_id, *args, **kwargs)
+
+    @property
+    def parent_object_qs(self):
+        return self.parent_model_class.objects.all().order_by(self.lookup_key)
 
 
 class ServiceNoteSynchronizer(ChildFetchRecordsMixin, CallbackPartialSyncMixin,
@@ -796,9 +798,10 @@ class ProjectTicketTaskSynchronizer(TicketTaskSynchronizer, DummySynchronizer):
             record_type=self.RECORD_TYPE).order_by('id')
 
 
-class OpportunityNoteSynchronizer(Synchronizer):
+class OpportunityNoteSynchronizer(ChildFetchRecordsMixin, Synchronizer):
     client_class = api.SalesAPIClient
     model_class = models.OpportunityNoteTracker
+    parent_model_class = models.Opportunity
 
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
@@ -823,16 +826,6 @@ class OpportunityNoteSynchronizer(Synchronizer):
 
     def client_call(self, opportunity_id, *args, **kwargs):
         return self.client.get_notes(opportunity_id, *args, **kwargs)
-
-    def get_page(self, *args, **kwargs):
-        records = []
-        opportunity_qs = models.Opportunity.objects.all()\
-            .order_by(self.lookup_key)
-
-        for opportunity_id in opportunity_qs.values_list('id', flat=True):
-            records += self.client_call(opportunity_id, *args, **kwargs)
-
-        return records
 
 
 class BoardSynchronizer(Synchronizer):
@@ -911,7 +904,8 @@ class BoardStatusSynchronizer(ChildFetchRecordsMixin, BoardChildSynchronizer):
         return self.client.get_statuses(board_id, *args, **kwargs)
 
 
-class BoardFilterMixin:
+class BoardFilterMixin(ChildFetchRecordsMixin):
+    parent_model_class = models.ConnectWiseBoard
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -920,19 +914,15 @@ class BoardFilterMixin:
         self.boards = [board.strip() for board in board_names.split(',')] \
             if board_names else None
 
-    def get_page(self, *args, **kwargs):
-        records = []
+    @property
+    def parent_object_qs(self):
         if self.boards:
-            board_qs = models.ConnectWiseBoard.available_objects.filter(
+            board_qs = self.parent_model_class.available_objects.filter(
                 name__in=self.boards).order_by(self.lookup_key)
         else:
-            board_qs = models.ConnectWiseBoard.available_objects.all().\
+            board_qs = self.parent_model_class.available_objects.all().\
                 order_by(self.lookup_key)
-
-        for board_id in board_qs.values_list('id', flat=True):
-            records += self.client_call(board_id, *args, **kwargs)
-
-        return records
+        return board_qs
 
 
 class TeamSynchronizer(BoardFilterMixin, BoardChildSynchronizer):
@@ -1148,9 +1138,10 @@ class ContactSynchronizer(Synchronizer):
             self.sync_children(*sync_classes)
 
 
-class ContactCommunicationSynchronizer(Synchronizer):
+class ContactCommunicationSynchronizer(ChildFetchRecordsMixin, Synchronizer):
     client_class = api.CompanyAPIClient
     model_class = models.ContactCommunicationTracker
+    parent_model_class = models.Contact
 
     related_meta = {
         'type': (models.CommunicationType, 'type'),
@@ -1182,6 +1173,8 @@ class ContactCommunicationSynchronizer(Synchronizer):
 
     def get_page(self, *args, **kwargs):
         records = []
+        contact_id = kwargs.get('object_id')
+
         conditions = kwargs.get('conditions')
         if conditions:
             try:
@@ -1195,9 +1188,7 @@ class ContactCommunicationSynchronizer(Synchronizer):
                 # Do nothing
                 pass
 
-        contact_qs = models.Contact.objects.all()
-        for contact_id in contact_qs.values_list('id', flat=True):
-            records += self.client_call(contact_id, *args, **kwargs)
+        records += self.client_call(contact_id, *args, **kwargs)
 
         return records
 
@@ -1769,9 +1760,11 @@ class ProjectStatusSynchronizer(Synchronizer):
         return self.client.get_project_statuses(*args, **kwargs)
 
 
-class ProjectPhaseSynchronizer(Synchronizer):
+class ProjectPhaseSynchronizer(ChildFetchRecordsMixin, Synchronizer):
     client_class = api.ProjectAPIClient
     model_class = models.ProjectPhaseTracker
+    parent_model_class = models.Project
+
     related_meta = {
         'board': (models.ConnectWiseBoard, 'board')
     }
@@ -1834,15 +1827,6 @@ class ProjectPhaseSynchronizer(Synchronizer):
     def client_call(self, project_id, *args, **kwargs):
         return self.client.get_project_phases(project_id, *args, **kwargs)
 
-    def get_page(self, *args, **kwargs):
-        records = []
-        project_qs = models.Project.objects.all().order_by(self.lookup_key)
-
-        for project_id in project_qs.values_list('id', flat=True):
-            records += self.client_call(project_id, *args, **kwargs)
-
-        return records
-
 
 class ProjectTypeSynchronizer(Synchronizer):
     client_class = api.ProjectAPIClient
@@ -1859,9 +1843,10 @@ class ProjectTypeSynchronizer(Synchronizer):
         return self.client.get_project_types(*args, **kwargs)
 
 
-class ProjectTeamMemberSynchronizer(Synchronizer):
+class ProjectTeamMemberSynchronizer(ChildFetchRecordsMixin, Synchronizer):
     client_class = api.ProjectAPIClient
     model_class = models.ProjectTeamMemberTracker
+    parent_model_class = models.Project
 
     related_meta = {
         'member': (models.Member, 'member'),
@@ -1900,15 +1885,10 @@ class ProjectTeamMemberSynchronizer(Synchronizer):
         return self.client.get_project_team_members(
             project_id, *args, **kwargs)
 
-    def get_page(self, *args, **kwargs):
-        records = []
-        project_qs = models.Project.objects.filter(
+    @property
+    def parent_object_qs(self):
+        return self.parent_model_class.objects.filter(
             status__closed_flag=False).order_by(self.lookup_key)
-
-        for project_id in project_qs.values_list('id', flat=True):
-            records += self.client_call(project_id, *args, **kwargs)
-
-        return records
 
 
 class ProjectSynchronizer(Synchronizer):
@@ -2503,9 +2483,10 @@ class CalendarSynchronizer(Synchronizer):
         return self.client.get_calendars(*args, **kwargs)
 
 
-class HolidaySynchronizer(Synchronizer):
+class HolidaySynchronizer(ChildFetchRecordsMixin, Synchronizer):
     client_class = api.ScheduleAPIClient
     model_class = models.HolidayTracker
+    parent_model_class = models.HolidayList
 
     def _assign_field_data(self, instance, json_data):
 
@@ -2533,14 +2514,6 @@ class HolidaySynchronizer(Synchronizer):
     def client_call(self, list_id, *args, **kwargs):
         return self.client.get_holidays(list_id, *args, **kwargs)
 
-    def get_page(self, *args, **kwargs):
-        records = []
-        list_qs = models.HolidayList.objects.all()
-
-        for list_id in list_qs.values_list('id', flat=True):
-            records += self.client_call(list_id, *args, **kwargs)
-        return records
-
 
 class HolidayListSynchronizer(Synchronizer):
     client_class = api.ScheduleAPIClient
@@ -2556,9 +2529,10 @@ class HolidayListSynchronizer(Synchronizer):
         return self.client.get_holiday_lists(*args, **kwargs)
 
 
-class SLAPrioritySynchronizer(Synchronizer):
+class SLAPrioritySynchronizer(ChildFetchRecordsMixin, Synchronizer):
     client_class = api.ServiceAPIClient
     model_class = models.SlaPriorityTracker
+    parent_model_class = models.Sla
 
     related_meta = {
         'priority': (models.TicketPriority, 'priority'),
@@ -2576,15 +2550,6 @@ class SLAPrioritySynchronizer(Synchronizer):
 
     def client_call(self, sla_id, *args, **kwargs):
         return self.client.get_slapriorities(sla_id, *args, **kwargs)
-
-    def get_page(self, *args, **kwargs):
-        records = []
-        sla_qs = models.Sla.objects.all()
-
-        for sla_id in sla_qs.values_list('id', flat=True):
-            records += self.client_call(sla_id, *args, **kwargs)
-
-        return records
 
 
 class SLASynchronizer(Synchronizer):
