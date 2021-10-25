@@ -690,7 +690,8 @@ class TicketTaskSynchronizer:
         'id': 'id',
         'closed_flag': 'closedFlag',
         'priority': 'priority',
-        'task': 'notes'
+        'task': 'notes',
+        'schedule': 'schedule'
     }
     RECORD_TYPE = models.Ticket.SERVICE_TICKET
     RECORD_NAME = "TicketTask"
