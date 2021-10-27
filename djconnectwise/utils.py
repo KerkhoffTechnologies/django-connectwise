@@ -89,6 +89,7 @@ class DjconnectwiseSettings:
             'response_version': '2020.4',
             'sync_child_tickets': True,
             'sync_time_and_note_entries': True,
+            'sync_contact_communications': True,
             'keep_closed_ticket_days': 0,
             'keep_closed_status_board_ids': 0
         }
