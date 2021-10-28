@@ -735,7 +735,8 @@ class TicketTaskSynchronizer:
         'id': 'id',
         'closed_flag': 'closedFlag',
         'priority': 'priority',
-        'task': 'notes'
+        'task': 'notes',
+        'schedule': 'schedule'
     }
     RECORD_TYPE = models.Ticket.SERVICE_TICKET
     RECORD_NAME = "TicketTask"
@@ -1469,6 +1470,16 @@ class ScheduleEntriesSynchronizer(BatchConditionMixin, Synchronizer):
 
     def get_single(self, entry_id):
         return self.client.get_schedule_entry(entry_id)
+
+    def fetch_sync_by_condition(self, conditions):
+        synced_entries = []
+        api_entries = self.client.get_schedule_entries(conditions=conditions)
+
+        for entry in api_entries:
+            instance, _ = self.update_or_create_instance(entry)
+            synced_entries.append(instance)
+
+        return synced_entries
 
     def create_new_entry(self, target, **kwargs):
         """
