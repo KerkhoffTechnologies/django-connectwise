@@ -400,7 +400,7 @@ class Synchronizer:
             created_count, updated_count, skipped_count, deleted_count \
                 = synchronizer.callback_sync(filter_params)
             msg = '{} Child Sync - Created: {},'\
-                ' Updated: {}, Skipped: {},Deleted: {}'.format(
+                ' Updated: {}, Skipped: {}, Deleted: {}'.format(
                     synchronizer.model_class.__bases__[0].__name__,
                     created_count,
                     updated_count,
@@ -508,6 +508,7 @@ class CallbackPartialSyncMixin:
 
 class ChildFetchRecordsMixin:
     parent_model_class = None
+    sync_single_id = None
 
     def get_total_pages(self, results, conditions=None, object_id=None):
         """
@@ -541,9 +542,9 @@ class ChildFetchRecordsMixin:
         return results
 
     def fetch_records(self, results, conditions=None):
-        for object_id in self.parent_object_qs.values_list(
-                self.lookup_key, flat=True):
-            results = self.get_total_pages(
+
+        for object_id in self.parent_object_ids:
+            self.get_total_pages(
                 results,
                 conditions=conditions,
                 object_id=object_id,
@@ -556,8 +557,16 @@ class ChildFetchRecordsMixin:
         return self.client_call(object_id, *args, **kwargs)
 
     @property
-    def parent_object_qs(self):
-        return self.parent_model_class.objects.all().order_by(self.lookup_key)
+    def parent_object_ids(self):
+        if self.sync_single_id:
+            # On callbacks we will only want to fetch records for a single ID
+            # not all model records in the database.
+            object_ids = [self.sync_single_id]
+        else:
+            object_ids = self.parent_model_class.objects.all().order_by(
+                self.lookup_key).values_list(self.lookup_key, flat=True)
+
+        return object_ids
 
 
 class ServiceNoteSynchronizer(ChildFetchRecordsMixin, CallbackPartialSyncMixin,
@@ -613,29 +622,9 @@ class ServiceNoteSynchronizer(ChildFetchRecordsMixin, CallbackPartialSyncMixin,
         return self.client.get_notes(ticket_id, *args, **kwargs)
 
     def get_page(self, *args, **kwargs):
-        records = []
         ticket_id = kwargs.get('object_id')
 
-        # We are using the conditions here to specify getting a single
-        # tickets notes. If conditions are supplied, like when a ticket
-        # callback is fired, then replace the conditions with the
-        # last updated sync time instead of syncing all notes all the time.
-        conditions = kwargs.get('conditions')
-        if conditions:
-            try:
-                ticket_id = int(conditions[0])
-                kwargs['conditions'] = \
-                    [conditions[1]] if len(conditions) > 1 else []
-
-                records += self.client_call(ticket_id, *args, **kwargs)
-                return records
-            except ValueError:
-                # Do nothing
-                pass
-
-        records += self.client_call(ticket_id, *args, **kwargs)
-
-        return records
+        return self.client_call(ticket_id, *args, **kwargs)
 
     def create_new_note(self, target, **kwargs):
         """
@@ -915,14 +904,15 @@ class BoardFilterMixin(ChildFetchRecordsMixin):
             if board_names else None
 
     @property
-    def parent_object_qs(self):
+    def parent_object_ids(self):
         if self.boards:
             board_qs = self.parent_model_class.available_objects.filter(
                 name__in=self.boards).order_by(self.lookup_key)
         else:
             board_qs = self.parent_model_class.available_objects.all().\
                 order_by(self.lookup_key)
-        return board_qs
+
+        return board_qs.values_list(self.lookup_key, flat=True)
 
 
 class TeamSynchronizer(BoardFilterMixin, BoardChildSynchronizer):
@@ -1132,7 +1122,7 @@ class ContactSynchronizer(Synchronizer):
         settings = DjconnectwiseSettings().get_settings()
         if settings['sync_contact_communications']:
             contact_communication_sync = ContactCommunicationSynchronizer()
-            contact_communication_sync.api_conditions = [instance_id]
+            contact_communication_sync.sync_single_id = instance_id
             sync_classes.append((contact_communication_sync,
                                  Q(contact=instance_id)))
             self.sync_children(*sync_classes)
@@ -1172,25 +1162,9 @@ class ContactCommunicationSynchronizer(ChildFetchRecordsMixin, Synchronizer):
                                                       **kwargs)
 
     def get_page(self, *args, **kwargs):
-        records = []
         contact_id = kwargs.get('object_id')
 
-        conditions = kwargs.get('conditions')
-        if conditions:
-            try:
-                contact_id = int(conditions[0])
-                kwargs['conditions'] = [conditions[1]] if len(
-                    conditions) > 1 else []
-
-                records += self.client_call(contact_id, *args, **kwargs)
-                return records
-            except ValueError:
-                # Do nothing
-                pass
-
-        records += self.client_call(contact_id, *args, **kwargs)
-
-        return records
+        return self.client_call(contact_id, *args, **kwargs)
 
     def get_single(self, communication_id):
         return self.client.get_single_communication(communication_id)
@@ -1886,9 +1860,10 @@ class ProjectTeamMemberSynchronizer(ChildFetchRecordsMixin, Synchronizer):
             project_id, *args, **kwargs)
 
     @property
-    def parent_object_qs(self):
+    def parent_object_ids(self):
         return self.parent_model_class.objects.filter(
-            status__closed_flag=False).order_by(self.lookup_key)
+            status__closed_flag=False).order_by(
+            self.lookup_key).values_list(self.lookup_key, flat=True)
 
 
 class ProjectSynchronizer(Synchronizer):
@@ -2217,7 +2192,7 @@ class TicketSynchronizerMixin:
 
         if sync_config.get('sync_service_note', True):
             note_sync = ServiceNoteSynchronizer()
-            note_sync.api_conditions = [instance_id]
+            note_sync.sync_single_id = instance_id
             sync_classes.append((note_sync, Q(ticket=instance)))
 
         if sync_config.get('sync_time_entry', True):
