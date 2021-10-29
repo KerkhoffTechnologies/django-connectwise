@@ -2538,11 +2538,11 @@ class SLASynchronizer(Synchronizer):
 
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
-        instance.name = json_data['name']
-        instance.default_flag = json_data['defaultFlag']
-        instance.respond_hours = json_data['respondHours']
-        instance.plan_within = json_data['planWithin']
-        instance.resolution_hours = json_data['resolutionHours']
+        instance.name = json_data.get('name')
+        instance.default_flag = json_data.get('defaultFlag')
+        instance.respond_hours = json_data.get('respondHours')
+        instance.plan_within = json_data.get('planWithin')
+        instance.resolution_hours = json_data.get('resolutionHours')
         instance.based_on = json_data.get('basedOn')
 
         self.set_relations(instance, json_data)
