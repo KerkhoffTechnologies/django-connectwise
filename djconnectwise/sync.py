@@ -621,11 +621,6 @@ class ServiceNoteSynchronizer(ChildFetchRecordsMixin, CallbackPartialSyncMixin,
     def client_call(self, ticket_id, *args, **kwargs):
         return self.client.get_notes(ticket_id, *args, **kwargs)
 
-    def get_page(self, *args, **kwargs):
-        ticket_id = kwargs.get('object_id')
-
-        return self.client_call(ticket_id, *args, **kwargs)
-
     def create_new_note(self, target, **kwargs):
         """
         Send POST request to ConnectWise to create a new note and then
@@ -1161,11 +1156,6 @@ class ContactCommunicationSynchronizer(ChildFetchRecordsMixin, Synchronizer):
     def client_call(self, contact_id, *args, **kwargs):
         return self.client.get_contact_communications(contact_id, *args,
                                                       **kwargs)
-
-    def get_page(self, *args, **kwargs):
-        contact_id = kwargs.get('object_id')
-
-        return self.client_call(contact_id, *args, **kwargs)
 
     def get_single(self, communication_id):
         return self.client.get_single_communication(communication_id)
