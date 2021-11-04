@@ -853,7 +853,7 @@ class BoardChildSynchronizer(Synchronizer):
         instance.name = json_data.get('name')
         try:
             board_id = json_data.get('board').get('id')
-        except KeyError:
+        except AttributeError:
             # Must be 2017.5 or earlier
             board_id = json_data.get('boardId')
         instance.board = models.ConnectWiseBoard.objects.get(id=board_id)
@@ -1386,6 +1386,11 @@ class ScheduleEntriesSynchronizer(BatchConditionMixin, Synchronizer):
         try:
             member_id = json_data.get('member').get('id')
             models.Member.objects.get(pk=member_id)
+        except AttributeError:
+            raise InvalidObjectException(
+                'Schedule entry {} can not be found with no member info: '
+                '- skipping.'.format(instance.id)
+            )
         except ObjectDoesNotExist:
             raise InvalidObjectException(
                 'Schedule entry {} can not find member: {}'
