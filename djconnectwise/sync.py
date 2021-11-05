@@ -2841,9 +2841,12 @@ class AgreementSynchronizer(Synchronizer):
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data.get('id')
         instance.name = json_data.get('name')
-        instance.agreement_type = json_data['type'].get('name')
         instance.agreement_status = json_data.get('agreementStatus')
         instance.cancelled_flag = json_data.get('cancelledFlag')
+
+        if json_data.get('type'):
+            instance.agreement_type = json_data['type'].get('name')
+
         if json_data.get('billTime') == 'NoDefault':
             instance.bill_time = None
         else:
