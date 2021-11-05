@@ -238,10 +238,10 @@ class ConnectWiseAPIClient(object):
     def api_base_url(self):
         # This will be for this particular API-
         # i.e. https://connectwise.example.com/v4_6_release/apis/3.0/service/
-        api_base_url, _ = self.build_api_base_url(False)
+        api_base_url, _ = self.build_api_base_url()
         return api_base_url
 
-    def build_api_base_url(self, force_fetch):
+    def build_api_base_url(self, force_fetch=False):
         api_codebase, codebase_updated = \
             self.info_manager.fetch_api_codebase(
                 self.server_url, self.company_id, force_fetch=force_fetch
