@@ -583,7 +583,7 @@ class ServiceNoteSynchronizer(ChildFetchRecordsMixin, CallbackPartialSyncMixin,
         instance.id = json_data['id']
 
         text = json_data.get('text')
-        if text:
+        if text is not None:
             instance.text = normalize_newlines(text)
         instance.detail_description_flag = json_data.get(
             'detailDescriptionFlag')
@@ -1267,7 +1267,9 @@ class ActivitySynchronizer(Synchronizer):
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
         instance.name = json_data['name']
-        instance.notes = json_data.get('notes')
+        notes = json_data.get('notes')
+        if notes is not None:
+            instance.notes = normalize_newlines(notes)
 
         # handle dates.  Assume UTC timezone when not defined
         # (according to ConnectWise FAQ: "What DateTimes are supported?")
@@ -1580,7 +1582,7 @@ class TimeEntrySynchronizer(BatchConditionMixin,
         instance.billable_option = json_data.get('billableOption')
 
         notes = json_data.get('notes')
-        if notes:
+        if notes is not None:
             instance.notes = normalize_newlines(notes)
         instance.internal_notes = json_data.get('internalNotes')
 
@@ -1903,7 +1905,10 @@ class ProjectSynchronizer(Synchronizer):
 
         instance.id = json_data['id']
         instance.name = json_data['name']
-        instance.description = json_data.get('description')
+        description = json_data.get('description')
+        if description is not None:
+            # '' string can be saved w/ is not None
+            instance.description = normalize_newlines(description)
         actual_hours = json_data.get('actualHours')
         budget_hours = json_data.get('budgetHours')
         scheduled_hours = json_data.get('scheduledHours')
@@ -2608,7 +2613,9 @@ class OpportunitySynchronizer(Synchronizer):
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
         instance.name = json_data['name']
-        instance.notes = json_data.get('notes')
+        notes = json_data.get('notes')
+        if notes is not None:
+            instance.notes = normalize_newlines(notes)
         instance.source = json_data.get('source')
         instance.location_id = json_data.get('locationId')
         instance.business_unit_id = json_data.get('businessUnitId')
