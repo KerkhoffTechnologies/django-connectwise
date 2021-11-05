@@ -287,6 +287,11 @@ class Synchronizer:
                 result = UPDATED
             else:
                 result = SKIPPED
+        except AttributeError as e:
+            msg = "AttributeError while attempting to sync object {}." \
+                  " Error: {}".format(self.model_class, e)
+            logger.error(msg)
+            raise InvalidObjectException(msg)
         except IntegrityError as e:
             # This can happen when multiple threads are creating the
             # same ticket at once. See issue description for #991
@@ -605,7 +610,7 @@ class ServiceNoteSynchronizer(ChildFetchRecordsMixin, CallbackPartialSyncMixin,
             ticket_id = json_data.get('ticketId')
             related_ticket = ticket_class.objects.get(pk=ticket_id)
             setattr(instance, 'ticket', related_ticket)
-        except KeyError:
+        except AttributeError:
             raise InvalidObjectException(
                 'Service note {} has no ticketId key to find its target'
                 '- skipping.'.format(instance.id)
@@ -1425,7 +1430,7 @@ class ScheduleEntriesSynchronizer(BatchConditionMixin, Synchronizer):
         activity_class = models.Activity
         try:
             uid = json_data.get('objectId')
-        except KeyError:
+        except AttributeError:
             raise InvalidObjectException(
                 'Schedule entry {} has no objectId key to find its target'
                 '- skipping.'.format(instance.id)
@@ -1634,7 +1639,7 @@ class TimeEntrySynchronizer(BatchConditionMixin,
         ticket_class = models.Ticket
         try:
             charge_id = json_data.get('chargeToId')
-        except KeyError:
+        except AttributeError:
             raise InvalidObjectException(
                 'Time Entry {} has no chargeToId key to find its target'
                 '- skipping.'.format(instance.id)
@@ -1790,7 +1795,7 @@ class ProjectPhaseSynchronizer(ChildFetchRecordsMixin, Synchronizer):
             project_id = json_data.get('projectId')
             related_project = models.Project.objects.get(pk=project_id)
             setattr(instance, 'project', related_project)
-        except KeyError:
+        except AttributeError:
             raise InvalidObjectException(
                 'Project phase {} has no projectId key to find its target'
                 '- skipping.'.format(instance.id)
@@ -1847,7 +1852,7 @@ class ProjectTeamMemberSynchronizer(ChildFetchRecordsMixin, Synchronizer):
             project_id = json_data.get('projectId')
             related_project = models.Project.objects.get(pk=project_id)
             setattr(instance, 'project', related_project)
-        except KeyError:
+        except AttributeError:
             raise InvalidObjectException(
                 'Project team member {} has no projectId key to find its '
                 'target - skipping.'.format(instance.id)
@@ -2543,7 +2548,7 @@ class SLASynchronizer(Synchronizer):
 
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data.get('id')
-        instance.name = json_data.get.get('name')
+        instance.name = json_data.get('name')
         instance.default_flag = json_data.get('defaultFlag')
         instance.respond_hours = json_data.get('respondHours')
         instance.plan_within = json_data.get('planWithin')
