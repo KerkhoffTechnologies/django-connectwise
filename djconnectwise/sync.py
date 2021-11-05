@@ -857,8 +857,8 @@ class BoardChildSynchronizer(Synchronizer):
         instance.id = json_data.get('id')
         instance.name = json_data.get('name')
         try:
-            board_id = json_data.get('board').get('id')
-        except AttributeError:
+            board_id = json_data['board']['id']
+        except KeyError:
             # Must be 2017.5 or earlier
             board_id = json_data.get('boardId')
         instance.board = models.ConnectWiseBoard.objects.get(id=board_id)
@@ -1392,8 +1392,10 @@ class ScheduleEntriesSynchronizer(BatchConditionMixin, Synchronizer):
             member_id = json_data.get('member').get('id')
             models.Member.objects.get(pk=member_id)
         except AttributeError:
+            # AttributeError from 'member' or 'id' is the same, so subsequent
+            # callings of get() is okay here.
             raise InvalidObjectException(
-                'Schedule entry {} can not be found with no member info: '
+                'Schedule entry {}: No member info exists. '
                 '- skipping.'.format(instance.id)
             )
         except ObjectDoesNotExist:
@@ -1436,7 +1438,7 @@ class ScheduleEntriesSynchronizer(BatchConditionMixin, Synchronizer):
                 '- skipping.'.format(instance.id)
             )
 
-        if json_data.get('type').get('identifier') == "S":
+        if json_data['type'].get('identifier') == "S":
             try:
                 related_ticket = ticket_class.objects.get(pk=uid)
                 if json_data.get('doneFlag'):
@@ -1448,7 +1450,7 @@ class ScheduleEntriesSynchronizer(BatchConditionMixin, Synchronizer):
                     'Ticket not found for {}.'.format(instance.id) +
                     ' ObjectDoesNotExist Exception: {}.'.format(e)
                 )
-        elif json_data.get('type').get('identifier') == "C":
+        elif json_data['type'].get('identifier') == "C":
             try:
                 related_activity = activity_class.objects.get(pk=uid)
                 setattr(instance, 'activity_object', related_activity)
@@ -1638,8 +1640,8 @@ class TimeEntrySynchronizer(BatchConditionMixin,
         # converted to a GenericForeignKey and would be handled differently.
         ticket_class = models.Ticket
         try:
-            charge_id = json_data.get('chargeToId')
-        except AttributeError:
+            charge_id = json_data['chargeToId']
+        except KeyError:
             raise InvalidObjectException(
                 'Time Entry {} has no chargeToId key to find its target'
                 '- skipping.'.format(instance.id)
@@ -2839,7 +2841,7 @@ class AgreementSynchronizer(Synchronizer):
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data.get('id')
         instance.name = json_data.get('name')
-        instance.agreement_type = json_data.get('type').get('name')
+        instance.agreement_type = json_data['type'].get('name')
         instance.agreement_status = json_data.get('agreementStatus')
         instance.cancelled_flag = json_data.get('cancelledFlag')
         if json_data.get('billTime') == 'NoDefault':
