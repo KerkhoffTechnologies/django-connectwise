@@ -934,7 +934,7 @@ class TimeEntry(UpdateRecordMixin, models.Model):
     hours_deduct = models.DecimalField(
         blank=True, null=True, decimal_places=2, max_digits=9)
     internal_notes = models.TextField(blank=True, null=True, max_length=2000)
-    notes = models.TextField(blank=True, null=True)
+    notes = models.TextField(blank=True, null=True, max_length=50000)
     time_start = models.DateTimeField(blank=True, null=True)
     time_end = models.DateTimeField(blank=True, null=True)
 
