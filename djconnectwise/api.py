@@ -92,6 +92,9 @@ class CompanyInfoManager:
                     )
                 else:
                     return resp_json
+            elif response.status_code == 404:
+                msg = 'CompanyInfo not found: {}'.format(company_endpoint)
+                raise ConnectWiseRecordNotFoundError(msg)
             else:
                 raise ConnectWiseAPIError(response.content)
         except requests.RequestException as e:
@@ -191,11 +194,6 @@ class ConnectWiseAPIClient(object):
 
         self.request_settings = DjconnectwiseSettings().get_settings()
         self.timeout = self.request_settings['timeout']
-        self.api_base_url = None  # This will be set to the base URL for this
-        # particular API-
-        # i.e. https://connectwise.example.com/v4_6_release/apis/3.0/service/
-
-        self.build_api_base_url(force_fetch=False)
 
     def _endpoint(self, path):
         return '{0}{1}'.format(self.api_base_url, path)
@@ -236,19 +234,26 @@ class ConnectWiseAPIClient(object):
                                                     error)
         return msg
 
-    def build_api_base_url(self, force_fetch):
+    @property
+    def api_base_url(self):
+        # This will be for this particular API-
+        # i.e. https://connectwise.example.com/v4_6_release/apis/3.0/service/
+        api_base_url, _ = self.build_api_base_url()
+        return api_base_url
+
+    def build_api_base_url(self, force_fetch=False):
         api_codebase, codebase_updated = \
             self.info_manager.fetch_api_codebase(
                 self.server_url, self.company_id, force_fetch=force_fetch
             )
 
-        self.api_base_url = '{0}/{1}apis/3.0/{2}/'.format(
+        api_base_url = '{0}/{1}apis/3.0/{2}/'.format(
             self.server_url,
             api_codebase,
             self.API,
         )
 
-        return codebase_updated
+        return api_base_url, codebase_updated
 
     def get_headers(self):
         headers = {}
@@ -335,7 +340,7 @@ class ConnectWiseAPIClient(object):
                 # company info codebase value and let it be retried by the
                 # @retry decorator.
                 if retry_counter['count'] <= self.MAX_404_ATTEMPTS:
-                    codebase_updated = self.build_api_base_url(
+                    _, codebase_updated = self.build_api_base_url(
                         force_fetch=True
                     )
                     if codebase_updated:
