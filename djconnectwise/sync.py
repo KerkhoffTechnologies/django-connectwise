@@ -1797,7 +1797,7 @@ class ProjectPhaseSynchronizer(ChildFetchRecordsMixin, Synchronizer):
             project_id = json_data.get('projectId')
             related_project = models.Project.objects.get(pk=project_id)
             setattr(instance, 'project', related_project)
-        except AttributeError:
+        except models.Project.DoesNotExist:
             raise InvalidObjectException(
                 'Project phase {} has no projectId key to find its target'
                 '- skipping.'.format(instance.id)
@@ -1854,7 +1854,7 @@ class ProjectTeamMemberSynchronizer(ChildFetchRecordsMixin, Synchronizer):
             project_id = json_data.get('projectId')
             related_project = models.Project.objects.get(pk=project_id)
             setattr(instance, 'project', related_project)
-        except AttributeError:
+        except models.Project.DoesNotExist:
             raise InvalidObjectException(
                 'Project team member {} has no projectId key to find its '
                 'target - skipping.'.format(instance.id)
