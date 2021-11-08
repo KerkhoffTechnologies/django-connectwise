@@ -1389,15 +1389,8 @@ class ScheduleEntriesSynchronizer(BatchConditionMixin, Synchronizer):
             )
 
         try:
-            member_id = json_data.get('member').get('id')
+            member_id = json_data['member'].get('id')
             models.Member.objects.get(pk=member_id)
-        except AttributeError:
-            # AttributeError from 'member' or 'id' is the same, so subsequent
-            # callings of get() is okay here.
-            raise InvalidObjectException(
-                'Schedule entry {}: No member info exists. '
-                '- skipping.'.format(instance.id)
-            )
         except ObjectDoesNotExist:
             raise InvalidObjectException(
                 'Schedule entry {} can not find member: {}'
@@ -1854,11 +1847,6 @@ class ProjectTeamMemberSynchronizer(ChildFetchRecordsMixin, Synchronizer):
             project_id = json_data.get('projectId')
             related_project = models.Project.objects.get(pk=project_id)
             setattr(instance, 'project', related_project)
-        except models.Project.DoesNotExist:
-            raise InvalidObjectException(
-                'Project team member {} has no projectId key to find its '
-                'target - skipping.'.format(instance.id)
-            )
         except ObjectDoesNotExist as e:
             raise InvalidObjectException(
                 'Project team member {} has a projectId that does not exist.'
