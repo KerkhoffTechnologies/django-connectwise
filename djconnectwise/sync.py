@@ -583,7 +583,7 @@ class ServiceNoteSynchronizer(ChildFetchRecordsMixin, CallbackPartialSyncMixin,
         instance.id = json_data['id']
 
         text = json_data.get('text')
-        if text is not None:
+        if text:
             instance.text = normalize_newlines(text)
         instance.detail_description_flag = json_data.get(
             'detailDescriptionFlag')
@@ -1268,7 +1268,7 @@ class ActivitySynchronizer(Synchronizer):
         instance.id = json_data['id']
         instance.name = json_data['name']
         notes = json_data.get('notes')
-        if notes is not None:
+        if notes:
             instance.notes = normalize_newlines(notes)
 
         # handle dates.  Assume UTC timezone when not defined
@@ -1582,7 +1582,7 @@ class TimeEntrySynchronizer(BatchConditionMixin,
         instance.billable_option = json_data.get('billableOption')
 
         notes = json_data.get('notes')
-        if notes is not None:
+        if notes:
             instance.notes = normalize_newlines(notes)
         instance.internal_notes = json_data.get('internalNotes')
 
@@ -1906,8 +1906,7 @@ class ProjectSynchronizer(Synchronizer):
         instance.id = json_data['id']
         instance.name = json_data['name']
         description = json_data.get('description')
-        if description is not None:
-            # '' string can be saved w/ is not None
+        if description:
             instance.description = normalize_newlines(description)
         actual_hours = json_data.get('actualHours')
         budget_hours = json_data.get('budgetHours')
@@ -2614,7 +2613,7 @@ class OpportunitySynchronizer(Synchronizer):
         instance.id = json_data['id']
         instance.name = json_data['name']
         notes = json_data.get('notes')
-        if notes is not None:
+        if notes:
             instance.notes = normalize_newlines(notes)
         instance.source = json_data.get('source')
         instance.location_id = json_data.get('locationId')

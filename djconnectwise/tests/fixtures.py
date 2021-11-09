@@ -1449,7 +1449,7 @@ API_SALES_OPPORTUNITY = {
     'id': 2,
     'locationId': 2,
     'name': 'Develop Executive Reporting System',
-    'notes': '',
+    'notes': None,
     'pipelineChangeDate': '2005-12-23T19:16:21Z',
     'primarySalesRep': API_MEMBER,
     'priority': {'_info': None, 'id': 7, 'name': 'Clear Flag'},
