@@ -170,8 +170,17 @@ def init_companies():
 
 
 def init_company_types():
+    # models.CompanyType.objects.all().delete()
     mocks.company_api_get_company_types_call(fixtures.API_COMPANY_TYPES_LIST)
     synchronizer = sync.CompanyTypeSynchronizer()
+    return synchronizer.sync()
+
+
+def init_company_statuses():
+    # models.CompanyStatus.objects.all().delete()
+    mocks.company_api_get_company_statuses_call(
+        fixtures.API_COMPANY_STATUS_LIST)
+    synchronizer = sync.CompanyStatusSynchronizer()
     return synchronizer.sync()
 
 
@@ -301,6 +310,7 @@ def init_work_roles():
 
 
 def init_agreements():
+    # models.Agreement.objects.all().delete()
     mocks.finance_api_get_agreements_call(
         fixtures.API_AGREEMENT_LIST)
     synchronizer = sync.AgreementSynchronizer()

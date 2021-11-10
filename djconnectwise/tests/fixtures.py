@@ -424,11 +424,7 @@ API_MEMBER = {
     'vendorNumber': None,
     'warehouse': None,
     'warehouseBin': None,
-    'workRole': {
-        'id': 11,
-        'name': 'System Engineer',
-        '_info': None
-    },
+    'workRole': None,
     'workType': None,
     '_info': {
         'lastUpdated': '2015-08-24T19:50:10Z',
@@ -659,7 +655,7 @@ API_PROJECT_PHASE = {
     'projectId': API_PROJECT['id'],
     'description': 'Project Management',
     'board': {
-        'id': 3,
+        'id': 1,
         'name': 'Windows',
         '_info': {
             'board_href': 'https://connectwise.kerkhofftech.ca/v4_6_release/apis/3.0/service/boards/3'
@@ -948,7 +944,7 @@ API_ITEM_LIST = [API_ITEM]
 API_TYPE_SUBTYPE_ITEM_ASSOCIATION = {
     "id": 20045,
     "type": {
-        "id": 275,
+        "id": 8,
         "name": "Server",
         "_info": {
             "type_href":
@@ -956,7 +952,7 @@ API_TYPE_SUBTYPE_ITEM_ASSOCIATION = {
         }
     },
     "subType": {
-        "id": 1895,
+        "id": 1,
         "name": "Active Directory",
         "_info": {
             "subType_href":
@@ -964,7 +960,7 @@ API_TYPE_SUBTYPE_ITEM_ASSOCIATION = {
         }
     },
     "item": {
-        "id": 267,
+        "id": 2,
         "name": "Alert",
         "_info": {
             "inactiveFlag": "True",
@@ -973,7 +969,7 @@ API_TYPE_SUBTYPE_ITEM_ASSOCIATION = {
         }
     },
     "board": {
-        "id": 23,
+        "id": 1,
         "name": "Triage Board",
         "_info": {
             "board_href": "https://v4_6_release/apis/3.0/service/boards/23"

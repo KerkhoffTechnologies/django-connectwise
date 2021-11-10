@@ -294,6 +294,7 @@ class TestScheduleEntriesSynchronizer(TestCase, SynchronizerTestMixin):
         super().setUp()
         fixture_utils.init_boards()
         fixture_utils.init_territories()
+        # fixture_utils.init_company_statuses()
         # fixture_utils.init_company_types()
         # fixture_utils.init_companies()
         fixture_utils.init_contacts()
@@ -438,8 +439,10 @@ class TestProjectPhaseSynchronizer(TestCase, SynchronizerTestMixin):
 
     def setUp(self):
         super().setUp()
+        fixture_utils.init_project_statuses()
+        fixture_utils.init_project_types()
         fixture_utils.init_projects()
-        fixture_utils.init_project_phases()
+        fixture_utils.init_boards()
 
     def call_api(self, return_data):
         return mocks.projects_api_get_project_phases_call(return_data)
@@ -512,7 +515,8 @@ class TestProjectSynchronizer(TestCase, SynchronizerTestMixin):
     def setUp(self):
         super().setUp()
         fixture_utils.init_project_statuses()
-        fixture_utils.init_members()
+        fixture_utils.init_project_types()
+        fixture_utils.init_boards()
 
     def call_api(self, return_data):
         return mocks.project_api_get_projects_call(return_data)
@@ -1100,6 +1104,9 @@ class TestCalendarSynchronizer(TestCase, SynchronizerTestMixin):
     synchronizer_class = sync.CalendarSynchronizer
     model_class = models.CalendarTracker
     fixture = fixtures.API_SCHEDULE_CALENDAR_LIST
+
+    def setUp(self):
+        fixture_utils.init_holiday_lists()
 
     def call_api(self, return_data):
         return mocks.schedule_api_get_calendars_call(return_data)
@@ -1852,14 +1859,22 @@ class TestActivitySynchronizer(TestCase, SynchronizerTestMixin):
         mocks.system_api_get_member_image_by_photo_id_call(
             (mocks.CW_MEMBER_IMAGE_FILENAME, mocks.get_member_avatar()))
         fixture_utils.init_members()
+        fixture_utils.init_work_roles()
+        fixture_utils.init_work_types()
         fixture_utils.init_territories()
+        fixture_utils.init_company_statuses()
+        fixture_utils.init_company_types()
         fixture_utils.init_companies()
+        fixture_utils.init_contacts()
+        fixture_utils.init_agreements()
+        fixture_utils.init_sales_probabilities()
         fixture_utils.init_opportunity_types()
         fixture_utils.init_opportunity_stages()
+        fixture_utils.init_opportunity_statuses()
         fixture_utils.init_opportunities()
+        fixture_utils.init_agreements()
         fixture_utils.init_activity_statuses()
         fixture_utils.init_activity_types()
-        fixture_utils.init_agreements()
         fixture_utils.init_activities()
 
     def call_api(self, return_data):
@@ -2138,9 +2153,12 @@ class TestAgreementSynchronizer(TestCase, SynchronizerTestMixin):
 
     def setUp(self):
         super().setUp()
-        fixture_utils.init_agreements()
         fixture_utils.init_work_roles()
         fixture_utils.init_work_types()
+        fixture_utils.init_territories()
+        fixture_utils.init_company_statuses()
+        fixture_utils.init_company_types()
+        fixture_utils.init_companies()
 
     def call_api(self, return_data):
         return mocks.finance_api_get_agreements_call(return_data)
