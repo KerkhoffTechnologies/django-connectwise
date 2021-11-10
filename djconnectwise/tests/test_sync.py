@@ -221,12 +221,6 @@ class TestTimeEntrySynchronizer(TestCase, SynchronizerTestMixin):
     model_class = models.TimeEntryTracker
     fixture = fixtures.API_TIME_ENTRY_LIST
 
-    def setUp(self):
-        super().setUp()
-        fixture_utils.init_board_statuses()
-        fixture_utils.init_tickets()
-        fixture_utils.init_time_entries()
-
     def call_api(self, return_data):
         return mocks.time_api_get_time_entries_call(return_data)
 
@@ -300,20 +294,24 @@ class TestScheduleEntriesSynchronizer(TestCase, SynchronizerTestMixin):
         super().setUp()
         fixture_utils.init_boards()
         fixture_utils.init_territories()
-        fixture_utils.init_companies()
+        # fixture_utils.init_company_types()
+        # fixture_utils.init_companies()
+        fixture_utils.init_contacts()
         fixture_utils.init_project_statuses()
         fixture_utils.init_projects()
         fixture_utils.init_locations()
         fixture_utils.init_priorities()
         fixture_utils.init_members()
         fixture_utils.init_opportunity_stages()
-        fixture_utils.init_opportunity_statuses()
         fixture_utils.init_opportunity_types()
         fixture_utils.init_opportunities()
-        fixture_utils.init_teams()
         fixture_utils.init_board_statuses()
         fixture_utils.init_schedule_statuses()
         fixture_utils.init_schedule_types()
+        fixture_utils.init_teams()
+        fixture_utils.init_types()
+        fixture_utils.init_subtypes()
+        fixture_utils.init_items()
         fixture_utils.init_tickets()
         fixture_utils.init_activities()
 
@@ -676,11 +674,6 @@ class TestServiceNoteSynchronizer(TestCase, SynchronizerTestMixin):
         self.assertEqual(instance.created_by, json_data['createdBy'])
         self.assertEqual(instance.internal_flag, json_data['internalFlag'])
         self.assertEqual(instance.external_flag, json_data['externalFlag'])
-
-    def setUp(self):
-        super().setUp()
-        fixture_utils.init_service_notes()
-        fixture_utils.init_tickets()
 
     def call_api(self, return_data):
         return mocks.service_api_get_notes_call(return_data)
@@ -1353,20 +1346,11 @@ class TestTicketSynchronizerMixin(AssertSyncMixin):
     def _init_data(self):
         self._clean()
 
-        fixture_utils.init_boards()
         fixture_utils.init_board_statuses()
         fixture_utils.init_teams()
-        fixture_utils.init_members()
-        fixture_utils.init_companies()
-        fixture_utils.init_priorities()
-        fixture_utils.init_projects()
-        fixture_utils.init_locations()
-        fixture_utils.init_calendars()
-        fixture_utils.init_slas()
         fixture_utils.init_types()
         fixture_utils.init_subtypes()
         fixture_utils.init_items()
-        fixture_utils.init_agreements()
 
     def test_sync_ticket(self):
         """
@@ -1864,11 +1848,10 @@ class TestActivitySynchronizer(TestCase, SynchronizerTestMixin):
     fixture = fixtures.API_SALES_ACTIVITIES
 
     def setUp(self):
+        super().setUp()
         mocks.system_api_get_member_image_by_photo_id_call(
             (mocks.CW_MEMBER_IMAGE_FILENAME, mocks.get_member_avatar()))
-        fixture_utils.init_work_roles()
         fixture_utils.init_members()
-        fixture_utils.init_tickets()
         fixture_utils.init_territories()
         fixture_utils.init_companies()
         fixture_utils.init_opportunity_types()

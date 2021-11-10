@@ -22,7 +22,7 @@ def init_board_statuses():
 
 
 def init_teams():
-    models.Team.objects.all().delete()
+    # models.Team.objects.all().delete()
     mocks.service_api_get_teams_call(fixtures.API_SERVICE_TEAM_LIST)
     synchronizer = sync.TeamSynchronizer()
     return synchronizer.sync()
@@ -143,6 +143,7 @@ def init_territories():
 
 
 def init_contacts():
+    # models.Contact.objects.all().delete()
     mocks.company_api_get_contacts(fixtures.API_COMPANY_CONTACT_LIST)
     synchronizer = sync.ContactSynchronizer()
     return synchronizer.sync()

@@ -586,13 +586,7 @@ API_PROJECT = {
     'budgetHours': 91.5,
     'businessUnitId': 10,
     'company': API_COMPANY,
-    'contact': {
-        'id': 70,
-        'name': 'Gregg Kegle',
-        '_info': {
-            'contact_href': 'https://example.com/v4_6_release/apis/3.0/company/contacts/70'
-        }
-    },
+    'contact': None,
     'customerPO': '',
     'description': '\n',
     'currency': {
@@ -903,11 +897,11 @@ API_TYPE = {
         }
     },
     'department': {
-        'id': 13,
-        'identifier': 'Admin',
-        'name': 'Admin',
+        'id': 10,
+        'identifier': "Services",
+        'name': "Professional Services",
         '_info': {
-            'department_href': 'https://example.com/v4_6_release/apis/3.0/system/departments/13'
+            'department_href': "https://connectwise.kerkhofftech.ca/v4_6_release/apis/3.0/system/departments/10"
         }
     },
     '_info': {
@@ -1025,10 +1019,10 @@ API_SERVICE_TICKET = {
     'zip': '33880',
     'country': None,
     'contact': {
-        'id': 70,
-        'name': 'Gregg Kegle',
+        'id': 2,
+        'name': 'Arnie Bellini',
         '_info': {
-            'contact_href': 'https://example.com/v4_6_release/apis/3.0/company/contacts/70'
+            'contact_href': 'https://example.com/v4_6_release/apis/3.0/company/contacts/2'
         }
     },
     'contactName': 'Gregg Kegle',
@@ -1430,9 +1424,9 @@ API_SALES_OPPORTUNITY = {
     'closedBy': API_MEMBER,
     'closedDate': '2005-09-09T19:53:52Z',
     'company': API_COMPANY,
-    'contact': {'_info': {'contact_href': 'https://example.com/v4_6_release/apis/3.0/company/contacts/20'},
-                'id': 20,
-                'name': 'Flin Storts'},
+    'contact': {'_info': {'contact_href': 'https://example.com/v4_6_release/apis/3.0/company/contacts/2'},
+                'id': 2,
+                'name': 'Arnie Bellini'},
     "customFields": [
                 {
                     "id": 1,
@@ -1627,7 +1621,7 @@ API_SALES_ACTIVITY = {
     'type': API_SALES_ACTIVITY_TYPES[0],
     'company': API_COMPANY,
     'contact': {
-        'id': 20,
+        'id': 2,
         'name': 'Flin Storts',
         '_info': {
             'contact_href': 'https://example.com/v4_6_release/apis/3.0/company/contacts/20'

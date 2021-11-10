@@ -108,9 +108,12 @@ class TestSyncTerritoriesCommand(AbstractBaseSyncTest, TestCase):
 
 
 class TestSyncContactsCommand(AbstractBaseSyncTest, TestCase):
-    def setUp(self):
-        super().setUp()
-        fixture_utils.init_contacts()
+    # def setUp(self):
+    #     super().setUp()
+    #     fixture_utils.init_territories()
+    #     fixture_utils.init_locations()
+    #     fixture_utils.init_companies()
+    #     fixture_utils.init_contacts()
 
     args = (
         mocks.company_api_get_contacts,
@@ -603,12 +606,13 @@ class TestSyncAllCommand(TestCase):
         mocks.company_api_by_id_call(fixtures.API_COMPANY)
         mocks.service_api_tickets_call()
         sync_test_cases = [
-            TestSyncCompanyStatusesCommand,
+            TestSyncTimeEntriesCommand,
+            TestSyncContactCommunicationsCommand,
             TestSyncContactsCommand,
             TestSyncCommunicationTypesCommand,
-            TestSyncContactCommunicationsCommand,
             TestSyncCompaniesCommand,
             TestSyncCompanyTypesCommand,
+            TestSyncCompanyStatusesCommand,
             TestSyncLocationsCommand,
             TestSyncPrioritiesCommand,
             TestSyncProjectPhaseCommand,
@@ -630,7 +634,6 @@ class TestSyncAllCommand(TestCase):
             TestSyncScheduleTypesCommand,
             TestSyncScheduleStatusesCommand,
             TestSyncScheduleEntriesCommand,
-            TestSyncTimeEntriesCommand,
             TestSyncTerritoriesCommand,
             TestSyncSLAsCommand,
             TestSyncCalendarsCommand,
