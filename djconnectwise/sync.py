@@ -1272,7 +1272,9 @@ class ActivitySynchronizer(Synchronizer):
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data.get('id')
         instance.name = json_data.get('name')
-        instance.notes = json_data.get('notes')
+        notes = json_data.get('notes')
+        if notes:
+            instance.notes = normalize_newlines(notes)
 
         # handle dates.  Assume UTC timezone when not defined
         # (according to ConnectWise FAQ: "What DateTimes are supported?")
@@ -1903,7 +1905,10 @@ class ProjectSynchronizer(Synchronizer):
 
         instance.id = json_data.get('id')
         instance.name = json_data.get('name')
-        instance.description = json_data.get('description')
+        description = json_data.get('description')
+        if description:
+            instance.description = normalize_newlines(description)
+
         actual_hours = json_data.get('actualHours')
         budget_hours = json_data.get('budgetHours')
         scheduled_hours = json_data.get('scheduledHours')
@@ -2608,7 +2613,9 @@ class OpportunitySynchronizer(Synchronizer):
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data.get('id')
         instance.name = json_data.get('name')
-        instance.notes = json_data.get('notes')
+        notes = json_data.get('notes')
+        if notes:
+            instance.notes = normalize_newlines(notes)
         instance.source = json_data.get('source')
         instance.location_id = json_data.get('locationId')
         instance.business_unit_id = json_data.get('businessUnitId')
