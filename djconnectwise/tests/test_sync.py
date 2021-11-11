@@ -294,9 +294,6 @@ class TestScheduleEntriesSynchronizer(TestCase, SynchronizerTestMixin):
         super().setUp()
         fixture_utils.init_boards()
         fixture_utils.init_territories()
-        # fixture_utils.init_company_statuses()
-        # fixture_utils.init_company_types()
-        # fixture_utils.init_companies()
         fixture_utils.init_contacts()
         fixture_utils.init_project_statuses()
         fixture_utils.init_projects()
@@ -1353,6 +1350,9 @@ class TestTicketSynchronizerMixin(AssertSyncMixin):
     def _init_data(self):
         self._clean()
 
+        fixture_utils.init_holiday_lists()
+        fixture_utils.init_calendars()
+        fixture_utils.init_slas()
         fixture_utils.init_board_statuses()
         fixture_utils.init_teams()
         fixture_utils.init_types()
@@ -1726,6 +1726,7 @@ class TestProjectTicketSynchronizer(TestTicketSynchronizerMixin, TestCase):
         mocks.project_api_tickets_call()
 
         self._init_data()
+        fixture_utils.init_schedule_statuses()
         fixture_utils.init_project_tickets()
 
     def _assert_sync(self, instance, json_data):

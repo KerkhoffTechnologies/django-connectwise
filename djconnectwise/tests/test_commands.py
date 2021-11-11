@@ -100,13 +100,6 @@ class TestSyncTerritoriesCommand(AbstractBaseSyncTest, TestCase):
 
 
 class TestSyncContactsCommand(AbstractBaseSyncTest, TestCase):
-    # def setUp(self):
-    #     super().setUp()
-    #     fixture_utils.init_territories()
-    #     fixture_utils.init_locations()
-    #     fixture_utils.init_companies()
-    #     fixture_utils.init_contacts()
-
     args = (
         mocks.company_api_get_contacts,
         fixtures.API_COMPANY_CONTACT_LIST,
@@ -175,6 +168,8 @@ class TestSyncTeamsCommand(AbstractBaseSyncTest, TestCase):
 
     def setUp(self):
         super().setUp()
+        fixture_utils.init_work_roles()
+        fixture_utils.init_work_types()
         fixture_utils.init_boards()
 
 
@@ -251,8 +246,16 @@ class TestSyncProjectPhaseCommand(AbstractBaseSyncTest, TestCase):
 
     def setUp(self):
         super().setUp()
+        mocks.system_api_get_member_image_by_photo_id_call(
+            (mocks.CW_MEMBER_IMAGE_FILENAME, mocks.get_member_avatar()))
+        fixture_utils.init_members()
+        fixture_utils.init_territories()
+        fixture_utils.init_company_statuses()
+        fixture_utils.init_company_types()
+        fixture_utils.init_companies()
+        fixture_utils.init_project_types()
+        fixture_utils.init_project_statuses()
         fixture_utils.init_projects()
-        fixture_utils.init_project_phases()
 
 
 class TestSyncProjectTeamMemberCommand(AbstractBaseSyncTest, TestCase):
@@ -268,9 +271,15 @@ class TestSyncProjectTeamMemberCommand(AbstractBaseSyncTest, TestCase):
             (mocks.CW_MEMBER_IMAGE_FILENAME, mocks.get_member_avatar()))
         fixture_utils.init_members()
         fixture_utils.init_work_roles()
+        fixture_utils.init_work_types()
+        fixture_utils.init_territories()
+        fixture_utils.init_company_statuses()
+        fixture_utils.init_company_types()
+        fixture_utils.init_companies()
+        fixture_utils.init_project_types()
         fixture_utils.init_project_statuses()
         fixture_utils.init_projects()
-        fixture_utils.init_project_team_members()
+        fixture_utils.init_boards()
 
 
 class TestSyncBoardsStatusesCommand(AbstractBaseSyncTest, TestCase):
@@ -307,6 +316,7 @@ class TestSyncSLAPrioritiesCommand(AbstractBaseSyncTest, TestCase):
     )
 
     def setUp(self):
+        fixture_utils.init_holiday_lists()
         fixture_utils.init_calendars()
         fixture_utils.init_slas()
         fixture_utils.init_priorities()
@@ -321,14 +331,26 @@ class TestSyncServiceNotesCommand(AbstractBaseSyncTest, TestCase):
 
     def setUp(self):
         super().setUp()
-        fixture_utils.init_service_notes()
+        mocks.system_api_get_member_image_by_photo_id_call(
+            (mocks.CW_MEMBER_IMAGE_FILENAME, mocks.get_member_avatar()))
         fixture_utils.init_members()
+        fixture_utils.init_work_roles()
+        fixture_utils.init_work_types()
+        fixture_utils.init_holiday_lists()
+        fixture_utils.init_calendars()
+        fixture_utils.init_slas()
+        fixture_utils.init_locations()
         fixture_utils.init_territories()
         fixture_utils.init_company_statuses()
         fixture_utils.init_company_types()
         fixture_utils.init_companies()
-        fixture_utils.init_boards()
+        fixture_utils.init_contacts()
         fixture_utils.init_board_statuses()
+        fixture_utils.init_teams()
+        fixture_utils.init_types()
+        fixture_utils.init_subtypes()
+        fixture_utils.init_items()
+        fixture_utils.init_priorities()
         fixture_utils.init_tickets()
 
 
@@ -345,7 +367,12 @@ class TestSyncOpportunityNotesCommand(AbstractBaseSyncTest, TestCase):
         fixture_utils.init_opportunity_stages()
         fixture_utils.init_opportunity_types()
         fixture_utils.init_opportunities()
-        fixture_utils.init_opportunity_notes()
+        fixture_utils.init_sales_probabilities()
+        fixture_utils.init_territories()
+        fixture_utils.init_company_statuses()
+        fixture_utils.init_company_types()
+        fixture_utils.init_companies()
+        fixture_utils.init_contacts()
 
 
 class TestSyncOpportunityCommand(AbstractBaseSyncTest, TestCase):
@@ -408,14 +435,27 @@ class TestSyncTimeEntriesCommand(AbstractBaseSyncTest, TestCase):
 
     def setUp(self):
         super().setUp()
-        fixture_utils.init_boards()
-        fixture_utils.init_board_statuses()
-        fixture_utils.init_tickets()
+        mocks.system_api_get_member_image_by_photo_id_call(
+            (mocks.CW_MEMBER_IMAGE_FILENAME, mocks.get_member_avatar()))
+        fixture_utils.init_members()
+        fixture_utils.init_work_roles()
+        fixture_utils.init_work_types()
+        fixture_utils.init_holiday_lists()
+        fixture_utils.init_calendars()
+        fixture_utils.init_slas()
+        fixture_utils.init_locations()
         fixture_utils.init_territories()
         fixture_utils.init_company_statuses()
         fixture_utils.init_company_types()
         fixture_utils.init_companies()
-        fixture_utils.init_members()
+        fixture_utils.init_contacts()
+        fixture_utils.init_board_statuses()
+        fixture_utils.init_teams()
+        fixture_utils.init_types()
+        fixture_utils.init_subtypes()
+        fixture_utils.init_items()
+        fixture_utils.init_priorities()
+        fixture_utils.init_tickets()
 
 
 class TestSyncScheduleEntriesCommand(AbstractBaseSyncTest, TestCase):
@@ -427,20 +467,29 @@ class TestSyncScheduleEntriesCommand(AbstractBaseSyncTest, TestCase):
 
     def setUp(self):
         super().setUp()
-        fixture_utils.init_boards()
-        fixture_utils.init_board_statuses()
+        mocks.system_api_get_member_image_by_photo_id_call(
+            (mocks.CW_MEMBER_IMAGE_FILENAME, mocks.get_member_avatar()))
+        fixture_utils.init_members()
+        fixture_utils.init_work_roles()
+        fixture_utils.init_work_types()
+        fixture_utils.init_holiday_lists()
+        fixture_utils.init_calendars()
+        fixture_utils.init_slas()
+        fixture_utils.init_locations()
         fixture_utils.init_territories()
         fixture_utils.init_company_statuses()
         fixture_utils.init_company_types()
         fixture_utils.init_companies()
-        fixture_utils.init_locations()
+        fixture_utils.init_contacts()
+        fixture_utils.init_board_statuses()
         fixture_utils.init_teams()
-        fixture_utils.init_members()
+        fixture_utils.init_types()
+        fixture_utils.init_subtypes()
+        fixture_utils.init_items()
         fixture_utils.init_priorities()
-        fixture_utils.init_projects()
+        fixture_utils.init_tickets()
         fixture_utils.init_schedule_types()
         fixture_utils.init_schedule_statuses()
-        fixture_utils.init_tickets()
 
 
 class TestSyncScheduleTypesCommand(AbstractBaseSyncTest, TestCase):
@@ -509,7 +558,8 @@ class TestSyncTypeCommand(AbstractBaseSyncTest, TestCase):
 
     def setUp(self):
         super().setUp()
-        fixture_utils.init_types()
+        fixture_utils.init_work_roles()
+        fixture_utils.init_work_types()
         fixture_utils.init_boards()
 
     args = (
@@ -522,7 +572,8 @@ class TestSyncTypeCommand(AbstractBaseSyncTest, TestCase):
 class TestSyncSubTypeCommand(AbstractBaseSyncTest, TestCase):
     def setUp(self):
         super().setUp()
-        fixture_utils.init_types()
+        fixture_utils.init_work_roles()
+        fixture_utils.init_work_types()
         fixture_utils.init_boards()
 
     args = (
@@ -591,7 +642,12 @@ class TestSyncWorkRoleCommand(AbstractBaseSyncTest, TestCase):
 class TestSyncAgreementCommand(AbstractBaseSyncTest, TestCase):
     def setUp(self):
         super().setUp()
-        fixture_utils.init_agreements()
+        fixture_utils.init_work_roles()
+        fixture_utils.init_work_types()
+        fixture_utils.init_territories()
+        fixture_utils.init_company_statuses()
+        fixture_utils.init_company_types()
+        fixture_utils.init_companies()
 
     args = (
         mocks.finance_api_get_agreements_call,
@@ -606,8 +662,23 @@ class TestSyncProjectTicketCommand(AbstractBaseSyncTest, TestCase):
         mocks.system_api_get_member_image_by_photo_id_call(
             (mocks.CW_MEMBER_IMAGE_FILENAME, mocks.get_member_avatar()))
         fixture_utils.init_members()
+        fixture_utils.init_work_roles()
+        fixture_utils.init_work_types()
+        fixture_utils.init_locations()
+        fixture_utils.init_territories()
+        fixture_utils.init_company_statuses()
+        fixture_utils.init_company_types()
+        fixture_utils.init_companies()
+        fixture_utils.init_contacts()
         fixture_utils.init_board_statuses()
-        fixture_utils.init_project_tickets()
+        fixture_utils.init_teams()
+        fixture_utils.init_types()
+        fixture_utils.init_subtypes()
+        fixture_utils.init_items()
+        fixture_utils.init_priorities()
+        fixture_utils.init_project_types()
+        fixture_utils.init_project_statuses()
+        fixture_utils.init_projects()
 
     args = (
         mocks.project_api_tickets_test_command,

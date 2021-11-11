@@ -139,12 +139,12 @@ API_COMPANY_CONTACT_LIST = [
         "firstName": "Arnie",
         "lastName": "Bellini",
         "company": {
-            "id": 12,
+            "id": 21,
             "identifier": "YourCompany",
             "name": "TestCompany",
         },
         "site": {
-            "id": 224,
+            "id": 28,
             "name": "Main",
         },
         "inactiveFlag": False,
@@ -161,7 +161,7 @@ API_COMPANY_CONTACT_LIST = [
         "defaultBillingFlag": False,
         "defaultFlag": True,
         "companyLocation": {
-            "id": 2,
+            "id": 1,
             "name": "Tampa Office",
         },
         "communicationItems": API_CONTACT_COMMUNICATION_LIST,
@@ -576,7 +576,7 @@ API_PROJECT = {
     'billProjectAfterClosedFlag': False,
     'billTime': 'Billable',
     'billUnapprovedTimeAndExpense': False,
-    'board': API_BOARD,
+    'board': None,
     'budgetAnalysis': 'ActualHours',
     'budgetFlag': False,
     'budgetHours': 91.5,
@@ -654,13 +654,7 @@ API_PROJECT_PHASE = {
     'id': 1,
     'projectId': API_PROJECT['id'],
     'description': 'Project Management',
-    'board': {
-        'id': 1,
-        'name': 'Windows',
-        '_info': {
-            'board_href': 'https://connectwise.kerkhofftech.ca/v4_6_release/apis/3.0/service/boards/3'
-        }
-    },
+    'board': None,
     'status': {
         'id': 1,
         'name': 'Open',
@@ -1149,13 +1143,7 @@ API_PROJECT_TICKET = {
         }
     },
     'project': API_PROJECT,
-    'phase': {
-        'id': API_PROJECT_PHASE['id'],
-        'name': API_PROJECT_PHASE['description'],
-        '_info': {
-            'phase_href': "https://connectwise.kerkhofftech.ca/v4_6_release/apis/3.0/project/projects/4/phases/1"
-        }
-    },
+    'phase': None,
     'wbsCode': "1.1",
     'company': API_COMPANY,
     'site': {
@@ -1171,8 +1159,8 @@ API_PROJECT_TICKET = {
     'city': "Atlanta",
     'stateIdentifier': "GA",
     'contact': {
-        'id': 26,
-        'name': "Gus Johnson",
+        'id': 2,
+        'name': 'Arnie Bellini',
         '_info': {
             'mobileGuid': "c5221fb2-6d13-4a5b-80a1-c06d714fd93d",
             'contact_href': "https://connectwise.kerkhofftech.ca/v4_6_release/apis/3.0/company/contacts/26"
@@ -1618,9 +1606,9 @@ API_SALES_ACTIVITY = {
     'company': API_COMPANY,
     'contact': {
         'id': 2,
-        'name': 'Flin Storts',
+        'name': 'Arnie Bellini',
         '_info': {
-            'contact_href': 'https://example.com/v4_6_release/apis/3.0/company/contacts/20'
+            'contact_href': 'https://example.com/v4_6_release/apis/3.0/company/contacts/2'
         }
     },
     'phoneNumber': '8139888241',
