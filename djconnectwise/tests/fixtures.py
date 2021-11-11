@@ -106,7 +106,7 @@ API_BOARD_STATUS_LIST = [
 API_CONTACT_COMMUNICATION_LIST = [
     {
         "id": 2,
-        "contactId": 1,
+        "contactId": 21,
         "type": {
             "id": 2,
             "name": "Direct",
@@ -119,7 +119,7 @@ API_CONTACT_COMMUNICATION_LIST = [
     },
     {
         "id": 3,
-        "contactId": 1,
+        "contactId": 21,
         "type": {
             "id": 1,
             "name": "Email",
@@ -1962,7 +1962,21 @@ API_PROJECT_TEAM_MEMBER = {
 }
 API_PROJECT_TEAM_MEMBER_LIST = [API_PROJECT_TEAM_MEMBER]
 
-API_COMMUNICATION_TYPE = {
+API_COMMUNICATION_TYPE_LIST = [
+    {
+        "id": 1,
+        "description": "Email",
+        "phoneFlag": True,
+        "faxFlag": False,
+        "emailFlag": False,
+        "defaultFlag": True,
+        "exchangeXref": "Business",
+        "_info": {
+            "lastUpdated": "2003-06-16T19:03:39Z",
+            "dateEntered": "2003-06-16T23:03:39Z",
+        }
+    },
+    {
         "id": 2,
         "description": "Direct",
         "phoneFlag": True,
@@ -1975,5 +1989,4 @@ API_COMMUNICATION_TYPE = {
             "dateEntered": "2003-06-16T23:03:39Z",
         }
     }
-
-API_COMMUNICATION_TYPE_LIST = [API_COMMUNICATION_TYPE]
+]

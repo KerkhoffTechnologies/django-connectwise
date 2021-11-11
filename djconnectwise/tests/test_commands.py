@@ -122,6 +122,11 @@ class TestSyncCommunicationTypesCommand(AbstractBaseSyncTest, TestCase):
 class TestSyncContactCommunicationsCommand(AbstractBaseSyncTest, TestCase):
     def setUp(self):
         super().setUp()
+        fixture_utils.init_territories()
+        fixture_utils.init_company_statuses()
+        fixture_utils.init_company_types()
+        fixture_utils.init_companies()
+        fixture_utils.init_communication_types()
         fixture_utils.init_contacts()
 
     args = (
@@ -363,16 +368,14 @@ class TestSyncOpportunityNotesCommand(AbstractBaseSyncTest, TestCase):
 
     def setUp(self):
         super().setUp()
+        mocks.system_api_get_member_image_by_photo_id_call(
+            (mocks.CW_MEMBER_IMAGE_FILENAME, mocks.get_member_avatar()))
+        fixture_utils.init_members()
+        fixture_utils.init_sales_probabilities()
         fixture_utils.init_opportunity_statuses()
         fixture_utils.init_opportunity_stages()
         fixture_utils.init_opportunity_types()
         fixture_utils.init_opportunities()
-        fixture_utils.init_sales_probabilities()
-        fixture_utils.init_territories()
-        fixture_utils.init_company_statuses()
-        fixture_utils.init_company_types()
-        fixture_utils.init_companies()
-        fixture_utils.init_contacts()
 
 
 class TestSyncOpportunityCommand(AbstractBaseSyncTest, TestCase):

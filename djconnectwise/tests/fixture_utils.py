@@ -22,7 +22,6 @@ def init_board_statuses():
 
 
 def init_teams():
-    # models.Team.objects.all().delete()
     mocks.service_api_get_teams_call(fixtures.API_SERVICE_TEAM_LIST)
     synchronizer = sync.TeamSynchronizer()
     return synchronizer.sync()
