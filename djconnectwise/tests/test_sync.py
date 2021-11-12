@@ -1727,6 +1727,7 @@ class TestProjectTicketSynchronizer(TestTicketSynchronizerMixin, TestCase):
 
         self._init_data()
         fixture_utils.init_schedule_statuses()
+        fixture_utils.init_schedule_types()
         fixture_utils.init_project_tickets()
 
     def _assert_sync(self, instance, json_data):

@@ -146,6 +146,12 @@ class TestSyncCompaniesCommand(AbstractBaseSyncTest, TestCase):
         'company',
     )
 
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_territories()
+        fixture_utils.init_company_statuses()
+        fixture_utils.init_company_types()
+
 
 class TestSyncCompanyStatusesCommand(AbstractBaseSyncTest, TestCase):
     args = (
