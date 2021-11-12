@@ -8,7 +8,6 @@ from djconnectwise import models
 from . import mocks
 from . import fixtures
 from . import fixture_utils
-from .. import sync
 
 
 def sync_summary(class_name, created_count):
@@ -70,6 +69,10 @@ class TestSyncCalendarsCommand(AbstractBaseSyncTest, TestCase):
         fixtures.API_SCHEDULE_CALENDAR_LIST,
         'calendar'
     )
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_holiday_lists()
 
 
 class TestSyncHolidayCommand(AbstractBaseSyncTest, TestCase):
@@ -137,10 +140,6 @@ class TestSyncContactCommunicationsCommand(AbstractBaseSyncTest, TestCase):
 
 
 class TestSyncCompaniesCommand(AbstractBaseSyncTest, TestCase):
-    def setUp(self):
-        super().setUp()
-        fixture_utils.init_territories()
-
     args = (
         mocks.company_api_get_call,
         fixtures.API_COMPANY_LIST,
@@ -185,6 +184,11 @@ class TestSyncBoardsCommand(AbstractBaseSyncTest, TestCase):
         'board',
     )
 
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_work_types()
+        fixture_utils.init_work_roles()
+
 
 class TestSyncLocationsCommand(AbstractBaseSyncTest, TestCase):
     args = (
@@ -202,6 +206,7 @@ class TestSyncMyCompanyOtherCommand(AbstractBaseSyncTest, TestCase):
     )
 
     def setUp(self):
+        fixture_utils.init_holiday_lists()
         fixture_utils.init_calendars()
 
 
@@ -295,11 +300,10 @@ class TestSyncBoardsStatusesCommand(AbstractBaseSyncTest, TestCase):
     )
 
     def setUp(self):
-        board_synchronizer = sync.BoardSynchronizer()
-        models.ConnectWiseBoard.objects.all().delete()
-        _, _patch = mocks.service_api_get_boards_call(fixtures.API_BOARD_LIST)
-        board_synchronizer.sync()
-        _patch.stop()
+        super().setUp()
+        fixture_utils.init_work_roles()
+        fixture_utils.init_work_types()
+        fixture_utils.init_boards()
 
 
 class TestSyncSLAsCommand(AbstractBaseSyncTest, TestCase):
@@ -387,14 +391,18 @@ class TestSyncOpportunityCommand(AbstractBaseSyncTest, TestCase):
 
     def setUp(self):
         super().setUp()
+        mocks.system_api_get_member_image_by_photo_id_call(
+            (mocks.CW_MEMBER_IMAGE_FILENAME, mocks.get_member_avatar()))
+        fixture_utils.init_members()
         fixture_utils.init_territories()
         fixture_utils.init_company_statuses()
         fixture_utils.init_company_types()
         fixture_utils.init_companies()
-        fixture_utils.init_members()
+        fixture_utils.init_contacts()
         fixture_utils.init_opportunity_statuses()
         fixture_utils.init_opportunity_stages()
         fixture_utils.init_opportunity_types()
+        fixture_utils.init_sales_probabilities()
 
 
 class TestSyncOpportunityStagesCommand(AbstractBaseSyncTest, TestCase):
@@ -589,7 +597,8 @@ class TestSyncSubTypeCommand(AbstractBaseSyncTest, TestCase):
 class TestSyncItemCommand(AbstractBaseSyncTest, TestCase):
     def setUp(self):
         super().setUp()
-        fixture_utils.init_types()
+        fixture_utils.init_work_roles()
+        fixture_utils.init_work_types()
         fixture_utils.init_boards()
 
     args = (
