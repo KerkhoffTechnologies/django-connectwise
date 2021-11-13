@@ -109,6 +109,13 @@ class TestSyncContactsCommand(AbstractBaseSyncTest, TestCase):
         'contact',
     )
 
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_territories()
+        fixture_utils.init_company_statuses()
+        fixture_utils.init_company_types()
+        fixture_utils.init_companies()
+
 
 class TestSyncCommunicationTypesCommand(AbstractBaseSyncTest, TestCase):
     def setUp(self):
@@ -250,7 +257,15 @@ class TestSyncProjectsCommand(AbstractBaseSyncTest, TestCase):
 
     def setUp(self):
         super().setUp()
+        mocks.system_api_get_member_image_by_photo_id_call(
+            (mocks.CW_MEMBER_IMAGE_FILENAME, mocks.get_member_avatar()))
+        fixture_utils.init_members()
+        fixture_utils.init_territories()
+        fixture_utils.init_company_statuses()
+        fixture_utils.init_company_types()
+        fixture_utils.init_companies()
         fixture_utils.init_project_statuses()
+        fixture_utils.init_project_types()
 
 
 class TestSyncProjectPhaseCommand(AbstractBaseSyncTest, TestCase):
@@ -320,6 +335,7 @@ class TestSyncSLAsCommand(AbstractBaseSyncTest, TestCase):
     )
 
     def setUp(self):
+        fixture_utils.init_holiday_lists()
         fixture_utils.init_calendars()
 
 
@@ -381,6 +397,11 @@ class TestSyncOpportunityNotesCommand(AbstractBaseSyncTest, TestCase):
         mocks.system_api_get_member_image_by_photo_id_call(
             (mocks.CW_MEMBER_IMAGE_FILENAME, mocks.get_member_avatar()))
         fixture_utils.init_members()
+        fixture_utils.init_territories()
+        fixture_utils.init_company_statuses()
+        fixture_utils.init_company_types()
+        fixture_utils.init_companies()
+        fixture_utils.init_contacts()
         fixture_utils.init_sales_probabilities()
         fixture_utils.init_opportunity_statuses()
         fixture_utils.init_opportunity_stages()
@@ -890,6 +911,8 @@ class TestSyncAllCommand(TestCase):
                     'opportunity_note',
                     'sla_priority',
                     'holiday',
+                    'contact',
+                    'contact_communication',
             ):
                 # Assert that there were objects to get deleted, then change
                 # to zero to verify the output formats correctly.

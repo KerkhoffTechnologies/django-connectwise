@@ -106,7 +106,7 @@ API_BOARD_STATUS_LIST = [
 API_CONTACT_COMMUNICATION_LIST = [
     {
         "id": 2,
-        "contactId": 21,
+        "contactId": 2,
         "type": {
             "id": 2,
             "name": "Direct",
@@ -119,7 +119,7 @@ API_CONTACT_COMMUNICATION_LIST = [
     },
     {
         "id": 3,
-        "contactId": 21,
+        "contactId": 2,
         "type": {
             "id": 1,
             "name": "Email",
@@ -139,7 +139,7 @@ API_COMPANY_CONTACT_LIST = [
         "firstName": "Arnie",
         "lastName": "Bellini",
         "company": {
-            "id": 21,
+            "id": 2,
             "identifier": "YourCompany",
             "name": "TestCompany",
         },
