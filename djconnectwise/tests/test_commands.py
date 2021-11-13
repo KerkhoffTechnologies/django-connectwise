@@ -349,8 +349,8 @@ class TestSyncSLAPrioritiesCommand(AbstractBaseSyncTest, TestCase):
     def setUp(self):
         fixture_utils.init_holiday_lists()
         fixture_utils.init_calendars()
-        fixture_utils.init_slas()
         fixture_utils.init_priorities()
+        fixture_utils.init_slas()
 
 
 class TestSyncServiceNotesCommand(AbstractBaseSyncTest, TestCase):
@@ -765,9 +765,9 @@ class TestSyncAllCommand(TestCase):
             TestSyncScheduleStatusesCommand,
             TestSyncScheduleEntriesCommand,
             TestSyncTerritoriesCommand,
+            TestSyncSLAPrioritiesCommand,
             TestSyncSLAsCommand,
             TestSyncCalendarsCommand,
-            TestSyncSLAPrioritiesCommand,
             TestSyncMyCompanyOtherCommand,
             TestSyncHolidayCommand,
             TestSyncHolidayListCommand,
