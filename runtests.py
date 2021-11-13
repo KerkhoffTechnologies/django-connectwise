@@ -108,7 +108,7 @@ def suite():
 
 if __name__ == '__main__':
     _setup()
-    # call_command('test')
+    call_command('test')
     # To run specific tests, try something such as:
-    call_command('test', 'djconnectwise.tests.test_commands.TestSyncOpportunityNotesCommand')  # noqa: E501
+    # call_command('test', 'djconnectwise.tests.test_commands.TestSyncAllCommand')  # noqa: E501
     exit_on_failure(flake8_main())
