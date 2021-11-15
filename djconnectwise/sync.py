@@ -929,8 +929,6 @@ class TeamSynchronizer(BoardFilterMixin, BoardChildSynchronizer):
             members = list(models.Member.objects.filter(
                 id__in=json_data.get('members')))
 
-        instance.save()
-
         instance.members.clear()
         instance.members.add(*members)
         return instance
