@@ -287,6 +287,11 @@ class Synchronizer:
                 result = UPDATED
             else:
                 result = SKIPPED
+        except AttributeError as e:
+            msg = "AttributeError while attempting to sync object {}." \
+                  " Error: {}".format(self.model_class, e)
+            logger.error(msg)
+            raise InvalidObjectException(msg)
         except IntegrityError as e:
             # This can happen when multiple threads are creating the
             # same ticket at once. See issue description for #991
@@ -588,7 +593,7 @@ class ServiceNoteSynchronizer(ChildFetchRecordsMixin, CallbackSyncMixin,
     }
 
     def _assign_field_data(self, instance, json_data):
-        instance.id = json_data['id']
+        instance.id = json_data.get('id')
 
         text = json_data.get('text')
         if text:
@@ -610,10 +615,10 @@ class ServiceNoteSynchronizer(ChildFetchRecordsMixin, CallbackSyncMixin,
         ticket_class = models.Ticket
 
         try:
-            ticket_id = json_data['ticketId']
+            ticket_id = json_data.get('ticketId')
             related_ticket = ticket_class.objects.get(pk=ticket_id)
             setattr(instance, 'ticket', related_ticket)
-        except KeyError:
+        except AttributeError:
             raise InvalidObjectException(
                 'Service note {} has no ticketId key to find its target'
                 '- skipping.'.format(instance.id)
@@ -797,7 +802,7 @@ class OpportunityNoteSynchronizer(ChildFetchRecordsMixin, Synchronizer):
     parent_model_class = models.Opportunity
 
     def _assign_field_data(self, instance, json_data):
-        instance.id = json_data['id']
+        instance.id = json_data.get('id')
         instance.text = json_data.get('text')
 
         opp_class = models.Opportunity
@@ -831,12 +836,12 @@ class BoardSynchronizer(Synchronizer):
     }
 
     def _assign_field_data(self, instance, json_data):
-        instance.id = json_data['id']
-        instance.name = json_data['name']
-        if json_data['billTime'] == 'NoDefault':
+        instance.id = json_data.get('id')
+        instance.name = json_data.get('name')
+        if json_data.get('billTime') == 'NoDefault':
             instance.bill_time = None
         else:
-            instance.bill_time = json_data['billTime']
+            instance.bill_time = json_data.get('billTime')
 
         if 'inactiveFlag' in json_data:
             # This is the new CW way
@@ -857,13 +862,13 @@ class BoardSynchronizer(Synchronizer):
 class BoardChildSynchronizer(Synchronizer):
 
     def _assign_field_data(self, instance, json_data):
-        instance.id = json_data['id']
-        instance.name = json_data['name']
+        instance.id = json_data.get('id')
+        instance.name = json_data.get('name')
         try:
             board_id = json_data['board']['id']
         except KeyError:
             # Must be 2017.5 or earlier
-            board_id = json_data['boardId']
+            board_id = json_data.get('boardId')
         instance.board = models.ConnectWiseBoard.objects.get(id=board_id)
         return instance
 
@@ -930,7 +935,7 @@ class TeamSynchronizer(BoardFilterMixin, BoardChildSynchronizer):
         members = []
         if json_data.get('members'):
             members = list(models.Member.objects.filter(
-                id__in=json_data['members']))
+                id__in=json_data.get('members')))
 
         instance.save()
 
@@ -955,9 +960,9 @@ class CompanySynchronizer(Synchronizer):
         Assigns field data from an company_json instance
         to a local Company model instance
         """
-        company.id = company_json['id']
-        company.name = company_json['name']
-        company.identifier = company_json['identifier']
+        company.id = company_json.get('id')
+        company.name = company_json.get('name')
+        company.identifier = company_json.get('identifier')
 
         # Fields below aren't included when the company is created as a
         # side-effect of creating/updating a ticket or other type of object,
@@ -1053,8 +1058,8 @@ class CompanyStatusSynchronizer(Synchronizer):
     model_class = models.CompanyStatusTracker
 
     def _assign_field_data(self, instance, json_data):
-        instance.id = json_data['id']
-        instance.name = json_data['name']
+        instance.id = json_data.get('id')
+        instance.name = json_data.get('name')
         instance.default_flag = json_data.get('defaultFlag')
         instance.inactive_flag = json_data.get('inactiveFlag')
         instance.notify_flag = json_data.get('notifyFlag')
@@ -1066,7 +1071,7 @@ class CompanyStatusSynchronizer(Synchronizer):
         )
 
         if json_data.get('track'):
-            instance.track_id = json_data['track']['id']
+            instance.track_id = json_data.get('track').get('id')
 
         return instance
 
@@ -1079,9 +1084,9 @@ class CompanyTypeSynchronizer(Synchronizer):
     model_class = models.CompanyTypeTracker
 
     def _assign_field_data(self, instance, json_data):
-        instance.id = json_data['id']
+        instance.id = json_data.get('id')
         instance.name = json_data.get('name')
-        instance.vendor_flag = json_data['vendorFlag']
+        instance.vendor_flag = json_data.get('vendorFlag')
 
     def get_page(self, *args, **kwargs):
         return self.client.get_company_types(*args, **kwargs)
@@ -1100,7 +1105,7 @@ class ContactSynchronizer(Synchronizer):
         self.api_conditions = ['inactiveFlag=False']
 
     def _assign_field_data(self, instance, json_data):
-        instance.id = json_data['id']
+        instance.id = json_data.get('id')
         instance.first_name = json_data.get('firstName')
         instance.last_name = json_data.get('lastName')
         instance.title = json_data.get('title')
@@ -1142,7 +1147,7 @@ class ContactCommunicationSynchronizer(ChildFetchRecordsMixin, Synchronizer):
     }
 
     def _assign_field_data(self, instance, json_data):
-        instance.id = json_data['id']
+        instance.id = json_data.get('id')
         instance.value = json_data.get('value')
         instance.extension = json_data.get('extension')
         instance.default_flag = json_data.get('defaultFlag')
@@ -1174,7 +1179,7 @@ class CommunicationTypeSynchronizer(Synchronizer):
     model_class = models.CommunicationTypeTracker
 
     def _assign_field_data(self, instance, json_data):
-        instance.id = json_data['id']
+        instance.id = json_data.get('id')
         instance.description = json_data.get('description')
         instance.phone_flag = json_data.get('phoneFlag')
         instance.fax_flag = json_data.get('faxFlag')
@@ -1195,7 +1200,7 @@ class MyCompanyOtherSynchronizer(Synchronizer):
     }
 
     def _assign_field_data(self, instance, json_data):
-        instance.id = json_data['id']
+        instance.id = json_data.get('id')
         self.set_relations(instance, json_data)
         return instance
 
@@ -1208,8 +1213,8 @@ class ActivityStatusSynchronizer(Synchronizer):
     model_class = models.ActivityStatusTracker
 
     def _assign_field_data(self, instance, json_data):
-        instance.id = json_data['id']
-        instance.name = json_data['name']
+        instance.id = json_data.get('id')
+        instance.name = json_data.get('name')
         instance.default_flag = json_data.get('defaultFlag', False)
         instance.inactive_flag = json_data.get('inactiveFlag', False)
         instance.spawn_followup_flag = \
@@ -1226,9 +1231,9 @@ class ActivityTypeSynchronizer(Synchronizer):
     model_class = models.ActivityTypeTracker
 
     def _assign_field_data(self, instance, json_data):
-        instance.id = json_data['id']
-        instance.name = json_data['name']
-        instance.points = json_data['points']
+        instance.id = json_data.get('id')
+        instance.name = json_data.get('name')
+        instance.points = json_data.get('points')
         instance.default_flag = json_data.get('defaultFlag', False)
         instance.inactive_flag = json_data.get('inactiveFlag', False)
         instance.email_flag = json_data.get('emailFlag', False)
@@ -1273,8 +1278,8 @@ class ActivitySynchronizer(Synchronizer):
         )]
 
     def _assign_field_data(self, instance, json_data):
-        instance.id = json_data['id']
-        instance.name = json_data['name']
+        instance.id = json_data.get('id')
+        instance.name = json_data.get('name')
         notes = json_data.get('notes')
         if notes:
             instance.notes = normalize_newlines(notes)
@@ -1317,8 +1322,8 @@ class SalesProbabilitySynchronizer(Synchronizer):
     model_class = models.SalesProbabilityTracker
 
     def _assign_field_data(self, instance, json_data):
-        instance.id = json_data['id']
-        instance.probability = json_data['probability']
+        instance.id = json_data.get('id')
+        instance.probability = json_data.get('probability')
 
     def get_page(self, *args, **kwargs):
         return self.client.get_probabilities(*args, **kwargs)
@@ -1381,7 +1386,7 @@ class ScheduleEntriesSynchronizer(BatchConditionMixin, Synchronizer):
         )
 
     def _assign_field_data(self, instance, json_data):
-        instance.id = json_data['id']
+        instance.id = json_data.get('id')
         instance.name = json_data.get('name')
         instance.done_flag = json_data['doneFlag']
 
@@ -1394,7 +1399,7 @@ class ScheduleEntriesSynchronizer(BatchConditionMixin, Synchronizer):
             )
 
         try:
-            member_id = json_data['member']['id']
+            member_id = json_data['member'].get('id')
             models.Member.objects.get(pk=member_id)
         except ObjectDoesNotExist:
             raise InvalidObjectException(
@@ -1429,17 +1434,17 @@ class ScheduleEntriesSynchronizer(BatchConditionMixin, Synchronizer):
         ticket_class = models.Ticket
         activity_class = models.Activity
         try:
-            uid = json_data['objectId']
-        except KeyError:
+            uid = json_data.get('objectId')
+        except AttributeError:
             raise InvalidObjectException(
                 'Schedule entry {} has no objectId key to find its target'
                 '- skipping.'.format(instance.id)
             )
 
-        if json_data['type']['identifier'] == "S":
+        if json_data['type'].get('identifier') == "S":
             try:
                 related_ticket = ticket_class.objects.get(pk=uid)
-                if json_data['doneFlag']:
+                if json_data.get('doneFlag'):
                     setattr(instance, 'ticket_object', None)
                 else:
                     setattr(instance, 'ticket_object', related_ticket)
@@ -1448,7 +1453,7 @@ class ScheduleEntriesSynchronizer(BatchConditionMixin, Synchronizer):
                     'Ticket not found for {}.'.format(instance.id) +
                     ' ObjectDoesNotExist Exception: {}.'.format(e)
                 )
-        elif json_data['type']['identifier'] == "C":
+        elif json_data['type'].get('identifier') == "C":
             try:
                 related_activity = activity_class.objects.get(pk=uid)
                 setattr(instance, 'activity_object', related_activity)
@@ -1517,8 +1522,8 @@ class ScheduleStatusSynchronizer(Synchronizer):
     model_class = models.ScheduleStatusTracker
 
     def _assign_field_data(self, instance, json_data):
-        instance.id = json_data['id']
-        instance.name = json_data['name']
+        instance.id = json_data.get('id')
+        instance.name = json_data.get('name')
 
         return instance
 
@@ -1531,9 +1536,9 @@ class ScheduleTypeSynchronizer(Synchronizer):
     model_class = models.ScheduleTypeTracker
 
     def _assign_field_data(self, instance, json_data):
-        instance.id = json_data['id']
-        instance.name = json_data['name']
-        instance.identifier = json_data['identifier']
+        instance.id = json_data.get('id')
+        instance.name = json_data.get('name')
+        instance.identifier = json_data.get('identifier')
 
         return instance
 
@@ -1546,8 +1551,8 @@ class TerritorySynchronizer(Synchronizer):
     model_class = models.TerritoryTracker
 
     def _assign_field_data(self, instance, json_data):
-        instance.id = json_data['id']
-        instance.name = json_data['name']
+        instance.id = json_data.get('id')
+        instance.name = json_data.get('name')
 
         return instance
 
@@ -1585,8 +1590,8 @@ class TimeEntrySynchronizer(BatchConditionMixin,
         )
 
     def _assign_field_data(self, instance, json_data):
-        instance.id = json_data['id']
-        instance.charge_to_type = json_data['chargeToType']
+        instance.id = json_data.get('id')
+        instance.charge_to_type = json_data.get('chargeToType')
         instance.billable_option = json_data.get('billableOption')
 
         notes = json_data.get('notes')
@@ -1699,8 +1704,8 @@ class LocationSynchronizer(Synchronizer):
         Assigns field data from an company_json instance
         to a local Company model instance
         """
-        location.id = location_json['id']
-        location.name = location_json['name']
+        location.id = location_json.get('id')
+        location.name = location_json.get('name')
         location.where = location_json.get('where')
         return location
 
@@ -1713,8 +1718,8 @@ class PrioritySynchronizer(Synchronizer):
     model_class = models.TicketPriorityTracker
 
     def _assign_field_data(self, ticket_priority, api_priority):
-        ticket_priority.id = api_priority['id']
-        ticket_priority.name = api_priority['name']
+        ticket_priority.id = api_priority.get('id')
+        ticket_priority.name = api_priority.get('name')
         ticket_priority.color = api_priority.get('color')
 
         # work around due to api data inconsistencies
@@ -1734,8 +1739,8 @@ class ProjectStatusSynchronizer(Synchronizer):
     model_class = models.ProjectStatusTracker
 
     def _assign_field_data(self, instance, json_data):
-        instance.id = json_data['id']
-        instance.name = json_data['name']
+        instance.id = json_data.get('id')
+        instance.name = json_data.get('name')
         instance.default_flag = json_data.get('defaultFlag')
         instance.inactive_flag = json_data.get('inactiveFlag')
         instance.closed_flag = json_data.get('closedFlag')
@@ -1755,8 +1760,8 @@ class ProjectPhaseSynchronizer(ChildFetchRecordsMixin, Synchronizer):
     }
 
     def _assign_field_data(self, instance, json_data):
-        instance.id = json_data['id']
-        instance.description = json_data['description']
+        instance.id = json_data.get('id')
+        instance.description = json_data.get('description')
         instance.notes = json_data.get('notes')
         instance.wbs_code = json_data.get('wbsCode')
         scheduled_hours = json_data.get('scheduledHours')
@@ -1769,10 +1774,10 @@ class ProjectPhaseSynchronizer(ChildFetchRecordsMixin, Synchronizer):
         instance.scheduled_hours = Decimal(str(scheduled_hours)) \
             if scheduled_hours is not None else None
 
-        if json_data['billTime'] == 'NoDefault':
+        if json_data.get('billTime') == 'NoDefault':
             instance.bill_time = None
         else:
-            instance.bill_time = json_data['billTime']
+            instance.bill_time = json_data.get('billTime')
 
         scheduled_start = json_data.get('scheduledStart')
         scheduled_end = json_data.get('scheduledEnd')
@@ -1792,10 +1797,10 @@ class ProjectPhaseSynchronizer(ChildFetchRecordsMixin, Synchronizer):
             instance.actual_end = parse(actual_end).date()
 
         try:
-            project_id = json_data['projectId']
+            project_id = json_data.get('projectId')
             related_project = models.Project.objects.get(pk=project_id)
             setattr(instance, 'project', related_project)
-        except KeyError:
+        except models.Project.DoesNotExist:
             raise InvalidObjectException(
                 'Project phase {} has no projectId key to find its target'
                 '- skipping.'.format(instance.id)
@@ -1818,8 +1823,8 @@ class ProjectTypeSynchronizer(Synchronizer):
     model_class = models.ProjectTypeTracker
 
     def _assign_field_data(self, instance, json_data):
-        instance.id = json_data['id']
-        instance.name = json_data['name']
+        instance.id = json_data.get('id')
+        instance.name = json_data.get('name')
         instance.default_flag = json_data.get('defaultFlag')
         instance.inactive_flag = json_data.get('inactiveFlag')
         return instance
@@ -1839,7 +1844,7 @@ class ProjectTeamMemberSynchronizer(ChildFetchRecordsMixin, Synchronizer):
     }
 
     def _assign_field_data(self, instance, json_data):
-        instance.id = json_data['id']
+        instance.id = json_data.get('id')
         start_date = json_data.get('startDate')
         end_date = json_data.get('endDate')
 
@@ -1849,14 +1854,9 @@ class ProjectTeamMemberSynchronizer(ChildFetchRecordsMixin, Synchronizer):
             instance.end_date = parse(end_date)
 
         try:
-            project_id = json_data['projectId']
+            project_id = json_data.get('projectId')
             related_project = models.Project.objects.get(pk=project_id)
             setattr(instance, 'project', related_project)
-        except KeyError:
-            raise InvalidObjectException(
-                'Project team member {} has no projectId key to find its '
-                'target - skipping.'.format(instance.id)
-            )
         except ObjectDoesNotExist as e:
             raise InvalidObjectException(
                 'Project team member {} has a projectId that does not exist.'
@@ -1911,11 +1911,12 @@ class ProjectSynchronizer(Synchronizer):
         scheduled_start = json_data.get('scheduledStart')
         scheduled_end = json_data.get('scheduledEnd')
 
-        instance.id = json_data['id']
-        instance.name = json_data['name']
+        instance.id = json_data.get('id')
+        instance.name = json_data.get('name')
         description = json_data.get('description')
         if description:
             instance.description = normalize_newlines(description)
+
         actual_hours = json_data.get('actualHours')
         budget_hours = json_data.get('budgetHours')
         scheduled_hours = json_data.get('scheduledHours')
@@ -1974,7 +1975,7 @@ class MemberSynchronizer(Synchronizer):
         self.last_sync_job_time = None
 
     def _assign_field_data(self, instance, json_data):
-        instance.id = json_data['id']
+        instance.id = json_data.get('id')
         instance.first_name = json_data.get('firstName')
         instance.last_name = json_data.get('lastName')
         instance.identifier = json_data.get('identifier')
@@ -2259,8 +2260,8 @@ class TicketSynchronizerMixin:
 
     def _assign_field_data(self, instance, json_data):
 
-        instance.id = json_data['id']
-        instance.summary = json_data['summary']
+        instance.id = json_data.get('id')
+        instance.summary = json_data.get('summary')
         instance.closed_flag = json_data.get('closedFlag')
         instance.entered_date_utc = json_data.get('_info').get('dateEntered')
         instance.last_updated_utc = json_data.get('_info').get('lastUpdated')
@@ -2420,8 +2421,8 @@ class CalendarSynchronizer(Synchronizer):
     model_class = models.CalendarTracker
 
     def _assign_field_data(self, instance, json_data):
-        instance.id = json_data['id']
-        instance.name = json_data['name']
+        instance.id = json_data.get('id')
+        instance.name = json_data.get('name')
         instance.monday_start_time = \
             parse(json_data.get('mondayStartTime')).time() \
             if json_data.get('mondayStartTime') else None
@@ -2486,8 +2487,8 @@ class HolidaySynchronizer(ChildFetchRecordsMixin, Synchronizer):
 
     def _assign_field_data(self, instance, json_data):
 
-        instance.id = json_data['id']
-        instance.name = json_data['name']
+        instance.id = json_data.get('id')
+        instance.name = json_data.get('name')
         instance.all_day_flag = json_data.get('allDayFlag')
         instance.date = parse(json_data.get('date')).date()
         instance.start_time = \
@@ -2516,8 +2517,8 @@ class HolidayListSynchronizer(Synchronizer):
     model_class = models.HolidayListTracker
 
     def _assign_field_data(self, instance, json_data):
-        instance.id = json_data['id']
-        instance.name = json_data['name']
+        instance.id = json_data.get('id')
+        instance.name = json_data.get('name')
 
         return instance
 
@@ -2536,10 +2537,10 @@ class SLAPrioritySynchronizer(ChildFetchRecordsMixin, Synchronizer):
     }
 
     def _assign_field_data(self, instance, json_data):
-        instance.id = json_data['id']
-        instance.respond_hours = json_data['respondHours']
-        instance.plan_within = json_data['planWithin']
-        instance.resolution_hours = json_data['resolutionHours']
+        instance.id = json_data.get('id')
+        instance.respond_hours = json_data.get('respondHours')
+        instance.plan_within = json_data.get('planWithin')
+        instance.resolution_hours = json_data.get('resolutionHours')
 
         self.set_relations(instance, json_data)
         return instance
@@ -2557,7 +2558,7 @@ class SLASynchronizer(Synchronizer):
     }
 
     def _assign_field_data(self, instance, json_data):
-        instance.id = json_data['id']
+        instance.id = json_data.get('id')
         instance.name = json_data.get('name')
         instance.default_flag = json_data.get('defaultFlag')
         instance.respond_hours = json_data.get('respondHours')
@@ -2626,8 +2627,8 @@ class OpportunitySynchronizer(Synchronizer):
         return child
 
     def _assign_field_data(self, instance, json_data):
-        instance.id = json_data['id']
-        instance.name = json_data['name']
+        instance.id = json_data.get('id')
+        instance.name = json_data.get('name')
         notes = json_data.get('notes')
         if notes:
             instance.notes = normalize_newlines(notes)
@@ -2676,8 +2677,8 @@ class OpportunityStageSynchronizer(Synchronizer):
     model_class = models.OpportunityStageTracker
 
     def _assign_field_data(self, instance, json_data):
-        instance.id = json_data['id']
-        instance.name = json_data['name']
+        instance.id = json_data.get('id')
+        instance.name = json_data.get('name')
 
         return instance
 
@@ -2690,8 +2691,8 @@ class OpportunityStatusSynchronizer(Synchronizer):
     model_class = models.OpportunityStatusTracker
 
     def _assign_field_data(self, instance, json_data):
-        instance.id = json_data['id']
-        instance.name = json_data['name']
+        instance.id = json_data.get('id')
+        instance.name = json_data.get('name')
         instance.won_flag = json_data['wonFlag']
         instance.lost_flag = json_data['lostFlag']
         instance.closed_flag = json_data['closedFlag']
@@ -2707,9 +2708,9 @@ class OpportunityTypeSynchronizer(Synchronizer):
     model_class = models.OpportunityTypeTracker
 
     def _assign_field_data(self, instance, json_data):
-        instance.id = json_data['id']
-        instance.description = json_data['description']
-        instance.inactive_flag = json_data['inactiveFlag']
+        instance.id = json_data.get('id')
+        instance.description = json_data.get('description')
+        instance.inactive_flag = json_data.get('inactiveFlag')
         return instance
 
     def get_page(self, *args, **kwargs):
@@ -2725,8 +2726,8 @@ class TypeSynchronizer(BoardFilterMixin, Synchronizer):
     }
 
     def _assign_field_data(self, instance, json_data):
-        instance.id = json_data['id']
-        instance.name = json_data['name']
+        instance.id = json_data.get('id')
+        instance.name = json_data.get('name')
         instance.inactive_flag = json_data.get('inactiveFlag')
 
         self.set_relations(instance, json_data)
@@ -2745,8 +2746,8 @@ class SubTypeSynchronizer(BoardFilterMixin, Synchronizer):
     }
 
     def _assign_field_data(self, instance, json_data):
-        instance.id = json_data['id']
-        instance.name = json_data['name']
+        instance.id = json_data.get('id')
+        instance.name = json_data.get('name')
         instance.inactive_flag = json_data.get('inactiveFlag')
 
         self.set_relations(instance, json_data)
@@ -2765,8 +2766,8 @@ class ItemSynchronizer(BoardFilterMixin, Synchronizer):
     }
 
     def _assign_field_data(self, instance, json_data):
-        instance.id = json_data['id']
-        instance.name = json_data['name']
+        instance.id = json_data.get('id')
+        instance.name = json_data.get('name')
         instance.inactive_flag = json_data.get('inactiveFlag')
 
         self.set_relations(instance, json_data)
@@ -2808,14 +2809,14 @@ class WorkTypeSynchronizer(Synchronizer):
     model_class = models.WorkTypeTracker
 
     def _assign_field_data(self, instance, json_data):
-        instance.id = json_data['id']
-        instance.name = json_data['name']
-        instance.inactive_flag = json_data['inactiveFlag']
-        instance.overall_default_flag = json_data['overallDefaultFlag']
-        if json_data['billTime'] == 'NoDefault':
+        instance.id = json_data.get('id')
+        instance.name = json_data.get('name')
+        instance.inactive_flag = json_data.get('inactiveFlag')
+        instance.overall_default_flag = json_data.get('overallDefaultFlag')
+        if json_data.get('billTime') == 'NoDefault':
             instance.bill_time = None
         else:
-            instance.bill_time = json_data['billTime']
+            instance.bill_time = json_data.get('billTime')
 
         return instance
 
@@ -2828,9 +2829,9 @@ class WorkRoleSynchronizer(Synchronizer):
     model_class = models.WorkRoleTracker
 
     def _assign_field_data(self, instance, json_data):
-        instance.id = json_data['id']
-        instance.name = json_data['name']
-        instance.inactive_flag = json_data['inactiveFlag']
+        instance.id = json_data.get('id')
+        instance.name = json_data.get('name')
+        instance.inactive_flag = json_data.get('inactiveFlag')
 
         return instance
 
@@ -2849,15 +2850,18 @@ class AgreementSynchronizer(Synchronizer):
     }
 
     def _assign_field_data(self, instance, json_data):
-        instance.id = json_data['id']
-        instance.name = json_data['name']
-        instance.agreement_type = json_data['type']['name']
+        instance.id = json_data.get('id')
+        instance.name = json_data.get('name')
         instance.agreement_status = json_data.get('agreementStatus')
-        instance.cancelled_flag = json_data['cancelledFlag']
-        if json_data['billTime'] == 'NoDefault':
+        instance.cancelled_flag = json_data.get('cancelledFlag')
+
+        if json_data.get('type'):
+            instance.agreement_type = json_data['type'].get('name')
+
+        if json_data.get('billTime') == 'NoDefault':
             instance.bill_time = None
         else:
-            instance.bill_time = json_data['billTime']
+            instance.bill_time = json_data.get('billTime')
 
         self.set_relations(instance, json_data)
         return instance
@@ -2888,7 +2892,7 @@ class UDFSynchronizer(Synchronizer):
         return results
 
     def _assign_field_data(self, instance, json_data):
-        instance.id = json_data['id']
+        instance.id = json_data.get('id')
         instance.caption = json_data.get('caption')
         instance.type = json_data.get('type')
         instance.entry_method = json_data.get('entryMethod')
