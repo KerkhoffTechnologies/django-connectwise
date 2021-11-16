@@ -489,18 +489,19 @@ class CallbackSyncMixin:
     when a callback runs. This could mean a lot of time and resources spent
     syncing old notes or time entries.
     The exception to this rule is if a ticket is created by a callback. In this
-    case, the related note sync will be full not partial. This is because
-    in most cases, a partial note sync that runs when a ticket is created
-    will miss most or all notes for a ticket.
+    case, the related note and time entry sync will be full not partial.
+    This is because in most cases, a partial note sync that runs when a
+    ticket is created will miss most or all notes and time entries for
+    a ticket.
     We will continue to return deleted_count even though it will always
     be zero in this case.
     """
-    sync_all_notes = False
+    sync_all = False
 
     def callback_sync(self, filter_params):
         sync_job_qset = self.get_sync_job_qset()
 
-        if sync_job_qset.exists() and not self.sync_all_notes:
+        if sync_job_qset.exists() and not self.sync_all:
             last_sync_job_time = sync_job_qset.last().start_time.isoformat()
             self.api_conditions.append(
                 "lastUpdated>[{0}]".format(last_sync_job_time)
@@ -2206,12 +2207,15 @@ class TicketSynchronizerMixin:
             note_sync = ServiceNoteSynchronizer()
             note_sync.sync_single_id = instance_id
             if result == CREATED:
-                note_sync.sync_all_notes = True
+                note_sync.sync_all = True
 
             sync_classes.append((note_sync, Q(ticket=instance)))
 
         if sync_config.get('sync_time_entry', True):
             time_sync = TimeEntrySynchronizer()
+            if result == CREATED:
+                time_sync.sync_all = True
+
             time_sync.batch_condition_list = [instance_id]
             sync_classes.append((time_sync, Q(charge_to_id=instance)))
 
