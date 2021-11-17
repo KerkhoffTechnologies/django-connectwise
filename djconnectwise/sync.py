@@ -259,6 +259,11 @@ class Synchronizer:
                 )
             )
 
+    def _is_instance_changed(self, instance):
+        m2m_changed = self.m2m_changed \
+            if hasattr(self, 'm2m_changed') else False
+        return instance.tracker.changed() or m2m_changed
+
     def update_or_create_instance(self, api_instance):
         """
         Creates and returns an instance if it does not already exist.
@@ -282,7 +287,7 @@ class Synchronizer:
                     instance.save(force_insert=True)
                 else:
                     instance.save()
-            elif instance.tracker.changed():
+            elif self._is_instance_changed(instance):
                 instance.save()
                 result = UPDATED
             else:
@@ -919,6 +924,7 @@ class BoardFilterMixin(ChildFetchRecordsMixin):
 class TeamSynchronizer(BoardFilterMixin, BoardChildSynchronizer):
     client_class = api.ServiceAPIClient
     model_class = models.TeamTracker
+    m2m_changed = False
 
     def _assign_field_data(self, instance, json_data):
         instance = super(TeamSynchronizer, self)._assign_field_data(
@@ -929,8 +935,15 @@ class TeamSynchronizer(BoardFilterMixin, BoardChildSynchronizer):
             members = list(models.Member.objects.filter(
                 id__in=json_data.get('members')))
 
-        instance.members.clear()
-        instance.members.add(*members)
+        old_members = list(instance.members.all())
+        old_ids = [member.id for member in old_members]
+        ids = [member.id for member in members]
+        self.m2m_changed = True if set(old_ids) != set(ids) else False
+
+        if self.m2m_changed:
+            instance.members.clear()
+            instance.members.add(*members)
+
         return instance
 
     def client_call(self, board_id, *args, **kwargs):
