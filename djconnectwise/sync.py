@@ -259,6 +259,9 @@ class Synchronizer:
                 )
             )
 
+    def _is_instance_changed(self, instance):
+        return instance.tracker.changed()
+
     def update_or_create_instance(self, api_instance):
         """
         Creates and returns an instance if it does not already exist.
@@ -282,7 +285,7 @@ class Synchronizer:
                     instance.save(force_insert=True)
                 else:
                     instance.save()
-            elif instance.tracker.changed():
+            elif self._is_instance_changed(instance):
                 instance.save()
                 result = UPDATED
             else:
@@ -927,6 +930,8 @@ class BoardFilterMixin(ChildFetchRecordsMixin):
 class TeamSynchronizer(BoardFilterMixin, BoardChildSynchronizer):
     client_class = api.ServiceAPIClient
     model_class = models.TeamTracker
+    # indicates if many to many field(member) info is changed or not
+    m2m_changed = False
 
     def _assign_field_data(self, instance, json_data):
         instance = super(TeamSynchronizer, self)._assign_field_data(
@@ -934,14 +939,25 @@ class TeamSynchronizer(BoardFilterMixin, BoardChildSynchronizer):
 
         members = []
         if json_data.get('members'):
-            members = list(models.Member.objects.filter(
-                id__in=json_data.get('members')))
+            members = list(
+                models.Member.objects.filter(id__in=json_data.get('members'))
+            )
 
-        instance.save()
+        self.m2m_changed = self._m2m_has_changed(instance, members)
+        if self.m2m_changed:
+            instance.members.clear()
+            instance.members.add(*members)
 
-        instance.members.clear()
-        instance.members.add(*members)
         return instance
+
+    def _m2m_has_changed(self, instance, members):
+        old_ids = [member.id for member in list(instance.members.all())]
+        ids = [member.id for member in members]
+
+        return set(old_ids) != set(ids)
+
+    def _is_instance_changed(self, instance):
+        return instance.tracker.changed() or self.m2m_changed
 
     def client_call(self, board_id, *args, **kwargs):
         return self.client.get_teams(board_id, *args, **kwargs)
