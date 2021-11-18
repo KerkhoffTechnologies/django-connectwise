@@ -936,24 +936,25 @@ class TeamSynchronizer(BoardFilterMixin, BoardChildSynchronizer):
     def _assign_field_data(self, instance, json_data):
         instance = super(TeamSynchronizer, self)._assign_field_data(
             instance, json_data)
-        self._process_members(instance, json_data)
 
-        return instance
-
-    def _process_members(self, instance, json_data):
         members = []
         if json_data.get('members'):
-            members = list(models.Member.objects.filter(
-                id__in=json_data.get('members')))
+            members = list(
+                models.Member.objects.filter(id__in=json_data.get('members'))
+            )
 
-        old_members = list(instance.members.all())
-        old_ids = [member.id for member in old_members]
-        ids = [member.id for member in members]
-        self.m2m_changed = True if set(old_ids) != set(ids) else False
-
+        self.m2m_changed = self._m2m_has_changed(instance, members)
         if self.m2m_changed:
             instance.members.clear()
             instance.members.add(*members)
+
+        return instance
+
+    def _m2m_has_changed(self, instance, members):
+        old_ids = [member.id for member in list(instance.members.all())]
+        ids = [member.id for member in members]
+
+        return set(old_ids) != set(ids)
 
     def _is_instance_changed(self, instance):
         return instance.tracker.changed() or self.m2m_changed
