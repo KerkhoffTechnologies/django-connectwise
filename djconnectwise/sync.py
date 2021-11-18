@@ -492,18 +492,26 @@ class BatchConditionMixin:
         return sum(len(str(i)) for i in condition_list[:size]) + 300 + size
 
 
-class CallbackPartialSyncMixin:
+class CallbackSyncMixin:
     """
     Run a partial sync on callbacks for related synchronizers. If a ticket
     has many notes or time entries they could all be fetched
     when a callback runs. This could mean a lot of time and resources spent
-    syncing old notes or time entries. We will continue to return
-    deleted_count even though it will always be zero in this case.
+    syncing old notes or time entries.
+    The exception to this rule is if a ticket is created by a callback. In this
+    case, the related note and time entry sync will be full not partial.
+    This is because in most cases, a partial note sync that runs when a
+    ticket is created will miss most or all notes and time entries for
+    a ticket.
+    We will continue to return deleted_count even though it will always
+    be zero in this case.
     """
+    sync_all = False
+
     def callback_sync(self, filter_params):
         sync_job_qset = self.get_sync_job_qset()
 
-        if sync_job_qset.exists():
+        if sync_job_qset.exists() and not self.sync_all:
             last_sync_job_time = sync_job_qset.last().start_time.isoformat()
             self.api_conditions.append(
                 "lastUpdated>[{0}]".format(last_sync_job_time)
@@ -579,7 +587,7 @@ class ChildFetchRecordsMixin:
         return object_ids
 
 
-class ServiceNoteSynchronizer(ChildFetchRecordsMixin, CallbackPartialSyncMixin,
+class ServiceNoteSynchronizer(ChildFetchRecordsMixin, CallbackSyncMixin,
                               Synchronizer):
     client_class = api.ServiceAPIClient
     model_class = models.ServiceNoteTracker
@@ -1564,7 +1572,7 @@ class TerritorySynchronizer(Synchronizer):
 
 
 class TimeEntrySynchronizer(BatchConditionMixin,
-                            CallbackPartialSyncMixin, Synchronizer):
+                            CallbackSyncMixin, Synchronizer):
     client_class = api.TimeAPIClient
     model_class = models.TimeEntryTracker
     batch_condition_list = []
@@ -2203,17 +2211,23 @@ class TicketSynchronizerMixin:
         return self.client.get_ticket(ticket_id)
 
     # sync_config is read-only, so mutable argument is used for simplicity.
-    def sync_related(self, instance, sync_config={}):
+    def sync_related(self, instance, sync_config={}, result=None):
         instance_id = instance.id
         sync_classes = []
 
         if sync_config.get('sync_service_note', True):
             note_sync = ServiceNoteSynchronizer()
             note_sync.sync_single_id = instance_id
+            if result == CREATED:
+                note_sync.sync_all = True
+
             sync_classes.append((note_sync, Q(ticket=instance)))
 
         if sync_config.get('sync_time_entry', True):
             time_sync = TimeEntrySynchronizer()
+            if result == CREATED:
+                time_sync.sync_all = True
+
             time_sync.batch_condition_list = [instance_id]
             sync_classes.append((time_sync, Q(charge_to_id=instance)))
 
@@ -2227,9 +2241,11 @@ class TicketSynchronizerMixin:
         self.sync_children(*sync_classes)
 
     def fetch_sync_by_id(self, instance_id, sync_config={}):
-        instance = super().fetch_sync_by_id(instance_id)
+        api_instance = self.get_single(instance_id)
+        instance, result = self.update_or_create_instance(api_instance)
+
         if not instance.closed_flag:
-            self.sync_related(instance, sync_config)
+            self.sync_related(instance, sync_config, result)
         return instance
 
     def _instance_ids(self, filter_params=None):
