@@ -260,9 +260,7 @@ class Synchronizer:
             )
 
     def _is_instance_changed(self, instance):
-        m2m_changed = self.m2m_changed \
-            if hasattr(self, 'm2m_changed') else False
-        return instance.tracker.changed() or m2m_changed
+        return instance.tracker.changed()
 
     def update_or_create_instance(self, api_instance):
         """
@@ -924,12 +922,17 @@ class BoardFilterMixin(ChildFetchRecordsMixin):
 class TeamSynchronizer(BoardFilterMixin, BoardChildSynchronizer):
     client_class = api.ServiceAPIClient
     model_class = models.TeamTracker
+    # indicates if many to many field(member) info is changed or not
     m2m_changed = False
 
     def _assign_field_data(self, instance, json_data):
         instance = super(TeamSynchronizer, self)._assign_field_data(
             instance, json_data)
+        self._process_members(instance, json_data)
 
+        return instance
+
+    def _process_members(self, instance, json_data):
         members = []
         if json_data.get('members'):
             members = list(models.Member.objects.filter(
@@ -944,7 +947,8 @@ class TeamSynchronizer(BoardFilterMixin, BoardChildSynchronizer):
             instance.members.clear()
             instance.members.add(*members)
 
-        return instance
+    def _is_instance_changed(self, instance):
+        return instance.tracker.changed() or self.m2m_changed
 
     def client_call(self, board_id, *args, **kwargs):
         return self.client.get_teams(board_id, *args, **kwargs)
