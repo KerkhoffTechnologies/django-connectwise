@@ -931,11 +931,11 @@ class M2MAssignmentMixin:
     # indicates if many to many field info is changed or not
     m2m_changed = False
 
-    def _m2m_has_changed(self, instance_objects, api_objects):
+    def set_m2m_has_changed(self, instance_objects, api_objects):
+        # This method works only when a model has one m2m field now.
         old_ids = [o.id for o in instance_objects]
         ids = [o.id for o in api_objects]
-
-        return set(old_ids) != set(ids)
+        self.m2m_changed = set(old_ids) != set(ids)
 
     def _is_instance_changed(self, instance):
         return instance.tracker.changed() or self.m2m_changed
@@ -957,7 +957,7 @@ class TeamSynchronizer(M2MAssignmentMixin, BoardFilterMixin,
             )
 
         instance_members = list(instance.members.all())
-        self.m2m_changed = self._m2m_has_changed(instance_members, members)
+        self.set_m2m_has_changed(instance_members, members)
         if self.m2m_changed:
             instance.members.clear()
             instance.members.add(*members)
@@ -1028,7 +1028,7 @@ class CompanySynchronizer(M2MAssignmentMixin, Synchronizer):
             )
 
         instance_types = list(company.company_types.all())
-        self.m2m_changed = self._m2m_has_changed(instance_types, types)
+        self.set_m2m_has_changed(instance_types, types)
         if self.m2m_changed:
             company.company_types.clear()
             company.company_types.add(*types)
