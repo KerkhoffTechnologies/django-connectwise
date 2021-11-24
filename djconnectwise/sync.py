@@ -925,11 +925,24 @@ class BoardFilterMixin(ChildFetchRecordsMixin):
         return board_qs.values_list(self.lookup_key, flat=True)
 
 
-class TeamSynchronizer(BoardFilterMixin, BoardChildSynchronizer):
+class M2MAssignmentMixin:
+    # indicates if many to many field info is changed or not
+    m2m_changed = False
+
+    def set_m2m_has_changed(self, instance_objects, api_objects):
+        # This method works only when a model has one m2m field now.
+        old_ids = [o.id for o in instance_objects]
+        ids = [o.id for o in api_objects]
+        self.m2m_changed = set(old_ids) != set(ids)
+
+    def _is_instance_changed(self, instance):
+        return instance.tracker.changed() or self.m2m_changed
+
+
+class TeamSynchronizer(M2MAssignmentMixin, BoardFilterMixin,
+                       BoardChildSynchronizer):
     client_class = api.ServiceAPIClient
     model_class = models.TeamTracker
-    # indicates if many to many field(member) info is changed or not
-    m2m_changed = False
 
     def _assign_field_data(self, instance, json_data):
         instance = super(TeamSynchronizer, self)._assign_field_data(
@@ -941,27 +954,19 @@ class TeamSynchronizer(BoardFilterMixin, BoardChildSynchronizer):
                 models.Member.objects.filter(id__in=json_data.get('members'))
             )
 
-        self.m2m_changed = self._m2m_has_changed(instance, members)
+        instance_members = list(instance.members.all())
+        self.set_m2m_has_changed(instance_members, members)
         if self.m2m_changed:
             instance.members.clear()
             instance.members.add(*members)
 
         return instance
 
-    def _m2m_has_changed(self, instance, members):
-        old_ids = [member.id for member in list(instance.members.all())]
-        ids = [member.id for member in members]
-
-        return set(old_ids) != set(ids)
-
-    def _is_instance_changed(self, instance):
-        return instance.tracker.changed() or self.m2m_changed
-
     def client_call(self, board_id, *args, **kwargs):
         return self.client.get_teams(board_id, *args, **kwargs)
 
 
-class CompanySynchronizer(Synchronizer):
+class CompanySynchronizer(M2MAssignmentMixin, Synchronizer):
     client_class = api.CompanyAPIClient
     model_class = models.CompanyTracker
 
@@ -1013,18 +1018,18 @@ class CompanySynchronizer(Synchronizer):
         else:
             company.calendar = calendar_id
 
-        types_list = company_json.get('typeIds', [])
-        for type_id in types_list:
-            try:
-                company_type = models.CompanyType.objects.get(
-                    pk=type_id)
-                company.company_types.add(company_type)
-            except models.CompanyType.DoesNotExist:
-                logger.warning(
-                    'Failed to find CompanyType: {}'.format(
-                        type_id
-                    )
-                )
+        types = []
+        if company_json.get('types'):
+            type_ids = [t.get('id') for t in company_json.get('types')]
+            types = list(
+                models.CompanyType.objects.filter(id__in=type_ids)
+            )
+
+        instance_types = list(company.company_types.all())
+        self.set_m2m_has_changed(instance_types, types)
+        if self.m2m_changed:
+            company.company_types.clear()
+            company.company_types.add(*types)
 
         territory_id = company_json.get('territoryId')
         if territory_id:
