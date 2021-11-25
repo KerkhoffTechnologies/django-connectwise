@@ -911,15 +911,13 @@ class BoardFilterMixin(ChildFetchRecordsMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         request_settings = DjconnectwiseSettings().get_settings()
-        board_names = request_settings.get('board_status_filter')
-        self.boards = [board.strip() for board in board_names.split(',')] \
-            if board_names else None
+        self.boards = request_settings.get('board_status_filter')
 
     @property
     def parent_object_ids(self):
         if self.boards:
             board_qs = self.parent_model_class.available_objects.filter(
-                name__in=self.boards).order_by(self.lookup_key)
+                id__in=self.boards).order_by(self.lookup_key)
         else:
             board_qs = self.parent_model_class.available_objects.all().\
                 order_by(self.lookup_key)
@@ -2162,19 +2160,18 @@ class TicketSynchronizerMixin:
         # condition for all the open statuses. This doesn't impact on-premise
         # ConnectWise, so we just do it for all cases.
         request_settings = DjconnectwiseSettings().get_settings()
-        board_names = request_settings.get('board_status_filter')
+        board_ids = request_settings.get('board_status_filter')
+
         filtered_statuses = models.BoardStatus.available_objects.filter(
             closed_status=False).order_by(self.lookup_key)
 
-        if board_names:
-            boards = [board.strip() for board in board_names.split(',')]
-
+        if board_ids:
             boards_exist = models.ConnectWiseBoard.available_objects.filter(
-                name__in=boards).exists()
+                id__in=board_ids).exists()
 
             if boards_exist:
                 filtered_statuses = filtered_statuses.filter(
-                    board__name__in=boards
+                    board__id__in=board_ids
                 )
 
         if filtered_statuses:
