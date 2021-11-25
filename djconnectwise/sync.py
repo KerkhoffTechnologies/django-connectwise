@@ -259,6 +259,9 @@ class Synchronizer:
                 )
             )
 
+    def _is_instance_changed(self, instance):
+        return instance.tracker.changed()
+
     def update_or_create_instance(self, api_instance):
         """
         Creates and returns an instance if it does not already exist.
@@ -282,7 +285,7 @@ class Synchronizer:
                     instance.save(force_insert=True)
                 else:
                     instance.save()
-            elif instance.tracker.changed():
+            elif self._is_instance_changed(instance):
                 instance.save()
                 result = UPDATED
             else:
@@ -487,18 +490,26 @@ class BatchConditionMixin:
         return sum(len(str(i)) for i in condition_list[:size]) + 300 + size
 
 
-class CallbackPartialSyncMixin:
+class CallbackSyncMixin:
     """
     Run a partial sync on callbacks for related synchronizers. If a ticket
     has many notes or time entries they could all be fetched
     when a callback runs. This could mean a lot of time and resources spent
-    syncing old notes or time entries. We will continue to return
-    deleted_count even though it will always be zero in this case.
+    syncing old notes or time entries.
+    The exception to this rule is if a ticket is created by a callback. In this
+    case, the related note and time entry sync will be full not partial.
+    This is because in most cases, a partial note sync that runs when a
+    ticket is created will miss most or all notes and time entries for
+    a ticket.
+    We will continue to return deleted_count even though it will always
+    be zero in this case.
     """
+    sync_all = False
+
     def callback_sync(self, filter_params):
         sync_job_qset = self.get_sync_job_qset()
 
-        if sync_job_qset.exists():
+        if sync_job_qset.exists() and not self.sync_all:
             last_sync_job_time = sync_job_qset.last().start_time.isoformat()
             self.api_conditions.append(
                 "lastUpdated>[{0}]".format(last_sync_job_time)
@@ -574,7 +585,7 @@ class ChildFetchRecordsMixin:
         return object_ids
 
 
-class ServiceNoteSynchronizer(ChildFetchRecordsMixin, CallbackPartialSyncMixin,
+class ServiceNoteSynchronizer(ChildFetchRecordsMixin, CallbackSyncMixin,
                               Synchronizer):
     client_class = api.ServiceAPIClient
     model_class = models.ServiceNoteTracker
@@ -900,15 +911,13 @@ class BoardFilterMixin(ChildFetchRecordsMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         request_settings = DjconnectwiseSettings().get_settings()
-        board_names = request_settings.get('board_status_filter')
-        self.boards = [board.strip() for board in board_names.split(',')] \
-            if board_names else None
+        self.boards = request_settings.get('board_status_filter')
 
     @property
     def parent_object_ids(self):
         if self.boards:
             board_qs = self.parent_model_class.available_objects.filter(
-                name__in=self.boards).order_by(self.lookup_key)
+                id__in=self.boards).order_by(self.lookup_key)
         else:
             board_qs = self.parent_model_class.available_objects.all().\
                 order_by(self.lookup_key)
@@ -916,7 +925,22 @@ class BoardFilterMixin(ChildFetchRecordsMixin):
         return board_qs.values_list(self.lookup_key, flat=True)
 
 
-class TeamSynchronizer(BoardFilterMixin, BoardChildSynchronizer):
+class M2MAssignmentMixin:
+    # indicates if many to many field info is changed or not
+    m2m_changed = False
+
+    def set_m2m_has_changed(self, instance_objects, api_objects):
+        # This method works only when a model has one m2m field now.
+        old_ids = [o.id for o in instance_objects]
+        ids = [o.id for o in api_objects]
+        self.m2m_changed = set(old_ids) != set(ids)
+
+    def _is_instance_changed(self, instance):
+        return instance.tracker.changed() or self.m2m_changed
+
+
+class TeamSynchronizer(M2MAssignmentMixin, BoardFilterMixin,
+                       BoardChildSynchronizer):
     client_class = api.ServiceAPIClient
     model_class = models.TeamTracker
 
@@ -926,20 +950,23 @@ class TeamSynchronizer(BoardFilterMixin, BoardChildSynchronizer):
 
         members = []
         if json_data.get('members'):
-            members = list(models.Member.objects.filter(
-                id__in=json_data.get('members')))
+            members = list(
+                models.Member.objects.filter(id__in=json_data.get('members'))
+            )
 
-        instance.save()
+        instance_members = list(instance.members.all())
+        self.set_m2m_has_changed(instance_members, members)
+        if self.m2m_changed:
+            instance.members.clear()
+            instance.members.add(*members)
 
-        instance.members.clear()
-        instance.members.add(*members)
         return instance
 
     def client_call(self, board_id, *args, **kwargs):
         return self.client.get_teams(board_id, *args, **kwargs)
 
 
-class CompanySynchronizer(Synchronizer):
+class CompanySynchronizer(M2MAssignmentMixin, Synchronizer):
     client_class = api.CompanyAPIClient
     model_class = models.CompanyTracker
 
@@ -991,18 +1018,18 @@ class CompanySynchronizer(Synchronizer):
         else:
             company.calendar = calendar_id
 
-        types_list = company_json.get('typeIds', [])
-        for type_id in types_list:
-            try:
-                company_type = models.CompanyType.objects.get(
-                    pk=type_id)
-                company.company_types.add(company_type)
-            except models.CompanyType.DoesNotExist:
-                logger.warning(
-                    'Failed to find CompanyType: {}'.format(
-                        type_id
-                    )
-                )
+        types = []
+        if company_json.get('types'):
+            type_ids = [t.get('id') for t in company_json.get('types')]
+            types = list(
+                models.CompanyType.objects.filter(id__in=type_ids)
+            )
+
+        instance_types = list(company.company_types.all())
+        self.set_m2m_has_changed(instance_types, types)
+        if self.m2m_changed:
+            company.company_types.clear()
+            company.company_types.add(*types)
 
         territory_id = company_json.get('territoryId')
         if territory_id:
@@ -1553,7 +1580,7 @@ class TerritorySynchronizer(Synchronizer):
 
 
 class TimeEntrySynchronizer(BatchConditionMixin,
-                            CallbackPartialSyncMixin, Synchronizer):
+                            CallbackSyncMixin, Synchronizer):
     client_class = api.TimeAPIClient
     model_class = models.TimeEntryTracker
     batch_condition_list = []
@@ -2133,19 +2160,18 @@ class TicketSynchronizerMixin:
         # condition for all the open statuses. This doesn't impact on-premise
         # ConnectWise, so we just do it for all cases.
         request_settings = DjconnectwiseSettings().get_settings()
-        board_names = request_settings.get('board_status_filter')
+        board_ids = request_settings.get('board_status_filter')
+
         filtered_statuses = models.BoardStatus.available_objects.filter(
             closed_status=False).order_by(self.lookup_key)
 
-        if board_names:
-            boards = [board.strip() for board in board_names.split(',')]
-
+        if board_ids:
             boards_exist = models.ConnectWiseBoard.available_objects.filter(
-                name__in=boards).exists()
+                id__in=board_ids).exists()
 
             if boards_exist:
                 filtered_statuses = filtered_statuses.filter(
-                    board__name__in=boards
+                    board__id__in=board_ids
                 )
 
         if filtered_statuses:
@@ -2192,17 +2218,23 @@ class TicketSynchronizerMixin:
         return self.client.get_ticket(ticket_id)
 
     # sync_config is read-only, so mutable argument is used for simplicity.
-    def sync_related(self, instance, sync_config={}):
+    def sync_related(self, instance, sync_config={}, result=None):
         instance_id = instance.id
         sync_classes = []
 
         if sync_config.get('sync_service_note', True):
             note_sync = ServiceNoteSynchronizer()
             note_sync.sync_single_id = instance_id
+            if result == CREATED:
+                note_sync.sync_all = True
+
             sync_classes.append((note_sync, Q(ticket=instance)))
 
         if sync_config.get('sync_time_entry', True):
             time_sync = TimeEntrySynchronizer()
+            if result == CREATED:
+                time_sync.sync_all = True
+
             time_sync.batch_condition_list = [instance_id]
             sync_classes.append((time_sync, Q(charge_to_id=instance)))
 
@@ -2216,9 +2248,11 @@ class TicketSynchronizerMixin:
         self.sync_children(*sync_classes)
 
     def fetch_sync_by_id(self, instance_id, sync_config={}):
-        instance = super().fetch_sync_by_id(instance_id)
+        api_instance = self.get_single(instance_id)
+        instance, result = self.update_or_create_instance(api_instance)
+
         if not instance.closed_flag:
-            self.sync_related(instance, sync_config)
+            self.sync_related(instance, sync_config, result)
         return instance
 
     def _instance_ids(self, filter_params=None):

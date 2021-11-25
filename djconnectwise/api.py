@@ -1019,13 +1019,9 @@ class SystemAPIClient(ConnectWiseAPIClient):
 class TicketAPIMixin:
     ENDPOINT_TICKETS = 'tickets'
 
-    def tickets_count(self):
-        params = dict(
-            conditions=self.get_conditions(),
-        )
+    def tickets_count(self, **kwargs):
         return self.fetch_resource(
-            '{}/count'.format(self.ENDPOINT_TICKETS), params
-        ).get('count', 0)
+            '{}/count'.format(self.ENDPOINT_TICKETS), **kwargs).get('count', 0)
 
     def get_ticket(self, ticket_id):
         endpoint_url = '{}/{}'.format(self.ENDPOINT_TICKETS, ticket_id)
