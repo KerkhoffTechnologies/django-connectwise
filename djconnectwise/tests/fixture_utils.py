@@ -142,7 +142,6 @@ def init_territories():
 
 
 def init_contacts():
-    # models.Contact.objects.all().delete()
     mocks.company_api_get_contacts(fixtures.API_COMPANY_CONTACT_LIST)
     synchronizer = sync.ContactSynchronizer()
     return synchronizer.sync()
@@ -169,14 +168,12 @@ def init_companies():
 
 
 def init_company_types():
-    # models.CompanyType.objects.all().delete()
     mocks.company_api_get_company_types_call(fixtures.API_COMPANY_TYPES_LIST)
     synchronizer = sync.CompanyTypeSynchronizer()
     return synchronizer.sync()
 
 
 def init_company_statuses():
-    # models.CompanyStatus.objects.all().delete()
     mocks.company_api_get_company_statuses_call(
         fixtures.API_COMPANY_STATUS_LIST)
     synchronizer = sync.CompanyStatusSynchronizer()

@@ -899,7 +899,6 @@ class TestSyncAllCommand(TestCase):
         # Run partial sync first
         self.run_sync_command()
 
-        fixture_utils.init_projects()
         fixture_utils.init_members()
         fixture_utils.init_board_statuses()
         fixture_utils.init_teams()
