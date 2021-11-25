@@ -257,6 +257,8 @@ class TestSyncProjectsCommand(AbstractBaseSyncTest, TestCase):
 
     def setUp(self):
         super().setUp()
+        fixture_utils.init_work_roles()
+        fixture_utils.init_work_types()
         mocks.system_api_get_member_image_by_photo_id_call(
             (mocks.CW_MEMBER_IMAGE_FILENAME, mocks.get_member_avatar()))
         fixture_utils.init_members()
@@ -266,6 +268,7 @@ class TestSyncProjectsCommand(AbstractBaseSyncTest, TestCase):
         fixture_utils.init_companies()
         fixture_utils.init_project_statuses()
         fixture_utils.init_project_types()
+        fixture_utils.init_boards()
 
 
 class TestSyncProjectPhaseCommand(AbstractBaseSyncTest, TestCase):
@@ -277,6 +280,8 @@ class TestSyncProjectPhaseCommand(AbstractBaseSyncTest, TestCase):
 
     def setUp(self):
         super().setUp()
+        fixture_utils.init_work_roles()
+        fixture_utils.init_work_types()
         mocks.system_api_get_member_image_by_photo_id_call(
             (mocks.CW_MEMBER_IMAGE_FILENAME, mocks.get_member_avatar()))
         fixture_utils.init_members()
@@ -286,6 +291,8 @@ class TestSyncProjectPhaseCommand(AbstractBaseSyncTest, TestCase):
         fixture_utils.init_companies()
         fixture_utils.init_project_types()
         fixture_utils.init_project_statuses()
+        fixture_utils.init_boards()
+        fixture_utils.init_project_phases()
         fixture_utils.init_projects()
 
 
@@ -298,19 +305,20 @@ class TestSyncProjectTeamMemberCommand(AbstractBaseSyncTest, TestCase):
 
     def setUp(self):
         super().setUp()
+        fixture_utils.init_work_roles()
+        fixture_utils.init_work_types()
         mocks.system_api_get_member_image_by_photo_id_call(
             (mocks.CW_MEMBER_IMAGE_FILENAME, mocks.get_member_avatar()))
         fixture_utils.init_members()
-        fixture_utils.init_work_roles()
-        fixture_utils.init_work_types()
         fixture_utils.init_territories()
         fixture_utils.init_company_statuses()
         fixture_utils.init_company_types()
         fixture_utils.init_companies()
         fixture_utils.init_project_types()
         fixture_utils.init_project_statuses()
-        fixture_utils.init_projects()
         fixture_utils.init_boards()
+        fixture_utils.init_project_phases()
+        fixture_utils.init_projects()
 
 
 class TestSyncBoardsStatusesCommand(AbstractBaseSyncTest, TestCase):
@@ -362,11 +370,11 @@ class TestSyncServiceNotesCommand(AbstractBaseSyncTest, TestCase):
 
     def setUp(self):
         super().setUp()
+        fixture_utils.init_work_roles()
+        fixture_utils.init_work_types()
         mocks.system_api_get_member_image_by_photo_id_call(
             (mocks.CW_MEMBER_IMAGE_FILENAME, mocks.get_member_avatar()))
         fixture_utils.init_members()
-        fixture_utils.init_work_roles()
-        fixture_utils.init_work_types()
         fixture_utils.init_holiday_lists()
         fixture_utils.init_calendars()
         fixture_utils.init_slas()
@@ -394,6 +402,8 @@ class TestSyncOpportunityNotesCommand(AbstractBaseSyncTest, TestCase):
 
     def setUp(self):
         super().setUp()
+        fixture_utils.init_work_roles()
+        fixture_utils.init_work_types()
         mocks.system_api_get_member_image_by_photo_id_call(
             (mocks.CW_MEMBER_IMAGE_FILENAME, mocks.get_member_avatar()))
         fixture_utils.init_members()
@@ -418,6 +428,8 @@ class TestSyncOpportunityCommand(AbstractBaseSyncTest, TestCase):
 
     def setUp(self):
         super().setUp()
+        fixture_utils.init_work_roles()
+        fixture_utils.init_work_types()
         mocks.system_api_get_member_image_by_photo_id_call(
             (mocks.CW_MEMBER_IMAGE_FILENAME, mocks.get_member_avatar()))
         fixture_utils.init_members()
@@ -473,11 +485,11 @@ class TestSyncTimeEntriesCommand(AbstractBaseSyncTest, TestCase):
 
     def setUp(self):
         super().setUp()
+        fixture_utils.init_work_types()
+        fixture_utils.init_work_roles()
         mocks.system_api_get_member_image_by_photo_id_call(
             (mocks.CW_MEMBER_IMAGE_FILENAME, mocks.get_member_avatar()))
         fixture_utils.init_members()
-        fixture_utils.init_work_roles()
-        fixture_utils.init_work_types()
         fixture_utils.init_holiday_lists()
         fixture_utils.init_calendars()
         fixture_utils.init_slas()
@@ -505,11 +517,11 @@ class TestSyncScheduleEntriesCommand(AbstractBaseSyncTest, TestCase):
 
     def setUp(self):
         super().setUp()
+        fixture_utils.init_work_types()
+        fixture_utils.init_work_roles()
         mocks.system_api_get_member_image_by_photo_id_call(
             (mocks.CW_MEMBER_IMAGE_FILENAME, mocks.get_member_avatar()))
         fixture_utils.init_members()
-        fixture_utils.init_work_roles()
-        fixture_utils.init_work_types()
         fixture_utils.init_holiday_lists()
         fixture_utils.init_calendars()
         fixture_utils.init_slas()
@@ -571,11 +583,11 @@ class TestSyncActivityCommand(AbstractBaseSyncTest, TestCase):
 
     def setUp(self):
         super().setUp()
+        fixture_utils.init_work_roles()
+        fixture_utils.init_work_types()
         mocks.system_api_get_member_image_by_photo_id_call(
             (mocks.CW_MEMBER_IMAGE_FILENAME, mocks.get_member_avatar()))
         fixture_utils.init_members()
-        fixture_utils.init_work_roles()
-        fixture_utils.init_work_types()
         fixture_utils.init_territories()
         fixture_utils.init_company_statuses()
         fixture_utils.init_company_types()
@@ -698,11 +710,11 @@ class TestSyncAgreementCommand(AbstractBaseSyncTest, TestCase):
 class TestSyncProjectTicketCommand(AbstractBaseSyncTest, TestCase):
     def setUp(self):
         super().setUp()
+        fixture_utils.init_work_roles()
+        fixture_utils.init_work_types()
         mocks.system_api_get_member_image_by_photo_id_call(
             (mocks.CW_MEMBER_IMAGE_FILENAME, mocks.get_member_avatar()))
         fixture_utils.init_members()
-        fixture_utils.init_work_roles()
-        fixture_utils.init_work_types()
         fixture_utils.init_locations()
         fixture_utils.init_territories()
         fixture_utils.init_company_statuses()
@@ -717,6 +729,7 @@ class TestSyncProjectTicketCommand(AbstractBaseSyncTest, TestCase):
         fixture_utils.init_priorities()
         fixture_utils.init_project_types()
         fixture_utils.init_project_statuses()
+        fixture_utils.init_project_phases()
         fixture_utils.init_projects()
 
     args = (
@@ -736,6 +749,8 @@ class TestSyncAllCommand(TestCase):
         mocks.company_api_by_id_call(fixtures.API_COMPANY)
         mocks.service_api_tickets_call()
         sync_test_cases = [
+            TestSyncWorkTypeCommand,
+            TestSyncWorkRoleCommand,
             TestSyncTimeEntriesCommand,
             TestSyncContactCommunicationsCommand,
             TestSyncContactsCommand,
@@ -775,8 +790,6 @@ class TestSyncAllCommand(TestCase):
             TestSyncSubTypeCommand,
             TestSyncItemCommand,
             TestSyncTypeSubTypeItemAssociationCommand,
-            TestSyncWorkTypeCommand,
-            TestSyncWorkRoleCommand,
             TestSyncAgreementCommand,
             TestSyncProjectTypesCommand,
             TestSyncProjectTeamMemberCommand
@@ -835,6 +848,8 @@ class TestSyncAllCommand(TestCase):
     def test_full_sync(self):
         """Test the command to run a full sync of all objects."""
         cw_object_map = {
+            'work_type': models.WorkType,
+            'work_role': models.WorkRole,
             'member': models.Member,
             'board': models.ConnectWiseBoard,
             'priority': models.TicketPriority,
@@ -876,8 +891,6 @@ class TestSyncAllCommand(TestCase):
             'sub_type': models.SubType,
             'item': models.Item,
             'type_subtype_item_association': models.TypeSubTypeItemAssociation,
-            'work_type': models.WorkType,
-            'work_role': models.WorkRole,
             'agreement': models.Agreement,
             'project_type': models.ProjectType,
             'project_team_member': models.ProjectTeamMember,

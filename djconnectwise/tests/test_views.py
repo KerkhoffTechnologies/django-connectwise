@@ -83,11 +83,11 @@ class TestTicketCallBackView(BaseTestCallBackView):
     MODEL_CLASS = Ticket
 
     def setUp(self):
+        fixture_utils.init_work_roles()
+        fixture_utils.init_work_types()
         mocks.system_api_get_member_image_by_photo_id_call(
             (mocks.CW_MEMBER_IMAGE_FILENAME, mocks.get_member_avatar()))
         fixture_utils.init_members()
-        fixture_utils.init_work_roles()
-        fixture_utils.init_work_types()
         fixture_utils.init_holiday_lists()
         fixture_utils.init_calendars()
         fixture_utils.init_slas()
@@ -138,11 +138,11 @@ class TestProjectCallBackView(BaseTestCallBackView):
     MODEL_CLASS = Project
 
     def setUp(self):
+        fixture_utils.init_work_roles()
+        fixture_utils.init_work_types()
         mocks.system_api_get_member_image_by_photo_id_call(
             (mocks.CW_MEMBER_IMAGE_FILENAME, mocks.get_member_avatar()))
         fixture_utils.init_members()
-        fixture_utils.init_work_roles()
-        fixture_utils.init_work_types()
         fixture_utils.init_territories()
         fixture_utils.init_company_statuses()
         fixture_utils.init_company_types()

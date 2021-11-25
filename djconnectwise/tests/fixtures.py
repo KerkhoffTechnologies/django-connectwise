@@ -424,7 +424,14 @@ API_MEMBER = {
     'vendorNumber': None,
     'warehouse': None,
     'warehouseBin': None,
-    'workRole': None,
+    'workRole': {
+        'id': API_WORK_ROLE['id'],
+        'name': API_WORK_ROLE['name'],
+        '_info': {
+            'workRole_href':
+                'https://example.com/v4_6_release/test'
+        }
+    },
     'workType': None,
     '_info': {
         'lastUpdated': '2015-08-24T19:50:10Z',
@@ -576,7 +583,7 @@ API_PROJECT = {
     'billProjectAfterClosedFlag': False,
     'billTime': 'Billable',
     'billUnapprovedTimeAndExpense': False,
-    'board': None,
+    'board': API_BOARD,
     'budgetAnalysis': 'ActualHours',
     'budgetFlag': False,
     'budgetHours': 91.5,
@@ -654,12 +661,12 @@ API_PROJECT_PHASE = {
     'id': 1,
     'projectId': API_PROJECT['id'],
     'description': 'Project Management',
-    'board': None,
+    'board': API_BOARD,
     'status': {
         'id': 1,
         'name': 'Open',
         '_info': {
-            'status_href': 'https://connectwise.kerkhofftech.ca/v4_6_release/apis/3.0/project/phaseStatuses/1'
+            'status_href': 'https://example.com/v4_6_release/apis/3.0/project/phaseStatuses/1'
         }
     },
     'wbsCode': '1',
@@ -696,7 +703,7 @@ API_PROJECT_PHASE = {
         'isoCode': 'USD',
         'name': 'US Dollars',
         '_info': {
-            'currency_href': 'https://connectwise.kerkhofftech.ca/v4_6_release/apis/3.0/finance/currencies/7'
+            'currency_href': 'https://example.com/v4_6_release/apis/3.0/finance/currencies/7'
         }
     },
     '_info': {
@@ -891,7 +898,7 @@ API_TYPE = {
         'identifier': "Services",
         'name': "Professional Services",
         '_info': {
-            'department_href': "https://connectwise.kerkhofftech.ca/v4_6_release/apis/3.0/system/departments/10"
+            'department_href': "https://example.com/v4_6_release/apis/3.0/system/departments/10"
         }
     },
     '_info': {
@@ -1132,25 +1139,31 @@ API_PROJECT_TICKET = {
         'id': API_BOARD['id'],
         'name': API_BOARD['name'],
         '_info': {
-            'board_href': "https://connectwise.kerkhofftech.ca/v4_6_release/apis/3.0/service/boards/3"
+            'board_href': "https://example.com/v4_6_release/apis/3.0/service/boards/3"
         }
     },
     'status': {
         'id': 1,
         'name': "New",
         '_info': {
-            'status_href': "https://connectwise.kerkhofftech.ca/v4_6_release/apis/3.0/service/boards/3/statuses/1"
+            'status_href': "https://example.com/v4_6_release/apis/3.0/service/boards/3/statuses/1"
         }
     },
     'project': API_PROJECT,
-    'phase': None,
+    'phase': {
+        'id': API_PROJECT_PHASE['id'],
+        'name': API_PROJECT_PHASE['description'],
+        '_info': {
+            'phase_href': "https://example.com/v4_6_release/apis/3.0/project/projects/4/phases/1"
+        }
+    },
     'wbsCode': "1.1",
     'company': API_COMPANY,
     'site': {
         'id': 9,
         'name': "Main",
         '_info': {
-            'site_href': "https://connectwise.kerkhofftech.ca/v4_6_release/apis/3.0/company/companies/10/sites/9",
+            'site_href': "https://example.com/v4_6_release/apis/3.0/company/companies/10/sites/9",
             'mobileGuid': "7606ac88-1326-4dc6-a620-daf7d9ed3c70"
         }
     },
@@ -1163,7 +1176,7 @@ API_PROJECT_TICKET = {
         'name': 'Arnie Bellini',
         '_info': {
             'mobileGuid': "c5221fb2-6d13-4a5b-80a1-c06d714fd93d",
-            'contact_href': "https://connectwise.kerkhofftech.ca/v4_6_release/apis/3.0/company/contacts/26"
+            'contact_href': "https://example.com/v4_6_release/apis/3.0/company/contacts/26"
         }
     },
     'contactName': "Gus Johnson",
@@ -1182,7 +1195,7 @@ API_PROJECT_TICKET = {
         'id': 2,
         'name': "Phone",
         '_info': {
-            'source_href': "https://connectwise.kerkhofftech.ca/v4_6_release/apis/3.0/service/sources/2"
+            'source_href': "https://example.com/v4_6_release/apis/3.0/service/sources/2"
         }
     },
     'requiredDate': "2017-03-03T00:00:00Z",
@@ -1208,7 +1221,7 @@ API_PROJECT_TICKET = {
         'id': 2,
         'name': "Tampa Office",
         '_info': {
-            'location_href': "https://connectwise.kerkhofftech.ca/v4_6_release/apis/3.0/system/locations/2"
+            'location_href': "https://example.com/v4_6_release/apis/3.0/system/locations/2"
         }
     },
     'department': {
@@ -1216,7 +1229,7 @@ API_PROJECT_TICKET = {
         'identifier': "Services",
         'name': "Professional Services",
         '_info': {
-            'department_href': "https://connectwise.kerkhofftech.ca/v4_6_release/apis/3.0/system/departments/10"
+            'department_href': "https://example.com/v4_6_release/apis/3.0/system/departments/10"
         }
     },
     'mobileGuid': "729d53ab-108e-4fbf-8ed3-5b0a260a8594",
@@ -1226,7 +1239,7 @@ API_PROJECT_TICKET = {
         'isoCode': "USD",
         'name': "US Dollars",
         '_info': {
-            'currency_href': "https://connectwise.kerkhofftech.ca/v4_6_release/apis/3.0/finance/currencies/7"
+            'currency_href': "https://example.com/v4_6_release/apis/3.0/finance/currencies/7"
         }
     },
     '_info': {
@@ -1945,7 +1958,7 @@ API_PROJECT_TEAM_MEMBER = {
         'identifier': API_MEMBER['identifier'],
         'name': API_MEMBER['firstName'],
         '_info': {
-            'member_href': 'https://connectwise.kerkhofftech.ca/v4_6_release/apis/3.0/system/members/186' # noqa
+            'member_href': 'https://example.com/v4_6_release/apis/3.0/system/members/186' # noqa
         }
     },
     'projectRole': {

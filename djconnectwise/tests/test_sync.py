@@ -438,8 +438,8 @@ class TestProjectPhaseSynchronizer(TestCase, SynchronizerTestMixin):
         super().setUp()
         fixture_utils.init_project_statuses()
         fixture_utils.init_project_types()
-        fixture_utils.init_projects()
         fixture_utils.init_boards()
+        fixture_utils.init_projects()
 
     def call_api(self, return_data):
         return mocks.projects_api_get_project_phases_call(return_data)
@@ -775,6 +775,7 @@ class TestMemberSynchronization(TransactionTestCase, AssertSyncMixin):
     model_class = models.MemberTracker
 
     def setUp(self):
+        fixture_utils.init_work_roles()
         self.identifier = 'User1'
         mocks.system_api_get_members_call([fixtures.API_MEMBER])
         self.synchronizer = sync.MemberSynchronizer()
@@ -1858,11 +1859,11 @@ class TestActivitySynchronizer(TestCase, SynchronizerTestMixin):
 
     def setUp(self):
         super().setUp()
+        fixture_utils.init_work_roles()
+        fixture_utils.init_work_types()
         mocks.system_api_get_member_image_by_photo_id_call(
             (mocks.CW_MEMBER_IMAGE_FILENAME, mocks.get_member_avatar()))
         fixture_utils.init_members()
-        fixture_utils.init_work_roles()
-        fixture_utils.init_work_types()
         fixture_utils.init_territories()
         fixture_utils.init_company_statuses()
         fixture_utils.init_company_types()
@@ -2190,6 +2191,7 @@ class TestProjectTeamMemberSynchronizer(TestCase, SynchronizerTestMixin):
         fixture_utils.init_members()
         fixture_utils.init_work_roles()
         fixture_utils.init_project_statuses()
+        fixture_utils.init_boards()
         fixture_utils.init_projects()
         fixture_utils.init_project_team_members()
 

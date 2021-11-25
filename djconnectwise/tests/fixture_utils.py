@@ -309,7 +309,6 @@ def init_work_roles():
 
 
 def init_agreements():
-    # models.Agreement.objects.all().delete()
     mocks.finance_api_get_agreements_call(
         fixtures.API_AGREEMENT_LIST)
     synchronizer = sync.AgreementSynchronizer()
