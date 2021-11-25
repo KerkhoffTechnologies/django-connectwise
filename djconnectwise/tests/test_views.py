@@ -12,11 +12,6 @@ from djconnectwise import views, api
 class BaseTestCallBackView(TestCase):
     MODEL_CLASS = None
 
-    def setUp(self):
-        fixture_utils.init_boards()
-        fixture_utils.init_board_statuses()
-        fixture_utils.init_members()
-
     def assert_fields(self, instance, entity):
         raise NotImplementedError
 
@@ -87,27 +82,37 @@ class BaseTestCallBackView(TestCase):
 class TestTicketCallBackView(BaseTestCallBackView):
     MODEL_CLASS = Ticket
 
+    def setUp(self):
+        fixture_utils.init_work_roles()
+        fixture_utils.init_work_types()
+        mocks.system_api_get_member_image_by_photo_id_call(
+            (mocks.CW_MEMBER_IMAGE_FILENAME, mocks.get_member_avatar()))
+        fixture_utils.init_members()
+        fixture_utils.init_holiday_lists()
+        fixture_utils.init_calendars()
+        fixture_utils.init_slas()
+        fixture_utils.init_board_statuses()
+        fixture_utils.init_priorities()
+        fixture_utils.init_locations()
+        fixture_utils.init_territories()
+        fixture_utils.init_company_statuses()
+        fixture_utils.init_company_types()
+        fixture_utils.init_companies()
+        fixture_utils.init_contacts()
+        fixture_utils.init_teams()
+        fixture_utils.init_types()
+        fixture_utils.init_subtypes()
+        fixture_utils.init_items()
+
     def assert_fields(self, instance, entity):
         self.assertEqual(instance.summary, entity['summary'])
 
     def test_add(self):
-        fixture_utils.init_priorities()
-        fixture_utils.init_projects()
-        fixture_utils.init_companies()
-        fixture_utils.init_board_statuses()
-        fixture_utils.init_locations()
-        fixture_utils.init_teams()
         self.assertEqual(Ticket.objects.count(), 0)
         mocks.service_api_get_ticket_call()
         self._test_added('ticket', fixtures.API_SERVICE_TICKET)
 
     def test_update(self):
-        fixture_utils.init_priorities()
-        fixture_utils.init_projects()
-        fixture_utils.init_companies()
-        fixture_utils.init_board_statuses()
-        fixture_utils.init_locations()
-        fixture_utils.init_teams()
         fixture_utils.init_tickets()
         self.assertEqual(Ticket.objects.count(), 1)
         # Change the summary of the local record to make our test meaningful.
@@ -120,10 +125,6 @@ class TestTicketCallBackView(BaseTestCallBackView):
 
     def test_delete(self):
         fixture_utils.init_tickets()
-        fixture_utils.init_priorities()
-        fixture_utils.init_companies()
-        fixture_utils.init_locations()
-        fixture_utils.init_teams()
         self.assertEqual(Ticket.objects.count(), 1)
 
         mocks.service_api_get_ticket_call(api.ConnectWiseRecordNotFoundError)
@@ -136,17 +137,29 @@ class TestTicketCallBackView(BaseTestCallBackView):
 class TestProjectCallBackView(BaseTestCallBackView):
     MODEL_CLASS = Project
 
+    def setUp(self):
+        fixture_utils.init_work_roles()
+        fixture_utils.init_work_types()
+        mocks.system_api_get_member_image_by_photo_id_call(
+            (mocks.CW_MEMBER_IMAGE_FILENAME, mocks.get_member_avatar()))
+        fixture_utils.init_members()
+        fixture_utils.init_territories()
+        fixture_utils.init_company_statuses()
+        fixture_utils.init_company_types()
+        fixture_utils.init_companies()
+        fixture_utils.init_project_types()
+        fixture_utils.init_project_statuses()
+        fixture_utils.init_boards()
+
     def assert_fields(self, instance, entity):
         self.assertEqual(instance.name, entity['name'])
 
     def test_add(self):
-        fixture_utils.init_project_statuses()
         self.assertEqual(Project.objects.count(), 0)
         mocks.project_api_get_project_call(fixtures.API_PROJECT)
         self._test_added('project', fixtures.API_PROJECT)
 
     def test_update(self):
-        fixture_utils.init_project_statuses()
         fixture_utils.init_projects()
         self.assertEqual(Project.objects.count(), 1)
         # Change the name of the local record to make our test meaningful.
@@ -158,7 +171,6 @@ class TestProjectCallBackView(BaseTestCallBackView):
         self._test_update('project', fixtures.API_PROJECT)
 
     def test_delete(self):
-        fixture_utils.init_project_statuses()
         fixture_utils.init_projects()
         self.assertEqual(Project.objects.count(), 1)
 
@@ -174,6 +186,11 @@ class TestProjectCallBackView(BaseTestCallBackView):
 
 class TestCompanyCallBackView(BaseTestCallBackView):
     MODEL_CLASS = Company
+
+    def setUp(self):
+        fixture_utils.init_territories()
+        fixture_utils.init_company_statuses()
+        fixture_utils.init_company_types()
 
     def assert_fields(self, instance, entity):
         self.assertEqual(instance.name, entity['name'])
@@ -195,6 +212,9 @@ class TestCompanyCallBackView(BaseTestCallBackView):
         self._test_update('company', fixtures.API_COMPANY)
 
     def test_delete(self):
+        fixture_utils.init_territories()
+        fixture_utils.init_company_statuses()
+        fixture_utils.init_company_types()
         fixture_utils.init_companies()
         self.assertEqual(Company.objects.count(), 1)
 

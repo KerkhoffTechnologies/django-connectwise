@@ -221,12 +221,6 @@ class TestTimeEntrySynchronizer(TestCase, SynchronizerTestMixin):
     model_class = models.TimeEntryTracker
     fixture = fixtures.API_TIME_ENTRY_LIST
 
-    def setUp(self):
-        super().setUp()
-        fixture_utils.init_board_statuses()
-        fixture_utils.init_tickets()
-        fixture_utils.init_time_entries()
-
     def call_api(self, return_data):
         return mocks.time_api_get_time_entries_call(return_data)
 
@@ -300,20 +294,22 @@ class TestScheduleEntriesSynchronizer(TestCase, SynchronizerTestMixin):
         super().setUp()
         fixture_utils.init_boards()
         fixture_utils.init_territories()
-        fixture_utils.init_companies()
+        fixture_utils.init_contacts()
         fixture_utils.init_project_statuses()
         fixture_utils.init_projects()
         fixture_utils.init_locations()
         fixture_utils.init_priorities()
         fixture_utils.init_members()
         fixture_utils.init_opportunity_stages()
-        fixture_utils.init_opportunity_statuses()
         fixture_utils.init_opportunity_types()
         fixture_utils.init_opportunities()
-        fixture_utils.init_teams()
         fixture_utils.init_board_statuses()
         fixture_utils.init_schedule_statuses()
         fixture_utils.init_schedule_types()
+        fixture_utils.init_teams()
+        fixture_utils.init_types()
+        fixture_utils.init_subtypes()
+        fixture_utils.init_items()
         fixture_utils.init_tickets()
         fixture_utils.init_activities()
 
@@ -440,8 +436,10 @@ class TestProjectPhaseSynchronizer(TestCase, SynchronizerTestMixin):
 
     def setUp(self):
         super().setUp()
+        fixture_utils.init_project_statuses()
+        fixture_utils.init_project_types()
+        fixture_utils.init_boards()
         fixture_utils.init_projects()
-        fixture_utils.init_project_phases()
 
     def call_api(self, return_data):
         return mocks.projects_api_get_project_phases_call(return_data)
@@ -514,7 +512,8 @@ class TestProjectSynchronizer(TestCase, SynchronizerTestMixin):
     def setUp(self):
         super().setUp()
         fixture_utils.init_project_statuses()
-        fixture_utils.init_members()
+        fixture_utils.init_project_types()
+        fixture_utils.init_boards()
 
     def call_api(self, return_data):
         return mocks.project_api_get_projects_call(return_data)
@@ -677,11 +676,6 @@ class TestServiceNoteSynchronizer(TestCase, SynchronizerTestMixin):
         self.assertEqual(instance.internal_flag, json_data['internalFlag'])
         self.assertEqual(instance.external_flag, json_data['externalFlag'])
 
-    def setUp(self):
-        super().setUp()
-        fixture_utils.init_service_notes()
-        fixture_utils.init_tickets()
-
     def call_api(self, return_data):
         return mocks.service_api_get_notes_call(return_data)
 
@@ -781,6 +775,7 @@ class TestMemberSynchronization(TransactionTestCase, AssertSyncMixin):
     model_class = models.MemberTracker
 
     def setUp(self):
+        fixture_utils.init_work_roles()
         self.identifier = 'User1'
         mocks.system_api_get_members_call([fixtures.API_MEMBER])
         self.synchronizer = sync.MemberSynchronizer()
@@ -1108,6 +1103,9 @@ class TestCalendarSynchronizer(TestCase, SynchronizerTestMixin):
     model_class = models.CalendarTracker
     fixture = fixtures.API_SCHEDULE_CALENDAR_LIST
 
+    def setUp(self):
+        fixture_utils.init_holiday_lists()
+
     def call_api(self, return_data):
         return mocks.schedule_api_get_calendars_call(return_data)
 
@@ -1353,20 +1351,14 @@ class TestTicketSynchronizerMixin(AssertSyncMixin):
     def _init_data(self):
         self._clean()
 
-        fixture_utils.init_boards()
-        fixture_utils.init_board_statuses()
-        fixture_utils.init_teams()
-        fixture_utils.init_members()
-        fixture_utils.init_companies()
-        fixture_utils.init_priorities()
-        fixture_utils.init_projects()
-        fixture_utils.init_locations()
+        fixture_utils.init_holiday_lists()
         fixture_utils.init_calendars()
         fixture_utils.init_slas()
+        fixture_utils.init_board_statuses()
+        fixture_utils.init_teams()
         fixture_utils.init_types()
         fixture_utils.init_subtypes()
         fixture_utils.init_items()
-        fixture_utils.init_agreements()
 
     def test_sync_ticket(self):
         """
@@ -1735,6 +1727,8 @@ class TestProjectTicketSynchronizer(TestTicketSynchronizerMixin, TestCase):
         mocks.project_api_tickets_call()
 
         self._init_data()
+        fixture_utils.init_schedule_statuses()
+        fixture_utils.init_schedule_types()
         fixture_utils.init_project_tickets()
 
     def _assert_sync(self, instance, json_data):
@@ -1864,19 +1858,26 @@ class TestActivitySynchronizer(TestCase, SynchronizerTestMixin):
     fixture = fixtures.API_SALES_ACTIVITIES
 
     def setUp(self):
+        super().setUp()
+        fixture_utils.init_work_roles()
+        fixture_utils.init_work_types()
         mocks.system_api_get_member_image_by_photo_id_call(
             (mocks.CW_MEMBER_IMAGE_FILENAME, mocks.get_member_avatar()))
-        fixture_utils.init_work_roles()
         fixture_utils.init_members()
-        fixture_utils.init_tickets()
         fixture_utils.init_territories()
+        fixture_utils.init_company_statuses()
+        fixture_utils.init_company_types()
         fixture_utils.init_companies()
+        fixture_utils.init_contacts()
+        fixture_utils.init_agreements()
+        fixture_utils.init_sales_probabilities()
         fixture_utils.init_opportunity_types()
         fixture_utils.init_opportunity_stages()
+        fixture_utils.init_opportunity_statuses()
         fixture_utils.init_opportunities()
+        fixture_utils.init_agreements()
         fixture_utils.init_activity_statuses()
         fixture_utils.init_activity_types()
-        fixture_utils.init_agreements()
         fixture_utils.init_activities()
 
     def call_api(self, return_data):
@@ -2155,9 +2156,12 @@ class TestAgreementSynchronizer(TestCase, SynchronizerTestMixin):
 
     def setUp(self):
         super().setUp()
-        fixture_utils.init_agreements()
         fixture_utils.init_work_roles()
         fixture_utils.init_work_types()
+        fixture_utils.init_territories()
+        fixture_utils.init_company_statuses()
+        fixture_utils.init_company_types()
+        fixture_utils.init_companies()
 
     def call_api(self, return_data):
         return mocks.finance_api_get_agreements_call(return_data)
@@ -2187,6 +2191,7 @@ class TestProjectTeamMemberSynchronizer(TestCase, SynchronizerTestMixin):
         fixture_utils.init_members()
         fixture_utils.init_work_roles()
         fixture_utils.init_project_statuses()
+        fixture_utils.init_boards()
         fixture_utils.init_projects()
         fixture_utils.init_project_team_members()
 

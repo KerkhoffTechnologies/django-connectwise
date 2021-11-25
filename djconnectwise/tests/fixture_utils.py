@@ -22,7 +22,6 @@ def init_board_statuses():
 
 
 def init_teams():
-    models.Team.objects.all().delete()
     mocks.service_api_get_teams_call(fixtures.API_SERVICE_TEAM_LIST)
     synchronizer = sync.TeamSynchronizer()
     return synchronizer.sync()
@@ -171,6 +170,13 @@ def init_companies():
 def init_company_types():
     mocks.company_api_get_company_types_call(fixtures.API_COMPANY_TYPES_LIST)
     synchronizer = sync.CompanyTypeSynchronizer()
+    return synchronizer.sync()
+
+
+def init_company_statuses():
+    mocks.company_api_get_company_statuses_call(
+        fixtures.API_COMPANY_STATUS_LIST)
+    synchronizer = sync.CompanyStatusSynchronizer()
     return synchronizer.sync()
 
 
