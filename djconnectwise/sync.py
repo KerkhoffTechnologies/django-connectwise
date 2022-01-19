@@ -2203,8 +2203,8 @@ class TicketSynchronizerMixin:
             condition = '{} and board/id in ({})'.format(
                 condition, keep_closed_board_ids)
 
-        # lastUpdated is only present when running full syncs.
-        if not self.full:
+        # lastUpdated is only present when running partial syncs.
+        if not self.full and self.api_conditions:
             last_updated = self.api_conditions[-1]
             condition = '{} and {}'.format(condition, last_updated)
 
