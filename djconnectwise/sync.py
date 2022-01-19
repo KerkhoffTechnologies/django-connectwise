@@ -2204,7 +2204,7 @@ class TicketSynchronizerMixin:
                 condition, keep_closed_board_ids)
 
         # lastUpdated is only present when running full syncs.
-        if not self.full:
+        if not self.full and self.api_conditions:
             last_updated = self.api_conditions[-1]
             condition = '{} and {}'.format(condition, last_updated)
 
