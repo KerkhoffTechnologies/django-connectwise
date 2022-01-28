@@ -82,7 +82,7 @@ class TestConnectWiseAPIClient(TestCase):
         self.assertEqual(
             self.client.prepare_conditions(conditions),
             '(closedFlag=False and status/id in (1,2,3) '
-            'and lastUpdated>1948-05-14T12:00:00-05:51)'
+            'and lastUpdated>1948-05-14T12:00:00-05:00)'
         )
 
     @responses.activate
