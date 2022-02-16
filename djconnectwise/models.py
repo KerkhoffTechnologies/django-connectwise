@@ -1501,7 +1501,7 @@ class Ticket(UpdateConnectWiseMixin, TimeStampedModel):
         blank=True, null=True, decimal_places=2, max_digits=9)
     approved = models.BooleanField(null=True)
     budget_hours = models.DecimalField(
-        blank=True, null=True, decimal_places=2, max_digits=9)
+        blank=True, null=True, decimal_places=2, max_digits=12)
     closed_by = models.CharField(blank=True, null=True, max_length=250)
     closed_date_utc = models.DateTimeField(blank=True, null=True)
     closed_flag = models.BooleanField(null=True)
