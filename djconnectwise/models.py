@@ -1163,7 +1163,7 @@ class Project(UpdateConnectWiseMixin, TimeStampedModel):
     actual_hours = models.DecimalField(
         blank=True, null=True, decimal_places=2, max_digits=9)
     budget_hours = models.DecimalField(
-        blank=True, null=True, decimal_places=2, max_digits=9)
+        blank=True, null=True, decimal_places=2, max_digits=12)
     scheduled_hours = models.DecimalField(
         blank=True, null=True, decimal_places=2, max_digits=9)
     actual_start = models.DateField(blank=True, null=True)
