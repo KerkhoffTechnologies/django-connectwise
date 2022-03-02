@@ -1031,8 +1031,9 @@ class CompanySynchronizer(M2MAssignmentMixin, Synchronizer):
             company.company_types.clear()
             company.company_types.add(*types)
 
-        territory_id = company_json.get('territoryId')
-        if territory_id:
+        territory = company_json.get('territory')
+        if territory and territory.get('id'):
+            territory_id = territory.get('id')
             try:
                 company.territory = models.Territory.objects.get(
                     pk=territory_id
@@ -1045,7 +1046,7 @@ class CompanySynchronizer(M2MAssignmentMixin, Synchronizer):
                 )
         else:
             logger.warning(
-                'No Territory ID recieved in request for Company: {}'.format(
+                'No Territory ID received in request for Company: {}'.format(
                     company.id
                 )
             )
