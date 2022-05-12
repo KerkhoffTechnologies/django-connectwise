@@ -1367,7 +1367,8 @@ class ScheduleEntriesSynchronizer(BatchConditionMixin, Synchronizer):
         self.no_batch = kwargs.get('no_batch')
 
         self.api_conditions = [
-            "(type/identifier='S' or type/identifier='O')"
+            "(type/identifier='S' or type/identifier='O' "
+            "or type/identifier='C')"
         ]
 
         if not self.no_batch:
@@ -1383,7 +1384,11 @@ class ScheduleEntriesSynchronizer(BatchConditionMixin, Synchronizer):
                 models.Opportunity.objects.order_by(
                     self.lookup_key).values_list('id', flat=True)
             )
-            self.batch_condition_list = list(ticket_ids | opportunity_ids)
+            activity_ids = set(
+                models.Activity.objects.order_by(
+                    self.lookup_key).values_list('id', flat=True)
+            )
+            self.batch_condition_list = list(ticket_ids | opportunity_ids | activity_ids)
 
     def get(self, results, conditions=None):
 
