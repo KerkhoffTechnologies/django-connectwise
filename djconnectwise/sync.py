@@ -1388,7 +1388,8 @@ class ScheduleEntriesSynchronizer(BatchConditionMixin, Synchronizer):
                 models.Activity.objects.order_by(
                     self.lookup_key).values_list('id', flat=True)
             )
-            self.batch_condition_list = list(ticket_ids | opportunity_ids | activity_ids)
+            self.batch_condition_list = \
+                list(ticket_ids | opportunity_ids | activity_ids)
 
     def get(self, results, conditions=None):
 
