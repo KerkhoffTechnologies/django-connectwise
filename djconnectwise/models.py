@@ -1943,6 +1943,11 @@ class Activity(UpdateConnectWiseMixin, TimeStampedModel):
     agreement = models.ForeignKey(
         'Agreement', blank=True, null=True, on_delete=models.SET_NULL)
     udf = models.JSONField(blank=True, null=True)
+    members = models.ManyToManyField(
+        'Member',
+        through='ScheduleEntry',
+        related_name='member_activities'
+    )
 
     EDITABLE_FIELDS = {
         'name': 'name',
