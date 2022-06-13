@@ -432,7 +432,7 @@ class TestTicket(ModelTestCase):
             '2018-09-06 16:24:34-07:00'
             )
 
-    @freeze_time("2018-08-25 15:24:34", tz_offset=0)
+    @freeze_time("2018-08-25 15:24:34", tz_offset=-7)
     def test_calculate_sla_expiry_out_of_hours(self):
         board = self.connectwise_boards[0]
         ticket = Ticket.objects.create(
