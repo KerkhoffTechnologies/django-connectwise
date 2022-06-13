@@ -7,3 +7,4 @@ responses
 model-mommy
 django-coverage
 names
+botocore
