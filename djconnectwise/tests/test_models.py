@@ -1,15 +1,15 @@
 import datetime
+from unittest import skip
 from unittest.mock import patch
 
-from unittest import skip
+from django.test import override_settings
 from django.utils import timezone
-from freezegun import freeze_time
-from model_mommy import mommy
-from test_plus.test import TestCase
-
 from djconnectwise.models import MyCompanyOther, Holiday, HolidayList, \
     Ticket, InvalidStatusError, Sla, Calendar, SlaPriority, TicketPriority, \
     BoardStatus
+from freezegun import freeze_time
+from model_mommy import mommy
+from test_plus.test import TestCase
 
 ticket_statuses_names = [
     'New',
@@ -432,7 +432,8 @@ class TestTicket(ModelTestCase):
             '2018-09-06 16:24:34-07:00'
             )
 
-    @freeze_time("2018-08-25 15:24:34", tz_offset=0)
+    @override_settings(TIME_ZONE='America/Vancouver')
+    @freeze_time("2018-08-25 15:24:34", tz_offset=-7)
     def test_calculate_sla_expiry_out_of_hours(self):
         board = self.connectwise_boards[0]
         ticket = Ticket.objects.create(
@@ -674,6 +675,7 @@ class TestTicket(ModelTestCase):
             '2021-08-23 03:24:34-07:00'
         )
 
+    @override_settings(TIME_ZONE='America/Vancouver')
     @freeze_time("2021-08-23 00:24:34", tz_offset=-7)
     def test_calculate_sla_on_status_and_priority_change(self):
         """
