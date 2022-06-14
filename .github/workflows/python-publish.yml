@@ -7,18 +7,17 @@
 # documentation.
 
 name: Upload Python Package
-on: [push]
-#on:
-#  pull_request:
-#    types:
-#      - closed
+on:
+  pull_request:
+    types:
+      - closed
 
 permissions:
   contents: read
 
 jobs:
   deploy:
-#    if: github.event.pull_request.merged == true
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
