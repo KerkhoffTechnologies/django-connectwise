@@ -2895,6 +2895,21 @@ class AgreementSynchronizer(Synchronizer):
         return self.client.get_agreements(*args, **kwargs)
 
 
+class SourceSynchronizer(Synchronizer):
+    client_class = api.ServiceAPIClient
+    model_class = models.Source
+
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data.get('id')
+        instance.name = json_data.get('name')
+        instance.default_flag = json_data.get('defaultFlag')
+
+        return instance
+
+    def get_page(self, *args, **kwargs):
+        return self.client.get_sources(*args, **kwargs)
+
+
 class UDFSynchronizer(Synchronizer):
 
     def fetch_records(self, results, conditions=None):

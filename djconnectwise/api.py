@@ -1056,16 +1056,62 @@ class TicketAPIMixin:
         endpoint_url = self._endpoint(
             '{}/{}'.format(self.ENDPOINT_TICKETS, ticket.id)
         )
-        body = self._format_ticket_request_body(ticket, changed_fields)
+        body = self._format_ticket_patch_body(ticket, changed_fields)
         return self.request('patch', endpoint_url, body)
 
-    def _format_ticket_request_body(self, ticket, changed_fields):
+    def create_ticket(self, ticket, changed_fields):
+        endpoint_url = self._endpoint(
+            '{}/'.format(self.ENDPOINT_TICKETS)
+        )
+        body = self._format_ticket_post_body(ticket, changed_fields)
+        return self.request('POST', endpoint_url, body)
+
+    def _format_ticket_post_body(self, ticket, fields):
+        # CW formats POST and PATCH very differently TODO rest of comment
+        body = {}
+
+
+        for field, value in fields.items():
+
+            # TODO get this from form
+            ticket.record_type = 'ServiceTicket'
+
+            if field and ticket.record_type and \
+                    field in ticket.EDITABLE_FIELDS[ticket.record_type]:
+
+                # TODO probably not necessary? Leaving in for dev, will
+                #  remove to see if it breaks
+                field = field.replace('_id', '')
+
+                field = ticket.EDITABLE_FIELDS[ticket.record_type][field]
+
+                if isinstance(value, datetime.datetime):
+                    value = value.astimezone(
+                            pytz.timezone('UTC')).strftime(
+                            "%Y-%m-%dT%H:%M:%SZ")
+                elif isinstance(value, models.Model):
+                    value = {'id': value.id}
+                else:
+                    value = str(value) if value else ''
+
+                body[field] = value
+
+        return body
+
+    def _format_ticket_patch_body(self, ticket, changed_fields):
         body = []
+        # TODO I forgot, PATCH requests are totally different than POST.
+        #  POST is cut and dry, patch has a wierd syntax. Will need to make
+        #  a new method for formatting POST requests. Should be easier at least.
 
         for field, value in changed_fields.items():
 
             # FieldTracker tracks Foreign Keys by database column name.
             # Remove _id to use the Django model field name.
+            # TODO This isn't true, and this data isn't even from the field
+            #  tracker. Why is it here?
+            #  ALSO it was removed in function that just ran, get_changed_values
+            #  in models.py. What is going on here?
             field = field.replace('_id', '')
 
             if field and ticket.record_type and \
@@ -1139,6 +1185,7 @@ class ServiceAPIClient(TicketAPIMixin, ConnectWiseAPIClient):
     ENDPOINT_PRIORITIES = 'priorities'
     ENDPOINT_LOCATIONS = 'locations'
     ENDPOINT_SLAS = 'SLAs'
+    ENDPOINT_SOURCES = 'sources'
 
     def get_notes(self, ticket_id, *args, **kwargs):
         """
@@ -1250,6 +1297,10 @@ class ServiceAPIClient(TicketAPIMixin, ConnectWiseAPIClient):
         endpoint_url = '{}/{}/typeSubTypeItemAssociations/'.format(
             self.ENDPOINT_BOARDS, board_id)
         return self.fetch_resource(endpoint_url, should_page=True,
+                                   *args, **kwargs)
+
+    def get_sources(self, *args, **kwargs):
+        return self.fetch_resource(self.ENDPOINT_SOURCES, should_page=True,
                                    *args, **kwargs)
 
 
