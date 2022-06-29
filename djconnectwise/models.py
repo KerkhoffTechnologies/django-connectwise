@@ -57,6 +57,8 @@ class UpdateConnectWiseMixin:
         updates can be PATCH to update existing records, or POST to
         create new records.
         """
+        # TODO remove all update_cw calls and related after synchronizers
+        #  handle updates to PSA
         api_class = self.api_class
 
         api_client = api_class(
@@ -65,16 +67,20 @@ class UpdateConnectWiseMixin:
         )
 
         changed_fields = kwargs.get('changed_fields')
+        # TODO updated objects? why this bad naming?
         updated_objects = self.get_changed_values(changed_fields)
 
         return self._update_cw(api_client, updated_objects)
 
     def get_changed_values(self, changed_field_keys):
+        # TODO remove this method after synchronizers handle updates to PSA
         # Prepare the updated fields to be sent to CW. At this point, any
         # updated fields have been set on the object, but not in local DB yet.
         updated_objects = {}
         if changed_field_keys:
             for field in changed_field_keys:
+                # TODO ask cameron about this, is this just a leftover from
+                #  another Dev not understanding how to use field trackers?
                 field = field.replace('_id', '')
                 updated_objects[field] = getattr(self, field)
 
@@ -1483,8 +1489,6 @@ class Ticket(UpdateConnectWiseMixin, TimeStampedModel):
         'status': 'status',
         'priority': 'priority',
         'board': 'board',
-        # TODO for creates, maybe just ignore this? Dont check if its in
-        #  editable fields?
         'record_type': 'recordType',
         'company': 'company',
         'location': 'location',
@@ -1572,8 +1576,7 @@ class Ticket(UpdateConnectWiseMixin, TimeStampedModel):
     tasks_completed = models.PositiveSmallIntegerField(blank=True, null=True)
     tasks_total = models.PositiveSmallIntegerField(blank=True, null=True)
 
-    # Only used for creation
-    # TODO remove when synchronizers handle all create/updates
+    # Only used for creation, not synced.
     initial = models.CharField(blank=True, null=True, max_length=5000)
 
     ticket_predecessor = models.ForeignKey(
@@ -1654,12 +1657,18 @@ class Ticket(UpdateConnectWiseMixin, TimeStampedModel):
         return api_class
 
     def _update_cw(self, api_client, updated_objects):
-        if not self.id:
-            # If ID is none, this ticket is being created.
-            # TODO Right now updating and creating records is split between
-            #  Synchronizers and models. We need to refactor to have all
-            #  interaction with the PSA to be through synchronizers.
-            return api_client.create_ticket(self, updated_objects)
+        # TODO
+        #  This _update_cw method just passes in the field names and the
+        #  new data to be updated from those field names of only the ones to be
+        #  changed.
+        #  Other than that, none of this needs to be on the model class, it
+        #  should be easy to move to the synchronizer to then call the API
+        #  class, because all the fields listed are changed, we know this, its
+        #  a brand new ticket. So we can probably skip that part, ish.
+
+        # TODO Right now updating and creating records is split between
+        #  Synchronizers and models. We need to refactor to have all
+        #  interaction with the PSA to be through synchronizers.
         return api_client.update_ticket(self, updated_objects)
 
     def get_descriptor(self):

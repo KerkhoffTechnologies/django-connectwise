@@ -2361,6 +2361,35 @@ class TicketSynchronizerMixin:
 
         return instance
 
+    def create(self, record, changed_fields, **kwargs):
+        """
+        Send POST request to ConnectWise to create tickets.
+        """
+        # TODO should be generic enough for all Card type records I think,
+        #  just need a new pattern for naming API methods less specifically
+        #  or an extra method wrapping them.
+        client = self.client_class(
+            api_public_key=kwargs.get('api_public_key'),
+            api_private_key=kwargs.get('api_private_key')
+        )
+        changed_values = self.get_changed_values(record, changed_fields)
+        new_record = client.create_ticket(record, changed_values)
+
+        return self.update_or_create_instance(new_record)
+
+    def get_changed_values(self, record, changed_field_keys):
+        # Prepare the updated fields to be sent to CW. At this point, any
+        # updated fields have been set on the object, but not in local DB yet.
+        changed_values = {}
+        if changed_field_keys:
+            for field in changed_field_keys:
+                # TODO ask cameron about this, is this just a leftover from
+                #  another Dev not understanding how to use field trackers?
+                field = field.replace('_id', '')
+                changed_values[field] = getattr(record, field)
+
+        return changed_values
+
 
 class ServiceTicketSynchronizer(TicketSynchronizerMixin,
                                 BatchConditionMixin, Synchronizer):

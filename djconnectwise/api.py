@@ -1063,24 +1063,30 @@ class TicketAPIMixin:
         endpoint_url = self._endpoint(
             '{}/'.format(self.ENDPOINT_TICKETS)
         )
+        # Changed fields is useful at this point as it prevents us
+        #  from sending an empty string, so the ticket is created with the
+        #  defaults from CW. I don't think this is the best way to handle it
+        #  though, and it should be updated to a new pattern during
+        #  the quick create records milestone.
+        # TODO remove changed fields to add new pattern
         body = self._format_ticket_post_body(ticket, changed_fields)
         return self.request('POST', endpoint_url, body)
 
     def _format_ticket_post_body(self, ticket, fields):
-        # CW formats POST and PATCH very differently TODO rest of comment
+        # CW formats POST and PATCH very differently, thats why there are two
+        #  different methods for it./
+        # TODO reduce duplication between post/patch formatting after switch
+        #  to synchronizers
+        # TODO Extract converting fields from their DB name to their API name
+        #  to their own method
         body = {}
 
-
         for field, value in fields.items():
-
-            # TODO get this from form
-            ticket.record_type = 'ServiceTicket'
 
             if field and ticket.record_type and \
                     field in ticket.EDITABLE_FIELDS[ticket.record_type]:
 
-                # TODO probably not necessary? Leaving in for dev, will
-                #  remove to see if it breaks
+                # TODO probably not necessary? Need to check with Cameron
                 field = field.replace('_id', '')
 
                 field = ticket.EDITABLE_FIELDS[ticket.record_type][field]
@@ -1099,10 +1105,11 @@ class TicketAPIMixin:
         return body
 
     def _format_ticket_patch_body(self, ticket, changed_fields):
+        # TODO reduce duplication between post/patch formatting after switch
+        #  to synchronizers
+        # TODO Extract converting fields from their DB name to their API name
+        #  to their own method
         body = []
-        # TODO I forgot, PATCH requests are totally different than POST.
-        #  POST is cut and dry, patch has a wierd syntax. Will need to make
-        #  a new method for formatting POST requests. Should be easier at least.
 
         for field, value in changed_fields.items():
 
@@ -1110,8 +1117,10 @@ class TicketAPIMixin:
             # Remove _id to use the Django model field name.
             # TODO This isn't true, and this data isn't even from the field
             #  tracker. Why is it here?
-            #  ALSO it was removed in function that just ran, get_changed_values
-            #  in models.py. What is going on here?
+            #  ALSO it was removed in function that ran earlier,
+            #  get_changed_values in models.py. What is going on here?
+            #  Another Dev probably not knowing how to use field tracker and
+            #  then not removing this part after field tracker stuff ripped out?
             field = field.replace('_id', '')
 
             if field and ticket.record_type and \
