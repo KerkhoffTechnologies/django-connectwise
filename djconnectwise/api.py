@@ -1078,16 +1078,13 @@ class TicketAPIMixin:
         # TODO reduce duplication between post/patch formatting after switch
         #  to synchronizers
         # TODO Extract converting fields from their DB name to their API name
-        #  to their own method
+        #  to their own method after switch to synchronizers
         body = {}
 
         for field, value in fields.items():
 
             if field and ticket.record_type and \
                     field in ticket.EDITABLE_FIELDS[ticket.record_type]:
-
-                # TODO probably not necessary? Need to check with Cameron
-                field = field.replace('_id', '')
 
                 field = ticket.EDITABLE_FIELDS[ticket.record_type][field]
 
@@ -1112,16 +1109,6 @@ class TicketAPIMixin:
         body = []
 
         for field, value in changed_fields.items():
-
-            # FieldTracker tracks Foreign Keys by database column name.
-            # Remove _id to use the Django model field name.
-            # TODO This isn't true, and this data isn't even from the field
-            #  tracker. Why is it here?
-            #  ALSO it was removed in function that ran earlier,
-            #  get_changed_values in models.py. What is going on here?
-            #  Another Dev probably not knowing how to use field tracker and
-            #  then not removing this part after field tracker stuff ripped out?
-            field = field.replace('_id', '')
 
             if field and ticket.record_type and \
                     field in ticket.EDITABLE_FIELDS[ticket.record_type]:
