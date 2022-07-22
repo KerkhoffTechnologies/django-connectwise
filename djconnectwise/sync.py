@@ -2365,9 +2365,8 @@ class TicketSynchronizerMixin:
         """
         Send POST request to ConnectWise to create tickets.
         """
-        # TODO should be generic enough for all Card type records I think,
-        #  just need a new pattern for naming API methods less specifically
-        #  or an extra method wrapping them.
+        # TODO move to parent synchronizer class when rest of record
+        #  creation is in.
         client = self.client_class(
             api_public_key=kwargs.get('api_public_key'),
             api_private_key=kwargs.get('api_private_key')

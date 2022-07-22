@@ -67,7 +67,7 @@ class UpdateConnectWiseMixin:
         )
 
         changed_fields = kwargs.get('changed_fields')
-        # TODO updated objects? why this bad naming?
+        # TODO improve naming when moved to synchronizer
         updated_objects = self.get_changed_values(changed_fields)
 
         return self._update_cw(api_client, updated_objects)
@@ -79,9 +79,6 @@ class UpdateConnectWiseMixin:
         updated_objects = {}
         if changed_field_keys:
             for field in changed_field_keys:
-                # TODO ask cameron about this, is this just a leftover from
-                #  another Dev not understanding how to use field trackers?
-                field = field.replace('_id', '')
                 updated_objects[field] = getattr(self, field)
 
         return updated_objects
@@ -1510,8 +1507,6 @@ class Ticket(UpdateConnectWiseMixin, TimeStampedModel):
         'project': 'project',
         'phase': 'phase'
     })
-    # TODO do we actually need this? Sources and contacts can be on project
-    #  tickets
     SERVICE_EDITABLE_FIELDS.update({
     })
     EDITABLE_FIELDS = {
