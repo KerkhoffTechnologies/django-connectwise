@@ -1495,7 +1495,6 @@ class Ticket(UpdateConnectWiseMixin, TimeStampedModel):
         'automatic_email_contact_flag': 'automaticEmailContactFlag',
         'automatic_email_cc': 'automaticEmailCc',
         'source': 'source',
-        'contact': 'contact',
 
         # Only for POST
         'initial_description': 'initialDescription',
@@ -1506,8 +1505,6 @@ class Ticket(UpdateConnectWiseMixin, TimeStampedModel):
     PROJECT_EDITABLE_FIELDS.update({
         'project': 'project',
         'phase': 'phase'
-    })
-    SERVICE_EDITABLE_FIELDS.update({
     })
     EDITABLE_FIELDS = {
         PROJECT_TICKET: PROJECT_EDITABLE_FIELDS,

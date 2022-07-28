@@ -108,6 +108,12 @@ def init_priorities():
     return synchronizer.sync()
 
 
+def init_sources():
+    mocks.service_api_get_sources_call([fixtures.API_SOURCE])
+    synchronizer = sync.SourceSynchronizer()
+    return synchronizer.sync()
+
+
 def init_project_statuses():
     mocks.projects_api_get_project_statuses_call(
         fixtures.API_PROJECT_STATUSES)

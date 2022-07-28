@@ -2003,3 +2003,15 @@ API_COMMUNICATION_TYPE_LIST = [
         }
     }
 ]
+
+
+API_SOURCE = {
+    'id': 3,
+    'name': "Email",
+    'defaultFlag': True,
+    '_info': {
+        'source_href': "https://example.com/v4_6_release/apis/3.0/service/sources/3"
+    }
+}
+
+API_SOURCE_LIST = [API_SOURCE]
