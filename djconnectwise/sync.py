@@ -2925,7 +2925,7 @@ class AgreementSynchronizer(Synchronizer):
 
 class SourceSynchronizer(Synchronizer):
     client_class = api.ServiceAPIClient
-    model_class = models.Source
+    model_class = models.SourceTracker
 
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data.get('id')
