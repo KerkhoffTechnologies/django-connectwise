@@ -99,6 +99,8 @@ class Command(BaseCommand):
                 _('Schedule Entry')),
             ('project_team_member', sync.ProjectTeamMemberSynchronizer,
                 _('Project Team Member')),
+            ('source', sync.SourceSynchronizer,
+             _('Source')),
             ('ticket_udf', sync.TicketUDFSynchronizer, _('Ticket UDF')),
             ('project_udf', sync.ProjectUDFSynchronizer, _('Project UDF')),
             ('activity_udf', sync.ActivityUDFSynchronizer, _('Activity UDF')),

@@ -407,6 +407,12 @@ class Agreement(admin.ModelAdmin):
     search_fields = ['name']
 
 
+@admin.register(models.Source)
+class Source(admin.ModelAdmin):
+    list_display = ('id', 'name', 'default_flag',)
+    search_fields = ['name']
+
+
 @admin.register(models.TicketUDF)
 class TicketUDFAdmin(admin.ModelAdmin):
     list_display = ('id', 'caption', 'type', 'entry_method',

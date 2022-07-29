@@ -678,6 +678,18 @@ class TestSyncWorkTypeCommand(AbstractBaseSyncTest, TestCase):
     )
 
 
+class TestSyncSourceCommand(AbstractBaseSyncTest, TestCase):
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_sources()
+
+    args = (
+        mocks.service_api_get_sources_call,
+        fixtures.API_SOURCE_LIST,
+        'source'
+    )
+
+
 class TestSyncWorkRoleCommand(AbstractBaseSyncTest, TestCase):
     def setUp(self):
         super().setUp()
@@ -792,7 +804,8 @@ class TestSyncAllCommand(TestCase):
             TestSyncTypeSubTypeItemAssociationCommand,
             TestSyncAgreementCommand,
             TestSyncProjectTypesCommand,
-            TestSyncProjectTeamMemberCommand
+            TestSyncProjectTeamMemberCommand,
+            TestSyncSourceCommand
         ]
 
         self.test_args = []
@@ -894,6 +907,7 @@ class TestSyncAllCommand(TestCase):
             'agreement': models.Agreement,
             'project_type': models.ProjectType,
             'project_team_member': models.ProjectTeamMember,
+            'source': models.Source,
         }
 
         # Run partial sync first
