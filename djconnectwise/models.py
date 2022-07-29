@@ -2619,6 +2619,14 @@ class SalesProbabilityTracker(SalesProbability):
         db_table = 'djconnectwise_salesprobability'
 
 
+class SourceTracker(Source):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djconnectwise_source'
+
+
 class TypeTracker(Type):
     tracker = FieldTracker()
 
