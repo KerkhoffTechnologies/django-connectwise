@@ -52,7 +52,13 @@ class UpdateConnectWiseMixin:
         Send ticket updates to ConnectWise. Accepts a changed_fields
         argument which is a list of fields that have been changed and
         should be updated in CW.
+
+        Update in this context means to update connectwise with new data,
+        updates can be PATCH to update existing records, or POST to
+        create new records.
         """
+        # TODO remove all update_cw calls and related after synchronizers
+        #  handle updates to PSA
         api_class = self.api_class
 
         api_client = api_class(
@@ -61,17 +67,18 @@ class UpdateConnectWiseMixin:
         )
 
         changed_fields = kwargs.get('changed_fields')
+        # TODO improve naming when moved to synchronizer
         updated_objects = self.get_changed_values(changed_fields)
 
         return self._update_cw(api_client, updated_objects)
 
     def get_changed_values(self, changed_field_keys):
+        # TODO remove this method after synchronizers handle updates to PSA
         # Prepare the updated fields to be sent to CW. At this point, any
         # updated fields have been set on the object, but not in local DB yet.
         updated_objects = {}
         if changed_field_keys:
             for field in changed_field_keys:
-                field = field.replace('_id', '')
                 updated_objects[field] = getattr(self, field)
 
         return updated_objects
@@ -1479,6 +1486,18 @@ class Ticket(UpdateConnectWiseMixin, TimeStampedModel):
         'status': 'status',
         'priority': 'priority',
         'board': 'board',
+        'record_type': 'recordType',
+        'company': 'company',
+        'location': 'location',
+        'contact': 'contact',
+        'automatic_email_resource_flag': 'automaticEmailResourceFlag',
+        'automatic_email_cc_flag': 'automaticEmailCcFlag',
+        'automatic_email_contact_flag': 'automaticEmailContactFlag',
+        'automatic_email_cc': 'automaticEmailCc',
+        'source': 'source',
+
+        # Only for POST
+        'initial_description': 'initialDescription',
     }
 
     SERVICE_EDITABLE_FIELDS = VALID_UPDATE_FIELDS
@@ -1486,10 +1505,6 @@ class Ticket(UpdateConnectWiseMixin, TimeStampedModel):
     PROJECT_EDITABLE_FIELDS.update({
         'project': 'project',
         'phase': 'phase'
-    })
-    SERVICE_EDITABLE_FIELDS.update({
-        'company': 'company',
-        'contact': 'contact',
     })
     EDITABLE_FIELDS = {
         PROJECT_TICKET: PROJECT_EDITABLE_FIELDS,
@@ -1525,7 +1540,6 @@ class Ticket(UpdateConnectWiseMixin, TimeStampedModel):
     res_plan_mins = models.IntegerField(blank=True, null=True)
     severity = models.CharField(blank=True, null=True, max_length=250)
     site_name = models.CharField(blank=True, null=True, max_length=250)
-    source = models.CharField(blank=True, null=True, max_length=250)
     summary = models.CharField(blank=True, null=True, db_index=True,
                                max_length=250)
     updated_by = models.CharField(blank=True, null=True, max_length=250)
@@ -1553,6 +1567,9 @@ class Ticket(UpdateConnectWiseMixin, TimeStampedModel):
     udf = models.JSONField(blank=True, null=True)
     tasks_completed = models.PositiveSmallIntegerField(blank=True, null=True)
     tasks_total = models.PositiveSmallIntegerField(blank=True, null=True)
+
+    # Only used for creation, not synced.
+    initial = models.CharField(blank=True, null=True, max_length=5000)
 
     ticket_predecessor = models.ForeignKey(
         'self', blank=True, null=True, on_delete=models.SET_NULL
@@ -1604,6 +1621,9 @@ class Ticket(UpdateConnectWiseMixin, TimeStampedModel):
     agreement = models.ForeignKey(
         'Agreement', blank=True, null=True, related_name='agreement_tickets',
         on_delete=models.SET_NULL)
+    source = models.ForeignKey(
+        'Source', blank=True, null=True, related_name='source_tickets',
+        on_delete=models.SET_NULL)
 
     class Meta:
         verbose_name = 'Ticket'
@@ -1629,6 +1649,18 @@ class Ticket(UpdateConnectWiseMixin, TimeStampedModel):
         return api_class
 
     def _update_cw(self, api_client, updated_objects):
+        # TODO
+        #  This _update_cw method just passes in the field names and the
+        #  new data to be updated from those field names of only the ones to be
+        #  changed.
+        #  Other than that, none of this needs to be on the model class, it
+        #  should be easy to move to the synchronizer to then call the API
+        #  class, because all the fields listed are changed, we know this, its
+        #  a brand new ticket. So we can probably skip that part, ish.
+
+        # TODO Right now updating and creating records is split between
+        #  Synchronizers and models. We need to refactor to have all
+        #  interaction with the PSA to be through synchronizers.
         return api_client.update_ticket(self, updated_objects)
 
     def get_descriptor(self):
@@ -2229,6 +2261,14 @@ class Agreement(TimeStampedModel):
         return '{}/{}'.format(self.agreement_type, self.name)
 
 
+class Source(TimeStampedModel):
+    name = models.CharField(max_length=100, blank=False, null=False)
+    default_flag = models.BooleanField()
+
+    def __str__(self):
+        return self.name
+
+
 class BaseUDF(TimeStampedModel):
     caption = models.CharField(max_length=50, blank=True, null=True)
     type = models.CharField(max_length=50, blank=True, null=True)
@@ -2577,6 +2617,14 @@ class SalesProbabilityTracker(SalesProbability):
     class Meta:
         proxy = True
         db_table = 'djconnectwise_salesprobability'
+
+
+class SourceTracker(Source):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djconnectwise_source'
 
 
 class TypeTracker(Type):

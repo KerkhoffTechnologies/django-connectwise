@@ -1056,17 +1056,59 @@ class TicketAPIMixin:
         endpoint_url = self._endpoint(
             '{}/{}'.format(self.ENDPOINT_TICKETS, ticket.id)
         )
-        body = self._format_ticket_request_body(ticket, changed_fields)
+        body = self._format_ticket_patch_body(ticket, changed_fields)
         return self.request('patch', endpoint_url, body)
 
-    def _format_ticket_request_body(self, ticket, changed_fields):
+    def create_ticket(self, ticket, changed_fields):
+        endpoint_url = self._endpoint(
+            '{}/'.format(self.ENDPOINT_TICKETS)
+        )
+        # Changed fields is useful at this point as it prevents us
+        #  from sending an empty string, so the ticket is created with the
+        #  defaults from CW. I don't think this is the best way to handle it
+        #  though, and it should be updated to a new pattern during
+        #  the quick create records milestone.
+        # TODO remove changed fields to add new pattern
+        body = self._format_ticket_post_body(ticket, changed_fields)
+        return self.request('POST', endpoint_url, body)
+
+    def _format_ticket_post_body(self, ticket, fields):
+        # CW formats POST and PATCH very differently, thats why there are two
+        #  different methods for it./
+        # TODO reduce duplication between post/patch formatting after switch
+        #  to synchronizers
+        # TODO Extract converting fields from their DB name to their API name
+        #  to their own method after switch to synchronizers
+        body = {}
+
+        for field, value in fields.items():
+
+            if field and ticket.record_type and \
+                    field in ticket.EDITABLE_FIELDS[ticket.record_type]:
+
+                field = ticket.EDITABLE_FIELDS[ticket.record_type][field]
+
+                if isinstance(value, datetime.datetime):
+                    value = value.astimezone(
+                            pytz.timezone('UTC')).strftime(
+                            "%Y-%m-%dT%H:%M:%SZ")
+                elif isinstance(value, models.Model):
+                    value = {'id': value.id}
+                else:
+                    value = str(value) if value else ''
+
+                body[field] = value
+
+        return body
+
+    def _format_ticket_patch_body(self, ticket, changed_fields):
+        # TODO reduce duplication between post/patch formatting after switch
+        #  to synchronizers
+        # TODO Extract converting fields from their DB name to their API name
+        #  to their own method
         body = []
 
         for field, value in changed_fields.items():
-
-            # FieldTracker tracks Foreign Keys by database column name.
-            # Remove _id to use the Django model field name.
-            field = field.replace('_id', '')
 
             if field and ticket.record_type and \
                     field in ticket.EDITABLE_FIELDS[ticket.record_type]:
@@ -1139,6 +1181,7 @@ class ServiceAPIClient(TicketAPIMixin, ConnectWiseAPIClient):
     ENDPOINT_PRIORITIES = 'priorities'
     ENDPOINT_LOCATIONS = 'locations'
     ENDPOINT_SLAS = 'SLAs'
+    ENDPOINT_SOURCES = 'sources'
 
     def get_notes(self, ticket_id, *args, **kwargs):
         """
@@ -1250,6 +1293,10 @@ class ServiceAPIClient(TicketAPIMixin, ConnectWiseAPIClient):
         endpoint_url = '{}/{}/typeSubTypeItemAssociations/'.format(
             self.ENDPOINT_BOARDS, board_id)
         return self.fetch_resource(endpoint_url, should_page=True,
+                                   *args, **kwargs)
+
+    def get_sources(self, *args, **kwargs):
+        return self.fetch_resource(self.ENDPOINT_SOURCES, should_page=True,
                                    *args, **kwargs)
 
 
