@@ -2154,6 +2154,7 @@ class TicketSynchronizerMixin:
         'subType': (models.SubType, 'sub_type'),
         'item': (models.Item, 'sub_type_item'),
         'agreement': (models.Agreement, 'agreement'),
+        'source': (models.Source, 'source'),
     }
 
     def __init__(self, *args, **kwargs):
