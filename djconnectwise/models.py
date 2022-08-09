@@ -1495,6 +1495,7 @@ class Ticket(UpdateConnectWiseMixin, TimeStampedModel):
         'automatic_email_contact_flag': 'automaticEmailContactFlag',
         'automatic_email_cc': 'automaticEmailCc',
         'source': 'source',
+        'is_issue_flag': 'isIssueFlag',
 
         # Only for POST
         'initial_description': 'initialDescription',
@@ -1567,9 +1568,11 @@ class Ticket(UpdateConnectWiseMixin, TimeStampedModel):
     udf = models.JSONField(blank=True, null=True)
     tasks_completed = models.PositiveSmallIntegerField(blank=True, null=True)
     tasks_total = models.PositiveSmallIntegerField(blank=True, null=True)
+    is_issue_flag = models.BooleanField(default=False)
 
     # Only used for creation, not synced.
-    initial = models.CharField(blank=True, null=True, max_length=5000)
+    initial_description = models.CharField(
+        blank=True, null=True, max_length=5000)
 
     ticket_predecessor = models.ForeignKey(
         'self', blank=True, null=True, on_delete=models.SET_NULL
