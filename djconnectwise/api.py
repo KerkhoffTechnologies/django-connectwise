@@ -1199,7 +1199,8 @@ class ServiceAPIClient(TicketAPIMixin, ConnectWiseAPIClient):
             "detailDescriptionFlag": kwargs.get("description_flag"),
             "internalAnalysisFlag": kwargs.get("analysis_flag"),
             "resolutionFlag": kwargs.get("resolution_flag"),
-            "processNotifications": kwargs.get("process_notifications")
+            "processNotifications": kwargs.get("process_notifications"),
+            "customerUpdatedFlag": kwargs.get("customerUpdatedFlag")
         }
 
         member = kwargs.get("resource")
@@ -1211,6 +1212,12 @@ class ServiceAPIClient(TicketAPIMixin, ConnectWiseAPIClient):
                     "name": str(member),
                 }
 
+            })
+
+        contact = kwargs.get("contact")
+        if contact:
+            body.update({
+                "contact": contact
             })
 
         text = kwargs.get("text")
