@@ -1200,7 +1200,7 @@ class ServiceAPIClient(TicketAPIMixin, ConnectWiseAPIClient):
             "internalAnalysisFlag": kwargs.get("analysis_flag"),
             "resolutionFlag": kwargs.get("resolution_flag"),
             "processNotifications": kwargs.get("process_notifications"),
-            "customerUpdatedFlag": kwargs.get("customerUpdatedFlag")
+            "customerUpdatedFlag": kwargs.get("customer_updated_flag")
         }
 
         member = kwargs.get("resource")
