@@ -2378,15 +2378,22 @@ class TicketSynchronizerMixin:
         return self.update_or_create_instance(new_record)
 
     def get_changed_values(self, record, changed_field_keys):
+        # TODO likely to be removed in upcoming issue in favour of new method
+        #  of synchronizers assuming forms will be the main method of updating
+        #  records, letting them make assumptions about changed data.
         # Prepare the updated fields to be sent to CW. At this point, any
         # updated fields have been set on the object, but not in local DB yet.
         changed_values = {}
         if changed_field_keys:
             for field in changed_field_keys:
-                # TODO ask cameron about this, is this just a leftover from
-                #  another Dev not understanding how to use field trackers?
-                field = field.replace('_id', '')
-                changed_values[field] = getattr(record, field)
+                try:
+                    changed_values[field] = getattr(record, field)
+                except AttributeError:
+                    # Ignore attribute errors so custom fields on forms
+                    # to gather extra data can be ignored.
+                    logger.debug(f"Field skipped in getting changed values"
+                                 f": {field}.")
+                    continue
 
         return changed_values
 
@@ -2455,7 +2462,10 @@ class ProjectTicketSynchronizer(TicketSynchronizerMixin,
         # record type field but we use the same Ticket model for project and
         # service tickets so we need to set the record type here.
         if json_data.get('isIssueFlag'):
+            # TODO update app to work with project issue flag instead of
+            #  legacy record_type field.
             instance.record_type = models.Ticket.PROJECT_ISSUE
+            instance.is_issue_flag = True
         else:
             instance.record_type = models.Ticket.PROJECT_TICKET
 
