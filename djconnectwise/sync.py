@@ -2342,6 +2342,7 @@ class TicketSynchronizerMixin:
         instance.lag_days = json_data.get('lagDays')
         instance.lag_non_working_days_flag = \
             json_data.get('lagNonworkingDaysFlag', False)
+        instance.contact_phone_number = json_data.get('contactPhoneNumber')
 
         try:
             predecessor_id = json_data.get('predecessorId')
