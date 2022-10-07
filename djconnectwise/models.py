@@ -1569,8 +1569,13 @@ class Ticket(UpdateConnectWiseMixin, TimeStampedModel):
     tasks_completed = models.PositiveSmallIntegerField(blank=True, null=True)
     tasks_total = models.PositiveSmallIntegerField(blank=True, null=True)
     is_issue_flag = models.BooleanField(default=False)
+    contact_name = models.CharField(blank=True, null=True, max_length=62)
     contact_phone_number = models.CharField(blank=True,
-                                            null=True, max_length=50)
+                                            null=True, max_length=20)
+    contact_phone_extension = models.CharField(blank=True,
+                                               null=True, max_length=15)
+    contact_email_address = models.CharField(blank=True,
+                                             null=True, max_length=250)
 
     # Only used for creation, not synced.
     initial_description = models.CharField(
