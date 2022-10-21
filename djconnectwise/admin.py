@@ -136,6 +136,12 @@ class ContactCommunicationAdmin(admin.ModelAdmin):
         return qs.select_related('contact', 'contact__company')
 
 
+@admin.register(models.CommunicationType)
+class CommunicationTypeAdmin(admin.ModelAdmin):
+    list_display = ('id', 'description', 'phone_flag', 'email_flag')
+    search_fields = ['id', 'description']
+
+
 @admin.register(models.ScheduleType)
 class ScheduleTypeAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'identifier')
