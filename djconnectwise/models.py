@@ -1499,6 +1499,7 @@ class Ticket(UpdateConnectWiseMixin, TimeStampedModel):
         'automatic_email_cc': 'automaticEmailCc',
         'source': 'source',
         'is_issue_flag': 'isIssueFlag',
+        'customer_updated': 'customerUpdatedFlag',
 
         # Only for POST
         'initial_description': 'initialDescription',
