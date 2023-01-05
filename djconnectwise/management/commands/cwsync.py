@@ -1,6 +1,7 @@
 from collections import OrderedDict
 
 from djconnectwise import sync, api
+from djconnectwise.api import ConnectWiseSecurityPermissionsException
 from djconnectwise.utils import DjconnectwiseSettings
 
 from django.core.management.base import BaseCommand, CommandError
@@ -19,104 +20,105 @@ class Command(BaseCommand):
         # using kwargs in Python 3.6. But we need Python 3.5 compatibility for
         # now.
         # See https://www.python.org/dev/peps/pep-0468/.
+
         synchronizers = (
             ('member', sync.MemberSynchronizer, _('Member')),
             ('work_type', sync.WorkTypeSynchronizer,
-                _('Work Type')),
+             _('Work Type')),
             ('work_role', sync.WorkRoleSynchronizer,
-                _('Work Role')),
+             _('Work Role')),
             ('board', sync.BoardSynchronizer, _('Board')),
             ('team', sync.TeamSynchronizer, _('Team')),
             ('board_status', sync.BoardStatusSynchronizer, _('Board Status')),
             ('priority', sync.PrioritySynchronizer, _('Priority')),
             ('project_status', sync.ProjectStatusSynchronizer,
-                _('Project Status')),
+             _('Project Status')),
             ('project_type', sync.ProjectTypeSynchronizer,
-                _('Project Type')),
+             _('Project Type')),
             ('project', sync.ProjectSynchronizer, _('Project')),
             ('project_phase', sync.ProjectPhaseSynchronizer,
-                _('Project Phase')),
+             _('Project Phase')),
             ('territory', sync.TerritorySynchronizer,
-                _('Territory')),
+             _('Territory')),
             ('company_status', sync.CompanyStatusSynchronizer,
-                _('Company Status')),
+             _('Company Status')),
             ('company_type', sync.CompanyTypeSynchronizer, _('Company Type')),
             ('company', sync.CompanySynchronizer, _('Company')),
             ('communication_type', sync.CommunicationTypeSynchronizer,
-                _('Communication Type')),
+             _('Communication Type')),
             ('contact', sync.ContactSynchronizer, _('Contact')),
             ('contact_communication',
-                sync.ContactCommunicationSynchronizer,
-                _('Contact Communication')),
+             sync.ContactCommunicationSynchronizer,
+             _('Contact Communication')),
             ('location', sync.LocationSynchronizer, _('Location')),
             ('opportunity_status', sync.OpportunityStatusSynchronizer,
-                _('Opportunity Status')),
+             _('Opportunity Status')),
             ('opportunity_stage', sync.OpportunityStageSynchronizer,
-                _('Opportunity Stage')),
+             _('Opportunity Stage')),
             ('opportunity_type', sync.OpportunityTypeSynchronizer,
-                _('Opportunity Type')),
+             _('Opportunity Type')),
             ('sales_probability', sync.SalesProbabilitySynchronizer,
-                _('Sales Probability')),
+             _('Sales Probability')),
             ('opportunity', sync.OpportunitySynchronizer,
-                _('Opportunity')),
+             _('Opportunity')),
             ('holiday_list', sync.HolidayListSynchronizer,
-                _('Holiday List')),
+             _('Holiday List')),
             ('holiday', sync.HolidaySynchronizer,
-                _('Holiday')),
+             _('Holiday')),
             ('calendar', sync.CalendarSynchronizer,
-                _('Calendar')),
+             _('Calendar')),
             ('company_other', sync.MyCompanyOtherSynchronizer,
-                _('Company Other')),
+             _('Company Other')),
             ('sla', sync.SLASynchronizer,
-                _('Sla')),
+             _('Sla')),
             ('sla_priority', sync.SLAPrioritySynchronizer,
-                _('Sla Priority')),
+             _('Sla Priority')),
             ('type', sync.TypeSynchronizer,
-                _('Type')),
+             _('Type')),
             ('sub_type', sync.SubTypeSynchronizer,
-                _('Sub Type')),
+             _('Sub Type')),
             ('item', sync.ItemSynchronizer,
-                _('Item')),
+             _('Item')),
             ('type_subtype_item_association',
              sync.TypeSubTypeItemAssociationSynchronizer,
              _('Type Subtype Item Association')),
             ('ticket', sync.ServiceTicketSynchronizer, _('Ticket')),
             ('project_ticket', sync.ProjectTicketSynchronizer,
-                _('Project Ticket')),
+             _('Project Ticket')),
             ('agreement', sync.AgreementSynchronizer,
-                _('Agreement')),
+             _('Agreement')),
             ('activity_status', sync.ActivityStatusSynchronizer,
-                _('Activity Status')),
+             _('Activity Status')),
             ('activity_type', sync.ActivityTypeSynchronizer,
-                _('Activity Type')),
+             _('Activity Type')),
             ('activity', sync.ActivitySynchronizer,
-                _('Activity')),
+             _('Activity')),
             ('schedule_type', sync.ScheduleTypeSynchronizer,
-                _('Schedule Type')),
+             _('Schedule Type')),
             ('schedule_status', sync.ScheduleStatusSynchronizer,
-                _('Schedule Status')),
+             _('Schedule Status')),
             ('schedule_entry', sync.ScheduleEntriesSynchronizer,
-                _('Schedule Entry')),
+             _('Schedule Entry')),
             ('project_team_member', sync.ProjectTeamMemberSynchronizer,
-                _('Project Team Member')),
+             _('Project Team Member')),
             ('source', sync.SourceSynchronizer,
              _('Source')),
             ('ticket_udf', sync.TicketUDFSynchronizer, _('Ticket UDF')),
             ('project_udf', sync.ProjectUDFSynchronizer, _('Project UDF')),
             ('activity_udf', sync.ActivityUDFSynchronizer, _('Activity UDF')),
             ('opportunity_udf', sync.OpportunityUDFSynchronizer,
-                _('Opportunity UDF')),
+             _('Opportunity UDF')),
         )
 
         settings = DjconnectwiseSettings().get_settings()
         if settings['sync_time_and_note_entries']:
             synchronizers = synchronizers + (
                 ('service_note', sync.ServiceNoteSynchronizer,
-                    _('Service Note')),
+                 _('Service Note')),
                 ('opportunity_note', sync.OpportunityNoteSynchronizer,
-                    _('Opportunity Note')),
+                 _('Opportunity Note')),
                 ('time_entry', sync.TimeEntrySynchronizer,
-                    _('Time Entry'))
+                 _('Time Entry'))
             )
 
         self.synchronizer_map = OrderedDict()
@@ -177,6 +179,11 @@ class Command(BaseCommand):
                                    full_option=full_option)
 
             except api.ConnectWiseAPIError as e:
+                msg = 'Failed to sync {}: {}'.format(obj_name, e)
+                self.stderr.write(msg)
+                error_messages += '{}\n'.format(msg)
+                failed_classes += 1
+            except ConnectWiseSecurityPermissionsException as e:
                 msg = 'Failed to sync {}: {}'.format(obj_name, e)
                 self.stderr.write(msg)
                 error_messages += '{}\n'.format(msg)

@@ -79,6 +79,7 @@ def generate_thumbnail(avatar, size, extension, filename):
 
 
 class DjconnectwiseSettings:
+
     def get_settings(self):
         # Make some defaults
         request_settings = {
