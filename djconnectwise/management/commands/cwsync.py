@@ -177,13 +177,12 @@ class Command(BaseCommand):
             try:
                 self.sync_by_class(sync_class, obj_name,
                                    full_option=full_option)
-
-            except api.ConnectWiseAPIError as e:
+            except ConnectWiseSecurityPermissionsException as e:
                 msg = 'Failed to sync {}: {}'.format(obj_name, e)
                 self.stderr.write(msg)
                 error_messages += '{}\n'.format(msg)
-                failed_classes += 1
-            except ConnectWiseSecurityPermissionsException as e:
+                
+            except api.ConnectWiseAPIError as e:
                 msg = 'Failed to sync {}: {}'.format(obj_name, e)
                 self.stderr.write(msg)
                 error_messages += '{}\n'.format(msg)
