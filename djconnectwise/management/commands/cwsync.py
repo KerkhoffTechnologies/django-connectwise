@@ -181,6 +181,7 @@ class Command(BaseCommand):
                 msg = 'Failed to sync {}: {}'.format(obj_name, e)
                 self.stderr.write(msg)
                 error_messages += '{}\n'.format(msg)
+
             except api.ConnectWiseAPIError as e:
                 msg = 'Failed to sync {}: {}'.format(obj_name, e)
                 self.stderr.write(msg)
