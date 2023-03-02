@@ -1479,6 +1479,7 @@ class Ticket(UpdateConnectWiseMixin, TimeStampedModel):
     VALID_UPDATE_FIELDS = {
         'summary': 'summary',
         'required_date_utc': 'requiredDate',
+        'estimated_start_date': 'estimatedStartDate',
         'budget_hours': 'budgetHours',
         'closed_flag': 'closedFlag',
         'owner': 'owner',
