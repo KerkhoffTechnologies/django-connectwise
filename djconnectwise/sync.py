@@ -854,6 +854,9 @@ class BoardSynchronizer(Synchronizer):
             instance.inactive = json_data.get('inactive')
 
         instance.project_flag = json_data.get('projectFlag', False)
+        instance.timeEntryDiscussionFlag = json_data.get('timeEntryDiscussionFlag', False)
+        instance.timeEntryResolutionFlag = json_data.get('timeEntryResolutionFlag', False)
+        instance.timeEntryInternalAnalysisFlag = json_data.get('timeEntryInternalAnalysisFlag', False)
 
         self.set_relations(instance, json_data)
         return instance
