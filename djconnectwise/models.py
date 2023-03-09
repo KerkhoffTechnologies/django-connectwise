@@ -137,7 +137,7 @@ class ConnectWiseBoard(TimeStampedModel):
     inactive = models.BooleanField(default=False)
     time_entry_discussion_flag = models.BooleanField(default=False)
     time_entry_resolution_flag = models.BooleanField(default=False)
-    time_entry_internalanalysis_flag = models.BooleanField(default=False)
+    time_entry_internal_analysis_flag = models.BooleanField(default=False)
     work_role = models.ForeignKey(
         'WorkRole',
         blank=True,
