@@ -335,8 +335,10 @@ class ConnectWiseAPIClient(object):
             if 200 <= response.status_code < 300:
                 try:
                     return response.json()
-                except JSONDecodeError as error:
-                    logger.error('An error occurred during returning response as dict: {}'.format(error))
+                except JSONDecodeError as e:
+                    logger.error('An error occurred while decoding '
+                                 'the request: {}'.format(e))
+                    return {}
 
             elif response.status_code == 404:
                 msg = 'Resource not found: {}'.format(response.url)
