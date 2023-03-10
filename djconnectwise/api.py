@@ -3,6 +3,8 @@ import json
 import logging
 import re
 from urllib.parse import urlparse
+from json import JSONDecodeError
+
 
 import pytz
 import requests
@@ -331,7 +333,12 @@ class ConnectWiseAPIClient(object):
                 raise ConnectWiseAPIError('{}'.format(e))
 
             if 200 <= response.status_code < 300:
-                return response.json()
+                try:
+                    return response.json()
+                except JSONDecodeError as e:
+                    logger.error('An error occurred while decoding '
+                                 'the request: {}'.format(e))
+                    return {}
 
             elif response.status_code == 404:
                 msg = 'Resource not found: {}'.format(response.url)
