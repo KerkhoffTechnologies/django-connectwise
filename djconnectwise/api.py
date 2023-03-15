@@ -1062,9 +1062,9 @@ class TicketAPIMixin:
         return self.fetch_resource(self.ENDPOINT_TICKETS, should_page=True,
                                    *args, **kwargs)
 
-    def update_ticket(self, card, changed_fields):
+    def update_ticket(self, ticket, changed_fields):
         endpoint_url = self._endpoint(
-            '{}/{}'.format(self.ENDPOINT_TICKETS, card.id)
+            '{}/{}'.format(self.ENDPOINT_TICKETS, ticket.id)
         )
         body = self._format_ticket_patch_body(changed_fields)
         return self.request('patch', endpoint_url, body)
@@ -1105,7 +1105,6 @@ class TicketAPIMixin:
 
         for field, value in changed_fields.items():
 
-            # extra_field_updates = []
             field_update = {
                 'op': 'replace',
                 'path': field,
