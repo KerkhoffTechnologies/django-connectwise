@@ -1672,9 +1672,7 @@ class Ticket(UpdateConnectWiseMixin, TimeStampedModel):
         #  new data to be updated from those field names of only the ones to be
         #  changed.
         #  Other than that, none of this needs to be on the model class, it
-        #  should be easy to move to the synchronizer to then call the API
-        #  class, because all the fields listed are changed, we know this, its
-        #  a brand new ticket. So we can probably skip that part, ish.
+        #  is only here for backwards compatibility until issue 2861
 
         # TODO Right now updating and creating records is split between
         #  Synchronizers and models. We need to refactor to have all

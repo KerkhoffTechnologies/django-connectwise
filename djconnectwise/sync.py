@@ -2163,6 +2163,36 @@ class TicketSynchronizerMixin:
         'source': (models.Source, 'source'),
     }
 
+    API_FIELD_NAMES = {
+        'summary': 'summary',
+        'required_date_utc': 'requiredDate',
+        'estimated_start_date': 'estimatedStartDate',
+        'budget_hours': 'budgetHours',
+        'closed_flag': 'closedFlag',
+        'owner': 'owner',
+        'type': 'type',
+        'sub_type': 'subType',
+        'sub_type_item': 'item',
+        'agreement': 'agreement',
+        'status': 'status',
+        'priority': 'priority',
+        'board': 'board',
+        'record_type': 'recordType',
+        'company': 'company',
+        'location': 'location',
+        'contact': 'contact',
+        'automatic_email_resource_flag': 'automaticEmailResourceFlag',
+        'automatic_email_cc_flag': 'automaticEmailCcFlag',
+        'automatic_email_contact_flag': 'automaticEmailContactFlag',
+        'automatic_email_cc': 'automaticEmailCc',
+        'source': 'source',
+        'is_issue_flag': 'isIssueFlag',
+        'customer_updated': 'customerUpdatedFlag',
+        'initial_description': 'initialDescription',
+        'project': 'project',
+        'phase': 'phase',
+    }
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -2373,7 +2403,7 @@ class TicketSynchronizerMixin:
 
         return instance
 
-    def create(self, record, changed_fields, **kwargs):
+    def create(self, fields, **kwargs):
         """
         Send POST request to ConnectWise to create tickets.
         """
@@ -2383,30 +2413,39 @@ class TicketSynchronizerMixin:
             api_public_key=kwargs.get('api_public_key'),
             api_private_key=kwargs.get('api_private_key')
         )
-        changed_values = self.get_changed_values(record, changed_fields)
-        new_record = client.create_ticket(record, changed_values)
+        # convert the fields to the format that the API expects
+        api_fields = self._convert_fields_to_api_format(fields)
+
+        new_record = client.create_ticket(api_fields)
 
         return self.update_or_create_instance(new_record)
 
-    def get_changed_values(self, record, changed_field_keys):
-        # TODO likely to be removed in upcoming issue in favour of new method
-        #  of synchronizers assuming forms will be the main method of updating
-        #  records, letting them make assumptions about changed data.
-        # Prepare the updated fields to be sent to CW. At this point, any
-        # updated fields have been set on the object, but not in local DB yet.
-        changed_values = {}
-        if changed_field_keys:
-            for field in changed_field_keys:
-                try:
-                    changed_values[field] = getattr(record, field)
-                except AttributeError:
-                    # Ignore attribute errors so custom fields on forms
-                    # to gather extra data can be ignored.
-                    logger.debug(f"Field skipped in getting changed values"
-                                 f": {field}.")
-                    continue
+    def _convert_fields_to_api_format(self, fields):
+        """
+        Converts the model field names to the API field names.
+        """
+        api_fields = {}
+        for key, value in fields.items():
+            api_fields[self.API_FIELD_NAMES[key]] = value
+        return api_fields
 
-        return changed_values
+    def update(self, record, changed_fields, **kwargs):
+        """
+        Send PATCH request to ConnectWise to create tickets.
+        """
+        # TODO move to parent synchronizer class when rest of record
+        #  creation is in.
+        client = self.client_class(
+            api_public_key=kwargs.get('api_public_key'),
+            api_private_key=kwargs.get('api_private_key')
+        )
+
+        # convert the fields to the format that the API expects
+        api_fields = self._convert_fields_to_api_format(changed_fields)
+
+        updated_record = client.update_ticket(record, api_fields)
+
+        return self.update_or_create_instance(updated_record)
 
 
 class ServiceTicketSynchronizer(TicketSynchronizerMixin,
