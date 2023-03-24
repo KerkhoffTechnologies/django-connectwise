@@ -337,10 +337,10 @@ class ConnectWiseAPIClient(object):
                     return response.json()
                 except JSONDecodeError as e:
                     logger.error(
-                        'Request failed during decoding JSON?: GET {}: {}'
+                        'Request failed during decoding JSON: GET {}: {}'
                         .format(endpoint, e)
                     )
-                    raise ConnectWiseAPIError('{}'.format(e))
+                    raise ConnectWiseAPIError('JSONDecodeError: {}'.format(e))
 
             elif response.status_code == 404:
                 msg = 'Resource not found: {}'.format(response.url)
