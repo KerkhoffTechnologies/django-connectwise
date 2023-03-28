@@ -799,6 +799,20 @@ class ProjectTicketTaskSynchronizer(TicketTaskSynchronizer, DummySynchronizer):
             record_type=self.RECORD_TYPE).order_by('id')
 
 
+class AttachmentSynchronizer:
+    client_class = api.SystemAPIClient
+
+    def __init__(self, *args, **kwargs):
+        self.api_conditions = []
+        self.client = self.client_class()
+        request_settings = DjconnectwiseSettings().get_settings()
+        self.batch_size = request_settings['batch_size']
+
+    def get_page(self, *args, **kwargs):
+        object_id = kwargs.pop('object_id')
+        return self.client.get_attachments(object_id, *args, **kwargs)
+
+
 class OpportunityNoteSynchronizer(ChildFetchRecordsMixin, Synchronizer):
     client_class = api.SalesAPIClient
     model_class = models.OpportunityNoteTracker

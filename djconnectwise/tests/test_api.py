@@ -327,7 +327,7 @@ class TestSystemAPIClient(BaseAPITestCase):
         avatar = mk.get_member_avatar()
         avatar_filename = 'AnonymousMember.png'
         endpoint = self.client._endpoint(
-            self.client.ENDPOINT_MEMBERS_IMAGE.format(member['photo']['id'],
+            self.client.ENDPOINT_DOCUMENTS_DOWNLOAD.format(member['photo']['id'],
                                                       member['identifier']))
         mk.get_raw(
             endpoint,
