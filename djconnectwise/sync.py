@@ -7,12 +7,12 @@ from decimal import Decimal
 from botocore.exceptions import NoCredentialsError
 from dateutil.parser import parse
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.files import File
 from django.core.files.storage import default_storage
 from django.db import transaction, IntegrityError
 from django.db.models import Q
 from django.utils import timezone
 from django.utils.text import normalize_newlines
-
 from djconnectwise import api
 from djconnectwise import models
 from djconnectwise.utils import DjconnectwiseSettings
@@ -811,6 +811,13 @@ class AttachmentSynchronizer:
     def get_page(self, *args, **kwargs):
         object_id = kwargs.pop('object_id')
         return self.client.get_attachments(object_id, *args, **kwargs)
+
+    def download_attachment(self, attachment_id, path):
+        filename, attachment = self.client.get_attachment(attachment_id)
+
+        with open(f'{path}{filename}', 'wb') as f:
+            myfile = File(f)
+            myfile.write(attachment.content)
 
 
 class OpportunityNoteSynchronizer(ChildFetchRecordsMixin, Synchronizer):

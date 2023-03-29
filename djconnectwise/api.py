@@ -1050,10 +1050,8 @@ class SystemAPIClient(ConnectWiseAPIClient):
         return self.fetch_resource(endpoint_url,
                                    should_page=True, *args, **kwargs)
 
-    def download_attachment(self, document_id):
-        filename, response = self.document_download(document_id)
-
-        return filename, response.content if response else response
+    def get_attachment(self, document_id):
+        return self.document_download(document_id)
 
 
 class TicketAPIMixin:
