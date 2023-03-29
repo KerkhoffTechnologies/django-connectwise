@@ -1046,7 +1046,8 @@ class SystemAPIClient(ConnectWiseAPIClient):
 
     def get_attachments(self, object_id, *args, **kwargs):
         endpoint_url = \
-            f'{self.ENDPOINT_DOCUMENTS}?recordType=Ticket&recordId={object_id}&'
+            f'{self.ENDPOINT_DOCUMENTS}' \
+            f'?recordType=Ticket&recordId={object_id}&'
         return self.fetch_resource(endpoint_url,
                                    should_page=True, *args, **kwargs)
 
