@@ -313,8 +313,11 @@ class ConnectWiseAPIClient(object):
                     params['pageSize'] = kwargs.get('page_size',
                                                     CW_RESPONSE_MAX_RECORDS)
                     params['page'] = kwargs.get('page', CW_DEFAULT_PAGE)
-                    endpoint += "?pageSize={}&page={}".format(
-                        params['pageSize'], params['page'])
+
+                    delimiter = '' if endpoint_url[-1] == '&' else '?'
+
+                    endpoint += "{}pageSize={}&page={}".format(
+                        delimiter, params['pageSize'], params['page'])
 
                     endpoint += "&" + conditions_str
                 else:
@@ -927,13 +930,14 @@ class SystemAPIClient(ConnectWiseAPIClient):
 
     # endpoints
     ENDPOINT_MEMBERS = 'members/'
-    ENDPOINT_MEMBERS_IMAGE = 'documents/{}/download'
+    ENDPOINT_DOCUMENTS_DOWNLOAD = 'documents/{}/download'
     ENDPOINT_MEMBERS_COUNT = 'members/count'
     ENDPOINT_CALLBACKS = 'callbacks/'
     ENDPOINT_INFO = 'info/'
     # Locations in the system API are actually territories
     ENDPOINT_LOCATIONS = 'locations/'
     ENDPOINT_OTHER = 'myCompany/other/'
+    ENDPOINT_DOCUMENTS = 'documents/'
 
     def get_connectwise_version(self):
         result = self.fetch_resource(self.ENDPOINT_INFO)
@@ -984,10 +988,39 @@ class SystemAPIClient(ConnectWiseAPIClient):
         This requires this permission:
         Companies => Manage Documents => Inquire Level: All
         """
-        try:
-            endpoint = self._endpoint(
-                self.ENDPOINT_MEMBERS_IMAGE.format(photo_id)
+
+        filename, response = self.document_download(photo_id)
+
+        if filename and response:
+            headers = response.headers
+            content_disposition_header = headers.get('Content-Disposition',
+                                                     default='')
+
+            logger.info(
+                "Got member '{}' image; size {} bytes and "
+                "content-disposition header '{}'".format(
+                    username,
+                    len(response.content),
+                    content_disposition_header
+                )
             )
+        return filename, response.content if response else response
+
+    def _attachment_filename(self, content_disposition):
+        """
+        Return the attachment filename from the content disposition header.
+
+        If there's no match, return None.
+        """
+        m = CONTENT_DISPOSITION_RE.match(content_disposition)
+        return m.group(1) if m else None
+
+    def document_download(self, document_id):
+        endpoint = self._endpoint(
+            self.ENDPOINT_DOCUMENTS_DOWNLOAD.format(document_id)
+        )
+
+        try:
             logger.debug('Making GET request to {}'.format(endpoint))
             response = requests.get(
                 endpoint,
@@ -1003,29 +1036,23 @@ class SystemAPIClient(ConnectWiseAPIClient):
             headers = response.headers
             content_disposition_header = headers.get('Content-Disposition',
                                                      default='')
-            logger.info(
-                "Got member '{}' image; size {} bytes and "
-                "content-disposition header '{}'".format(
-                    username,
-                    len(response.content),
-                    content_disposition_header
-                )
-            )
+
             attachment_filename = self._attachment_filename(
                 content_disposition_header)
-            return attachment_filename, response.content
+            return attachment_filename, response
         else:
             self._log_failed(response)
             return None, None
 
-    def _attachment_filename(self, content_disposition):
-        """
-        Return the attachment filename from the content disposition header.
+    def get_attachments(self, object_id, *args, **kwargs):
+        endpoint_url = \
+            f'{self.ENDPOINT_DOCUMENTS}' \
+            f'?recordType=Ticket&recordId={object_id}&'
+        return self.fetch_resource(endpoint_url,
+                                   should_page=True, *args, **kwargs)
 
-        If there's no match, return None.
-        """
-        m = CONTENT_DISPOSITION_RE.match(content_disposition)
-        return m.group(1) if m else None
+    def get_attachment(self, document_id):
+        return self.document_download(document_id)
 
 
 class TicketAPIMixin:
