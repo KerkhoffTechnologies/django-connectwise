@@ -7,12 +7,12 @@ from decimal import Decimal
 from botocore.exceptions import NoCredentialsError
 from dateutil.parser import parse
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.files import File
 from django.core.files.storage import default_storage
 from django.db import transaction, IntegrityError
 from django.db.models import Q
 from django.utils import timezone
 from django.utils.text import normalize_newlines
-
 from djconnectwise import api
 from djconnectwise import models
 from djconnectwise.utils import DjconnectwiseSettings
@@ -797,6 +797,27 @@ class ProjectTicketTaskSynchronizer(TicketTaskSynchronizer, DummySynchronizer):
     def _get_queryset(self):
         return models.Ticket.objects.exclude(
             record_type=self.RECORD_TYPE).order_by('id')
+
+
+class AttachmentSynchronizer:
+    client_class = api.SystemAPIClient
+
+    def __init__(self, *args, **kwargs):
+        self.api_conditions = []
+        self.client = self.client_class()
+        request_settings = DjconnectwiseSettings().get_settings()
+        self.batch_size = request_settings['batch_size']
+
+    def get_page(self, *args, **kwargs):
+        object_id = kwargs.pop('object_id')
+        return self.client.get_attachments(object_id, *args, **kwargs)
+
+    def download_attachment(self, attachment_id, path):
+        filename, attachment = self.client.get_attachment(attachment_id)
+
+        with open(f'{path}{filename}', 'wb') as f:
+            myfile = File(f)
+            myfile.write(attachment.content)
 
 
 class OpportunityNoteSynchronizer(ChildFetchRecordsMixin, Synchronizer):
@@ -2181,6 +2202,9 @@ class TicketSynchronizerMixin:
         'company': 'company',
         'location': 'location',
         'contact': 'contact',
+        'contact_name': 'contactName',
+        'contact_phone_number': 'contactPhoneNumber',
+        'contact_email_address': 'contactEmailAddress',
         'automatic_email_resource_flag': 'automaticEmailResourceFlag',
         'automatic_email_cc_flag': 'automaticEmailCcFlag',
         'automatic_email_contact_flag': 'automaticEmailContactFlag',
