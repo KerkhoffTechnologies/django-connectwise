@@ -1051,6 +1051,11 @@ class SystemAPIClient(ConnectWiseAPIClient):
         return self.fetch_resource(endpoint_url,
                                    should_page=True, *args, **kwargs)
 
+    def get_attachment_count(self, object_id):
+        endpoint_url = f'{self.ENDPOINT_DOCUMENTS}count' \
+                       f'?recordType=Ticket&recordId={object_id}&'
+        return self.fetch_resource(endpoint_url).get('count', 0)
+
     def get_attachment(self, document_id):
         return self.document_download(document_id)
 
