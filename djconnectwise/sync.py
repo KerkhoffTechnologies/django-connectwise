@@ -2398,10 +2398,12 @@ class TicketSynchronizerMixin:
             if actual_hours is not None else None
 
         instance.predecessor_type = json_data.get('predecessorType')
-
+        instance.predecessor_closed_flag = \
+            json_data.get('predecessorClosedFlag', False)
         instance.lag_days = json_data.get('lagDays')
         instance.lag_non_working_days_flag = \
             json_data.get('lagNonworkingDaysFlag', False)
+
         instance.contact_name = json_data.get('contactName')
         instance.contact_phone_number = json_data.get('contactPhoneNumber')
         instance.contact_phone_extension = \

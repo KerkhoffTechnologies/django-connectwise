@@ -1088,7 +1088,7 @@ API_SERVICE_TICKET = {
     'billProducts': 'Billable',
     'predecessorType': None,
     'predecessorId': None,
-    'predecessorClosedFlag': None,
+    'predecessorClosedFlag': False,
     'lagDays': 0,
     'lagNonworkingDaysFlag': False,
     'estimatedStartDate': "2017-03-04T00:00:00Z",
