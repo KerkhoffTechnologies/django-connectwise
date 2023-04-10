@@ -1,6 +1,7 @@
 import datetime
 import logging
 import math
+import os
 from copy import deepcopy
 from decimal import Decimal
 
@@ -26,7 +27,7 @@ MIN_URL_LENGTH = 1980
 CREATED = 1
 UPDATED = 2
 SKIPPED = 3
-FILE_UMASK = 0o77
+FILE_UMASK = 0o600
 
 logger = logging.getLogger(__name__)
 
@@ -822,9 +823,17 @@ class AttachmentSynchronizer:
         extension = get_filename_extension(filename)
         filename = compute_md5(attachment.content)
 
-        with open(f'{path}{filename}.{extension}', 'wb', FILE_UMASK) as f:
-            attachment_file = File(f)
-            attachment_file.write(attachment.content)
+        logger.debug(f'Writing attachment {filename}.{extension} to {path}')
+
+        # Set permissions on file before creating and writing to it.
+        os.umask(0)
+        fd = os.open(f'{path}{filename}.{extension}', os.O_CREAT, FILE_UMASK)
+        os.close(fd)
+
+        with open(f'{path}{filename}.{extension}', 'r+b') as f:
+            f.write(attachment.content)
+
+        return f'{filename}.{extension}'
 
 
 class OpportunityNoteSynchronizer(ChildFetchRecordsMixin, Synchronizer):
