@@ -8,7 +8,6 @@ from decimal import Decimal
 from botocore.exceptions import NoCredentialsError
 from dateutil.parser import parse
 from django.core.exceptions import ObjectDoesNotExist
-from django.core.files import File
 from django.core.files.storage import default_storage
 from django.db import transaction, IntegrityError
 from django.db.models import Q
