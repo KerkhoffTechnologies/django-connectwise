@@ -1,13 +1,13 @@
 import datetime
 import logging
 import math
+import os
 from copy import deepcopy
 from decimal import Decimal
 
 from botocore.exceptions import NoCredentialsError
 from dateutil.parser import parse
 from django.core.exceptions import ObjectDoesNotExist
-from django.core.files import File
 from django.core.files.storage import default_storage
 from django.db import transaction, IntegrityError
 from django.db.models import Q
@@ -17,7 +17,7 @@ from djconnectwise import api
 from djconnectwise import models
 from djconnectwise.utils import DjconnectwiseSettings
 from djconnectwise.utils import get_hash, get_filename_extension, \
-    generate_thumbnail, generate_filename, remove_thumbnail
+    generate_thumbnail, generate_filename, remove_thumbnail, compute_md5
 
 DEFAULT_AVATAR_EXTENSION = 'jpg'
 MAX_URL_LENGTH = 2000
@@ -26,6 +26,7 @@ MIN_URL_LENGTH = 1980
 CREATED = 1
 UPDATED = 2
 SKIPPED = 3
+FILE_UMASK = 0o600
 
 logger = logging.getLogger(__name__)
 
@@ -812,12 +813,26 @@ class AttachmentSynchronizer:
         object_id = kwargs.pop('object_id')
         return self.client.get_attachments(object_id, *args, **kwargs)
 
+    def get_count(self, object_id):
+        return self.client.get_attachment_count(object_id)
+
     def download_attachment(self, attachment_id, path):
         filename, attachment = self.client.get_attachment(attachment_id)
 
-        with open(f'{path}{filename}', 'wb') as f:
-            myfile = File(f)
-            myfile.write(attachment.content)
+        extension = get_filename_extension(filename)
+        filename = compute_md5(attachment.content)
+
+        logger.debug(f'Writing attachment {filename}.{extension} to {path}')
+
+        # Set permissions on file before creating and writing to it.
+        os.umask(0)
+        fd = os.open(f'{path}{filename}.{extension}', os.O_CREAT, FILE_UMASK)
+        os.close(fd)
+
+        with open(f'{path}{filename}.{extension}', 'r+b') as f:
+            f.write(attachment.content)
+
+        return f'{filename}.{extension}'
 
 
 class OpportunityNoteSynchronizer(ChildFetchRecordsMixin, Synchronizer):
@@ -2398,10 +2413,12 @@ class TicketSynchronizerMixin:
             if actual_hours is not None else None
 
         instance.predecessor_type = json_data.get('predecessorType')
-
+        instance.predecessor_closed_flag = \
+            json_data.get('predecessorClosedFlag', False)
         instance.lag_days = json_data.get('lagDays')
         instance.lag_non_working_days_flag = \
             json_data.get('lagNonworkingDaysFlag', False)
+
         instance.contact_name = json_data.get('contactName')
         instance.contact_phone_number = json_data.get('contactPhoneNumber')
         instance.contact_phone_extension = \

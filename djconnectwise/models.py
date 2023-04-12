@@ -1569,6 +1569,7 @@ class Ticket(UpdateConnectWiseMixin, TimeStampedModel):
 
     predecessor_type = models.CharField(blank=True, null=True, max_length=10,
                                         choices=PREDECESSOR_TYPES)
+    predecessor_closed_flag = models.BooleanField(default=False)
     lag_days = models.IntegerField(blank=True, null=True)
     lag_non_working_days_flag = models.BooleanField(default=False)
     estimated_start_date = models.DateTimeField(blank=True, null=True)
