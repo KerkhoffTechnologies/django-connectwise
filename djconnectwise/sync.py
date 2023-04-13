@@ -824,12 +824,13 @@ class AttachmentSynchronizer:
 
         logger.debug(f'Writing attachment {filename}.{extension} to {path}')
 
+        file_path = os.path.join(path, f'{filename}.{extension}')
         # Set permissions on file before creating and writing to it.
         os.umask(0)
-        fd = os.open(f'{path}{filename}.{extension}', os.O_CREAT, FILE_UMASK)
+        fd = os.open(file_path, os.O_CREAT, FILE_UMASK)
         os.close(fd)
 
-        with open(f'{path}{filename}.{extension}', 'r+b') as f:
+        with open(file_path, 'r+b') as f:
             f.write(attachment.content)
 
         return f'{filename}.{extension}'
