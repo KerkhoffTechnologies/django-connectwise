@@ -17,7 +17,7 @@ from djconnectwise import api
 from djconnectwise import models
 from djconnectwise.utils import DjconnectwiseSettings
 from djconnectwise.utils import get_hash, get_filename_extension, \
-    generate_thumbnail, generate_filename, remove_thumbnail, compute_md5
+    generate_thumbnail, generate_filename, remove_thumbnail
 
 DEFAULT_AVATAR_EXTENSION = 'jpg'
 MAX_URL_LENGTH = 2000
@@ -819,21 +819,19 @@ class AttachmentSynchronizer:
     def download_attachment(self, attachment_id, path):
         filename, attachment = self.client.get_attachment(attachment_id)
 
-        extension = get_filename_extension(filename)
-        filename = compute_md5(attachment.content)
+        filename = f'{attachment_id}-{filename}'
+        file_path = os.path.join(path, f'{filename}')
 
-        logger.debug(f'Writing attachment {filename}.{extension} to {path}')
+        logger.debug(f'Writing attachment {filename} to {path}')
 
-        file_path = os.path.join(path, f'{filename}.{extension}')
-        # Set permissions on file before creating and writing to it.
-        os.umask(0)
-        fd = os.open(file_path, os.O_CREAT, FILE_UMASK)
-        os.close(fd)
+        previous_umask = os.umask(FILE_UMASK)
 
-        with open(file_path, 'r+b') as f:
+        with open(file_path, 'wb') as f:
             f.write(attachment.content)
 
-        return f'{filename}.{extension}'
+        os.umask(previous_umask)
+
+        return filename
 
 
 class OpportunityNoteSynchronizer(ChildFetchRecordsMixin, Synchronizer):

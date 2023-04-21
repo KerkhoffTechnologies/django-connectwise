@@ -78,11 +78,6 @@ def generate_thumbnail(avatar, size, extension, filename):
     return avatar_file, filename
 
 
-def compute_md5(content):
-    hash_md5 = hashlib.md5(content).hexdigest()
-    return hash_md5
-
-
 class DjconnectwiseSettings:
 
     def get_settings(self):
