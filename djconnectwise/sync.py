@@ -26,7 +26,7 @@ MIN_URL_LENGTH = 1980
 CREATED = 1
 UPDATED = 2
 SKIPPED = 3
-FILE_UMASK = 0o600
+FILE_UMASK = 0o022
 
 logger = logging.getLogger(__name__)
 
