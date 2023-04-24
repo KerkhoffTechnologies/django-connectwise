@@ -1223,18 +1223,6 @@ class Project(UpdateConnectWiseMixin, TimeStampedModel):
     objects = models.Manager()
     available_objects = AvailableProjectManager()
 
-    EDITABLE_FIELDS = {
-        'name': 'name',
-        'status': 'status',
-        'type': 'type',
-        'estimated_start': 'estimatedStart',
-        'estimated_end': 'estimatedEnd',
-        'manager': 'manager',
-        'percent_complete': 'percentComplete',
-        'description': 'description',
-        'contact': 'contact',
-    }
-
     class Meta:
         ordering = ('name', )
 
@@ -1388,20 +1376,6 @@ class Opportunity(UpdateConnectWiseMixin, TimeStampedModel):
                                          on_delete=models.SET_NULL)
     udf = models.JSONField(blank=True, null=True)
 
-    EDITABLE_FIELDS = {
-        'name': 'name',
-        'stage': 'stage',
-        'notes': 'notes',
-        'contact': 'contact',
-        'expected_close_date': 'expectedCloseDate',
-        'opportunity_type': 'type',
-        'status': 'status',
-        'source': 'source',
-        'primary_sales_rep': 'primarySalesRep',
-        'secondary_sales_rep': 'secondarySalesRep',
-        'location_id': 'locationId',
-    }
-
     class Meta:
         ordering = ('name', )
         verbose_name_plural = 'Opportunities'
@@ -1478,48 +1452,6 @@ class Ticket(UpdateConnectWiseMixin, TimeStampedModel):
         (TICKET, 'Ticket'),
         (PHASE, 'Phase')
     )
-
-    VALID_UPDATE_FIELDS = {
-        'summary': 'summary',
-        'required_date_utc': 'requiredDate',
-        'estimated_start_date': 'estimatedStartDate',
-        'budget_hours': 'budgetHours',
-        'closed_flag': 'closedFlag',
-        'owner': 'owner',
-        'type': 'type',
-        'sub_type': 'subType',
-        'sub_type_item': 'item',
-        'agreement': 'agreement',
-        'status': 'status',
-        'priority': 'priority',
-        'board': 'board',
-        'record_type': 'recordType',
-        'company': 'company',
-        'location': 'location',
-        'contact': 'contact',
-        'automatic_email_resource_flag': 'automaticEmailResourceFlag',
-        'automatic_email_cc_flag': 'automaticEmailCcFlag',
-        'automatic_email_contact_flag': 'automaticEmailContactFlag',
-        'automatic_email_cc': 'automaticEmailCc',
-        'source': 'source',
-        'is_issue_flag': 'isIssueFlag',
-        'customer_updated': 'customerUpdatedFlag',
-
-        # Only for POST
-        'initial_description': 'initialDescription',
-    }
-
-    SERVICE_EDITABLE_FIELDS = VALID_UPDATE_FIELDS
-    PROJECT_EDITABLE_FIELDS = deepcopy(VALID_UPDATE_FIELDS)
-    PROJECT_EDITABLE_FIELDS.update({
-        'project': 'project',
-        'phase': 'phase'
-    })
-    EDITABLE_FIELDS = {
-        PROJECT_TICKET: PROJECT_EDITABLE_FIELDS,
-        PROJECT_ISSUE: PROJECT_EDITABLE_FIELDS,
-        SERVICE_TICKET: SERVICE_EDITABLE_FIELDS,
-    }
 
     actual_hours = models.DecimalField(
         blank=True, null=True, decimal_places=2, max_digits=9)
@@ -1997,21 +1929,6 @@ class Activity(UpdateConnectWiseMixin, TimeStampedModel):
         through='ScheduleEntry',
         related_name='member_activities'
     )
-
-    EDITABLE_FIELDS = {
-        'name': 'name',
-        'status': 'status',
-        'notes': 'notes',
-        'type': 'type',
-        'assign_to': 'assignTo',
-        'company': 'company',
-        'contact': 'contact',
-        'agreement': 'agreement',
-        'opportunity': 'opportunity',
-        'ticket': 'ticket',
-        'date_start': 'dateStart',
-        'date_end': 'dateEnd',
-    }
 
     class Meta:
         verbose_name_plural = 'activities'
