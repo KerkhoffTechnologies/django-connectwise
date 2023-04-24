@@ -1,15 +1,15 @@
-import re
-import logging
-import urllib
 import datetime
+import logging
+import re
+import urllib
+
 from django.conf import settings
-from django.utils import timezone
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django_extensions.db.models import TimeStampedModel
-from django.core.exceptions import ObjectDoesNotExist
 from model_utils import FieldTracker
-from copy import deepcopy
 
 from . import api
 
@@ -26,6 +26,7 @@ BILL_TYPES = (
 
 
 class UpdateConnectWiseMixin:
+    # TODO still used by ticket close ticket feature and service note creation.
 
     def save(self, *args, **kwargs):
         """
@@ -1171,7 +1172,7 @@ class AvailableProjectManager(models.Manager):
         )
 
 
-class Project(UpdateConnectWiseMixin, TimeStampedModel):
+class Project(TimeStampedModel):
     name = models.CharField(max_length=200)
     actual_hours = models.DecimalField(
         blank=True, null=True, decimal_places=2, max_digits=9)
@@ -1232,9 +1233,6 @@ class Project(UpdateConnectWiseMixin, TimeStampedModel):
     @property
     def api_class(self):
         return api.ProjectAPIClient
-
-    def _update_cw(self, api_client, updated_objects):
-        return api_client.update_project(self, updated_objects)
 
     def get_connectwise_url(self):
         params = dict(
@@ -1331,7 +1329,7 @@ class OpportunityType(TimeStampedModel):
         return self.description
 
 
-class Opportunity(UpdateConnectWiseMixin, TimeStampedModel):
+class Opportunity(TimeStampedModel):
     business_unit_id = models.IntegerField(null=True)
     closed_date = models.DateTimeField(blank=True, null=True)
     customer_po = models.CharField(max_length=100, blank=True, null=True)
@@ -1386,9 +1384,6 @@ class Opportunity(UpdateConnectWiseMixin, TimeStampedModel):
     @property
     def api_class(self):
         return api.SalesAPIClient
-
-    def _update_cw(self, api_client, updated_objects):
-        return api_client.update_opportunity(self, updated_objects)
 
     def get_descriptor(self):
         return self.name
@@ -1902,7 +1897,7 @@ class ActivityType(TimeStampedModel):
         return self.name
 
 
-class Activity(UpdateConnectWiseMixin, TimeStampedModel):
+class Activity(TimeStampedModel):
     name = models.CharField(max_length=250)
     notes = models.TextField(blank=True, null=True, max_length=2000)
     date_start = models.DateTimeField(blank=True, null=True)
