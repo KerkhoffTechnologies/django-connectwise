@@ -1251,22 +1251,9 @@ class Project(TimeStampedModel):
 
         return self.calculate_percentage(percent_value)
 
-    def calculate_percentage(self, value):
+    @staticmethod
+    def calculate_percentage(value):
         return round(value * 100)
-
-    def get_changed_values(self, changed_field_keys):
-        updated_objects = super().get_changed_values(changed_field_keys)
-
-        percent_complete = updated_objects.get('percent_complete')
-        if percent_complete:
-            # CW accepts percentComplete as the percentage value, not as
-            # the decimal value.
-            # For example, the API returns "percentComplete": 0.2500, when
-            # we submit "percentComplete": 25.
-            updated_objects['percent_complete'] = \
-                self.calculate_percentage(percent_complete)
-
-        return updated_objects
 
 
 class OpportunityStage(TimeStampedModel):
