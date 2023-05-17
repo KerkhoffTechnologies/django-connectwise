@@ -30,6 +30,8 @@ class Command(BaseCommand):
             ('board', sync.BoardSynchronizer, _('Board')),
             ('team', sync.TeamSynchronizer, _('Team')),
             ('board_status', sync.BoardStatusSynchronizer, _('Board Status')),
+            ('company_note_type', sync.CompanyNoteTypesSynchronizer,
+             _('Company Type')),
             ('priority', sync.PrioritySynchronizer, _('Priority')),
             ('project_status', sync.ProjectStatusSynchronizer,
              _('Project Status')),

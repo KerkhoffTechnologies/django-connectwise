@@ -2380,6 +2380,14 @@ class CompanyTypeTracker(CompanyType):
         db_table = 'djconnectwise_companytype'
 
 
+class CompanyNoteTypeTracker(Company):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djconnectwise_companynotetype'
+
+
 class ContactTracker(Contact):
     tracker = FieldTracker()
 
