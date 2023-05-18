@@ -2547,8 +2547,6 @@ class TicketSynchronizerMixin:
         """
         Send DELETE request to ConnectWise to delete ticket.
         """
-
-
         client = self.client_class(
             api_public_key=kwargs.get('api_public_key'),
             api_private_key=kwargs.get('api_private_key')
