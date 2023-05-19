@@ -1211,9 +1211,9 @@ class CompanyNoteTypesSynchronizer(Synchronizer):
         instance.id = json_data.get('id')
         instance.name = json_data.get('name')
         instance.identifier = json_data.get('identifier')
-        instance.status.default_flag = json_data.get('defaultFlag')
+        instance.default_flag = json_data.get('defaultFlag')
 
-    def get_types(self, *args, **kwargs):
+    def get_page(self, *args, **kwargs):
         return self.client.get_company_note_types(*args, **kwargs)
 
 
@@ -1878,16 +1878,16 @@ class PrioritySynchronizer(Synchronizer):
 
         return ticket_priority
 
+    def get_page(self, *args, **kwargs):
+        return self.client.get_priorities(*args, **kwargs)
+
 
 class ProjectNotesSynchronizer(Synchronizer):
     client_class = api.ProjectAPIClient
 
-    def get_notes(self, project_id, page, page_size, *args, **kwargs):
+    def get_page(self, project_id, page, page_size, *args, **kwargs):
         return self.client.get_project_notes(project_id, page,
                                              page_size, *args, **kwargs)
-
-    def get_page(self, *args, **kwargs):
-        return self.client.get_priorities(*args, **kwargs)
 
 
 class ProjectStatusSynchronizer(Synchronizer):
