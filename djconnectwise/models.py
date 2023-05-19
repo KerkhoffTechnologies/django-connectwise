@@ -1,15 +1,15 @@
-import re
-import logging
-import urllib
 import datetime
+import logging
+import re
+import urllib
+
 from django.conf import settings
-from django.utils import timezone
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django_extensions.db.models import TimeStampedModel
-from django.core.exceptions import ObjectDoesNotExist
 from model_utils import FieldTracker
-from copy import deepcopy
 
 from . import api
 
@@ -426,6 +426,18 @@ class CompanyStatus(models.Model):
 class CompanyType(models.Model):
     name = models.CharField(max_length=50)
     vendor_flag = models.BooleanField()
+
+    class Meta:
+        ordering = ('name', )
+
+    def __str__(self):
+        return self.name
+
+
+class CompanyNoteType(models.Model):
+    name = models.CharField(max_length=50)
+    identifier = models.CharField(max_length=50)
+    defaultFlag = models.BooleanField()
 
     class Meta:
         ordering = ('name', )
@@ -1223,18 +1235,6 @@ class Project(UpdateConnectWiseMixin, TimeStampedModel):
     objects = models.Manager()
     available_objects = AvailableProjectManager()
 
-    EDITABLE_FIELDS = {
-        'name': 'name',
-        'status': 'status',
-        'type': 'type',
-        'estimated_start': 'estimatedStart',
-        'estimated_end': 'estimatedEnd',
-        'manager': 'manager',
-        'percent_complete': 'percentComplete',
-        'description': 'description',
-        'contact': 'contact',
-    }
-
     class Meta:
         ordering = ('name', )
 
@@ -1265,22 +1265,9 @@ class Project(UpdateConnectWiseMixin, TimeStampedModel):
 
         return self.calculate_percentage(percent_value)
 
-    def calculate_percentage(self, value):
+    @staticmethod
+    def calculate_percentage(value):
         return round(value * 100)
-
-    def get_changed_values(self, changed_field_keys):
-        updated_objects = super().get_changed_values(changed_field_keys)
-
-        percent_complete = updated_objects.get('percent_complete')
-        if percent_complete:
-            # CW accepts percentComplete as the percentage value, not as
-            # the decimal value.
-            # For example, the API returns "percentComplete": 0.2500, when
-            # we submit "percentComplete": 25.
-            updated_objects['percent_complete'] = \
-                self.calculate_percentage(percent_complete)
-
-        return updated_objects
 
 
 class OpportunityStage(TimeStampedModel):
@@ -1388,20 +1375,6 @@ class Opportunity(UpdateConnectWiseMixin, TimeStampedModel):
                                          on_delete=models.SET_NULL)
     udf = models.JSONField(blank=True, null=True)
 
-    EDITABLE_FIELDS = {
-        'name': 'name',
-        'stage': 'stage',
-        'notes': 'notes',
-        'contact': 'contact',
-        'expected_close_date': 'expectedCloseDate',
-        'opportunity_type': 'type',
-        'status': 'status',
-        'source': 'source',
-        'primary_sales_rep': 'primarySalesRep',
-        'secondary_sales_rep': 'secondarySalesRep',
-        'location_id': 'locationId',
-    }
-
     class Meta:
         ordering = ('name', )
         verbose_name_plural = 'Opportunities'
@@ -1478,48 +1451,6 @@ class Ticket(UpdateConnectWiseMixin, TimeStampedModel):
         (TICKET, 'Ticket'),
         (PHASE, 'Phase')
     )
-
-    VALID_UPDATE_FIELDS = {
-        'summary': 'summary',
-        'required_date_utc': 'requiredDate',
-        'estimated_start_date': 'estimatedStartDate',
-        'budget_hours': 'budgetHours',
-        'closed_flag': 'closedFlag',
-        'owner': 'owner',
-        'type': 'type',
-        'sub_type': 'subType',
-        'sub_type_item': 'item',
-        'agreement': 'agreement',
-        'status': 'status',
-        'priority': 'priority',
-        'board': 'board',
-        'record_type': 'recordType',
-        'company': 'company',
-        'location': 'location',
-        'contact': 'contact',
-        'automatic_email_resource_flag': 'automaticEmailResourceFlag',
-        'automatic_email_cc_flag': 'automaticEmailCcFlag',
-        'automatic_email_contact_flag': 'automaticEmailContactFlag',
-        'automatic_email_cc': 'automaticEmailCc',
-        'source': 'source',
-        'is_issue_flag': 'isIssueFlag',
-        'customer_updated': 'customerUpdatedFlag',
-
-        # Only for POST
-        'initial_description': 'initialDescription',
-    }
-
-    SERVICE_EDITABLE_FIELDS = VALID_UPDATE_FIELDS
-    PROJECT_EDITABLE_FIELDS = deepcopy(VALID_UPDATE_FIELDS)
-    PROJECT_EDITABLE_FIELDS.update({
-        'project': 'project',
-        'phase': 'phase'
-    })
-    EDITABLE_FIELDS = {
-        PROJECT_TICKET: PROJECT_EDITABLE_FIELDS,
-        PROJECT_ISSUE: PROJECT_EDITABLE_FIELDS,
-        SERVICE_TICKET: SERVICE_EDITABLE_FIELDS,
-    }
 
     actual_hours = models.DecimalField(
         blank=True, null=True, decimal_places=2, max_digits=9)
@@ -1998,21 +1929,6 @@ class Activity(UpdateConnectWiseMixin, TimeStampedModel):
         related_name='member_activities'
     )
 
-    EDITABLE_FIELDS = {
-        'name': 'name',
-        'status': 'status',
-        'notes': 'notes',
-        'type': 'type',
-        'assign_to': 'assignTo',
-        'company': 'company',
-        'contact': 'contact',
-        'agreement': 'agreement',
-        'opportunity': 'opportunity',
-        'ticket': 'ticket',
-        'date_start': 'dateStart',
-        'date_end': 'dateEnd',
-    }
-
     class Meta:
         verbose_name_plural = 'activities'
 
@@ -2380,7 +2296,7 @@ class CompanyTypeTracker(CompanyType):
         db_table = 'djconnectwise_companytype'
 
 
-class CompanyNoteTypeTracker(Company):
+class CompanyNoteTypeTracker(CompanyNoteType):
     tracker = FieldTracker()
 
     class Meta:

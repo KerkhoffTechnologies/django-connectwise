@@ -445,3 +445,9 @@ class OpportunityUDFAdmin(admin.ModelAdmin):
     list_display = ('id', 'caption', 'type', 'entry_method',
                     'number_of_decimals')
     search_fields = ['caption', 'type']
+
+
+@admin.register(models.OpportunityUDF)
+class CompanyNoteTypeAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'identifier', 'defaultFlag')
+    search_fields = ['name', 'identifier']
