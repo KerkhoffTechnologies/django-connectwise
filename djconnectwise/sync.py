@@ -2567,6 +2567,16 @@ class TicketSynchronizerMixin:
 
         return self.update_or_create_instance(new_record)
 
+    def delete(self, instance, **kwargs):
+        """
+        Send DELETE request to ConnectWise to delete ticket.
+        """
+        client = self.client_class(
+            api_public_key=kwargs.get('api_public_key'),
+            api_private_key=kwargs.get('api_private_key')
+        )
+        return client.delete_ticket(instance.id)
+
     def _convert_fields_to_api_format(self, fields):
         """
         Converts the model field names to the API field names.
