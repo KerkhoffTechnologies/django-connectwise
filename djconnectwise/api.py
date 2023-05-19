@@ -568,7 +568,7 @@ class CompanyAPIClient(ConnectWiseAPIClient):
                                    should_page=True,
                                    *args, **kwargs)
 
-    def get_company_note_types(self,*args,**kwargs):
+    def get_company_note_types(self, *args, **kwargs):
         return self.fetch_resource(self.ENDPOINT_COMPANY_NOTE_TYPES,
                                    should_page=True,
                                    *args, **kwargs)
@@ -1317,7 +1317,7 @@ class ServiceAPIClient(TicketAPIMixin, ConnectWiseAPIClient):
 
 class ProjectAPIClient(TicketAPIMixin, ConnectWiseAPIClient):
     API = 'project'
-    ENDPOINT_PROJECTS = 'projects/'
+    ENDPOINT_PROJECTS = 'projects'
     ENDPOINT_PROJECT_STATUSES = 'statuses/'
     ENDPOINT_PROJECT_PHASES = 'phases/'
     ENDPOINT_PROJECT_TYPES = 'projectTypes/'
@@ -1367,7 +1367,7 @@ class ProjectAPIClient(TicketAPIMixin, ConnectWiseAPIClient):
         kwargs['page_size'] = page_size
         kwargs['page'] = page
         endpoint_url = '{}/{}/{}'.format(self.ENDPOINT_PROJECTS, project_id,
-                                         self.ENDPOINT_PROJECT_NOTES, 1)
+                                         self.ENDPOINT_PROJECT_NOTES)
         return self.fetch_resource(endpoint_url, should_page=True,
                                    *args, **kwargs)
 

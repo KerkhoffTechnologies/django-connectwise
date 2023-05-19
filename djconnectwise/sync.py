@@ -1152,6 +1152,7 @@ class CompanyTypeSynchronizer(Synchronizer):
     def get_page(self, *args, **kwargs):
         return self.client.get_company_types(*args, **kwargs)
 
+
 class CompanyNoteTypesSynchronizer(Synchronizer):
     client_class = api.CompanyAPIClient
     model_class = models.CompanyNoteTypeTracker
@@ -1809,11 +1810,13 @@ class PrioritySynchronizer(Synchronizer):
 
         return ticket_priority
 
-class ProjectNotesSynchronizer(Synchronizer):
-        client_class = api.ProjectAPIClient
 
-        def get_notes(self, project_id, page, page_size, *args, **kwargs):
-            return self.client.get_project_notes(project_id, page, page_size, *args, **kwargs)
+class ProjectNotesSynchronizer(Synchronizer):
+    client_class = api.ProjectAPIClient
+
+    def get_notes(self, project_id, page, page_size, *args, **kwargs):
+        return self.client.get_project_notes(project_id, page,
+                                             page_size, *args, **kwargs)
 
     def get_page(self, *args, **kwargs):
         return self.client.get_priorities(*args, **kwargs)
