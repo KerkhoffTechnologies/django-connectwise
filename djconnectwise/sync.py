@@ -1882,9 +1882,11 @@ class PrioritySynchronizer(Synchronizer):
 class ProjectNotesSynchronizer(Synchronizer):
     client_class = api.ProjectAPIClient
 
-    def get_notes(self, project_id, page, page_size, *args, **kwargs):
-        return self.client.get_project_notes(project_id, page,
-                                             page_size, *args, **kwargs)
+    def get_notes(self, project_id, *args, **kwargs):
+        return self.client.get_project_notes(project_id, *args, **kwargs)
+
+    def get_count(self, project_id):
+        return self.client.get_project_notes_count(project_id)
 
     def get_page(self, *args, **kwargs):
         return self.client.get_priorities(*args, **kwargs)

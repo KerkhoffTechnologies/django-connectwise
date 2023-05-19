@@ -1355,13 +1355,18 @@ class ProjectAPIClient(TicketAPIMixin, ConnectWiseAPIClient):
         )
         return self.update_instance(changed_fields, endpoint_url)
 
-    def get_project_notes(self, project_id, page, page_size, *args, **kwargs):
-        kwargs['page_size'] = page_size
-        kwargs['page'] = page
+    def get_project_notes(self, project_id, *args, **kwargs):
         endpoint_url = '{}/{}/{}'.format(self.ENDPOINT_PROJECTS, project_id,
                                          self.ENDPOINT_PROJECT_NOTES)
         return self.fetch_resource(endpoint_url, should_page=True,
                                    *args, **kwargs)
+
+    def get_project_notes_count(self, project_id):
+        endpoint_url = '{}/{}/{}'.format(self.ENDPOINT_PROJECTS, project_id,
+                                         self.ENDPOINT_PROJECT_NOTES)
+        res = self.fetch_resource(endpoint_url)
+
+        return len(res)
 
 
 class FinanceAPIClient(ConnectWiseAPIClient):
