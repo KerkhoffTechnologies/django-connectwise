@@ -2015,3 +2015,28 @@ API_SOURCE = {
 }
 
 API_SOURCE_LIST = [API_SOURCE]
+
+
+API_COMPANY_NOTE_TYPE_LIST = [
+    {
+        "id": 1,
+        "identifier": "Accounting",
+        "name": "Accounting",
+        "defaultFlag": False,
+        "importFlag": False,
+        "_info": {
+            "lastUpdated": "1999-09-09T16:46:20Z"
+        }
+    },
+    {
+        "id": 2,
+        "identifier": "Comment",
+        "name": "Comment",
+        "defaultFlag": True,
+        "importFlag": False,
+        "_info": {
+            "lastUpdated": "2001-01-03T16:00:22Z",
+            "updatedBy": "mjohnson"
+        }
+    }
+]

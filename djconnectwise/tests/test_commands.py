@@ -751,6 +751,18 @@ class TestSyncProjectTicketCommand(AbstractBaseSyncTest, TestCase):
     )
 
 
+class TestSyncCompanyNoteTypeCommand(AbstractBaseSyncTest, TestCase):
+    def setUp(self):
+        super().setUp()
+        # fixture_utils.init_companies()
+
+    args = (
+        mocks.company_get_company_note_types_call,
+        fixtures.API_COMPANY_NOTE_TYPE_LIST,
+        'company_note_type'
+    )
+
+
 class TestSyncAllCommand(TestCase):
 
     def setUp(self):
@@ -805,7 +817,8 @@ class TestSyncAllCommand(TestCase):
             TestSyncAgreementCommand,
             TestSyncProjectTypesCommand,
             TestSyncProjectTeamMemberCommand,
-            TestSyncSourceCommand
+            TestSyncSourceCommand,
+            TestSyncCompanyNoteTypeCommand,
         ]
 
         self.test_args = []
@@ -908,6 +921,7 @@ class TestSyncAllCommand(TestCase):
             'project_type': models.ProjectType,
             'project_team_member': models.ProjectTeamMember,
             'source': models.Source,
+            'company_note_type': models.CompanyNoteType,
         }
 
         # Run partial sync first

@@ -437,7 +437,7 @@ class CompanyType(models.Model):
 class CompanyNoteType(models.Model):
     name = models.CharField(max_length=50)
     identifier = models.CharField(max_length=50)
-    defaultFlag = models.BooleanField()
+    default_flag = models.BooleanField()
 
     class Meta:
         ordering = ('name', )

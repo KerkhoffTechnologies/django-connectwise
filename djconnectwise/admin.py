@@ -447,7 +447,7 @@ class OpportunityUDFAdmin(admin.ModelAdmin):
     search_fields = ['caption', 'type']
 
 
-@admin.register(models.OpportunityUDF)
+@admin.register(models.CompanyNoteType)
 class CompanyNoteTypeAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'identifier', 'defaultFlag')
+    list_display = ('id', 'name', 'identifier', 'default_flag')
     search_fields = ['name', 'identifier']
