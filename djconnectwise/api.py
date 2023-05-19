@@ -462,47 +462,39 @@ class ConnectWiseAPIClient(object):
 
         return url._replace(netloc=CW_CLOUD_URLS[url.netloc]).geturl()
 
-    def update_instance(self, instance, changed_fields, endpoint_url):
+    def update_instance(self, changed_fields, endpoint_url):
         # Yeah, this schema is a bit bizarre. See CW docs at
         # https://developer.connectwise.com/Manage/Developer_Guide#Patch
-        body = self._format_request_body(instance, changed_fields)
+        body = self._format_patch_request_body(changed_fields)
         return self.request('patch', endpoint_url, body)
 
-    def _format_request_body(self, instance, changed_fields):
+    def _format_patch_request_body(self, changed_fields):
         body = []
 
         for field, value in changed_fields.items():
 
-            # FieldTracker tracks Foreign Keys by database column name.
-            # Remove _id to use the Django model field name.
-            # TODO note, this line is NOT NEEDED, just a red-herring.
-            #  It can be removed after refactoring. I'm still afraid to remove
-            #  if for now, in case I'm wrong and it breaks updates.
-            field = field.replace('_id', '')
+            field_update = {
+                'op': 'replace',
+                'path': field,
+            }
 
-            if field and field in instance.EDITABLE_FIELDS:
-                field_update = {
-                    'op': 'replace',
-                    'path': instance.EDITABLE_FIELDS[field],
-                }
+            if isinstance(value, datetime.datetime):
+                field_update.update({
+                    'value': value.astimezone(
+                        pytz.timezone('UTC')).strftime(
+                            "%Y-%m-%dT%H:%M:%SZ")
+                })
 
-                if isinstance(value, datetime.datetime):
-                    field_update.update({
-                        'value': value.astimezone(
-                            pytz.timezone('UTC')).strftime(
-                                "%Y-%m-%dT%H:%M:%SZ")
-                    })
+            elif isinstance(value, models.Model):
+                field_update.update({
+                    'value': {
+                        'id': value.id,
+                    }
+                })
+            else:
+                field_update.update({'value': str(value) if value else ''})
 
-                elif isinstance(value, models.Model):
-                    field_update.update({
-                        'value': {
-                            'id': value.id,
-                        }
-                    })
-                else:
-                    field_update.update({'value': str(value) if value else ''})
-
-                body.append(field_update)
+            body.append(field_update)
 
         return body
 
@@ -922,13 +914,13 @@ class SalesAPIClient(ConnectWiseAPIClient):
         endpoint_url = self._endpoint(
             '{}/{}'.format(self.ENDPOINT_OPPORTUNITIES, obj.id)
         )
-        return self.update_instance(obj, changed_fields, endpoint_url)
+        return self.update_instance(changed_fields, endpoint_url)
 
     def update_activity(self, obj, changed_fields):
         endpoint_url = self._endpoint(
             '{}/{}'.format(self.ENDPOINT_ACTIVITIES, obj.id)
         )
-        return self.update_instance(obj, changed_fields, endpoint_url)
+        return self.update_instance(changed_fields, endpoint_url)
 
 
 class SystemAPIClient(ConnectWiseAPIClient):
@@ -1361,7 +1353,7 @@ class ProjectAPIClient(TicketAPIMixin, ConnectWiseAPIClient):
         endpoint_url = self._endpoint(
             '{}{}'.format(self.ENDPOINT_PROJECTS, project.id)
         )
-        return self.update_instance(project, changed_fields, endpoint_url)
+        return self.update_instance(changed_fields, endpoint_url)
 
     def get_project_notes(self, project_id, page, page_size, *args, **kwargs):
         kwargs['page_size'] = page_size

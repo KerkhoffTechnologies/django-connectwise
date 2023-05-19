@@ -425,6 +425,16 @@ class Synchronizer:
 
         return json_data
 
+    def _translate_fields_to_api_format(self, model_field_data):
+        """
+        Converts the model field names to the API field names.
+        """
+        api_fields = {}
+        for key, value in model_field_data.items():
+            api_fields[self.API_FIELD_NAMES[key]] = value
+
+        return api_fields
+
 
 class BatchConditionMixin:
     """
@@ -586,6 +596,46 @@ class ChildFetchRecordsMixin:
         return object_ids
 
 
+class CreateRecordMixin:
+
+    def create(self, fields, **kwargs):
+        """
+        Send POST request to ConnectWise to create a record.
+        """
+        client = self.client_class(
+            api_public_key=kwargs.get('api_public_key'),
+            api_private_key=kwargs.get('api_private_key')
+        )
+        # Convert the fields to the format that the API expects
+        api_fields = self._translate_fields_to_api_format(fields)
+
+        new_record = client.create_ticket(api_fields)
+
+        return self.update_or_create_instance(new_record)
+
+
+class UpdateRecordMixin:
+
+    def update(self, record, changed_fields, **kwargs):
+        """
+        Send PATCH request to ConnectWise to update a record.
+        """
+        client = self.client_class(
+            api_public_key=kwargs.get('api_public_key'),
+            api_private_key=kwargs.get('api_private_key')
+        )
+
+        # Convert the fields to the format that the API expects
+        api_fields = self._translate_fields_to_api_format(changed_fields)
+
+        updated_record = self.update_record(client, record, api_fields)
+
+        return self.update_or_create_instance(updated_record)
+
+    def update_record(self, client, record, api_fields):
+        raise NotImplementedError
+
+
 class ServiceNoteSynchronizer(ChildFetchRecordsMixin, CallbackSyncMixin,
                               Synchronizer):
     client_class = api.ServiceAPIClient
@@ -676,7 +726,7 @@ class DummySynchronizer:
 
     def __init__(self, *args, **kwargs):
         self.api_conditions = []
-        self.client = self.client_class()
+        self.client = self.client_class(**kwargs)
         request_settings = DjconnectwiseSettings().get_settings()
         self.batch_size = request_settings['batch_size']
 
@@ -1321,7 +1371,7 @@ class ActivityTypeSynchronizer(Synchronizer):
         return self.client.get_activity_types(*args, **kwargs)
 
 
-class ActivitySynchronizer(Synchronizer):
+class ActivitySynchronizer(UpdateRecordMixin, Synchronizer):
     client_class = api.SalesAPIClient
     model_class = models.ActivityTracker
 
@@ -1334,6 +1384,21 @@ class ActivitySynchronizer(Synchronizer):
         'company': (models.Company, 'company'),
         'contact': (models.Contact, 'contact'),
         'agreement': (models.Agreement, 'agreement'),
+    }
+
+    API_FIELD_NAMES = {
+        'name': 'name',
+        'status': 'status',
+        'notes': 'notes',
+        'type': 'type',
+        'assign_to': 'assignTo',
+        'company': 'company',
+        'contact': 'contact',
+        'agreement': 'agreement',
+        'opportunity': 'opportunity',
+        'ticket': 'ticket',
+        'date_start': 'dateStart',
+        'date_end': 'dateEnd',
     }
 
     def __init__(self, *args, **kwargs):
@@ -1384,6 +1449,9 @@ class ActivitySynchronizer(Synchronizer):
 
         self.set_relations(instance, json_data)
         return instance
+
+    def update_record(self, client, record, api_fields):
+        return client.update_activity(record, api_fields)
 
     def get_page(self, *args, **kwargs):
         return self.client.get_activities(*args, **kwargs)
@@ -1966,7 +2034,7 @@ class ProjectTeamMemberSynchronizer(ChildFetchRecordsMixin, Synchronizer):
             self.lookup_key).values_list(self.lookup_key, flat=True)
 
 
-class ProjectSynchronizer(Synchronizer):
+class ProjectSynchronizer(UpdateRecordMixin, Synchronizer):
     client_class = api.ProjectAPIClient
     model_class = models.ProjectTracker
     related_meta = {
@@ -1976,6 +2044,18 @@ class ProjectSynchronizer(Synchronizer):
         'contact': (models.Contact, 'contact'),
         'type': (models.ProjectType, 'type'),
         'board': (models.ConnectWiseBoard, 'board'),
+    }
+
+    API_FIELD_NAMES = {
+        'name': 'name',
+        'estimated_start': 'estimatedStart',
+        'estimated_end': 'estimatedEnd',
+        'percent_complete': 'percentComplete',
+        'type': 'type',
+        'status': 'status',
+        'manager': 'manager',
+        'contact': 'contact',
+        'description': 'description',
     }
 
     def __init__(self, *args, **kwargs):
@@ -2042,6 +2122,9 @@ class ProjectSynchronizer(Synchronizer):
 
         self.set_relations(instance, json_data)
         return instance
+
+    def update_record(self, client, record, api_fields):
+        return client.update_project(record, api_fields)
 
     def get_page(self, *args, **kwargs):
         return self.client.get_projects(*args, **kwargs)
@@ -2749,7 +2832,7 @@ class SLASynchronizer(Synchronizer):
         return self.client.get_slas(*args, **kwargs)
 
 
-class OpportunitySynchronizer(Synchronizer):
+class OpportunitySynchronizer(UpdateRecordMixin, Synchronizer):
     client_class = api.SalesAPIClient
     model_class = models.OpportunityTracker
     related_meta = {
@@ -2762,6 +2845,20 @@ class OpportunitySynchronizer(Synchronizer):
         'company': (models.Company, 'company'),
         'contact': (models.Contact, 'contact'),
         'closedBy': (models.Member, 'closed_by')
+    }
+
+    API_FIELD_NAMES = {
+        'name': 'name',
+        'stage': 'stage',
+        'notes': 'notes',
+        'contact': 'contact',
+        'expected_close_date': 'expectedCloseDate',
+        'opportunity_type': 'type',
+        'status': 'status',
+        'source': 'source',
+        'primary_sales_rep': 'primarySalesRep',
+        'secondary_sales_rep': 'secondarySalesRep',
+        'location_id': 'locationId',
     }
 
     def __init__(self, *args, **kwargs):
@@ -2840,6 +2937,9 @@ class OpportunitySynchronizer(Synchronizer):
 
         self.set_relations(instance, json_data)
         return instance
+
+    def update_record(self, client, record, api_fields):
+        return client.update_opportunity(record, api_fields)
 
     def get_page(self, *args, **kwargs):
         return self.client.get_opportunities(*args, **kwargs)
