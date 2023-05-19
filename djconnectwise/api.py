@@ -468,6 +468,9 @@ class ConnectWiseAPIClient(object):
         body = self._format_patch_request_body(changed_fields)
         return self.request('patch', endpoint_url, body)
 
+    def delete(self, endpoint_url):
+        return self.request('delete', endpoint_url)
+
     def _format_patch_request_body(self, changed_fields):
         body = []
 
@@ -1068,6 +1071,10 @@ class TicketAPIMixin:
     def get_ticket(self, ticket_id):
         endpoint_url = '{}/{}'.format(self.ENDPOINT_TICKETS, ticket_id)
         return self.fetch_resource(endpoint_url)
+
+    def delete_ticket(self, ticket_id):
+        endpoint_url = '{}/{}'.format(self.ENDPOINT_TICKETS, ticket_id)
+        return self.request('delete', self._endpoint(endpoint_url))
 
     def get_ticket_tasks(self, ticket_id, **kwargs):
         endpoint_url = '{}/{}/tasks'.format(
