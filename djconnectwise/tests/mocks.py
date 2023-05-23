@@ -395,6 +395,11 @@ def finance_api_get_agreements_call(return_value):
     return create_mock_call(method_name, return_value)
 
 
+def company_get_company_note_types_call(return_value):
+    method_name = 'djconnectwise.api.CompanyAPIClient.get_company_note_types'
+    return create_mock_call(method_name, return_value)
+
+
 def get_raw(url, data, content_type="application/octet-stream", headers=None,
             status=200):
     """Set up requests mock for given URL."""

@@ -434,6 +434,18 @@ class CompanyType(models.Model):
         return self.name
 
 
+class CompanyNoteType(models.Model):
+    name = models.CharField(max_length=50)
+    identifier = models.CharField(max_length=50)
+    default_flag = models.BooleanField()
+
+    class Meta:
+        ordering = ('name', )
+
+    def __str__(self):
+        return self.name
+
+
 class Contact(models.Model):
 
     def __str__(self):
@@ -2282,6 +2294,14 @@ class CompanyTypeTracker(CompanyType):
     class Meta:
         proxy = True
         db_table = 'djconnectwise_companytype'
+
+
+class CompanyNoteTypeTracker(CompanyNoteType):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djconnectwise_companynotetype'
 
 
 class ContactTracker(Contact):

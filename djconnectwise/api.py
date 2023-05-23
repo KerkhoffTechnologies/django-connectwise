@@ -526,6 +526,7 @@ class CompanyAPIClient(ConnectWiseAPIClient):
     ENDPOINT_COMPANY_TYPES = '{}/types'.format(ENDPOINT_COMPANIES)
     ENDPOINT_COMPANY_COMMUNICATION_TYPES = 'communicationTypes'
     ENDPOINT_CONTACT_COMMUNICATIONs = 'communications'
+    ENDPOINT_COMPANY_NOTE_TYPES = 'noteTypes'
 
     def __init__(self, *args, **kwargs):
         # TODO This init method is temporary, remove in 1840 as well as
@@ -559,6 +560,11 @@ class CompanyAPIClient(ConnectWiseAPIClient):
 
     def get_company_types(self, *args, **kwargs):
         return self.fetch_resource(self.ENDPOINT_COMPANY_TYPES,
+                                   should_page=True,
+                                   *args, **kwargs)
+
+    def get_company_note_types(self, *args, **kwargs):
+        return self.fetch_resource(self.ENDPOINT_COMPANY_NOTE_TYPES,
                                    should_page=True,
                                    *args, **kwargs)
 
@@ -1310,11 +1316,12 @@ class ServiceAPIClient(TicketAPIMixin, ConnectWiseAPIClient):
 
 class ProjectAPIClient(TicketAPIMixin, ConnectWiseAPIClient):
     API = 'project'
-    ENDPOINT_PROJECTS = 'projects/'
+    ENDPOINT_PROJECTS = 'projects'
     ENDPOINT_PROJECT_STATUSES = 'statuses/'
     ENDPOINT_PROJECT_PHASES = 'phases/'
     ENDPOINT_PROJECT_TYPES = 'projectTypes/'
     ENDPOINT_PROJECT_TEAM_MEMBERS = 'teamMembers/'
+    ENDPOINT_PROJECT_NOTES = 'notes'
 
     def get_project(self, project_id):
         endpoint_url = '{}/{}'.format(self.ENDPOINT_PROJECTS, project_id)
@@ -1354,6 +1361,19 @@ class ProjectAPIClient(TicketAPIMixin, ConnectWiseAPIClient):
             '{}{}'.format(self.ENDPOINT_PROJECTS, project.id)
         )
         return self.update_instance(changed_fields, endpoint_url)
+
+    def get_project_notes(self, project_id, *args, **kwargs):
+        endpoint_url = '{}/{}/{}'.format(self.ENDPOINT_PROJECTS, project_id,
+                                         self.ENDPOINT_PROJECT_NOTES)
+        return self.fetch_resource(endpoint_url, should_page=True,
+                                   *args, **kwargs)
+
+    def get_project_notes_count(self, project_id):
+        endpoint_url = '{}/{}/{}'.format(self.ENDPOINT_PROJECTS, project_id,
+                                         self.ENDPOINT_PROJECT_NOTES)
+        res = self.fetch_resource(endpoint_url)
+
+        return len(res)
 
 
 class FinanceAPIClient(ConnectWiseAPIClient):
