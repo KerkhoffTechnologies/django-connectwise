@@ -1316,7 +1316,7 @@ class ServiceAPIClient(TicketAPIMixin, ConnectWiseAPIClient):
 
 class ProjectAPIClient(TicketAPIMixin, ConnectWiseAPIClient):
     API = 'project'
-    ENDPOINT_PROJECTS = 'projects'
+    ENDPOINT_PROJECTS = 'projects/'
     ENDPOINT_PROJECT_STATUSES = 'statuses/'
     ENDPOINT_PROJECT_PHASES = 'phases/'
     ENDPOINT_PROJECT_TYPES = 'projectTypes/'
@@ -1363,14 +1363,14 @@ class ProjectAPIClient(TicketAPIMixin, ConnectWiseAPIClient):
         return self.update_instance(changed_fields, endpoint_url)
 
     def get_project_notes(self, project_id, *args, **kwargs):
-        endpoint_url = '{}/{}/{}'.format(self.ENDPOINT_PROJECTS, project_id,
-                                         self.ENDPOINT_PROJECT_NOTES)
+        endpoint_url = '{}{}/{}'.format(self.ENDPOINT_PROJECTS, project_id,
+                                        self.ENDPOINT_PROJECT_NOTES)
         return self.fetch_resource(endpoint_url, should_page=True,
                                    *args, **kwargs)
 
     def get_project_notes_count(self, project_id):
-        endpoint_url = '{}/{}/{}'.format(self.ENDPOINT_PROJECTS, project_id,
-                                         self.ENDPOINT_PROJECT_NOTES)
+        endpoint_url = '{}{}/{}'.format(self.ENDPOINT_PROJECTS, project_id,
+                                        self.ENDPOINT_PROJECT_NOTES)
         res = self.fetch_resource(endpoint_url)
 
         return len(res)
