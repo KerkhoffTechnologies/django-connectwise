@@ -299,6 +299,18 @@ API_COMPANY = {
 
 API_COMPANY_LIST = [API_COMPANY]
 
+API_COMPANY_TEAM_ROLE = {
+    "id": 1,
+    "name": "Account Mgr",
+    "accountManagerFlag": True,
+    "techFlag": True,
+    "salesFlag": True,
+
+  }
+
+API_COMPANY_TEAM_ROLE_LIST = [API_COMPANY_TEAM_ROLE]
+
+
 API_MEMBER = {
     'adminFlag': False,
     'allowExpensesEnteredAgainstCompaniesFlag': True,
@@ -446,6 +458,18 @@ API_MEMBER_COUNT = {
     'count': len(API_MEMBER_LIST)
 }
 
+API_COMPANY_TEAM_LIST = [
+    {
+    "id": 1,
+    "company": API_COMPANY,
+    "teamRole": API_COMPANY_TEAM_ROLE,
+    "contact": API_COMPANY_CONTACT_LIST,
+    "member": API_MEMBER_LIST,
+    "accountManagerFlag": True,
+    "techFlag": True,
+    "salesFlag": True,
+
+}]
 
 API_SERVICE_NOTE_LIST = [
     {

@@ -176,6 +176,28 @@ class TestSyncCompanyTypesCommand(AbstractBaseSyncTest, TestCase):
     )
 
 
+class TestSyncCompanyTeamCommand(AbstractBaseSyncTest, TestCase):
+    args = (
+        mocks.company_api_get_company_team_call,
+        fixtures.API_COMPANY_TEAM_LIST,
+        'company_team'
+    )
+
+    def setUp(self):
+        fixture_utils.init_company_team()
+
+
+class TestSyncCompanyTeamRoleCommand(AbstractBaseSyncTest, TestCase):
+    args = (
+        mocks.company_api_get_company_team_role_call,
+        fixtures.API_COMPANY_TEAM_ROLE_LIST,
+        'company_team_role'
+    )
+
+    def setUp(self):
+        fixture_utils.init_company_team_role()
+
+
 class TestSyncTeamsCommand(AbstractBaseSyncTest, TestCase):
     args = (
         mocks.service_api_get_teams_call,
@@ -781,6 +803,8 @@ class TestSyncAllCommand(TestCase):
             TestSyncCommunicationTypesCommand,
             TestSyncCompaniesCommand,
             TestSyncCompanyTypesCommand,
+            TestSyncCompanyTeamCommand,
+            TestSyncCompanyTeamRoleCommand,
             TestSyncCompanyStatusesCommand,
             TestSyncLocationsCommand,
             TestSyncPrioritiesCommand,
@@ -871,6 +895,12 @@ class TestSyncAllCommand(TestCase):
         self.assertEqual(models.Ticket.objects.all().count(),
                          len([fixtures.API_SERVICE_TICKET]))
 
+        self.assertEqual(models.CompanyTeam.objects.all().count(),
+                         1)
+
+        # self.assertEqual(models.CompanyTeamRole.objects.all().count(),
+        #                  len([fixtures.API_COMPANY_TEAM_ROLE_LIST]))
+
     def test_full_sync(self):
         """Test the command to run a full sync of all objects."""
         cw_object_map = {
@@ -886,6 +916,8 @@ class TestSyncAllCommand(TestCase):
             'territory': models.Territory,
             'company_status': models.CompanyStatus,
             'company_type': models.CompanyType,
+            'company_team': models.CompanyTeam,
+            'company_team_role': models.CompanyTeamRole,
             'team': models.Team,
             'location': models.Location,
             'ticket': models.Ticket,
