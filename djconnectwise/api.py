@@ -589,9 +589,9 @@ class CompanyAPIClient(ConnectWiseAPIClient):
         return self.fetch_resource(self.ENDPOINT_COMPANY_TEAM_ROLE,
                                    should_page=True, *args, **kwargs)
 
-    def get_company_team(self, company_id, *args, **kwargs,):
-        endpoint_url = '{}/{}/{}'.format(self.ENDPOINT_COMPANIES,company_id,
-                                         self.ENDPOINT_COMPANY_TEAM,)
+    def get_company_team(self, company_id, *args, **kwargs):
+        endpoint_url = '{}/{}/{}'.format(self.ENDPOINT_COMPANIES, company_id,
+                                         self.ENDPOINT_COMPANY_TEAM)
         return self.fetch_resource(endpoint_url, should_page=True,
                                    *args, **kwargs)
 

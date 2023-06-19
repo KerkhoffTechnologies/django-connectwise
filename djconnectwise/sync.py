@@ -1240,14 +1240,16 @@ class CompanyTeamSynchronizer(Synchronizer):
 
     def get_page(self, *args, **kwargs):
         records = []
-        company_qs  = models.Company.objects.all().values_list('id', flat=True)
+        company_qs = models.Company.objects.all().values_list('id', flat=True)
         for company_id in company_qs:
             if company_id:
-                record = self.client.get_company_team(*args, **kwargs, company_id=company_id)
+                record = self.client.get_company_team(
+                    *args, **kwargs, company_id=company_id)
                 if record:
                     record = record[0]
                     records.append(record)
         return records
+
 
 class CompanyTeamRoleSynchronizer(Synchronizer):
     client_class = api.CompanyAPIClient

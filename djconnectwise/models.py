@@ -447,11 +447,17 @@ class CompanyNoteType(models.Model):
 
 
 class CompanyTeam(models.Model):
-    company = models.ForeignKey('Company', blank=True, null=True, on_delete=models.CASCADE)
-    team_role = models.ForeignKey('CompanyTeamRole', blank=True, null=True, on_delete=models.CASCADE)
-    location = models.ForeignKey('Location', blank=True, null=True, on_delete=models.CASCADE)
-    contact = models.ForeignKey('Contact', blank=True, null=True, on_delete=models.CASCADE)
-    member = models.ForeignKey('Member', blank=True, null=True, on_delete=models.CASCADE)
+    company = models.ForeignKey('Company', blank=True,
+                                null=True, on_delete=models.CASCADE)
+    team_role = models.ForeignKey('CompanyTeamRole',
+                                  blank=True, null=True,
+                                  on_delete=models.CASCADE)
+    location = models.ForeignKey('Location', blank=True,
+                                 null=True, on_delete=models.CASCADE)
+    contact = models.ForeignKey('Contact', blank=True,
+                                null=True, on_delete=models.CASCADE)
+    member = models.ForeignKey('Member', blank=True,
+                               null=True, on_delete=models.CASCADE)
     accountManagerFlag = models.BooleanField()
     techFlag = models.BooleanField()
     salesFlag = models.BooleanField()
@@ -461,7 +467,6 @@ class CompanyTeam(models.Model):
 
     def __str__(self):
         return self.company.name
-
 
 
 class CompanyTeamRole(models.Model):
