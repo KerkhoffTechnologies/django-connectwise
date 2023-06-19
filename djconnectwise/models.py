@@ -446,6 +446,37 @@ class CompanyNoteType(models.Model):
         return self.name
 
 
+class CompanyTeam(models.Model):
+    company = models.ForeignKey('Company', blank=True, null=True, on_delete=models.CASCADE)
+    team_role = models.ForeignKey('CompanyTeamRole', blank=True, null=True, on_delete=models.CASCADE)
+    location = models.ForeignKey('Location', blank=True, null=True, on_delete=models.CASCADE)
+    contact = models.ForeignKey('Contact', blank=True, null=True, on_delete=models.CASCADE)
+    member = models.ForeignKey('Member', blank=True, null=True, on_delete=models.CASCADE)
+    accountManagerFlag = models.BooleanField()
+    techFlag = models.BooleanField()
+    salesFlag = models.BooleanField()
+
+    class Meta:
+        ordering = ('id', )
+
+    def __str__(self):
+        return self.company.name
+
+
+
+class CompanyTeamRole(models.Model):
+    name = models.CharField(max_length=50)
+    accountManagerFlag = models.BooleanField()
+    techFlag = models.BooleanField()
+    salesFlag = models.BooleanField()
+
+    class Meta:
+        ordering = ('name', )
+
+    def __str__(self):
+        return self.name
+
+
 class Contact(models.Model):
 
     def __str__(self):
@@ -2302,6 +2333,22 @@ class CompanyNoteTypeTracker(CompanyNoteType):
     class Meta:
         proxy = True
         db_table = 'djconnectwise_companynotetype'
+
+
+class CompanyTeamTracker(CompanyTeam):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djconnectwise_companyteam'
+
+
+class CompanyTeamRoleTracker(CompanyTeamRole):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djconnectwise_companyteamrole'
 
 
 class ContactTracker(Contact):

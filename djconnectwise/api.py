@@ -527,6 +527,8 @@ class CompanyAPIClient(ConnectWiseAPIClient):
     ENDPOINT_COMPANY_COMMUNICATION_TYPES = 'communicationTypes'
     ENDPOINT_CONTACT_COMMUNICATIONs = 'communications'
     ENDPOINT_COMPANY_NOTE_TYPES = 'noteTypes'
+    ENDPOINT_COMPANY_TEAM = 'teams'
+    ENDPOINT_COMPANY_TEAM_ROLE = 'teamRoles'
 
     def __init__(self, *args, **kwargs):
         # TODO This init method is temporary, remove in 1840 as well as
@@ -582,6 +584,16 @@ class CompanyAPIClient(ConnectWiseAPIClient):
         self.communication_type_endpoint = True
         return self.fetch_resource(self.ENDPOINT_COMPANY_COMMUNICATION_TYPES,
                                    should_page=True, *args, **kwargs)
+
+    def get_company_team_role(self, *args, **kwargs):
+        return self.fetch_resource(self.ENDPOINT_COMPANY_TEAM_ROLE,
+                                   should_page=True, *args, **kwargs)
+
+    def get_company_team(self, company_id, *args, **kwargs,):
+        endpoint_url = '{}/{}/{}'.format(self.ENDPOINT_COMPANIES,company_id,
+                                         self.ENDPOINT_COMPANY_TEAM,)
+        return self.fetch_resource(endpoint_url, should_page=True,
+                                   *args, **kwargs)
 
     def get_headers(self):
         """
