@@ -242,7 +242,7 @@ class TestCompanyTeamSynchronizer(TestCase, SynchronizerTestMixin):
         self._sync(new_json_list)
 
         changed = self.model_class.objects.get(id=instance_id)
-        self.assertNotEqual(original.techFlag, new_json['techFlag'])
+        self.assertNotEqual(original.tech_flag, new_json['techFlag'])
         self._assert_fields(changed, new_json)
 
     def _assert_fields(self, instance, json_data):
