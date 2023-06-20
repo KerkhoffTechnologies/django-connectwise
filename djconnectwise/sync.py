@@ -1232,9 +1232,9 @@ class CompanyTeamSynchronizer(Synchronizer):
 
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data.get('id')
-        instance.accountManagerFlag = json_data.get('accountManagerFlag')
-        instance.techFlag = json_data.get('techFlag')
-        instance.salesFlag = json_data.get('salesFlag')
+        instance.account_manager_flag = json_data.get('accountManagerFlag')
+        instance.tech_flag = json_data.get('techFlag')
+        instance.sales_flag = json_data.get('salesFlag')
 
         self.set_relations(instance, json_data)
 
@@ -1258,9 +1258,9 @@ class CompanyTeamRoleSynchronizer(Synchronizer):
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data.get('id')
         instance.name = json_data.get('name')
-        instance.accountManagerFlag = json_data.get('accountManagerFlag')
-        instance.techFlag = json_data.get('techFlag')
-        instance.salesFlag = json_data.get('salesFlag')
+        instance.account_manager_flag = json_data.get('accountManagerFlag')
+        instance.tech_flag = json_data.get('techFlag')
+        instance.sales_flag = json_data.get('salesFlag')
 
     def get_page(self, *args, **kwargs):
         return self.client.get_company_team_role(*args, **kwargs)
