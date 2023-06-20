@@ -184,6 +184,7 @@ class TestSyncCompanyTeamCommand(AbstractBaseSyncTest, TestCase):
     )
 
     def setUp(self):
+        fixture_utils.init_companies()
         fixture_utils.init_company_team()
 
 
@@ -898,8 +899,8 @@ class TestSyncAllCommand(TestCase):
         self.assertEqual(models.CompanyTeam.objects.all().count(),
                          1)
 
-        # self.assertEqual(models.CompanyTeamRole.objects.all().count(),
-        #                  len([fixtures.API_COMPANY_TEAM_ROLE_LIST]))
+        self.assertEqual(models.CompanyTeamRole.objects.all().count(),
+                         len([fixtures.API_COMPANY_TEAM_ROLE_LIST]))
 
     def test_full_sync(self):
         """Test the command to run a full sync of all objects."""

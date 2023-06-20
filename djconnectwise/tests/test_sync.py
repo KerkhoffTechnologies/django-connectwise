@@ -227,6 +227,24 @@ class TestCompanyTeamSynchronizer(TestCase, SynchronizerTestMixin):
     def call_api(self, return_data):
         return mocks.company_api_get_company_team_call(return_data)
 
+    def test_sync_update(self):
+        self._sync(self.fixture)
+
+        json_data = self.fixture[0]
+
+        instance_id = json_data['id']
+        original = self.model_class.objects.get(id=instance_id)
+
+        new_json = deepcopy(self.fixture[0])
+        new_json['techFlag'] = False
+        new_json_list = [new_json]
+
+        self._sync(new_json_list)
+
+        changed = self.model_class.objects.get(id=instance_id)
+        self.assertNotEqual(original.techFlag, new_json['techFlag'])
+        self._assert_fields(changed, new_json)
+
     def _assert_fields(self, instance, json_data):
         self.assertEqual(instance.accountManagerFlag,
                          json_data['accountManagerFlag'])
