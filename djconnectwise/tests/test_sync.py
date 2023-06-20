@@ -228,10 +228,10 @@ class TestCompanyTeamSynchronizer(TestCase, SynchronizerTestMixin):
         return mocks.company_api_get_company_team_call(return_data)
 
     def _assert_fields(self, instance, json_data):
-        self.assertEqual(instance.accountManagerFlag,
+        self.assertEqual(instance.account_manager_flag,
                          json_data['accountManagerFlag'])
-        self.assertEqual(instance.techFlag, json_data['techFlag'])
-        self.assertEqual(instance.salesFlag, json_data['salesFlag'])
+        self.assertEqual(instance.tech_flag, json_data['techFlag'])
+        self.assertEqual(instance.sales_flag, json_data['salesFlag'])
 
 
 class TestCompanyTestRoleSynchronizer(TestCase, SynchronizerTestMixin):
@@ -247,10 +247,10 @@ class TestCompanyTestRoleSynchronizer(TestCase, SynchronizerTestMixin):
 
     def _assert_fields(self, instance, json_data):
         self.assertEqual(instance.name, json_data['name'])
-        self.assertEqual(instance.accountManagerFlag,
+        self.assertEqual(instance.account_manager_flag,
                          json_data['accountManagerFlag'])
-        self.assertEqual(instance.techFlag, json_data['techFlag'])
-        self.assertEqual(instance.salesFlag, json_data['salesFlag'])
+        self.assertEqual(instance.tech_flag, json_data['techFlag'])
+        self.assertEqual(instance.sales_flag, json_data['salesFlag'])
 
 
 class TestTimeEntrySynchronizer(TestCase, SynchronizerTestMixin):

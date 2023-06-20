@@ -458,9 +458,9 @@ class CompanyTeam(models.Model):
                                 null=True, on_delete=models.CASCADE)
     member = models.ForeignKey('Member', blank=True,
                                null=True, on_delete=models.CASCADE)
-    accountManagerFlag = models.BooleanField()
-    techFlag = models.BooleanField()
-    salesFlag = models.BooleanField()
+    account_manager_flag = models.BooleanField()
+    tech_flag = models.BooleanField()
+    sales_flag = models.BooleanField()
 
     class Meta:
         ordering = ('id', )
@@ -471,9 +471,9 @@ class CompanyTeam(models.Model):
 
 class CompanyTeamRole(models.Model):
     name = models.CharField(max_length=50)
-    accountManagerFlag = models.BooleanField()
-    techFlag = models.BooleanField()
-    salesFlag = models.BooleanField()
+    account_manager_flag = models.BooleanField()
+    tech_flag = models.BooleanField()
+    sales_flag = models.BooleanField()
 
     class Meta:
         ordering = ('name', )
