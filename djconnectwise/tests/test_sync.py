@@ -216,6 +216,61 @@ class TestCompanyStatusSynchronizer(TestCase, SynchronizerTestMixin):
                          json_data['cancelOpenTracksFlag'])
 
 
+class TestCompanyTeamSynchronizer(TestCase, SynchronizerTestMixin):
+    synchronizer_class = sync.CompanyTeamSynchronizer
+    model_class = models.CompanyTeamTracker
+    fixture = fixtures.API_COMPANY_TEAM_LIST
+
+    def setUp(self):
+        fixture_utils.init_company_team()
+
+    def call_api(self, return_data):
+        return mocks.company_api_get_company_team_call(return_data)
+
+    def test_sync_update(self):
+        self._sync(self.fixture)
+
+        json_data = self.fixture[0]
+
+        instance_id = json_data['id']
+        original = self.model_class.objects.get(id=instance_id)
+
+        new_json = deepcopy(self.fixture[0])
+        new_json['techFlag'] = False
+        new_json_list = [new_json]
+
+        self._sync(new_json_list)
+
+        changed = self.model_class.objects.get(id=instance_id)
+        self.assertNotEqual(original.tech_flag, new_json['techFlag'])
+        self._assert_fields(changed, new_json)
+
+    def _assert_fields(self, instance, json_data):
+        self.assertEqual(instance.account_manager_flag,
+                         json_data['accountManagerFlag'])
+        self.assertEqual(instance.tech_flag, json_data['techFlag'])
+        self.assertEqual(instance.sales_flag, json_data['salesFlag'])
+
+
+class TestCompanyTestRoleSynchronizer(TestCase, SynchronizerTestMixin):
+    synchronizer_class = sync.CompanyTeamRoleSynchronizer
+    model_class = models.CompanyTeamRoleTracker
+    fixture = fixtures.API_COMPANY_TEAM_ROLE_LIST
+
+    def setUp(self):
+        fixture_utils.init_company_team_role()
+
+    def call_api(self, return_data):
+        return mocks.company_api_get_company_team_role_call(return_data)
+
+    def _assert_fields(self, instance, json_data):
+        self.assertEqual(instance.name, json_data['name'])
+        self.assertEqual(instance.account_manager_flag,
+                         json_data['accountManagerFlag'])
+        self.assertEqual(instance.tech_flag, json_data['techFlag'])
+        self.assertEqual(instance.sales_flag, json_data['salesFlag'])
+
+
 class TestTimeEntrySynchronizer(TestCase, SynchronizerTestMixin):
     synchronizer_class = sync.TimeEntrySynchronizer
     model_class = models.TimeEntryTracker

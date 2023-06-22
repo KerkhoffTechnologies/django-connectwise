@@ -186,6 +186,19 @@ def init_company_statuses():
     return synchronizer.sync()
 
 
+def init_company_team():
+    mocks.company_api_get_company_team_call(fixtures.API_COMPANY_TEAM_LIST)
+    synchronizer = sync.CompanyTeamSynchronizer()
+    return synchronizer.sync()
+
+
+def init_company_team_role():
+    mocks.company_api_get_company_team_role_call(
+        [fixtures.API_COMPANY_TEAM_ROLE])
+    synchronizer = sync.CompanyTeamRoleSynchronizer()
+    return synchronizer.sync()
+
+
 def init_locations():
     mocks.service_api_get_locations_call(fixtures.API_SERVICE_LOCATION_LIST)
     synchronizer = sync.LocationSynchronizer()
