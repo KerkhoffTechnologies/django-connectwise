@@ -1217,6 +1217,55 @@ class CompanyNoteTypesSynchronizer(Synchronizer):
         return self.client.get_company_note_types(*args, **kwargs)
 
 
+class CompanyTeamSynchronizer(Synchronizer):
+    client_class = api.CompanyAPIClient
+    model_class = models.CompanyTeamTracker
+
+    related_meta = {
+        'company': (models.Company, 'company'),
+        'teamRole': (models.CompanyTeamRole, 'team_role'),
+        'location': (models.Location, 'location'),
+        'contact': (models.Contact, 'contact'),
+        'member': (models.Member, 'member'),
+
+    }
+
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data.get('id')
+        instance.account_manager_flag = json_data.get('accountManagerFlag')
+        instance.tech_flag = json_data.get('techFlag')
+        instance.sales_flag = json_data.get('salesFlag')
+
+        self.set_relations(instance, json_data)
+
+    def get_page(self, *args, **kwargs):
+        records = []
+        company_qs = models.Company.objects.all().values_list('id', flat=True)
+        for company_id in company_qs:
+            if company_id:
+                record = self.client.get_company_team(
+                    *args, **kwargs, company_id=company_id)
+                if record:
+                    record = record[0]
+                    records.append(record)
+        return records
+
+
+class CompanyTeamRoleSynchronizer(Synchronizer):
+    client_class = api.CompanyAPIClient
+    model_class = models.CompanyTeamRoleTracker
+
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data.get('id')
+        instance.name = json_data.get('name')
+        instance.account_manager_flag = json_data.get('accountManagerFlag')
+        instance.tech_flag = json_data.get('techFlag')
+        instance.sales_flag = json_data.get('salesFlag')
+
+    def get_page(self, *args, **kwargs):
+        return self.client.get_company_team_role(*args, **kwargs)
+
+
 class ContactSynchronizer(Synchronizer):
     client_class = api.CompanyAPIClient
     model_class = models.ContactTracker

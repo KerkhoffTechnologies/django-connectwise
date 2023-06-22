@@ -451,3 +451,14 @@ class OpportunityUDFAdmin(admin.ModelAdmin):
 class CompanyNoteTypeAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'identifier', 'default_flag')
     search_fields = ['name', 'identifier']
+
+
+@admin.register(models.CompanyTeamRole)
+class CompanyTeamRoleAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name')
+    search_fields = ['name']
+
+
+@admin.register(models.CompanyTeam)
+class CompanyTeamAdmin(admin.ModelAdmin):
+    list_display = ('id', 'company', 'team_role')
