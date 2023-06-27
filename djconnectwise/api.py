@@ -1368,6 +1368,11 @@ class ProjectAPIClient(TicketAPIMixin, ConnectWiseAPIClient):
                                    should_page=True,
                                    *args, **kwargs)
 
+    def create_project(self, fields):
+        endpoint_url = self._endpoint(self.ENDPOINT_PROJECTS)
+
+        return self.request('POST', endpoint_url, fields)
+
     def update_project(self, project, changed_fields):
         endpoint_url = self._endpoint(
             '{}{}'.format(self.ENDPOINT_PROJECTS, project.id)
