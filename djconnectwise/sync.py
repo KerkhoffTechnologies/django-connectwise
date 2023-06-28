@@ -726,7 +726,10 @@ class DummySynchronizer:
 
     def __init__(self, *args, **kwargs):
         self.api_conditions = []
-        self.client = self.client_class(**kwargs)
+        self.client = self.client_class(
+            api_public_key=kwargs.get('api_public_key'),
+            api_private_key=kwargs.get('api_private_key')
+        )
         request_settings = DjconnectwiseSettings().get_settings()
         self.batch_size = request_settings['batch_size']
 
