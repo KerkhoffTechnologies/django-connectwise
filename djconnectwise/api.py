@@ -468,6 +468,10 @@ class ConnectWiseAPIClient(object):
         body = self._format_patch_request_body(changed_fields)
         return self.request('patch', endpoint_url, body)
 
+    def create(self, endpoint_url, fields):
+        body = self._format_post_request_body(fields)
+        return self.request('post', endpoint_url, body)
+
     def delete(self, endpoint_url):
         return self.request('delete', endpoint_url)
 
@@ -514,6 +518,24 @@ class ConnectWiseAPIClient(object):
                 'path': path,
                 'value': value
             })
+
+        return body
+
+    def _format_post_request_body(self, fields):
+        body = {}
+
+        for field, value in fields.items():
+
+            if isinstance(value, datetime.datetime):
+                value = value.astimezone(
+                    pytz.timezone('UTC')).strftime(
+                    "%Y-%m-%dT%H:%M:%SZ")
+            elif isinstance(value, models.Model):
+                value = {'id': value.id}
+            else:
+                value = str(value) if value else ''
+
+            body[field] = value
 
         return body
 
@@ -1371,7 +1393,7 @@ class ProjectAPIClient(TicketAPIMixin, ConnectWiseAPIClient):
     def create_project(self, fields):
         endpoint_url = self._endpoint(self.ENDPOINT_PROJECTS)
 
-        return self.request('POST', endpoint_url, fields)
+        return self.create(endpoint_url, fields)
 
     def update_project(self, project, changed_fields):
         endpoint_url = self._endpoint(

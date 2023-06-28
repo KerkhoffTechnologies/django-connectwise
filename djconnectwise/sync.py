@@ -2111,6 +2111,10 @@ class ProjectSynchronizer(CreateRecordMixin,
         'manager': 'manager',
         'contact': 'contact',
         'description': 'description',
+        'billing_method': 'billingMethod',
+        'company': 'company',
+        'board': 'board',
+        'company': 'company',
     }
 
     def __init__(self, *args, **kwargs):
@@ -2137,6 +2141,7 @@ class ProjectSynchronizer(CreateRecordMixin,
 
         instance.id = json_data.get('id')
         instance.name = json_data.get('name')
+        instance.billing_method = json_data.get('billingMethod')
         description = json_data.get('description')
         if description:
             instance.description = normalize_newlines(description)
