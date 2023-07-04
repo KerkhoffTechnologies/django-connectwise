@@ -1249,8 +1249,7 @@ class CompanyTeamSynchronizer(Synchronizer):
                 record = self.client.get_company_team(
                     *args, **kwargs, company_id=company_id)
                 if record:
-                    record = record[0]
-                    records.append(record)
+                    records.extend(record)
         return records
 
 
