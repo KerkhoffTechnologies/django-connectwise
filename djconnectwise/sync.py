@@ -609,9 +609,12 @@ class CreateRecordMixin:
         # Convert the fields to the format that the API expects
         api_fields = self._translate_fields_to_api_format(fields)
 
-        new_record = client.create_ticket(api_fields)
+        new_record = self.create_record(client, api_fields)
 
         return self.update_or_create_instance(new_record)
+
+    def create_record(self, client, api_fields):
+        raise NotImplementedError
 
 
 class UpdateRecordMixin:
@@ -2087,7 +2090,8 @@ class ProjectTeamMemberSynchronizer(ChildFetchRecordsMixin, Synchronizer):
             self.lookup_key).values_list(self.lookup_key, flat=True)
 
 
-class ProjectSynchronizer(UpdateRecordMixin, Synchronizer):
+class ProjectSynchronizer(CreateRecordMixin,
+                          UpdateRecordMixin, Synchronizer):
     client_class = api.ProjectAPIClient
     model_class = models.ProjectTracker
     related_meta = {
@@ -2109,6 +2113,10 @@ class ProjectSynchronizer(UpdateRecordMixin, Synchronizer):
         'manager': 'manager',
         'contact': 'contact',
         'description': 'description',
+        'billing_method': 'billingMethod',
+        'company': 'company',
+        'board': 'board',
+        'company': 'company',
     }
 
     def __init__(self, *args, **kwargs):
@@ -2135,6 +2143,7 @@ class ProjectSynchronizer(UpdateRecordMixin, Synchronizer):
 
         instance.id = json_data.get('id')
         instance.name = json_data.get('name')
+        instance.billing_method = json_data.get('billingMethod')
         description = json_data.get('description')
         if description:
             instance.description = normalize_newlines(description)
@@ -2175,6 +2184,9 @@ class ProjectSynchronizer(UpdateRecordMixin, Synchronizer):
 
         self.set_relations(instance, json_data)
         return instance
+
+    def create_record(self, client, api_fields):
+        return client.create_project(api_fields)
 
     def update_record(self, client, record, api_fields):
         return client.update_project(record, api_fields)
