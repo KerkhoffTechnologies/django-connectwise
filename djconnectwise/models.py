@@ -1238,6 +1238,20 @@ class Project(UpdateConnectWiseMixin, TimeStampedModel):
     description = models.TextField(blank=True, null=True)
     udf = models.JSONField(blank=True, null=True)
 
+    ACTUAL_RATES = 'ActualRates'
+    FIXED_FEE = 'FixedFee'
+    NOT_TO_EXCEED = 'NotToExceed'
+    OVERRIDE_RATE = 'OverrideRate'
+
+    BILLING_METHODS = (
+        (ACTUAL_RATES, 'Actual Rates'),
+        (FIXED_FEE, 'Fixed Fee'),
+        (NOT_TO_EXCEED, 'Not To Exceed'),
+        (OVERRIDE_RATE, 'Override Rate'),
+    )
+    billing_method = models.CharField(null=True, blank=True,
+                                      choices=BILLING_METHODS, max_length=50)
+
     board = models.ForeignKey(
         'ConnectWiseBoard',
         blank=True,
