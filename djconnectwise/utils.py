@@ -92,7 +92,8 @@ class DjconnectwiseSettings:
             'sync_time_and_note_entries': True,
             'sync_contact_communications': True,
             'keep_closed_ticket_days': 0,
-            'keep_closed_status_board_ids': 0
+            'keep_closed_status_board_ids': 0,
+            'send_naive_datetimes': True,
         }
 
         if hasattr(settings, 'DJCONNECTWISE_CONF_CALLABLE'):
