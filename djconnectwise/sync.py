@@ -531,14 +531,12 @@ class CallbackSyncMixin:
         if sync_job_qset.exists() and not self.sync_all:
             send_naive_datetimes = (
                 DjconnectwiseSettings().get_settings())['send_naive_datetimes']
+            last_sync_job = sync_job_qset.last()
             if send_naive_datetimes:
-                last_sync_job = sync_job_qset.exclude(
-                    id=sync_job_qset.last().id)
-                last_sync_job_time = last_sync_job.last().start_time.strftime(
+                last_sync_job_time = last_sync_job.start_time.strftime(
                     '%Y-%m-%dT%H:%M:%S.%f')
             else:
-                last_sync_job_time = sync_job_qset.exclude(
-                    id=sync_job_qset.last().id).last().start_time.isoformat()
+                last_sync_job_time = last_sync_job.start_time.isoformat()
             self.api_conditions.append(
                 "lastUpdated>[{0}]".format(last_sync_job_time)
             )
