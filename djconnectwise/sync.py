@@ -363,8 +363,16 @@ class Synchronizer:
         # itself, and at least one other sync job exists.
         if sync_job_qset.count() > 1 and not self.full and \
                 self.partial_sync_support:
-            last_sync_job_time = sync_job_qset.exclude(
-                id=sync_job_qset.last().id).last().start_time.isoformat()
+            send_naive_datetimes = (
+                DjconnectwiseSettings().get_settings())['send_naive_datetimes']
+            if send_naive_datetimes:
+                last_sync_job = sync_job_qset.exclude(
+                    id=sync_job_qset.last().id)
+                last_sync_job_time = last_sync_job.last().start_time.strftime(
+                    '%Y-%m-%dT%H:%M:%S.%f')
+            else:
+                last_sync_job_time = sync_job_qset.exclude(
+                    id=sync_job_qset.last().id).last().start_time.isoformat()
             self.api_conditions.append(
                 "lastUpdated>[{0}]".format(last_sync_job_time)
             )
@@ -521,7 +529,14 @@ class CallbackSyncMixin:
         sync_job_qset = self.get_sync_job_qset()
 
         if sync_job_qset.exists() and not self.sync_all:
-            last_sync_job_time = sync_job_qset.last().start_time.isoformat()
+            send_naive_datetimes = (
+                DjconnectwiseSettings().get_settings())['send_naive_datetimes']
+            last_sync_job = sync_job_qset.last()
+            if send_naive_datetimes:
+                last_sync_job_time = last_sync_job.start_time.strftime(
+                    '%Y-%m-%dT%H:%M:%S.%f')
+            else:
+                last_sync_job_time = last_sync_job.start_time.isoformat()
             self.api_conditions.append(
                 "lastUpdated>[{0}]".format(last_sync_job_time)
             )
