@@ -2397,7 +2397,6 @@ class TicketSynchronizerMixin:
         'status': 'status',
         'priority': 'priority',
         'board': 'board',
-        'record_type': 'recordType',
         'company': 'company',
         'location': 'location',
         'contact': 'contact',
