@@ -23,9 +23,11 @@ CW_CLOUD_URLS = {
     'na.myconnectwise.net': 'api-na.myconnectwise.net',
     'aus.myconnectwise.net': 'api-aus.myconnectwise.net',
     'za.myconnectwise.net': 'api-za.myconnectwise.net',
+    'staging.connectwisedev.com': 'api-staging.connectwisedev.com',
 }
 COMPANY_INFO_REQUIRED = 'company-info-required'
 CW_CLOUD_DOMAIN = 'myconnectwise.net'
+CW_DEV_CLOUD_DOMAIN = 'connectwisedev.com'
 DEFAULT_CW_API_CODEBASE = 'v4_6_release/'
 
 CW_RESPONSE_MAX_RECORDS = 1000  # The greatest number of records ConnectWise
@@ -116,7 +118,8 @@ class CompanyInfoManager:
         codebase_result = DEFAULT_CW_API_CODEBASE
         codebase_updated = False
 
-        if CW_CLOUD_DOMAIN in server_url:
+        if any(domain in server_url for domain in
+               [CW_CLOUD_DOMAIN, CW_DEV_CLOUD_DOMAIN]):
             logger.debug('Fetching ConnectWise codebase value from cache.')
             codebase_from_cache = cache.get(cache_key)
             logger.info(
