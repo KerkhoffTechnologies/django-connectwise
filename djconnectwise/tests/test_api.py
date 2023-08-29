@@ -17,6 +17,7 @@ from djconnectwise.api import ConnectWiseRecordNotFoundError
 from djconnectwise.api import CompanyInfoManager
 
 
+CLOUD_DOMAIN = 'myconnectwise.net'
 API_URL = 'https://localhost/v4_6_release/apis/3.0/system/members/count'
 
 
@@ -740,7 +741,7 @@ class TestSalesAPIClient(BaseAPITestCase):
 class TestAPISettings(TestCase):
 
     def get_cloud_client(self):
-        server_url = 'https://{}'.format(api.CW_CLOUD_DOMAIN)
+        server_url = 'https://{}'.format(CLOUD_DOMAIN)
         return api.ServiceAPIClient(server_url=server_url)
 
     def test_default_timeout(self):

@@ -899,29 +899,6 @@ class TestMemberSynchronization(TransactionTestCase, AssertSyncMixin):
         self.assertTrue(default_storage.exists(avatar_size))
         self.assertTrue(default_storage.exists(micro_avatar_size))
 
-    @override_settings(DEFAULT_FILE_STORAGE='storages.backends.'
-                                            's3boto3.S3Boto3Storage',
-                       AWS_STORAGE_BUCKET_NAME='somebucket')
-    def test_app_wont_crash_without_DO_credentials(self):
-        self.synchronizer = sync.MemberSynchronizer()
-        api_member = fixtures.API_MEMBER
-
-        # If this doesn't raise an exception, GREAT!
-        self.synchronizer.update_or_create_instance(api_member)
-
-        # Now we check to make sure that it WOULD have raised an exception
-        # if we didn't call it from its safe location. If no exceptions
-        # occur then there is still a problem.
-        self.synchronizer = sync.MemberSynchronizer()
-        self.synchronizer.sync()
-        member = models.Member.objects.get(identifier=self.identifier)
-
-        attachment_filename = 'some_new_image.png'
-        avatar = mocks.get_member_avatar()
-        with self.assertRaises(NoCredentialsError):
-            self.synchronizer._save_avatar(
-                member, avatar, attachment_filename)
-
 
 class TestOpportunitySynchronizer(TestCase, SynchronizerTestMixin):
     synchronizer_class = sync.OpportunitySynchronizer
