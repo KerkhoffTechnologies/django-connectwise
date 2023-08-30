@@ -2,9 +2,6 @@ from copy import deepcopy
 from unittest import TestCase
 from django.test import TransactionTestCase
 from django.core.files.storage import default_storage
-from django.test import override_settings
-
-from botocore.exceptions import NoCredentialsError
 
 import datetime
 
