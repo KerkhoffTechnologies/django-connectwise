@@ -64,7 +64,7 @@ def remove_thumbnail(avatar_filename):
 def generate_thumbnail(avatar, size, extension, filename):
     filename = generate_filename(size, filename, extension)
     avatar_image = Image.open(BytesIO(avatar))
-    thumbnail = ImageOps.fit(avatar_image, size, Image.ANTIALIAS)
+    thumbnail = ImageOps.fit(avatar_image, size, Image.LANCZOS)
 
     # For now just change the extension to jpeg
     # https://stackoverflow.com/questions/37048807/python-image-library-and-keyerror-jpg
