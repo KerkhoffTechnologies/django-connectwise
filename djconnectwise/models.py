@@ -1625,9 +1625,11 @@ class Ticket(UpdateConnectWiseMixin, TimeStampedModel):
         'Source', blank=True, null=True, related_name='source_tickets',
         on_delete=models.SET_NULL)
     work_type = models.ForeignKey(
-        'WorkType', null=True, on_delete=models.SET_NULL)
+        'WorkType', blank=True, null=True, related_name='work_type_tickets',
+        on_delete=models.SET_NULL)
     work_role = models.ForeignKey(
-        'WorkRole', null=True, on_delete=models.SET_NULL)
+        'WorkRole', blank=True, null=True, related_name='work_role_tickets',
+        on_delete=models.SET_NULL)
 
     class Meta:
         verbose_name = 'Ticket'
