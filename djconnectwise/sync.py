@@ -2381,6 +2381,8 @@ class TicketSynchronizerMixin:
         'item': (models.Item, 'sub_type_item'),
         'agreement': (models.Agreement, 'agreement'),
         'source': (models.Source, 'source'),
+        'workType': (models.WorkType, 'work_type'),
+        'workRole': (models.WorkRole, 'work_role'),
     }
 
     API_FIELD_NAMES = {
