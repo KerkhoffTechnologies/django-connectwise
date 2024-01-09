@@ -20,8 +20,6 @@ from djconnectwise.utils import get_hash, get_filename_extension, \
     generate_thumbnail, generate_filename, remove_thumbnail
 
 DEFAULT_AVATAR_EXTENSION = 'jpg'
-MAX_URL_LENGTH = 2000
-MIN_URL_LENGTH = 1980
 
 CREATED = 1
 UPDATED = 2
@@ -464,7 +462,10 @@ class BatchConditionMixin:
         while unfetched_conditions:
             # While there are still items left in the list there are still
             # batches left to be fetched.
-            optimal_size = self.get_optimal_size(unfetched_conditions)
+            optimal_size = self.get_optimal_size(
+                unfetched_conditions,
+                self.client.request_settings['max_url_length']
+            )
             batch_conditions = unfetched_conditions[:optimal_size]
             del unfetched_conditions[:optimal_size]
             batch_condition = self.get_batch_condition(batch_conditions)
@@ -473,12 +474,17 @@ class BatchConditionMixin:
             results = super().get(results, conditions=batch_conditions)
         return results
 
-    def get_optimal_size(self, condition_list):
+    def get_optimal_size(self, condition_list, max_url_length=2000,
+                         min_url_length=None):
         if not condition_list:
             # Return none if empty list
             return None
         size = len(condition_list)
-        if self.url_length(condition_list, size) < MAX_URL_LENGTH:
+
+        if not min_url_length:
+            min_url_length = max_url_length - 20
+
+        if self.url_length(condition_list, size) < max_url_length:
             # If we can fit all of the statuses in the first batch, return
             return size
 
@@ -486,9 +492,9 @@ class BatchConditionMixin:
         min_size = 1
         while True:
             url_len = self.url_length(condition_list, size)
-            if url_len <= MAX_URL_LENGTH and url_len > MIN_URL_LENGTH:
+            if url_len <= max_url_length and url_len > min_url_length:
                 break
-            elif url_len > MAX_URL_LENGTH:
+            elif url_len > max_url_length:
                 max_size = size
                 size = math.floor((max_size+min_size)/2)
             else:
@@ -1592,11 +1598,13 @@ class ScheduleEntriesSynchronizer(BatchConditionMixin, Synchronizer):
 
         return results
 
-    def get_optimal_size(self, condition_list):
+    def get_optimal_size(self, condition_list, max_url_length=2000,
+                         min_url_length=None):
         object_id_size = self.settings['schedule_entry_conditions_size']
 
         return object_id_size if object_id_size \
-            else super().get_optimal_size(condition_list)
+            else super().get_optimal_size(condition_list, max_url_length,
+                                          min_url_length)
 
     def get_batch_condition(self, conditions):
         return 'objectId in ({})'.format(

@@ -100,27 +100,38 @@ class SynchronizerTestMixin(AssertSyncMixin):
 class TestBatchConditionMixin(TestCase):
     def test_get_optimal_size(self):
         synchronizer = sync.BatchConditionMixin()
-        size = synchronizer.get_optimal_size([31, 35, 43, 52, 58])
+        size = synchronizer.get_optimal_size(
+            [31, 35, 43, 52, 58]
+        )
 
         self.assertEqual(size, 5)
 
-        sync.MAX_URL_LENGTH = 310
-        sync.MIN_URL_LENGTH = 305
-
         size = synchronizer.get_optimal_size(
-            [1, 2, 3, 43434, 54562, 54568, 65643]
+            [1, 2, 3, 43434, 54562, 54568, 65643],
+            max_url_length=310,
+            min_url_length=305,
         )
         self.assertEqual(size, 3)
 
         size = synchronizer.get_optimal_size(
-            [442434, 53462, 552468, 63443]
+            [442434, 53462, 552468, 63443],
+            max_url_length=310,
+            min_url_length=305,
         )
         self.assertEqual(size, 1)
 
-        size = synchronizer.get_optimal_size([1])
+        size = synchronizer.get_optimal_size(
+            [1],
+            max_url_length=310,
+            min_url_length=305,
+        )
         self.assertEqual(size, 1)
 
-        size = synchronizer.get_optimal_size([])
+        size = synchronizer.get_optimal_size(
+            [],
+            max_url_length=310,
+            min_url_length=305,
+        )
         self.assertIsNone(size)
 
 
@@ -1525,8 +1536,6 @@ class TestTicketSynchronizerMixin(AssertSyncMixin):
         self._assert_sync(instance, updated_ticket_fixture)
 
     def test_sync_multiple_status_batches(self):
-        sync.MAX_URL_LENGTH = 330
-        sync.MIN_URL_LENGTH = 320
         self._init_data()
         fixture_utils.init_tickets()
         updated_ticket_fixture = deepcopy(self.ticket_fixture)
@@ -1536,6 +1545,7 @@ class TestTicketSynchronizerMixin(AssertSyncMixin):
         method_name = 'djconnectwise.api.TicketAPIMixin.get_tickets'
         mock_call, _patch = mocks.create_mock_call(method_name, fixture_list)
         synchronizer = sync.ServiceTicketSynchronizer()
+        synchronizer.client.request_settings['max_url_length'] = 330
         synchronizer.batch_condition_list.extend(
             [234234, 345345, 234213, 2344523, 345645]
         )
