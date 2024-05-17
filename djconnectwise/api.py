@@ -550,6 +550,7 @@ class CompanyAPIClient(ConnectWiseAPIClient):
     ENDPOINT_CONTACT_COMMUNICATIONs = 'communications'
     ENDPOINT_COMPANY_NOTE_TYPES = 'noteTypes'
     ENDPOINT_COMPANY_TEAM = 'teams'
+    ENDPOINT_COMPANY_SITE = 'sites'
     ENDPOINT_COMPANY_TEAM_ROLE = 'teamRoles'
 
     def __init__(self, *args, **kwargs):
@@ -614,6 +615,12 @@ class CompanyAPIClient(ConnectWiseAPIClient):
     def get_company_team(self, company_id, *args, **kwargs):
         endpoint_url = '{}/{}/{}'.format(self.ENDPOINT_COMPANIES, company_id,
                                          self.ENDPOINT_COMPANY_TEAM)
+        return self.fetch_resource(endpoint_url, should_page=True,
+                                   *args, **kwargs)
+
+    def get_company_site(self, company_id, *args, **kwargs):
+        endpoint_url = '{}/{}/{}'.format(self.ENDPOINT_COMPANIES, company_id,
+                                         self.ENDPOINT_COMPANY_SITE)
         return self.fetch_resource(endpoint_url, should_page=True,
                                    *args, **kwargs)
 

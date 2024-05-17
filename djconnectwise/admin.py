@@ -462,3 +462,8 @@ class CompanyTeamRoleAdmin(admin.ModelAdmin):
 @admin.register(models.CompanyTeam)
 class CompanyTeamAdmin(admin.ModelAdmin):
     list_display = ('id', 'company', 'team_role')
+
+
+@admin.register(models.CompanySite)
+class CompanySiteAdmin(admin.ModelAdmin):
+    list_display = ('id','name' , 'company', 'inactive')
