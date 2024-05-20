@@ -2636,7 +2636,8 @@ class TicketSynchronizerMixin:
             )
 
         try:
-            merged_parent_id = json_data.get('mergedParentTicket', {}).get('id')
+            merged_parent_id = \
+                json_data.get('mergedParentTicket', {}).get('id')
 
             if merged_parent_id:
                 instance.merged_parent = \
