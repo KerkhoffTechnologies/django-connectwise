@@ -2679,7 +2679,7 @@ class TicketSynchronizerMixin:
                 
         try:
             site_id = json_data.get('site', {}).get('id')
-            
+
             if site_id:
                 instance.company_site = \
                     models.CompanySite.objects.get(pk=site_id)

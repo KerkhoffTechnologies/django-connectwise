@@ -2388,6 +2388,7 @@ class CompanyTeamTracker(CompanyTeam):
         proxy = True
         db_table = 'djconnectwise_companyteam'
 
+
 class CompanySiteTracker(CompanySite):
     tracker = FieldTracker()
 

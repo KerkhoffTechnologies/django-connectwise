@@ -466,4 +466,4 @@ class CompanyTeamAdmin(admin.ModelAdmin):
 
 @admin.register(models.CompanySite)
 class CompanySiteAdmin(admin.ModelAdmin):
-    list_display = ('id','name' , 'company', 'inactive')
+    list_display = ('id', 'name', 'company', 'inactive')
