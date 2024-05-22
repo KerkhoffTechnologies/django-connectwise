@@ -1633,40 +1633,6 @@ class ScheduleEntriesSynchronizer(BatchConditionMixin, Synchronizer):
                 '- skipping.'.format(instance.id, member_id)
             )
 
-        # Handle status- there are cases where no status field is provided,
-        # which we consider invalid.
-        if 'status' not in json_data:
-            raise InvalidObjectException(
-                'Schedule entry {} has no status field- skipping.'
-                .format(instance.id)
-            )
-
-        try:
-            status_id = json_data['status'].get('id')
-            models.ScheduleStatus.objects.get(pk=status_id)
-        except ObjectDoesNotExist:
-            raise InvalidObjectException(
-                'Schedule entry {} can not find status: {}'
-                '- skipping.'.format(instance.id, status_id)
-            )
-
-        # Handle where- there are cases where no where field is provided,
-        # which we consider invalid.
-        if 'where' not in json_data:
-            raise InvalidObjectException(
-                'Schedule entry {} has no where field- skipping.'
-                .format(instance.id)
-            )
-
-        try:
-            where_id = json_data['where'].get('id')
-            models.Location.objects.get(pk=where_id)
-        except ObjectDoesNotExist:
-            raise InvalidObjectException(
-                'Schedule entry {} can not find where: {}'
-                '- skipping.'.format(instance.id, where_id)
-            )
-
         # handle dates
         # Connectwise handles schedule entries with a date and no time by
         # leaving it as midnight UTC. This has the unfortunate side effect of
