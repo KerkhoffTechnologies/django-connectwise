@@ -471,7 +471,8 @@ class CompanyTeam(models.Model):
 
 class CompanySite(models.Model):
     name = models.CharField(max_length=255)
-    inactive = models.BooleanField(default=False)
+    inactive = models.BooleanField(default=False,
+                                   null=True)
     company = models.ForeignKey('Company', blank=True,
                                 null=True, on_delete=models.CASCADE)
 
