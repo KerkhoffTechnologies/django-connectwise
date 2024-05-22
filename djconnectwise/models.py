@@ -1573,7 +1573,12 @@ class Ticket(UpdateConnectWiseMixin, TimeStampedModel):
         blank=True, null=True, max_length=5000)
 
     ticket_predecessor = models.ForeignKey(
-        'self', blank=True, null=True, on_delete=models.SET_NULL
+        'self', blank=True, null=True, on_delete=models.SET_NULL,
+        related_name="ticket_predecessor_ticket"
+    )
+    merged_parent = models.ForeignKey(
+        'self', blank=True, null=True, on_delete=models.SET_NULL,
+        related_name="merged_parent_ticket"
     )
     phase_predecessor = models.ForeignKey(
         'ProjectPhase', blank=True, null=True, on_delete=models.SET_NULL
