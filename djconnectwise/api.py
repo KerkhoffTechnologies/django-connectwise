@@ -117,13 +117,7 @@ class CompanyInfoManager:
         codebase_updated = False
 
         if any(domain in server_url for domain in CLOUD_DOMAINS):
-            logger.debug('Fetching ConnectWise codebase value from cache.')
             codebase_from_cache = cache.get(cache_key)
-            logger.info(
-                'Cached ConnectWise codebase was: {}'.format(
-                    codebase_from_cache
-                )
-            )
             if not codebase_from_cache or force_fetch:
                 company_info_json = self.get_company_info(
                     server_url, company_id
@@ -198,11 +192,13 @@ class ConnectWiseAPIClient(object):
         self.timeout = self.request_settings['timeout']
 
     def _endpoint(self, path):
-        return '{0}{1}'.format(self.api_base_url, path)
+        api_base_url, _ = self.build_api_base_url()
+        return '{0}{1}'.format(api_base_url, path)
 
     def _log_failed(self, response):
-        logger.error('Failed API call: {0} - {1} - {2}'.format(
-            response.url, response.status_code, response.content))
+        logger.error('Failed request: HTTP {0} for {1}; response {2}'.format(
+            response.status_code, response.url, response.content)
+        )
 
     def _prepare_error_response(self, response):
         error = response.content.decode("utf-8")
@@ -235,13 +231,6 @@ class ConnectWiseAPIClient(object):
             msg = 'An error occurred: {} {}'.format(response.status_code,
                                                     error)
         return msg
-
-    @property
-    def api_base_url(self):
-        # This will be for this particular API-
-        # i.e. https://connectwise.example.com/v4_6_release/apis/3.0/service/
-        api_base_url, _ = self.build_api_base_url()
-        return api_base_url
 
     def build_api_base_url(self, force_fetch=False):
         api_codebase, codebase_updated = \
@@ -294,60 +283,19 @@ class ConnectWiseAPIClient(object):
             if not params:
                 params = {}
 
+            conditions = kwargs.get('conditions')
+            if conditions:
+                params['conditions'] = self.prepare_conditions(conditions)
+
+            if should_page:
+                params['pageSize'] = kwargs.get('page_size',
+                                                CW_RESPONSE_MAX_RECORDS)
+                params['page'] = kwargs.get('page', CW_DEFAULT_PAGE)
+
             try:
-                endpoint = self._endpoint(endpoint_url)
-                logger.debug('Making GET request to {}'.format(endpoint))
-
-                conditions_str = ''
-                conditions = kwargs.get('conditions')
-                if conditions:
-                    logger.debug('Conditions: {}'.format(conditions))
-                    conditions_str = 'conditions={}'.format(
-                        self.prepare_conditions(conditions)
-                    )
-                    # URL encode needed characters
-                    conditions_str = conditions_str.replace("+", "%2B")
-                    conditions_str = conditions_str.replace(" ", "+")
-
-                if should_page:
-                    params['pageSize'] = kwargs.get('page_size',
-                                                    CW_RESPONSE_MAX_RECORDS)
-                    params['page'] = kwargs.get('page', CW_DEFAULT_PAGE)
-
-                    delimiter = '' if endpoint_url[-1] == '&' else '?'
-
-                    endpoint += "{}pageSize={}&page={}".format(
-                        delimiter, params['pageSize'], params['page'])
-
-                    endpoint += "&" + conditions_str
-                else:
-                    endpoint += "?" + conditions_str
-
-                response = requests.get(
-                    endpoint,
-                    auth=self.auth,
-                    timeout=self.timeout,
-                    headers=self.get_headers(),
-                )
-                logger.debug(" URL: {}".format(response.url))
-
-            except requests.RequestException as e:
-                logger.error('Request failed: GET {}: {}'.format(endpoint, e))
-                raise ConnectWiseAPIError('{}'.format(e))
-
-            if 200 <= response.status_code < 300:
-                try:
-                    return response.json()
-                except JSONDecodeError as e:
-                    logger.error(
-                        'Request failed during decoding JSON: GET {}: {}'
-                        .format(endpoint, e)
-                    )
-                    raise ConnectWiseAPIError('JSONDecodeError: {}'.format(e))
-
-            elif response.status_code == 404:
-                msg = 'Resource not found: {}'.format(response.url)
-                logger.warning(msg)
+                return self.request('get', endpoint_url, params=params)
+            except ConnectWiseRecordNotFoundError as e:
+                logger.debug('Resource not found: {}'.format(endpoint_url))
                 # If this is the first failure, try updating the
                 # company info codebase value and let it be retried by the
                 # @retry decorator.
@@ -363,28 +311,8 @@ class ConnectWiseAPIClient(object):
                         # will cause the call to be retried.
                         logger.info('Codebase value has changed, so this '
                                     'request will be retried.')
-                        raise ConnectWiseAPIError(response.content)
-                raise ConnectWiseRecordNotFoundError(msg)
-
-            elif response.status_code == 403:
-                self._log_failed(response)
-                raise ConnectWiseSecurityPermissionsException(
-                    self._prepare_error_response(response),
-                    response.status_code
-                )
-
-            elif 400 <= response.status_code < 499:
-                self._log_failed(response)
-                raise ConnectWiseAPIClientError(
-                    self._prepare_error_response(response))
-            elif response.status_code == 500:
-                self._log_failed(response)
-                raise ConnectWiseAPIServerError(
-                    self._prepare_error_response(response))
-            else:
-                self._log_failed(response)
-                raise ConnectWiseAPIError(
-                    self._prepare_error_response(response))
+                        raise ConnectWiseAPIError(str(e))
+                raise e
 
         if not retry_counter:
             retry_counter = {'count': 0}
@@ -400,24 +328,28 @@ class ConnectWiseAPIClient(object):
         """
         return '({})'.format(' and '.join(conditions))
 
-    def request(self, method, endpoint_url, body=None):
+    def request(self, method, endpoint_url, body=None, params=None):
         """
         Issue the given type of request to the specified REST endpoint.
         """
         try:
             logger.debug(
-                'Making {} request to {}'.format(method, endpoint_url)
+                'Making {} request to {}, body len {}, params {}'.format(
+                    method, endpoint_url, len(body) if body else 0, params
+                )
             )
+            complete_endpoint = self._endpoint(endpoint_url)
             response = requests.request(
                 method,
-                endpoint_url,
+                complete_endpoint,
                 json=body,
+                params=params,
                 auth=self.auth,
                 timeout=self.timeout,
                 headers=self.get_headers(),
             )
         except requests.RequestException as e:
-            logger.error(
+            logger.debug(
                 'Request failed: {} {}: {}'.format(method, endpoint_url, e)
             )
             raise ConnectWiseAPIError('{}'.format(e))
@@ -425,7 +357,14 @@ class ConnectWiseAPIClient(object):
         if response.status_code == 204:  # No content
             return None
         elif 200 <= response.status_code < 300:
-            return response.json()
+            try:
+                return response.json()
+            except JSONDecodeError as e:
+                logger.error(
+                    'Request failed during decoding JSON: GET {}: {}'
+                    .format(endpoint_url, e)
+                )
+                raise ConnectWiseAPIError('JSONDecodeError: {}'.format(e))
         elif response.status_code == 403:
             self._log_failed(response)
             raise ConnectWiseSecurityPermissionsException(
@@ -664,8 +603,6 @@ class ScheduleAPIClient(ConnectWiseAPIClient):
         return self.fetch_resource(endpoint_url)
 
     def post_schedule_entry(self, target, schedule_type, **kwargs):
-        endpoint_url = self._endpoint(self.ENDPOINT_ENTRIES)
-
         body = {
                     "objectId": target.id,
                     "type": {
@@ -699,13 +636,11 @@ class ScheduleAPIClient(ConnectWiseAPIClient):
         if allow_conflicts is not None:
             body["allowScheduleConflictsFlag"] = allow_conflicts
 
-        return self.request('post', endpoint_url, body)
+        return self.request('post', self.ENDPOINT_ENTRIES, body)
 
     def patch_schedule_entry(self, **kwargs):
         schedule_id = kwargs.get("id")
-        endpoint_url = self._endpoint(
-            "{}/{}".format(self.ENDPOINT_ENTRIES, schedule_id))
-
+        endpoint_url = "{}/{}".format(self.ENDPOINT_ENTRIES, schedule_id)
         # Yeah, this schema is a bit bizarre. See CW docs at
         # https://developer.connectwise.com/Manage/Developer_Guide#Patch
         body = [
@@ -718,14 +653,9 @@ class ScheduleAPIClient(ConnectWiseAPIClient):
         return self.request('patch', endpoint_url, body)
 
     def delete_schedule_entry(self, entry_id):
-        endpoint_url = self._endpoint(
-            '{}/{}'.format(self.ENDPOINT_ENTRIES, entry_id))
-        return requests.request(
+        return self.request(
             'delete',
-            endpoint_url,
-            auth=self.auth,
-            timeout=self.timeout,
-            headers=self.get_headers(),
+            '{}/{}'.format(self.ENDPOINT_ENTRIES, entry_id)
         )
 
     def get_calendars(self, *args, **kwargs):
@@ -776,8 +706,6 @@ class TimeAPIClient(ConnectWiseAPIClient):
                                    *args, **kwargs)
 
     def post_time_entry(self, target_data, **kwargs):
-        endpoint_url = self._endpoint(self.ENDPOINT_ENTRIES)
-
         time_start = kwargs.get("time_start")
         time_start = time_start.astimezone(pytz.timezone('UTC')).strftime(
             "%Y-%m-%dT%H:%M:%SZ")
@@ -860,18 +788,19 @@ class TimeAPIClient(ConnectWiseAPIClient):
                 "emailCc": email_cc
             })
 
-        return self.request('post', endpoint_url, body)
+        return self.request('post', self.ENDPOINT_ENTRIES, body)
 
     def update_time_entry(self, time_entry):
-        endpoint_url = self._endpoint(
-            '{}/{}'.format(self.ENDPOINT_ENTRIES, time_entry.id)
-        )
         body = [{
             'op': 'replace',
             'path': 'notes',
             'value': time_entry.notes
         }]
-        return self.request('patch', endpoint_url, body)
+        return self.request(
+            'patch',
+            '{}/{}'.format(self.ENDPOINT_ENTRIES, time_entry.id),
+            body
+        )
 
 
 class SalesAPIClient(ConnectWiseAPIClient):
@@ -948,16 +877,16 @@ class SalesAPIClient(ConnectWiseAPIClient):
                                    *args, **kwargs)
 
     def update_opportunity(self, obj, changed_fields):
-        endpoint_url = self._endpoint(
+        return self.update_instance(
+            changed_fields,
             '{}/{}'.format(self.ENDPOINT_OPPORTUNITIES, obj.id)
         )
-        return self.update_instance(changed_fields, endpoint_url)
 
     def update_activity(self, obj, changed_fields):
-        endpoint_url = self._endpoint(
+        return self.update_instance(
+            changed_fields,
             '{}/{}'.format(self.ENDPOINT_ACTIVITIES, obj.id)
         )
-        return self.update_instance(changed_fields, endpoint_url)
 
 
 class SystemAPIClient(ConnectWiseAPIClient):
@@ -997,19 +926,15 @@ class SystemAPIClient(ConnectWiseAPIClient):
         return self.fetch_resource(self.ENDPOINT_OTHER, *args, **kwargs)
 
     def delete_callback(self, entry_id):
-        endpoint = self._endpoint(
-            '{}{}'.format(self.ENDPOINT_CALLBACKS, entry_id)
-        )
         return self.request(
             'delete',
-            endpoint,
+            '{}{}'.format(self.ENDPOINT_CALLBACKS, entry_id),
         )
 
     def create_callback(self, callback_entry):
-        endpoint = self._endpoint(self.ENDPOINT_CALLBACKS)
         return self.request(
             'post',
-            endpoint,
+            self.ENDPOINT_CALLBACKS,
             body=callback_entry,
         )
 
@@ -1023,7 +948,6 @@ class SystemAPIClient(ConnectWiseAPIClient):
         This requires this permission:
         Companies => Manage Documents => Inquire Level: All
         """
-
         filename, response = self.document_download(photo_id)
 
         if filename and response:
@@ -1051,20 +975,18 @@ class SystemAPIClient(ConnectWiseAPIClient):
         return m.group(1) if m else None
 
     def document_download(self, document_id):
-        endpoint = self._endpoint(
-            self.ENDPOINT_DOCUMENTS_DOWNLOAD.format(document_id)
-        )
+        endpoint_url = self.ENDPOINT_DOCUMENTS_DOWNLOAD.format(document_id)
 
         try:
-            logger.debug('Making GET request to {}'.format(endpoint))
+            logger.debug('Making GET request to {}'.format(endpoint_url))
             response = requests.get(
-                endpoint,
+                endpoint_url,
                 auth=self.auth,
                 timeout=self.timeout,
                 headers=self.get_headers(),
             )
         except requests.RequestException as e:
-            logger.error('Request failed: GET {}: {}'.format(endpoint, e))
+            logger.error('Request failed: GET {}: {}'.format(endpoint_url, e))
             raise ConnectWiseAPIError('{}'.format(e))
 
         if 200 <= response.status_code < 300:
@@ -1080,16 +1002,26 @@ class SystemAPIClient(ConnectWiseAPIClient):
             return None, None
 
     def get_attachments(self, object_id, *args, **kwargs):
-        endpoint_url = \
-            f'{self.ENDPOINT_DOCUMENTS}' \
-            f'?recordType=Ticket&recordId={object_id}&'
-        return self.fetch_resource(endpoint_url,
-                                   should_page=True, *args, **kwargs)
+        endpoint_url = self.ENDPOINT_DOCUMENTS
+        params = {
+            'recordType': 'Ticket',
+            'recordId': object_id,
+        }
+        return self.fetch_resource(
+            endpoint_url,
+            should_page=True,
+            params=params,
+            *args,
+            **kwargs
+        )
 
     def get_attachment_count(self, object_id):
-        endpoint_url = f'{self.ENDPOINT_DOCUMENTS}count' \
-                       f'?recordType=Ticket&recordId={object_id}&'
-        return self.fetch_resource(endpoint_url).get('count', 0)
+        endpoint_url = f'{self.ENDPOINT_DOCUMENTS}count'
+        params = {
+            'recordType': 'Ticket',
+            'recordId': object_id,
+        }
+        return self.fetch_resource(endpoint_url, params=params).get('count', 0)
 
     def get_attachment(self, document_id):
         return self.document_download(document_id)
@@ -1103,12 +1035,15 @@ class TicketAPIMixin:
             '{}/count'.format(self.ENDPOINT_TICKETS), **kwargs).get('count', 0)
 
     def get_ticket(self, ticket_id):
-        endpoint_url = '{}/{}'.format(self.ENDPOINT_TICKETS, ticket_id)
-        return self.fetch_resource(endpoint_url)
+        return self.fetch_resource(
+            '{}/{}'.format(self.ENDPOINT_TICKETS, ticket_id)
+        )
 
     def delete_ticket(self, ticket_id):
-        endpoint_url = '{}/{}'.format(self.ENDPOINT_TICKETS, ticket_id)
-        return self.request('delete', self._endpoint(endpoint_url))
+        return self.request(
+            'delete',
+            '{}/{}'.format(self.ENDPOINT_TICKETS, ticket_id)
+        )
 
     def get_ticket_tasks(self, ticket_id, **kwargs):
         endpoint_url = '{}/{}/tasks'.format(
@@ -1116,38 +1051,47 @@ class TicketAPIMixin:
         return self.fetch_resource(endpoint_url, should_page=True, **kwargs)
 
     def create_ticket_task(self, ticket_id, **kwargs):
-        endpoint_url = '{}/{}/tasks'.format(
-            self.ENDPOINT_TICKETS, ticket_id)
-        return self.request('post', self._endpoint(endpoint_url), kwargs)
+        return self.request(
+            'post',
+            '{}/{}/tasks'.format(
+                self.ENDPOINT_TICKETS, ticket_id),
+            kwargs
+        )
 
     def update_ticket_task(self, task_id, ticket_id, **kwargs):
-        endpoint_url = '{}/{}/tasks/{}'.format(
-            self.ENDPOINT_TICKETS, ticket_id, task_id)
         body = self._format_patch_body(**kwargs)
-        return self.request('patch', self._endpoint(endpoint_url), body)
+        return self.request(
+            'patch',
+            '{}/{}/tasks/{}'.format(
+                self.ENDPOINT_TICKETS, ticket_id, task_id),
+            body
+        )
 
     def delete_ticket_task(self, ticket_id, **kwargs):
-        endpoint_url = '{}/{}/tasks/{}'.format(
-            self.ENDPOINT_TICKETS, ticket_id, kwargs['id'])
-        return self.request('delete', self._endpoint(endpoint_url))
+        return self.request(
+            'delete',
+            '{}/{}/tasks/{}'.format(
+                self.ENDPOINT_TICKETS, ticket_id, kwargs['id'])
+        )
 
     def get_tickets(self, *args, **kwargs):
-        return self.fetch_resource(self.ENDPOINT_TICKETS, should_page=True,
-                                   *args, **kwargs)
+        return self.fetch_resource(
+            self.ENDPOINT_TICKETS,
+            should_page=True,
+            *args, **kwargs
+        )
 
     def update_ticket(self, ticket, changed_fields):
-        endpoint_url = self._endpoint(
-            '{}/{}'.format(self.ENDPOINT_TICKETS, ticket.id)
-        )
         body = self._format_ticket_patch_body(changed_fields)
-        return self.request('patch', endpoint_url, body)
+        return self.request(
+            'patch',
+            '{}/{}'.format(self.ENDPOINT_TICKETS, ticket.id),
+            body
+        )
 
     def create_ticket(self, fields):
-        endpoint_url = self._endpoint(
-            '{}/'.format(self.ENDPOINT_TICKETS)
-        )
         body = self._format_ticket_post_body(fields)
-        return self.request('POST', endpoint_url, body)
+        return self.request('POST', '{}/'.format(self.ENDPOINT_TICKETS), body)
 
     def _format_ticket_post_body(self, fields):
         # CW formats POST and PATCH very differently, thats why there are two
@@ -1204,16 +1148,18 @@ class TicketAPIMixin:
         return body
 
     def update_note(self, note):
-        endpoint_url = self._endpoint(
-            '{}/{}/notes/{}'.format(
-                self.ENDPOINT_TICKETS, note.ticket.id, note.id)
-        )
         body = [{
             'op': 'replace',
             'path': 'text',
             'value': note.text
         }]
-        return self.request('patch', endpoint_url, body)
+        return self.request(
+            'patch',
+            '{}/{}/notes/{}'.format(
+                self.ENDPOINT_TICKETS, note.ticket.id, note.id
+            ),
+            body
+        )
 
 
 class ServiceAPIClient(TicketAPIMixin, ConnectWiseAPIClient):
@@ -1233,9 +1179,6 @@ class ServiceAPIClient(TicketAPIMixin, ConnectWiseAPIClient):
                                    *args, **kwargs)
 
     def post_note(self, target_data, **kwargs):
-        endpoint_url = self._endpoint(
-            '{}/{}/notes'.format(self.ENDPOINT_TICKETS, target_data['id']))
-
         body = {
             "detailDescriptionFlag": kwargs.get("description_flag"),
             "internalAnalysisFlag": kwargs.get("analysis_flag"),
@@ -1265,15 +1208,16 @@ class ServiceAPIClient(TicketAPIMixin, ConnectWiseAPIClient):
         if text:
             body.update({"text": text})
 
-        return self.request('post', endpoint_url, body)
+        return self.request(
+            'post',
+            '{}/{}/notes'.format(self.ENDPOINT_TICKETS, target_data['id']),
+            body
+        )
 
     def post_merge_ticket(self, merge_data, **kwargs):
         parent_id = merge_data.get('parent_ticket_id')
         child_id = merge_data.get('child_ticket_id')
         status = merge_data.get('status')
-
-        endpoint_url = self._endpoint(
-            '{}/{}/merge'.format(self.ENDPOINT_TICKETS, parent_id))
 
         body = {
             "mergeTicketIds": [child_id],
@@ -1282,7 +1226,10 @@ class ServiceAPIClient(TicketAPIMixin, ConnectWiseAPIClient):
                 "name": status.name
             }
         }
-        return self.request('post', endpoint_url, body)
+        return self.request(
+            'post',
+            '{}/{}/merge'.format(self.ENDPOINT_TICKETS, parent_id), body
+        )
 
     def get_statuses(self, board_id, *args, **kwargs):
         """
@@ -1391,15 +1338,13 @@ class ProjectAPIClient(TicketAPIMixin, ConnectWiseAPIClient):
                                    *args, **kwargs)
 
     def create_project(self, fields):
-        endpoint_url = self._endpoint(self.ENDPOINT_PROJECTS)
-
-        return self.create(endpoint_url, fields)
+        return self.create(self.ENDPOINT_PROJECTS, fields)
 
     def update_project(self, project, changed_fields):
-        endpoint_url = self._endpoint(
+        return self.update_instance(
+            changed_fields,
             '{}{}'.format(self.ENDPOINT_PROJECTS, project.id)
         )
-        return self.update_instance(changed_fields, endpoint_url)
 
     def get_project_notes(self, project_id, *args, **kwargs):
         endpoint_url = '{}{}/{}'.format(self.ENDPOINT_PROJECTS, project_id,
@@ -1428,8 +1373,6 @@ class HostedAPIClient(SystemAPIClient):
     ENDPOINT_HOSTED_SETUPS = 'connectwisehostedsetups/'
 
     def post_hosted_tab(self, *args, **kwargs):
-        endpoint_url = self._endpoint(self.ENDPOINT_HOSTED_SETUPS)
-
         body = {
             'screenId': kwargs.get('screen_id'),
             'description': kwargs.get('description'),
@@ -1438,7 +1381,11 @@ class HostedAPIClient(SystemAPIClient):
             'type': kwargs.get('type')
         }
 
-        return self.request('post', endpoint_url, body)
+        return self.request(
+            'post',
+            self.ENDPOINT_HOSTED_SETUPS,
+            body
+        )
 
     def get_hosted_tabs(self, *args, **kwargs):
         return self.fetch_resource(self.ENDPOINT_HOSTED_SETUPS,
@@ -1446,11 +1393,10 @@ class HostedAPIClient(SystemAPIClient):
                                    *args, **kwargs)
 
     def delete_hosted_tab(self, hosted_tab_id):
-        endpoint_url = self._endpoint(
+        return self.request(
+            'delete',
             '{}/{}'.format(self.ENDPOINT_HOSTED_SETUPS, hosted_tab_id)
         )
-
-        return requests.request('delete', endpoint_url, auth=self.auth)
 
 
 class HostedReportAPIClient(ConnectWiseAPIClient):
