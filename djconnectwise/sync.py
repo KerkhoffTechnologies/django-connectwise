@@ -2635,6 +2635,20 @@ class TicketSynchronizerMixin:
                 'ObjectDoesNotExist Exception: {}'.format(instance.id, e)
             )
 
+        try:
+            merged_parent_id = \
+                json_data.get('mergedParentTicket', {}).get('id')
+
+            if merged_parent_id:
+                instance.merged_parent = \
+                    models.Ticket.objects.get(pk=merged_parent_id)
+
+        except ObjectDoesNotExist as e:
+            logger.warning(
+                'Ticket {} has a mergedParentTicket that does not exist. '
+                'ObjectDoesNotExist Exception: {}'.format(instance.id, e)
+            )
+
         return instance
 
     def create(self, fields, **kwargs):
