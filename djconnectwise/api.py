@@ -684,6 +684,24 @@ class ScheduleAPIClient(ConnectWiseAPIClient):
                           }
             })
 
+        status = kwargs.get("status")
+        if status:
+            body.update({
+                "status": {
+                            "id": status.id,
+                            "name": str(status),
+                          }
+            })
+
+        where = kwargs.get("where")
+        if where:
+            body.update({
+                "where": {
+                            "id": where.id,
+                            "name": str(where)
+                          }
+            })
+
         date_start = kwargs.get("date_start")
         if date_start:
             body["dateStart"] = date_start.astimezone(
