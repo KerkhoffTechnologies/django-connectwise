@@ -188,6 +188,18 @@ class TestSyncCompanyTeamCommand(AbstractBaseSyncTest, TestCase):
         fixture_utils.init_company_team()
 
 
+class TestSyncCompanySiteCommand(AbstractBaseSyncTest, TestCase):
+    args = (
+        mocks.company_api_get_company_site_call,
+        fixtures.API_COMPANY_SITE_LIST,
+        'company_site'
+    )
+
+    def setUp(self):
+        fixture_utils.init_companies()
+        fixture_utils.init_company_site()
+
+
 class TestSyncCompanyTeamRoleCommand(AbstractBaseSyncTest, TestCase):
     args = (
         mocks.company_api_get_company_team_role_call,
@@ -805,6 +817,7 @@ class TestSyncAllCommand(TestCase):
             TestSyncCompaniesCommand,
             TestSyncCompanyTypesCommand,
             TestSyncCompanyTeamCommand,
+            TestSyncCompanySiteCommand,
             TestSyncCompanyTeamRoleCommand,
             TestSyncCompanyStatusesCommand,
             TestSyncLocationsCommand,
@@ -899,6 +912,9 @@ class TestSyncAllCommand(TestCase):
         self.assertEqual(models.CompanyTeam.objects.all().count(),
                          1)
 
+        self.assertEqual(models.CompanySite.objects.all().count(),
+                         1)
+
         self.assertEqual(models.CompanyTeamRole.objects.all().count(),
                          len([fixtures.API_COMPANY_TEAM_ROLE_LIST]))
 
@@ -918,6 +934,7 @@ class TestSyncAllCommand(TestCase):
             'company_status': models.CompanyStatus,
             'company_type': models.CompanyType,
             'company_team': models.CompanyTeam,
+            'company_site': models.CompanySite,
             'company_team_role': models.CompanyTeamRole,
             'team': models.Team,
             'location': models.Location,
@@ -986,6 +1003,7 @@ class TestSyncAllCommand(TestCase):
                     'holiday',
                     'contact',
                     'contact_communication',
+                    'company_site'
             ):
                 # Assert that there were objects to get deleted, then change
                 # to zero to verify the output formats correctly.

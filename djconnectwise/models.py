@@ -469,6 +469,20 @@ class CompanyTeam(models.Model):
         return self.company.name
 
 
+class CompanySite(models.Model):
+    name = models.CharField(max_length=255)
+    inactive = models.BooleanField(default=False,
+                                   null=True)
+    company = models.ForeignKey('Company', blank=True,
+                                null=True, on_delete=models.CASCADE)
+
+    class Meta:
+        ordering = ('id', )
+
+    def __str__(self):
+        return self.name
+
+
 class CompanyTeamRole(models.Model):
     name = models.CharField(max_length=50)
     account_manager_flag = models.BooleanField()
@@ -1165,6 +1179,7 @@ class ProjectPhase(TimeStampedModel):
     scheduled_end = models.DateField(blank=True, null=True)
     actual_start = models.DateField(blank=True, null=True)
     actual_end = models.DateField(blank=True, null=True)
+    required_date = models.DateField(blank=True, null=True)
 
     bill_time = models.CharField(
         max_length=50, choices=BILL_TYPES, blank=True, null=True)
@@ -1572,7 +1587,12 @@ class Ticket(UpdateConnectWiseMixin, TimeStampedModel):
         blank=True, null=True, max_length=5000)
 
     ticket_predecessor = models.ForeignKey(
-        'self', blank=True, null=True, on_delete=models.SET_NULL
+        'self', blank=True, null=True, on_delete=models.SET_NULL,
+        related_name="ticket_predecessor_ticket"
+    )
+    merged_parent = models.ForeignKey(
+        'self', blank=True, null=True, on_delete=models.SET_NULL,
+        related_name="merged_parent_ticket"
     )
     phase_predecessor = models.ForeignKey(
         'ProjectPhase', blank=True, null=True, on_delete=models.SET_NULL
@@ -1582,6 +1602,9 @@ class Ticket(UpdateConnectWiseMixin, TimeStampedModel):
     company = models.ForeignKey(
         'Company', blank=True, null=True, related_name='company_tickets',
         on_delete=models.SET_NULL)
+    company_site = models.ForeignKey(
+        'CompanySite', blank=True, null=True, on_delete=models.SET_NULL
+    )
     contact = models.ForeignKey('Contact', blank=True, null=True,
                                 on_delete=models.SET_NULL)
     location = models.ForeignKey(
@@ -2366,6 +2389,14 @@ class CompanyTeamTracker(CompanyTeam):
     class Meta:
         proxy = True
         db_table = 'djconnectwise_companyteam'
+
+
+class CompanySiteTracker(CompanySite):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djconnectwise_companysite'
 
 
 class CompanyTeamRoleTracker(CompanyTeamRole):

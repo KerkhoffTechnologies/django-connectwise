@@ -486,6 +486,7 @@ class CompanyAPIClient(ConnectWiseAPIClient):
     ENDPOINT_CONTACT_COMMUNICATIONs = 'communications'
     ENDPOINT_COMPANY_NOTE_TYPES = 'noteTypes'
     ENDPOINT_COMPANY_TEAM = 'teams'
+    ENDPOINT_COMPANY_SITE = 'sites'
     ENDPOINT_COMPANY_TEAM_ROLE = 'teamRoles'
 
     def __init__(self, *args, **kwargs):
@@ -553,6 +554,12 @@ class CompanyAPIClient(ConnectWiseAPIClient):
         return self.fetch_resource(endpoint_url, should_page=True,
                                    *args, **kwargs)
 
+    def get_company_site(self, company_id, *args, **kwargs):
+        endpoint_url = '{}/{}/{}'.format(self.ENDPOINT_COMPANIES, company_id,
+                                         self.ENDPOINT_COMPANY_SITE)
+        return self.fetch_resource(endpoint_url, should_page=True,
+                                   *args, **kwargs)
+
     def get_headers(self):
         """
         This is a temporary fix for setting the response version for the
@@ -615,6 +622,24 @@ class ScheduleAPIClient(ConnectWiseAPIClient):
                             "id": member.id,
                             "identifier": member.identifier,
                             "name": str(member)
+                          }
+            })
+
+        status = kwargs.get("status")
+        if status:
+            body.update({
+                "status": {
+                            "id": status.id,
+                            "name": str(status),
+                          }
+            })
+
+        where = kwargs.get("where")
+        if where:
+            body.update({
+                "where": {
+                            "id": where.id,
+                            "name": str(where)
                           }
             })
 

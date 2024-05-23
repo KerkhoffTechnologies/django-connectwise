@@ -68,6 +68,11 @@ def company_api_get_company_team_call(return_value, raised=None):
     return create_mock_call(method_name, return_value, side_effect=raised)
 
 
+def company_api_get_company_site_call(return_value, raised=None):
+    method_name = 'djconnectwise.api.CompanyAPIClient.get_company_site'
+    return create_mock_call(method_name, return_value, side_effect=raised)
+
+
 def company_api_get_company_team_role_call(return_value, raised=None):
     method_name = 'djconnectwise.api.CompanyAPIClient.get_company_team_role'
     return create_mock_call(method_name, return_value, side_effect=raised)

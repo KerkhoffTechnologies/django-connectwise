@@ -471,6 +471,14 @@ API_COMPANY_TEAM_LIST = [
 
 }]
 
+API_COMPANY_SITE_LIST = [
+    {
+    "id": 1,
+    "name": 'Test Company Site',
+    "company": API_COMPANY,
+    "inactive": False,
+}]
+
 API_SERVICE_NOTE_LIST = [
     {
         'id': 3,
