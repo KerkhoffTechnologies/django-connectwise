@@ -2,9 +2,8 @@ import datetime
 import json
 import logging
 import re
-from urllib.parse import urlparse
 from json import JSONDecodeError
-
+from urllib.parse import urlparse
 
 import pytz
 import requests
@@ -248,9 +247,7 @@ class ConnectWiseAPIClient(object):
 
     def get_headers(self):
         headers = {}
-
         response_version = self.request_settings.get('response_version')
-
         if response_version:
             headers['Accept'] = \
                 'application/vnd.connectwise.com+json; version={}' \
@@ -711,18 +708,16 @@ class TimeAPIClient(ConnectWiseAPIClient):
             "%Y-%m-%dT%H:%M:%SZ")
 
         body = {
-                    "chargeToId": target_data['id'],
-                    "chargeToType": target_data['type'],
-                    "timeStart": time_start,
-                    "addToDetailDescriptionFlag": kwargs
-                    .get("description_flag"),
-                    "addToInternalAnalysisFlag": kwargs
-                    .get("analysis_flag"),
-                    "addToResolutionFlag": kwargs.get("resolution_flag"),
-                    "emailResourceFlag": kwargs.get("resource_flag"),
-                    "emailContactFlag": kwargs.get("contact_flag"),
-                    "emailCcFlag": kwargs.get("cc_flag"),
-                }
+            "chargeToId": target_data['id'],
+            "chargeToType": target_data['type'],
+            "timeStart": time_start,
+            "addToDetailDescriptionFlag": kwargs.get("description_flag"),
+            "addToInternalAnalysisFlag": kwargs.get("analysis_flag"),
+            "addToResolutionFlag": kwargs.get("resolution_flag"),
+            "emailResourceFlag": kwargs.get("resource_flag"),
+            "emailContactFlag": kwargs.get("contact_flag"),
+            "emailCcFlag": kwargs.get("cc_flag"),
+        }
 
         member = kwargs.get("resource")
         if member:
@@ -976,11 +971,11 @@ class SystemAPIClient(ConnectWiseAPIClient):
 
     def document_download(self, document_id):
         endpoint_url = self.ENDPOINT_DOCUMENTS_DOWNLOAD.format(document_id)
-
         try:
             logger.debug('Making GET request to {}'.format(endpoint_url))
+            complete_endpoint = self._endpoint(endpoint_url)
             response = requests.get(
-                endpoint_url,
+                complete_endpoint,
                 auth=self.auth,
                 timeout=self.timeout,
                 headers=self.get_headers(),
@@ -1380,7 +1375,6 @@ class HostedAPIClient(SystemAPIClient):
             'origin': kwargs.get('origin'),
             'type': kwargs.get('type')
         }
-
         return self.request(
             'post',
             self.ENDPOINT_HOSTED_SETUPS,

@@ -510,9 +510,11 @@ class BatchConditionMixin:
     def url_length(condition_list, size):
         # We add the approximate amount of characters for the URL that we
         # know will be there every time (200) plus a little more to ensure we
-        # don't undercut it (300), and add size, because for the amount of
-        # conditions, there will be just as many commas separating them
-        return sum(len(str(i)) for i in condition_list[:size]) + 300 + size
+        # don't undercut it (300), and add (3 * size), because for the number
+        # of conditions, there will be the same number of commas separating
+        # them but commas are urlencoded to %2C which is 3 characters.
+        return (sum(len(str(i)) for i in condition_list[:size])
+                + 300 + (3 * size))
 
 
 class CallbackSyncMixin:
