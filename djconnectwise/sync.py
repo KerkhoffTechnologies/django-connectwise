@@ -2047,6 +2047,7 @@ class ProjectPhaseSynchronizer(ChildFetchRecordsMixin, Synchronizer):
         scheduled_end = json_data.get('scheduledEnd')
         actual_start = json_data.get('actualStart')
         actual_end = json_data.get('actualEnd')
+        required_date = json_data.get('deadlineDate')
 
         if scheduled_start:
             instance.scheduled_start = parse(scheduled_start).date()
@@ -2059,6 +2060,9 @@ class ProjectPhaseSynchronizer(ChildFetchRecordsMixin, Synchronizer):
 
         if actual_end:
             instance.actual_end = parse(actual_end).date()
+
+        if required_date:
+            instance.required_date = parse(required_date).date()
 
         try:
             project_id = json_data.get('projectId')
@@ -2187,6 +2191,7 @@ class ProjectSynchronizer(CreateRecordMixin,
     def _assign_field_data(self, instance, json_data):
         actual_start = json_data.get('actualStart')
         actual_end = json_data.get('actualEnd')
+        required_date = json_data.get('deadlineDate')
         estimated_start = json_data.get('estimatedStart')
         estimated_end = json_data.get('estimatedEnd')
         scheduled_start = json_data.get('scheduledStart')
@@ -2220,6 +2225,9 @@ class ProjectSynchronizer(CreateRecordMixin,
 
         if actual_end:
             instance.actual_end = parse(actual_end).date()
+
+        if required_date:
+            instance.required_date = parse(required_date).date()
 
         if estimated_start:
             instance.estimated_start = parse(estimated_start).date()

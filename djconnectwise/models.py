@@ -1179,6 +1179,7 @@ class ProjectPhase(TimeStampedModel):
     scheduled_end = models.DateField(blank=True, null=True)
     actual_start = models.DateField(blank=True, null=True)
     actual_end = models.DateField(blank=True, null=True)
+    required_date = models.DateField(blank=True, null=True)
 
     bill_time = models.CharField(
         max_length=50, choices=BILL_TYPES, blank=True, null=True)
