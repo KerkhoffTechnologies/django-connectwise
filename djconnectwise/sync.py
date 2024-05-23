@@ -2684,7 +2684,7 @@ class TicketSynchronizerMixin:
                 'Ticket {} has a mergedParentTicket that does not exist. '
                 'ObjectDoesNotExist Exception: {}'.format(instance.id, e)
             )
-                
+
         try:
             site_id = json_data.get('site', {}).get('id')
 
