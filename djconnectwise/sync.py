@@ -1277,6 +1277,34 @@ class CompanyTeamSynchronizer(Synchronizer):
         return records
 
 
+class CompanySiteSynchronizer(Synchronizer):
+    client_class = api.CompanyAPIClient
+    model_class = models.CompanySiteTracker
+
+    related_meta = {
+        'company': (models.Company, 'company'),
+
+    }
+
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data.get('id')
+        instance.name = json_data.get('name')
+        instance.inactive = json_data.get('inactive')
+
+        self.set_relations(instance, json_data)
+
+    def get_page(self, *args, **kwargs):
+        records = []
+        company_qs = models.Company.objects.all().values_list('id', flat=True)
+        for company_id in company_qs:
+            if company_id:
+                record = self.client.get_company_site(
+                    *args, **kwargs, company_id=company_id)
+                if record:
+                    records.extend(record)
+        return records
+
+
 class CompanyTeamRoleSynchronizer(Synchronizer):
     client_class = api.CompanyAPIClient
     model_class = models.CompanyTeamRoleTracker
@@ -2654,6 +2682,19 @@ class TicketSynchronizerMixin:
         except ObjectDoesNotExist as e:
             logger.warning(
                 'Ticket {} has a mergedParentTicket that does not exist. '
+                'ObjectDoesNotExist Exception: {}'.format(instance.id, e)
+            )
+                
+        try:
+            site_id = json_data.get('site', {}).get('id')
+
+            if site_id:
+                instance.company_site = \
+                    models.CompanySite.objects.get(pk=site_id)
+
+        except ObjectDoesNotExist as e:
+            logger.warning(
+                'Ticket {} has a site_id that does not exist. '
                 'ObjectDoesNotExist Exception: {}'.format(instance.id, e)
             )
 

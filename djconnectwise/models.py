@@ -469,6 +469,20 @@ class CompanyTeam(models.Model):
         return self.company.name
 
 
+class CompanySite(models.Model):
+    name = models.CharField(max_length=255)
+    inactive = models.BooleanField(default=False,
+                                   null=True)
+    company = models.ForeignKey('Company', blank=True,
+                                null=True, on_delete=models.CASCADE)
+
+    class Meta:
+        ordering = ('id', )
+
+    def __str__(self):
+        return self.name
+
+
 class CompanyTeamRole(models.Model):
     name = models.CharField(max_length=50)
     account_manager_flag = models.BooleanField()
@@ -1588,6 +1602,9 @@ class Ticket(UpdateConnectWiseMixin, TimeStampedModel):
     company = models.ForeignKey(
         'Company', blank=True, null=True, related_name='company_tickets',
         on_delete=models.SET_NULL)
+    company_site = models.ForeignKey(
+        'CompanySite', blank=True, null=True, on_delete=models.SET_NULL
+    )
     contact = models.ForeignKey('Contact', blank=True, null=True,
                                 on_delete=models.SET_NULL)
     location = models.ForeignKey(
@@ -2372,6 +2389,14 @@ class CompanyTeamTracker(CompanyTeam):
     class Meta:
         proxy = True
         db_table = 'djconnectwise_companyteam'
+
+
+class CompanySiteTracker(CompanySite):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djconnectwise_companysite'
 
 
 class CompanyTeamRoleTracker(CompanyTeamRole):

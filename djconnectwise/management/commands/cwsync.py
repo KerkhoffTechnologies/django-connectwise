@@ -50,6 +50,8 @@ class Command(BaseCommand):
             ('company', sync.CompanySynchronizer, _('Company')),
             ('company_team', sync.CompanyTeamSynchronizer,
              _('Company Team')),
+            ('company_site', sync.CompanySiteSynchronizer,
+             _('Company Site')),
             ('communication_type', sync.CommunicationTypeSynchronizer,
              _('Communication Type')),
             ('contact', sync.ContactSynchronizer, _('Contact')),
