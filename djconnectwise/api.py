@@ -1,9 +1,10 @@
 import datetime
 import json
 import logging
-import re
+import re, os
 from urllib.parse import urlparse
 from json import JSONDecodeError
+from .forms import UploadFileForm
 
 
 import pytz
@@ -11,6 +12,10 @@ import requests
 from django.conf import settings
 from django.core.cache import cache
 from django.db import models
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
+
+
 from retrying import retry
 
 from djconnectwise.utils import DjconnectwiseSettings
@@ -446,6 +451,55 @@ class ConnectWiseAPIClient(object):
             self._log_failed(response)
             raise ConnectWiseAPIError(response)
 
+    def upload(self, method, endpoint_url, body=None, image=None):
+        """
+        Issue the given type of request to the specified REST endpoint.
+        """
+        try:
+            logger.debug(
+                'Making {} request to {}'.format(method, endpoint_url)
+            )
+
+            import pdb
+            pdb.set_trace()
+
+            uploaded_image = image.get('file')
+            image_name = uploaded_image.name
+            content_type = uploaded_image.content_type
+            image_extension = content_type.split('/')[-1]
+            image_file = f"{image_name}.{image_extension}"
+
+            response = requests.request(method, endpoint_url, data=body, files=[('file',(image_file, content_type))], auth=self.auth, timeout=self.timeout, headers=self.get_headers())
+        except requests.RequestException as e:
+            logger.error(
+                'Request failed: {} {}: {}'.format(method, endpoint_url, e)
+            )
+            raise ConnectWiseAPIError('{}'.format(e))
+
+        if response.status_code == 204:  # No content
+            return None
+        elif 200 <= response.status_code < 300:
+            return response.json()
+        elif response.status_code == 403:
+            self._log_failed(response)
+            raise ConnectWiseSecurityPermissionsException(
+                self._prepare_error_response(response), response.status_code)
+        elif response.status_code == 404:
+            msg = 'Resource not found: {}'.format(response.url)
+            logger.warning(msg)
+            raise ConnectWiseRecordNotFoundError(msg)
+        elif 400 <= response.status_code < 499:
+            self._log_failed(response)
+            raise ConnectWiseAPIClientError(
+                self._prepare_error_response(response))
+        elif response.status_code == 500:
+            self._log_failed(response)
+            raise ConnectWiseAPIServerError(
+                self._prepare_error_response(response))
+        else:
+            self._log_failed(response)
+            raise ConnectWiseAPIError(response)
+    
     def change_cw_cloud_url(self, server_url):
         """
         Replace the user-facing CW CLoud URLs with the API URLs.
@@ -471,6 +525,10 @@ class ConnectWiseAPIClient(object):
     def create(self, endpoint_url, fields):
         body = self._format_post_request_body(fields)
         return self.request('post', endpoint_url, body)
+
+    def upload_doc(self, endpoint_url, fields, image):
+        body = self._format_post_request_body(fields)
+        return self.upload('post', endpoint_url, body, image)
 
     def delete(self, endpoint_url):
         return self.request('delete', endpoint_url)
@@ -973,6 +1031,7 @@ class SystemAPIClient(ConnectWiseAPIClient):
     ENDPOINT_LOCATIONS = 'locations/'
     ENDPOINT_OTHER = 'myCompany/other/'
     ENDPOINT_DOCUMENTS = 'documents/'
+    ENDPOINT_UPLOAD_DOCUMENTS = 'system/documents/'
 
     def get_connectwise_version(self):
         result = self.fetch_resource(self.ENDPOINT_INFO)
@@ -1078,6 +1137,21 @@ class SystemAPIClient(ConnectWiseAPIClient):
         else:
             self._log_failed(response)
             return None, None
+
+    def upload_attachments(self, fields, image, *args, **kwargs):
+        endpoint_url = f'documents/'
+        endpoint = self._endpoint(endpoint_url)
+
+        response = self.upload_doc(
+            endpoint,
+            fields,
+            image
+        )
+
+        import pdb
+        pdb.set_trace()
+
+        return self.fetch_resource(endpoint_url, *args, **kwargs)
 
     def get_attachments(self, object_id, *args, **kwargs):
         endpoint_url = \
@@ -1460,3 +1534,5 @@ class HostedReportAPIClient(ConnectWiseAPIClient):
     def get_hosted_screen_ids(self, *args, **kwargs):
         return self.fetch_resource(self.ENDPOINT_HOSTED_REPORT,
                                    *args, **kwargs)
+
+

@@ -893,6 +893,9 @@ class AttachmentSynchronizer:
     def get_count(self, object_id):
         return self.client.get_attachment_count(object_id)
 
+    def upload_attachment(self, fields, image):
+        return self.client.upload_attachments(fields, image)
+
     def download_attachment(self, attachment_id, path):
         filename, attachment = self.client.get_attachment(attachment_id)
 
