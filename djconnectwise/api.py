@@ -325,7 +325,7 @@ class ConnectWiseAPIClient(object):
         """
         return '({})'.format(' and '.join(conditions))
 
-    def request(self, method, endpoint_url, body=None, params=None):
+    def request(self, method, endpoint_url, body=None, params=None, files=None):
         """
         Issue the given type of request to the specified REST endpoint.
         """
@@ -336,15 +336,27 @@ class ConnectWiseAPIClient(object):
                 )
             )
             complete_endpoint = self._endpoint(endpoint_url)
-            response = requests.request(
-                method,
-                complete_endpoint,
-                json=body,
-                params=params,
-                auth=self.auth,
-                timeout=self.timeout,
-                headers=self.get_headers(),
-            )
+            if files:
+                response = requests.request(
+                    method,
+                    endpoint_url,
+                    files=files,
+                    data=body,
+                    params=params
+                    auth=self.auth,
+                    timeout=self.timeout,
+                    headers=self.get_headers()
+                )
+            else:
+                response = requests.request(
+                    method,
+                    complete_endpoint,
+                    json=body,
+                    params=params,
+                    auth=self.auth,
+                    timeout=self.timeout,
+                    headers=self.get_headers(),
+                )
         except requests.RequestException as e:
             logger.debug(
                 'Request failed: {} {}: {}'.format(method, endpoint_url, e)
@@ -1034,6 +1046,21 @@ class SystemAPIClient(ConnectWiseAPIClient):
             *args,
             **kwargs
         )
+
+    def upload_attachments(
+            self, 
+            object_id, 
+            files, 
+            recordType='Ticket', 
+            *args, 
+            **kwargs
+        ):
+        endpoint_url = self.ENDPOINT_DOCUMENTS
+        body = {
+            'recordType': recordType,
+            'recordId': object_id
+        }
+        return self.request('POST', endpoint_url, body, files=files)
 
     def get_attachment_count(self, object_id):
         endpoint_url = f'{self.ENDPOINT_DOCUMENTS}count'
