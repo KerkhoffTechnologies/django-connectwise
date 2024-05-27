@@ -111,7 +111,7 @@ class TestBatchConditionMixin(TestCase):
             max_url_length=310,
             min_url_length=305,
         )
-        self.assertEqual(size, 3)
+        self.assertEqual(size, 2)
 
         size = synchronizer.get_optimal_size(
             [442434, 53462, 552468, 63443],

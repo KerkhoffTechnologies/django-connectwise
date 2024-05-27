@@ -11,6 +11,7 @@ from .. import api
 
 from . import fixtures
 from . import mocks as mk
+from unittest.mock import patch
 
 from djconnectwise.api import ConnectWiseAPIError, ConnectWiseAPIClientError
 from djconnectwise.api import ConnectWiseRecordNotFoundError
@@ -88,11 +89,12 @@ class TestConnectWiseAPIClient(TestCase):
 
     @responses.activate
     def test_request(self):
-        endpoint = 'http://example.com/'
+        url = 'test'
+        endpoint = self.client._endpoint(url)
         response = 'ok'
         responses.add(responses.GET, endpoint, json=response, status=200)
 
-        result = self.client.request('get', endpoint, None)
+        result = self.client.request('get', url, None)
         self.assertEqual(result, response)
 
     @responses.activate
@@ -234,24 +236,13 @@ class TestHostedAPIClient(BaseAPITestCase):
 
     @responses.activate
     def test_post_hosted_tab(self):
-        body = {
-            'screenId': fixtures.API_HOSTED_SCREENS['row_values'][3],
-            'description': 'A new hosted tab',
-            'url': 'https://example.com',
-            'type': 'Tab'
-        }
-
-        method_name = 'djconnectwise.api.ConnectWiseAPIClient.request'
-        mock_call, _patch = mk.create_mock_call(
-            method_name,
-            body)
-
-        self.client.post_hosted_tab(
-            screen_id=fixtures.API_HOSTED_SCREENS['row_values'][3],
-            description='A new hosted tab',
-            origin_url='https://example.com',
-            type='Tab'
-        )
+        with patch.object(api.ConnectWiseAPIClient, 'request') as mock_call:
+            self.client.post_hosted_tab(
+                screen_id=fixtures.API_HOSTED_SCREENS['row_values'][3],
+                description='A new hosted tab',
+                origin_url='https://example.com',
+                type='Tab'
+            )
         self.assertEqual(mock_call.call_count, 1)
 
     @responses.activate
@@ -264,15 +255,10 @@ class TestHostedAPIClient(BaseAPITestCase):
         result = self.client.get_hosted_tabs()
         self.assertEqual(result, fixtures.API_HOSTED_SETUPS)
 
-    @responses.activate
     def test_delete_hosted_tab(self):
         object_id = 27
-        method_name = 'requests.request'
-        mock_call, _patch = mk.create_mock_call(
-            method_name,
-            "201 Created")
-
-        self.client.delete_hosted_tab(object_id)
+        with patch.object(api.ConnectWiseAPIClient, 'request') as mock_call:
+            self.client.delete_hosted_tab(object_id)
         self.assertEqual(mock_call.call_count, 1)
 
 
@@ -496,7 +482,6 @@ class TestScheduleAPIClient(BaseAPITestCase):
         self.assertEqual(result, fixtures.API_SCHEDULE_ENTRY_FOR_TICKET)
         self.assert_request_should_page(False)
 
-    @responses.activate
     def test_post_schedule_entry(self):
         member = SimpleNamespace()
         member.id = 176
@@ -507,27 +492,18 @@ class TestScheduleAPIClient(BaseAPITestCase):
         ticket_object = SimpleNamespace()
         ticket_object.id = 4
 
-        method_name = 'djconnectwise.api.ConnectWiseAPIClient.request'
-        mock_call, _patch = mk.create_mock_call(
-            method_name,
-            fixtures.API_SCHEDULE_ENTRY_FOR_TICKET)
-        self.client = api.ScheduleAPIClient()
-
-        self.client.post_schedule_entry(
-            ticket_object,
-            schedule_type)
+        with patch.object(api.ConnectWiseAPIClient, 'request') as mock_call:
+            client = api.ScheduleAPIClient()
+            client.post_schedule_entry(
+                ticket_object,
+                schedule_type)
         self.assertEqual(mock_call.call_count, 1)
 
-    @responses.activate
     def test_delete_schedule_entry(self):
         object_id = 69
-        method_name = 'requests.request'
-        mock_call, _patch = mk.create_mock_call(
-            method_name,
-            "200 OK")
-
-        self.client = api.ScheduleAPIClient()
-        self.client.delete_schedule_entry(object_id)
+        with patch.object(api.ConnectWiseAPIClient, 'request') as mock_call:
+            client = api.ScheduleAPIClient()
+            client.delete_schedule_entry(object_id)
         self.assertEqual(mock_call.call_count, 1)
 
 
@@ -547,23 +523,17 @@ class TestTimeAPIClient(BaseAPITestCase):
         self.assertEqual(result, fixtures.API_TIME_ENTRY_LIST)
         self.assert_request_should_page(True)
 
-    @responses.activate
     def test_post_time_entry(self):
-        method_name = 'djconnectwise.api.ConnectWiseAPIClient.request'
-        mock_call, _patch = mk.create_mock_call(
-            method_name,
-            fixtures.API_TIME_ENTRY)
-        self.client = api.TimeAPIClient()
-
-        target_data = {
-            'id': 1,
-            'type': "ServiceTicket",
-        }
-
-        self.client.post_time_entry(
-            target_data,
-            time_start=timezone.now(),
-        )
+        with patch.object(api.ConnectWiseAPIClient, 'request') as mock_call:
+            client = api.TimeAPIClient()
+            target_data = {
+                'id': 1,
+                'type': "ServiceTicket",
+            }
+            client.post_time_entry(
+                target_data,
+                time_start=timezone.now(),
+            )
         self.assertEqual(mock_call.call_count, 1)
 
 
