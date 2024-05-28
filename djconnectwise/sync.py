@@ -2148,9 +2148,11 @@ class ProjectTeamMemberSynchronizer(ChildFetchRecordsMixin, Synchronizer):
 
 
 class ProjectSynchronizer(CreateRecordMixin,
-                          UpdateRecordMixin, Synchronizer):
+                          UpdateRecordMixin, BatchConditionMixin,
+                          Synchronizer):
     client_class = api.ProjectAPIClient
     model_class = models.ProjectTracker
+    batch_condition_list = []
     related_meta = {
         'status': (models.ProjectStatus, 'status'),
         'manager': (models.Member, 'manager'),
@@ -2189,6 +2191,32 @@ class ProjectSynchronizer(CreateRecordMixin,
                     i in models.ProjectStatus.objects.filter(closed_flag=False)
                 )
             )]
+            self.batch_condition_list = self.api_conditions
+
+    def get_batch_condition(self,conditions):
+        batch_condition = self.api_conditions[-1]
+
+        request_settings = DjconnectwiseSettings().get_settings()
+        keep_closed = request_settings.get('keep_closed_ticket_days')
+        if keep_closed:
+            batch_condition = self.format_conditions(
+                keep_closed, batch_condition, request_settings)
+
+        return batch_condition
+
+    def format_conditions(self, keep_closed,
+                          batch_condition, request_settings):
+        closed_date = timezone.now() - timezone.timedelta(days=keep_closed)
+        condition = 'lastUpdated>[{}]'.format(closed_date)
+
+        keep_closed_board_ids = \
+            request_settings.get('keep_closed_status_board_ids')
+        if keep_closed_board_ids:
+            condition = '{} and board/id in ({})'.format(
+                condition, keep_closed_board_ids)
+
+        batch_condition = '{} or {}'.format(batch_condition, condition)
+        return batch_condition
 
     def _assign_field_data(self, instance, json_data):
         actual_start = json_data.get('actualStart')
