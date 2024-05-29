@@ -2193,7 +2193,7 @@ class ProjectSynchronizer(CreateRecordMixin,
             )]
             self.batch_condition_list = self.api_conditions
 
-    def get_batch_condition(self,conditions):
+    def get_batch_condition(self, conditions):
         batch_condition = self.api_conditions[-1]
 
         request_settings = DjconnectwiseSettings().get_settings()
