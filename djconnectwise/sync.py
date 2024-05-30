@@ -2148,7 +2148,8 @@ class ProjectTeamMemberSynchronizer(ChildFetchRecordsMixin, Synchronizer):
 
 
 class ProjectSynchronizer(CreateRecordMixin,
-                          UpdateRecordMixin, Synchronizer):
+                          UpdateRecordMixin,
+                          Synchronizer):
     client_class = api.ProjectAPIClient
     model_class = models.ProjectTracker
     related_meta = {
@@ -2183,12 +2184,40 @@ class ProjectSynchronizer(CreateRecordMixin,
             # Only sync projects in non-closed statuses. We could simply use
             # closedFlag=False but API versions before 2019.5 don't support the
             # closedFlag field and we need to support those versions for now.
-            self.api_conditions = ['status/id in ({})'.format(
-                ','.join(
-                    str(i.id) for
-                    i in models.ProjectStatus.objects.filter(closed_flag=False)
+            project_conditions = [
+                'status/id in ({})'.format(
+                    ','.join(
+                        str(status.id)
+                        for status in models.ProjectStatus.objects.filter(
+                            closed_flag=False
+                        )
+                    )
                 )
-            )]
+            ]
+            request_settings = DjconnectwiseSettings().get_settings()
+            keep_closed_days = request_settings.get('keep_closed_ticket_days')
+            if keep_closed_days:
+                project_conditions = self.format_conditions(
+                    keep_closed_days, project_conditions, request_settings
+                )
+
+            self.api_conditions = project_conditions
+
+    def format_conditions(self, keep_closed_days,
+                          project_conditions, request_settings):
+        closed_date = \
+            timezone.now() - timezone.timedelta(days=keep_closed_days)
+        condition = 'lastUpdated>[{}]'.format(closed_date)
+
+        keep_closed_board_ids = \
+            request_settings.get('keep_closed_status_board_ids')
+        if keep_closed_board_ids:
+            condition = '{} and board/id in ({})'.format(
+                condition, keep_closed_board_ids
+            )
+
+        project_conditions.append(condition)
+        return project_conditions
 
     def _assign_field_data(self, instance, json_data):
         actual_start = json_data.get('actualStart')
