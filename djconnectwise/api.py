@@ -325,7 +325,12 @@ class ConnectWiseAPIClient(object):
         """
         return '({})'.format(' and '.join(conditions))
 
-    def request(self, method, endpoint_url, body=None, params=None, files=None):
+    def request(self,
+                method,
+                endpoint_url,
+                body=None,
+                params=None,
+                files=None):
         """
         Issue the given type of request to the specified REST endpoint.
         """
@@ -339,10 +344,10 @@ class ConnectWiseAPIClient(object):
             if files:
                 response = requests.request(
                     method,
-                    endpoint_url,
+                    complete_endpoint,
                     files=files,
                     data=body,
-                    params=params
+                    params=params,
                     auth=self.auth,
                     timeout=self.timeout,
                     headers=self.get_headers()
@@ -1048,14 +1053,14 @@ class SystemAPIClient(ConnectWiseAPIClient):
         )
 
     def upload_attachments(
-            self, 
-            object_id, 
-            files, 
-            recordType='Ticket', 
-            *args, 
-            **kwargs
-        ):
+            self,
+            object_id,
+            files,
+            recordType='Ticket',
+            *args,
+            **kwargs):
         endpoint_url = self.ENDPOINT_DOCUMENTS
+
         body = {
             'recordType': recordType,
             'recordId': object_id
