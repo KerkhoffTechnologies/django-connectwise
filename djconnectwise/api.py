@@ -12,7 +12,7 @@ from django.core.cache import cache
 from django.db import models
 from retrying import retry
 
-from djconnectwise.utils import DjconnectwiseSettings
+from djconnectwise.utils import DjconnectwiseSettings, generate_image_url
 
 # Cloud URLs:
 # https://developer.connectwise.com/Products/Manage/Developer_Guide#Cloud_URLs
@@ -1065,7 +1065,11 @@ class SystemAPIClient(ConnectWiseAPIClient):
             'recordType': recordType,
             'recordId': object_id
         }
-        return self.request('POST', endpoint_url, body, files=files)
+        response = self.request('POST', endpoint_url, body, files=files)
+        response['attachment_url'] = \
+            generate_image_url(self.company_id, response.get('guid'))
+
+        return response
 
     def get_attachment_count(self, object_id):
         endpoint_url = f'{self.ENDPOINT_DOCUMENTS}count'
