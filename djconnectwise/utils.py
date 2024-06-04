@@ -78,6 +78,14 @@ def generate_thumbnail(avatar, size, extension, filename):
     return avatar_file, filename
 
 
+def generate_image_url(company_id, guid):
+    if not guid:
+        return None
+
+    return settings.CONNECTWISE_SERVER_URL + \
+        '/v4_6_release/api/inlineimages/' + company_id + '/' + guid
+
+
 class DjconnectwiseSettings:
 
     def get_settings(self):
