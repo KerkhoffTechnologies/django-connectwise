@@ -2212,29 +2212,13 @@ class ProjectSynchronizer(CreateRecordMixin,
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        filtered_statuses = \
+            models.ProjectStatus.objects.filter(closed_flag=False)
+
         if self.full:
             self.api_conditions = ['status/id in ({})'.format(
-                ','.join(
-                    str(i.id) for
-                    i in models.ProjectStatus.objects.filter(closed_flag=False)
-                )
+                ','.join(str(i.id) for i in filtered_statuses)
             )]
-
-        request_settings = DjconnectwiseSettings().get_settings()
-        board_ids = request_settings.get('board_status_filter')
-
-        filtered_statuses = models.ProjectStatus.objects.filter(
-            closed_flag=False
-        )
-
-        if board_ids:
-            boards_exist = models.ConnectWiseBoard.objects.filter(
-                id__in=board_ids).exists()
-
-            if boards_exist:
-                filtered_statuses = filtered_statuses.filter(
-                    board__id__in=board_ids
-                )
 
         if filtered_statuses:
             self.batch_condition_list = \
