@@ -479,6 +479,16 @@ API_COMPANY_SITE_LIST = [
     "inactive": False,
 }]
 
+API_CONTACT_TYPE_LIST = [
+    {
+    "id": 1,
+    "description": "Test Contact Type",
+    "defaultFlag": True,
+    "serviceAlertFlag": True,
+    "serviceAlertMessage": "",
+}]
+
+
 API_SERVICE_NOTE_LIST = [
     {
         'id': 3,

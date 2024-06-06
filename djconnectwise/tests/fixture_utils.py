@@ -198,6 +198,12 @@ def init_company_site():
     return synchronizer.sync()
 
 
+def init_contact_type():
+    mocks.company_api_get_contact_type_call(fixtures.API_CONTACT_TYPE_LIST)
+    synchronizer = sync.ContactTypeSynchronizer()
+    return synchronizer.sync()
+
+
 def init_company_team_role():
     mocks.company_api_get_company_team_role_call(
         [fixtures.API_COMPANY_TEAM_ROLE])
