@@ -1227,9 +1227,27 @@ class CompanyTypeSynchronizer(Synchronizer):
         instance.id = json_data.get('id')
         instance.name = json_data.get('name')
         instance.vendor_flag = json_data.get('vendorFlag')
+        instance.default_flag = json_data.get('defaultFlag')
+        instance.service_alert_flag = json_data.get('service_alert_flag')
+        instance.service_alert_message = json_data.get('service_alert_message')
 
     def get_page(self, *args, **kwargs):
         return self.client.get_company_types(*args, **kwargs)
+
+
+class ContactTypeSynchronizer(Synchronizer):
+    client_class = api.CompanyAPIClient
+    model_class = models.ContactTypeTracker
+
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data.get('id')
+        instance.description = json_data.get('description')
+        instance.default_flag = json_data.get('defaultFlag')
+        instance.service_alert_flag = json_data.get('service_alert_flag')
+        instance.service_alert_message = json_data.get('service_alert_message')
+
+    def get_page(self, *args, **kwargs):
+        return self.client.get_contact_types(*args, **kwargs)
 
 
 class CompanyNoteTypesSynchronizer(Synchronizer):

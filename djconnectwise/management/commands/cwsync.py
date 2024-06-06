@@ -55,6 +55,7 @@ class Command(BaseCommand):
             ('communication_type', sync.CommunicationTypeSynchronizer,
              _('Communication Type')),
             ('contact', sync.ContactSynchronizer, _('Contact')),
+            ('contact_type', sync.ContactTypeSynchronizer, _('Contact Type')),
             ('contact_communication',
              sync.ContactCommunicationSynchronizer,
              _('Contact Communication')),
