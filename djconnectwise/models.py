@@ -9,6 +9,8 @@ from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django_extensions.db.models import TimeStampedModel
+from django.contrib.postgres.fields import ArrayField
+
 from model_utils import FieldTracker
 
 from . import api
@@ -1581,6 +1583,10 @@ class Ticket(UpdateConnectWiseMixin, TimeStampedModel):
                                                null=True, max_length=15)
     contact_email_address = models.CharField(blank=True,
                                              null=True, max_length=250)
+    temp_assets = ArrayField(
+        models.TextField(),
+        null=True,
+    )
 
     # Only used for creation, not synced.
     initial_description = models.CharField(
