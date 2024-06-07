@@ -1018,7 +1018,6 @@ class TestSyncAllCommand(TestCase):
                     'contact',
                     'contact_communication',
                     'company_site',
-                    'contact_type',
             ):
                 # Assert that there were objects to get deleted, then change
                 # to zero to verify the output formats correctly.
