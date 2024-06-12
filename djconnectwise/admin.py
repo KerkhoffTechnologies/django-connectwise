@@ -107,8 +107,14 @@ class CompanyStatusAdmin(admin.ModelAdmin):
 
 @admin.register(models.CompanyType)
 class CompanyTypeAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'vendor_flag')
+    list_display = ('id', 'name', 'vendor_flag', 'service_alert_flag')
     search_fields = ['name']
+
+
+@admin.register(models.ContactType)
+class ContactTypeAdmin(admin.ModelAdmin):
+    list_display = ('id', 'description', 'default_flag', 'service_alert_flag')
+    search_fields = ['description']
 
 
 @admin.register(models.Contact)

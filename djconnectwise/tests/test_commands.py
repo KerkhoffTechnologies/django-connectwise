@@ -200,6 +200,18 @@ class TestSyncCompanySiteCommand(AbstractBaseSyncTest, TestCase):
         fixture_utils.init_company_site()
 
 
+class TestSyncContactTypeCommand(AbstractBaseSyncTest, TestCase):
+    args = (
+        mocks.company_api_get_contact_type_call,
+        fixtures.API_CONTACT_TYPE_LIST,
+        'contact_type'
+    )
+
+    def setUp(self):
+        fixture_utils.init_companies()
+        fixture_utils.init_contact_type()
+
+
 class TestSyncCompanyTeamRoleCommand(AbstractBaseSyncTest, TestCase):
     args = (
         mocks.company_api_get_company_team_role_call,
@@ -813,6 +825,7 @@ class TestSyncAllCommand(TestCase):
             TestSyncTimeEntriesCommand,
             TestSyncContactCommunicationsCommand,
             TestSyncContactsCommand,
+            TestSyncContactTypeCommand,
             TestSyncCommunicationTypesCommand,
             TestSyncCompaniesCommand,
             TestSyncCompanyTypesCommand,
@@ -942,6 +955,7 @@ class TestSyncAllCommand(TestCase):
             'service_note': models.ServiceNote,
             'opportunity_note': models.OpportunityNote,
             'contact': models.Contact,
+            'contact_type': models.ContactType,
             'communication_type': models.CommunicationType,
             'contact_communication': models.ContactCommunication,
             'company': models.Company,
@@ -1003,7 +1017,7 @@ class TestSyncAllCommand(TestCase):
                     'holiday',
                     'contact',
                     'contact_communication',
-                    'company_site'
+                    'company_site',
             ):
                 # Assert that there were objects to get deleted, then change
                 # to zero to verify the output formats correctly.

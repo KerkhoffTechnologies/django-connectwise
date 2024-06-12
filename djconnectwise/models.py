@@ -426,12 +426,33 @@ class CompanyStatus(models.Model):
 class CompanyType(models.Model):
     name = models.CharField(max_length=50)
     vendor_flag = models.BooleanField()
+    default_flag = models.BooleanField(blank=True, null=True)
+    service_alert_flag = models.BooleanField(blank=True, null=True)
+    service_alert_message = models.TextField(
+        blank=True, null=True
+    )
 
     class Meta:
         ordering = ('name', )
 
     def __str__(self):
         return self.name
+
+
+class ContactType(models.Model):
+    description = models.CharField(max_length=250)
+    default_flag = models.BooleanField()
+    service_alert_flag = models.BooleanField(
+        blank=True, null=True)
+    service_alert_message = models.TextField(
+        blank=True, null=True
+    )
+
+    class Meta:
+        ordering = ('description', )
+
+    def __str__(self):
+        return self.description
 
 
 class CompanyNoteType(models.Model):
@@ -509,6 +530,7 @@ class Contact(models.Model):
     title = models.CharField(blank=True, null=True, max_length=200)
     company = models.ForeignKey(
         'Company', null=True, on_delete=models.CASCADE)
+    type = models.ManyToManyField('ContactType')
 
     class Meta:
         ordering = ('first_name', 'last_name')
@@ -2373,6 +2395,14 @@ class CompanyTypeTracker(CompanyType):
     class Meta:
         proxy = True
         db_table = 'djconnectwise_companytype'
+
+
+class ContactTypeTracker(ContactType):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djconnectwise_contacttype'
 
 
 class CompanyNoteTypeTracker(CompanyNoteType):
