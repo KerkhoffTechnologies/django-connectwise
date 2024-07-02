@@ -2513,6 +2513,7 @@ class TicketSynchronizerMixin:
         'initial_description': 'initialDescription',
         'project': 'project',
         'phase': 'phase',
+        'company_site': 'site'
     }
 
     def __init__(self, *args, **kwargs):
