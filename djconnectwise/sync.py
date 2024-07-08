@@ -2481,6 +2481,7 @@ class TicketSynchronizerMixin:
         'source': (models.Source, 'source'),
         'workType': (models.WorkType, 'work_type'),
         'workRole': (models.WorkRole, 'work_role'),
+        'site': (models.CompanySite, 'company_site'),
     }
 
     API_FIELD_NAMES = {
@@ -2513,6 +2514,7 @@ class TicketSynchronizerMixin:
         'initial_description': 'initialDescription',
         'project': 'project',
         'phase': 'phase',
+        'company_site': 'site'
     }
 
     def __init__(self, *args, **kwargs):
