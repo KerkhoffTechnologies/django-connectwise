@@ -2514,6 +2514,7 @@ class TicketSynchronizerMixin:
         'initial_description': 'initialDescription',
         'project': 'project',
         'phase': 'phase',
+        'team': 'team',
         'company_site': 'site'
     }
 
@@ -2802,7 +2803,6 @@ class TicketSynchronizerMixin:
             api_public_key=kwargs.get('api_public_key'),
             api_private_key=kwargs.get('api_private_key')
         )
-
         # convert the fields to the format that the API expects
         api_fields = self._convert_fields_to_api_format(changed_fields)
 
