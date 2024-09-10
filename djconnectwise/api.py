@@ -1422,6 +1422,39 @@ class ProjectAPIClient(TicketAPIMixin, ConnectWiseAPIClient):
         return len(res)
 
 
+class ConfigurationAPIClient(ConnectWiseAPIClient):
+    API = 'company'
+    ENDPOINT_CONFIGURATIONS = 'configurations/'
+    ENDPOINT_STATUS = '{}statuses/'.format(ENDPOINT_CONFIGURATIONS)
+    ENDPOINT_TYPES = '{}types/'.format(ENDPOINT_CONFIGURATIONS)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def get_configurations(self, company_id, *args, **kwargs):
+        """
+        Retrieves configurations for a given company ID.
+        """
+        params = {'companyId': company_id}
+        return self.fetch_resource(self.ENDPOINT_CONFIGURATIONS,
+                                   params=params,
+                                   *args, **kwargs)
+
+    def get_configuration_statuses(self, *args, **kwargs):
+        """
+        Retrieves configuration statuses from the API.
+        """
+        return self.fetch_resource(self.ENDPOINT_STATUS, should_page=True,
+                                   *args, **kwargs)
+
+    def get_configuration_types(self, *args, **kwargs):
+        """
+        Retrieves configuration types from the API.
+        """
+        return self.fetch_resource(self.ENDPOINT_STATUS, should_page=True,
+                                   *args, **kwargs)
+
+
 class FinanceAPIClient(ConnectWiseAPIClient):
     API = 'finance'
     ENDPOINT_AGREEMENTS = 'agreements'

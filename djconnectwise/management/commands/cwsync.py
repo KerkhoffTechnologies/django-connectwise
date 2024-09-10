@@ -117,6 +117,10 @@ class Command(BaseCommand):
             ('activity_udf', sync.ActivityUDFSynchronizer, _('Activity UDF')),
             ('opportunity_udf', sync.OpportunityUDFSynchronizer,
              _('Opportunity UDF')),
+            ('configuration_status', sync.ConfigurationStatusSynchronizer,
+             _('Configuration Status')),
+            ('configuration_type', sync.ConfigurationTypeSynchronizer,
+             _('Configuration Type')),
         )
 
         settings = DjconnectwiseSettings().get_settings()

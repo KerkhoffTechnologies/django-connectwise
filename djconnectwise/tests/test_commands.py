@@ -737,6 +737,30 @@ class TestSyncSourceCommand(AbstractBaseSyncTest, TestCase):
     )
 
 
+class TestSyncConfigurationStatusesCommand(AbstractBaseSyncTest, TestCase):
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_configuration_statuses()
+
+    args = (
+        mocks.configuration_api_get_configuration_statuses,
+        fixtures.API_CONFIGURATION_STATUS,
+        'configuration_status'
+    )
+
+
+class TestSyncConfigurationTypesCommand(AbstractBaseSyncTest, TestCase):
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_configuration_types()
+
+    args = (
+        mocks.configuration_api_get_configuration_types,
+        fixtures.API_CONFIGURATION_TYPES,
+        'configuration_type'
+    )
+
+
 class TestSyncWorkRoleCommand(AbstractBaseSyncTest, TestCase):
     def setUp(self):
         super().setUp()
@@ -870,6 +894,8 @@ class TestSyncAllCommand(TestCase):
             TestSyncProjectTeamMemberCommand,
             TestSyncSourceCommand,
             TestSyncCompanyNoteTypeCommand,
+            TestSyncConfigurationStatusesCommand,
+            TestSyncConfigurationTypesCommand,
         ]
 
         self.test_args = []
@@ -986,6 +1012,8 @@ class TestSyncAllCommand(TestCase):
             'project_team_member': models.ProjectTeamMember,
             'source': models.Source,
             'company_note_type': models.CompanyNoteType,
+            'configuration_status': models.ConfigurationStatus,
+            'configuration_type': models.ConfigurationType,
         }
 
         # Run partial sync first

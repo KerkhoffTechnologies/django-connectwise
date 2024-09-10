@@ -943,6 +943,76 @@ class OpportunityNoteSynchronizer(ChildFetchRecordsMixin, Synchronizer):
         return self.client.get_notes(opportunity_id, *args, **kwargs)
 
 
+class ConfigurationSynchronizer:
+    client_class = api.ConfigurationAPIClient
+
+    def __init__(self, *args, **kwargs):
+        self.api_conditions = []
+        self.client = self.client_class()
+        request_settings = DjconnectwiseSettings().get_settings()
+        self.batch_size = request_settings['batch_size']
+
+    def fetch_configurations(self, company_id):
+        """
+        Fetch configurations from a specific company.
+        """
+        return self.client.get_configurations(company_id)
+
+
+class ConfigurationStatusSynchronizer(Synchronizer):
+    client_class = api.ConfigurationAPIClient
+    model_class = models.ConfigurationStatusTracker
+
+    related_meta = {
+        'company': (models.Company, 'company'),
+    }
+
+    def _assign_field_data(self, instance, json_data):
+        """
+        Assigns the data from the API instance to the model instance.
+        """
+        instance.id = json_data.get('id')
+        instance.description = json_data.get('description', '')
+        instance.closed_flag = json_data.get('closedFlag', False)
+        instance.default_flag = json_data.get('defaultFlag', False)
+
+        self.set_relations(instance, json_data)
+        return instance
+
+    def get_page(self, *args, **kwargs):
+        """
+        Retrieves a page of configuration statuses from the API.
+        """
+        return self.client.get_configuration_statuses(*args, **kwargs)
+
+
+class ConfigurationTypeSynchronizer(Synchronizer):
+    client_class = api.ConfigurationAPIClient
+    model_class = models.ConfigurationTypeTracker
+
+    related_meta = {
+        'company': (models.Company, 'company'),
+    }
+
+    def _assign_field_data(self, instance, json_data):
+        """
+        Assigns the data from the API instance to the model instance.
+        """
+        instance.id = json_data.get('id')
+        instance.name = json_data.get('name')
+        instance.inactive_flag = json_data.get('inactiveFlag', False)
+        instance.system_flag = json_data.get('systemFlag', False)
+
+        self.set_relations(instance, json_data)
+        return instance
+
+    def get_page(self, *args, **kwargs):
+        """
+        Retrieves a page of configuration types from the API.
+        """
+        return self.client.get_configuration_types(*args, **kwargs)
+
+
 class BoardSynchronizer(Synchronizer):
     client_class = api.ServiceAPIClient
     model_class = models.ConnectWiseBoardTracker

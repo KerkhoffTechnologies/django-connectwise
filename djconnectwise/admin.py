@@ -473,3 +473,17 @@ class CompanyTeamAdmin(admin.ModelAdmin):
 @admin.register(models.CompanySite)
 class CompanySiteAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'company', 'inactive')
+
+
+@admin.register(models.ConfigurationStatus)
+class ConfigurationStatusAdmin(admin.ModelAdmin):
+    list_display = ('id', 'description', 'closed_flag', 'default_flag')
+    list_filter = ('closed_flag', 'default_flag')
+    search_fields = ['description']
+
+
+@admin.register(models.ConfigurationType)
+class ConfigurationTypeAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'inactive_flag', 'system_flag')
+    list_filter = ('inactive_flag', 'system_flag')
+    search_fields = ['name']
