@@ -1435,7 +1435,8 @@ class ConfigurationAPIClient(ConnectWiseAPIClient):
         """
         Retrieves configurations for a given company ID.
         """
-        params = {'companyId': company_id}
+        api_conditions = f'company/id={company_id}'
+        params = {'conditions': api_conditions}
         return self.fetch_resource(self.ENDPOINT_CONFIGURATIONS,
                                    params=params,
                                    *args, **kwargs)
