@@ -6,6 +6,7 @@ import urllib
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
+from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django_extensions.db.models import TimeStampedModel
@@ -1860,7 +1861,8 @@ class Ticket(UpdateConnectWiseMixin, TimeStampedModel):
 class NonInternalNoteManager(models.Manager):
     def get_queryset(self):
         return super().get_queryset(). \
-            filter(internal_analysis_flag=False, internal_flag=False)
+            filter(Q(internal_analysis_flag=False) | Q(internal_flag=False)
+        )
 
 
 class ServiceNote(UpdateRecordMixin, TimeStampedModel):
