@@ -1861,8 +1861,7 @@ class Ticket(UpdateConnectWiseMixin, TimeStampedModel):
 class NonInternalNoteManager(models.Manager):
     def get_queryset(self):
         return super().get_queryset(). \
-            filter(Q(internal_analysis_flag=False) | Q(internal_flag=False)
-        )
+             exclude(Q(internal_analysis_flag=True) | Q(internal_flag=True))
 
 
 class ServiceNote(UpdateRecordMixin, TimeStampedModel):
