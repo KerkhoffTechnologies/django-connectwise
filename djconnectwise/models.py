@@ -1009,6 +1009,11 @@ class UpdateRecordMixin:
         super().save(**kwargs)
 
 
+class NonInternalTimeEntryManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().exclude(internal_analysis_flag=True)
+
+
 class TimeEntry(UpdateRecordMixin, models.Model):
     CHARGE_TYPES = (
         ('ServiceTicket', "Service Ticket"),
@@ -1054,6 +1059,9 @@ class TimeEntry(UpdateRecordMixin, models.Model):
         'WorkType', blank=True, null=True, on_delete=models.SET_NULL)
     agreement = models.ForeignKey(
         'Agreement', blank=True, null=True, on_delete=models.SET_NULL)
+
+    objects = models.Manager()
+    non_internal_objects = NonInternalTimeEntryManager()
 
     def get_entered_time(self):
         if self.time_end:
@@ -1849,6 +1857,11 @@ class Ticket(UpdateConnectWiseMixin, TimeStampedModel):
             self.sla_state.enter(valid_stage, calendar, sla)
 
 
+class NonInternalNoteManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().exclude(internal_analysis_flag=True)
+
+
 class ServiceNote(UpdateRecordMixin, TimeStampedModel):
 
     created_by = models.TextField(blank=True, null=True, max_length=250)
@@ -1863,6 +1876,9 @@ class ServiceNote(UpdateRecordMixin, TimeStampedModel):
     ticket = models.ForeignKey('Ticket', on_delete=models.CASCADE)
     member = models.ForeignKey(
         'Member', blank=True, null=True, on_delete=models.SET_NULL)
+
+    objects = models.Manager()
+    non_internal_objects = NonInternalNoteManager()
 
     class Meta:
         ordering = ('-date_created', 'id')
