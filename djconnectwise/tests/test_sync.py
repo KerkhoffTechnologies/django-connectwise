@@ -492,6 +492,56 @@ class TestProjectTypeSynchronizer(TestCase, SynchronizerTestMixin):
         self.assertEqual(instance.inactive_flag, json_data['inactiveFlag'])
 
 
+class TestConfigurationStatusSynchronizer(TestCase, SynchronizerTestMixin):
+    synchronizer_class = sync.ConfigurationStatusSynchronizer
+    model_class = models.ConfigurationStatusTracker
+    fixture = fixtures.API_CONFIGURATION_STATUS
+
+    def call_api(self, return_data):
+        return mocks.configuration_api_get_configuration_statuses(return_data)
+
+    def _assert_fields(self, instance, json_data):
+        self.assertEqual(instance.id, json_data['id'])
+        self.assertEqual(instance.description, json_data['description'])
+        self.assertEqual(instance.closed_flag, json_data['closedFlag'])
+        self.assertEqual(instance.default_flag, json_data['defaultFlag'])
+
+    def test_sync_update(self):
+        self._sync(self.fixture)
+
+        json_data = self.fixture[0]
+
+        instance_id = json_data['id']
+        original = self.model_class.objects.get(id=instance_id)
+
+        description = 'Some New Description'
+        new_json = deepcopy(self.fixture[0])
+        new_json['description'] = description
+        new_json_list = [new_json]
+
+        self._sync(new_json_list)
+
+        changed = self.model_class.objects.get(id=instance_id)
+
+        self.assertNotEqual(original.description, description)
+        self._assert_fields(changed, new_json)
+
+
+class TestConfigurationTypeSynchronizer(TestCase, SynchronizerTestMixin):
+    synchronizer_class = sync.ConfigurationTypeSynchronizer
+    model_class = models.ConfigurationTypeTracker
+    fixture = fixtures.API_CONFIGURATION_TYPES
+
+    def call_api(self, return_data):
+        return mocks.configuration_api_get_configuration_types(return_data)
+
+    def _assert_fields(self, instance, json_data):
+        self.assertEqual(instance.id, json_data['id'])
+        self.assertEqual(instance.name, json_data['name'])
+        self.assertEqual(instance.inactive_flag, json_data['inactiveFlag'])
+        self.assertEqual(instance.system_flag, json_data['systemFlag'])
+
+
 class TestProjectPhaseSynchronizer(TestCase, SynchronizerTestMixin):
     synchronizer_class = sync.ProjectPhaseSynchronizer
     model_class = models.ProjectPhaseTracker

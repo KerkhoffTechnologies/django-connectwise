@@ -607,6 +607,34 @@ API_PROJECT_TYPES = [
 ]
 
 
+API_CONFIGURATION_TYPES = [
+    {
+        'id': 1,
+        'name': 'Network',
+        'inactiveFlag': False,
+        'systemFlag': False,
+        '_info': {
+            'lastUpdated': '2001-01-08T18:05:13Z',
+            'updatedBy': None
+        }
+    }
+]
+
+
+API_CONFIGURATION_STATUS = [
+    {
+        'id': 1,
+        'description': 'Testing Network',
+        'closedFlag': False,
+        'defaultFlag': False,
+        '_info': {
+            'lastUpdated': '2001-01-08T18:05:13Z',
+            'updatedBy': None
+        }
+    }
+]
+
+
 API_PROJECT = {
     'id': 5,
     '_info': {

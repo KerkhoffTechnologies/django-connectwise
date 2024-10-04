@@ -1500,6 +1500,40 @@ class Opportunity(UpdateConnectWiseMixin, TimeStampedModel):
         )
 
 
+class ConfigurationStatus(TimeStampedModel):
+    description = models.CharField(max_length=255)
+    closed_flag = models.BooleanField(default=False)
+    default_flag = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['description']
+        verbose_name_plural = 'Configuration Statuses'
+
+    def __str__(self):
+        return self.description
+
+    @property
+    def api_class(self):
+        return api.ConfigurationAPIClient
+
+
+class ConfigurationType(TimeStampedModel):
+    name = models.TextField(max_length=250)
+    inactive_flag = models.BooleanField(default=False)
+    system_flag = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['name']
+        verbose_name_plural = 'Configuration Types'
+
+    def __str__(self):
+        return self.name
+
+    @property
+    def api_class(self):
+        return api.ConfigurationAPIClient
+
+
 class Ticket(UpdateConnectWiseMixin, TimeStampedModel):
     SCHEDULE_ENTRY_TYPE = "S"
 
@@ -2643,6 +2677,22 @@ class OpportunityTracker(Opportunity):
     class Meta:
         proxy = True
         db_table = 'djconnectwise_opportunity'
+
+
+class ConfigurationStatusTracker(ConfigurationStatus):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djconnectwise_configurationstatus'
+
+
+class ConfigurationTypeTracker(ConfigurationType):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djconnectwise_configurationtype'
 
 
 class ServiceNoteTracker(ServiceNote):

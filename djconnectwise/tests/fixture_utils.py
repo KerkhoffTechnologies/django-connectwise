@@ -128,6 +128,20 @@ def init_project_types():
     return synchronizer.sync()
 
 
+def init_configuration_statuses():
+    mocks.configuration_api_get_configuration_statuses(
+        fixtures.API_CONFIGURATION_STATUS)
+    synchronizer = sync.ConfigurationStatusSynchronizer()
+    return synchronizer.sync()
+
+
+def init_configuration_types():
+    mocks.configuration_api_get_configuration_types(
+        fixtures.API_CONFIGURATION_TYPES)
+    synchronizer = sync.ConfigurationTypeSynchronizer()
+    return synchronizer.sync()
+
+
 def init_project_phases():
     mocks.projects_api_get_project_phases_call(
         fixtures.API_PROJECT_PHASE_LIST)
