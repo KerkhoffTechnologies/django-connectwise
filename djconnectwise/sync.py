@@ -87,6 +87,7 @@ class SyncResults:
 
 class Synchronizer:
     lookup_key = 'id'
+    bulk_prune = True
 
     def __init__(self, full=False, *args, **kwargs):
         self.api_conditions = []
@@ -339,7 +340,11 @@ class Synchronizer:
                     len(stale_ids), self.model_class.__bases__[0].__name__,
                 )
             )
-            delete_qset.delete()
+            if self.bulk_prune:
+                delete_qset.delete()
+            else:
+                for qs in delete_qset:
+                    qs.delete()
             if self.post_delete_callback:
                 self.post_delete_callback(pre_delete_result)
 
@@ -2384,6 +2389,7 @@ class ProjectSynchronizer(CreateRecordMixin,
 class MemberSynchronizer(Synchronizer):
     client_class = api.SystemAPIClient
     model_class = models.MemberTracker
+    bulk_prune = False
 
     related_meta = {
         'workRole': (models.WorkRole, 'work_role'),
