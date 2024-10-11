@@ -347,7 +347,7 @@ class Synchronizer:
                     try:
                         instance.delete()
                     except IntegrityError as e:
-                        logger.error(
+                        logger.exception(
                             'IntegrityError while attempting to '
                             'delete {} records. Error: {}'.format(
                                 self.model_class.__bases__[0].__name__,
