@@ -345,8 +345,9 @@ class Synchronizer:
                     delete_qset.delete()
                 except IntegrityError as e:
                     logger.error(
-                        'IntegrityError while attempting to delete {} records. '
-                        'Error: {}'.format(self.model_class.__bases__[0].__name__, e)
+                        'IntegrityError while attempting to '
+                        'delete {} records. Error: {}'.format(
+                            self.model_class.__bases__[0].__name__, e)
                     )
             else:
                 for instance in delete_qset:
@@ -354,8 +355,11 @@ class Synchronizer:
                         instance.delete()
                     except DatabaseError as e:
                         logger.error(
-                            'A database error occurred while attempting to delete {} records. '
-                            'Error: {}'.format(self.model_class.__bases__[0].__name__, e.__cause__)
+                            'A database error occurred while attempting to '
+                            'delete {} records. Error: {}'.format(
+                                self.model_class.__bases__[0].__name__,
+                                e.__cause__
+                            )
                         )
 
             if self.post_delete_callback:
