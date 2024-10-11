@@ -9,7 +9,7 @@ from botocore.exceptions import NoCredentialsError
 from dateutil.parser import parse
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.files.storage import default_storage
-from django.db import transaction, IntegrityError, DatabaseError
+from django.db import transaction, IntegrityError
 from django.db.models import Q
 from django.utils import timezone
 from django.utils.text import normalize_newlines
@@ -341,21 +341,14 @@ class Synchronizer:
                 )
             )
             if self.bulk_prune:
-                try:
-                    delete_qset.delete()
-                except IntegrityError as e:
-                    logger.error(
-                        'IntegrityError while attempting to '
-                        'delete {} records. Error: {}'.format(
-                            self.model_class.__bases__[0].__name__, e)
-                    )
+                delete_qset.delete()
             else:
                 for instance in delete_qset:
                     try:
                         instance.delete()
-                    except DatabaseError as e:
+                    except IntegrityError as e:
                         logger.error(
-                            'A database error occurred while attempting to '
+                            'IntegrityError while attempting to '
                             'delete {} records. Error: {}'.format(
                                 self.model_class.__bases__[0].__name__,
                                 e.__cause__
