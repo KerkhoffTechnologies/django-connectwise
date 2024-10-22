@@ -9,7 +9,7 @@ from botocore.exceptions import NoCredentialsError
 from dateutil.parser import parse
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.files.storage import default_storage
-from django.db import transaction, IntegrityError
+from django.db import transaction, IntegrityError, DataError
 from django.db.models import Q
 from django.utils import timezone
 from django.utils.text import normalize_newlines
@@ -875,7 +875,21 @@ class TicketTaskSynchronizer:
         instance.tasks_total = len(tasks)
         instance.tasks_completed = sum(task['closed_flag'] for task in tasks)
 
-        instance.save()
+        try:
+            instance.save()
+        except DataError as e:
+            logger.warning(f"Error saving tasks for ticket {instance.id}. "
+                           f"There may have been too many tasks, count was"
+                           f" {len(tasks)}. Error: {e}")
+
+            # This only happens when there are an INSANE amount of tasks,
+            # like over 32,000. If that happens, just catch the error and
+            # set the task count to zero so instead of showing an
+            # incorrect number of tasks (whatever the count was before it
+            # exceeded the max), it just won't show any tasks.
+            instance.tasks_total = 0
+            instance.tasks_completed = 0
+            instance.save()
 
 
 class ServiceTicketTaskSynchronizer(TicketTaskSynchronizer, DummySynchronizer):
