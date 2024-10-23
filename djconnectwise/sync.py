@@ -875,7 +875,7 @@ class TicketTaskSynchronizer:
         instance.tasks_total = len(tasks)
         instance.tasks_completed = sum(task['closed_flag'] for task in tasks)
 
-        instance.save()
+        instance.save(update_fields=["tasks_total", "tasks_completed"])
 
 
 class ServiceTicketTaskSynchronizer(TicketTaskSynchronizer, DummySynchronizer):
