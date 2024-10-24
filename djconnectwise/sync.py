@@ -27,7 +27,8 @@ SKIPPED = 3
 FILE_UMASK = 0o022
 
 MAX_POSITIVE_SMALL_INT = 32767
-# See https://docs.djangoproject.com/en/dev/ref/models/fields/#positivesmallintegerfield
+# See https://docs.djangoproject.com/en/dev/ref/models/fields
+# /#positivesmallintegerfield
 
 logger = logging.getLogger(__name__)
 
