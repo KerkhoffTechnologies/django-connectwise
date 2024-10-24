@@ -9,7 +9,7 @@ from botocore.exceptions import NoCredentialsError
 from dateutil.parser import parse
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.files.storage import default_storage
-from django.db import transaction, IntegrityError
+from django.db import transaction, IntegrityError, DatabaseError
 from django.db.models import Q
 from django.utils import timezone
 from django.utils.text import normalize_newlines
@@ -25,6 +25,9 @@ CREATED = 1
 UPDATED = 2
 SKIPPED = 3
 FILE_UMASK = 0o022
+
+MAX_POSITIVE_SMALL_INT = 32767
+# See https://docs.djangoproject.com/en/dev/ref/models/fields/#positivesmallintegerfield
 
 logger = logging.getLogger(__name__)
 
@@ -872,10 +875,23 @@ class TicketTaskSynchronizer:
 
     def sync_tasks(self, instance):
         tasks = self.get(parent=instance.id)
-        instance.tasks_total = len(tasks)
-        instance.tasks_completed = sum(task['closed_flag'] for task in tasks)
 
-        instance.save(update_fields=["tasks_total", "tasks_completed"])
+        # When the PSA goes crazy, stay within the bounds of a small int.
+        instance.tasks_total = min(
+            MAX_POSITIVE_SMALL_INT, len(tasks)
+        )
+        instance.tasks_completed = min(
+            MAX_POSITIVE_SMALL_INT, sum(task['closed_flag'] for task in tasks)
+        )
+
+        try:
+            instance.save(update_fields=["tasks_total", "tasks_completed"])
+        except DatabaseError as e:
+            # This can happen if the ticket was deleted in the background.
+            logger.warning(
+                'DatabaseError while processing tasks on ticket {}: '
+                '{}'.format(instance, e)
+            )
 
 
 class ServiceTicketTaskSynchronizer(TicketTaskSynchronizer, DummySynchronizer):
