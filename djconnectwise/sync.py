@@ -2435,6 +2435,7 @@ class MemberSynchronizer(Synchronizer):
         instance.office_email = json_data.get('officeEmail')
         instance.license_class = json_data.get('licenseClass')
         instance.inactive = json_data.get('inactiveFlag')
+        instance.title = json_data.get('title')
 
         self.set_relations(instance, json_data)
 

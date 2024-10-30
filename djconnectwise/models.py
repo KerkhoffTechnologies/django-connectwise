@@ -322,6 +322,8 @@ class Member(TimeStampedModel):
         'WorkRole', null=True, on_delete=models.SET_NULL)
 
     objects = models.Manager()
+    title = models.CharField(blank=True, null=True, max_length=250)
+
     regular_objects = RegularMemberManager()
 
     class Meta:
