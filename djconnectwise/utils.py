@@ -88,7 +88,7 @@ def generate_image_url(company_id, guid):
 
 
 def convert_str_to_datetime(date):
-    return datetime.fromisoformat(date.replace("Z", "+00:00")) 
+    return datetime.fromisoformat(date.replace("Z", "+00:00"))
 
 
 class DjconnectwiseSettings:

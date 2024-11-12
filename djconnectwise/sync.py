@@ -18,7 +18,8 @@ from djconnectwise import models
 from djconnectwise.utils import DjconnectwiseSettings
 from djconnectwise.api import ConnectWiseAPIError, ConnectWiseInvalidInputError
 from djconnectwise.utils import get_hash, get_filename_extension, \
-    generate_thumbnail, generate_filename, remove_thumbnail, convert_str_to_datetime
+    generate_thumbnail, generate_filename, remove_thumbnail, \
+    convert_str_to_datetime
 
 DEFAULT_AVATAR_EXTENSION = 'jpg'
 
@@ -2920,18 +2921,31 @@ class TicketSynchronizerMixin:
             changed_fields.get('estimated_start_date') or
             changed_fields.get('required_date_utc')
         ):
-            if convert_str_to_datetime(changed_fields.get('estimated_start_date')) < record.ticket_predecessor.estimated_start_date:
+            if convert_str_to_datetime(
+                changed_fields.get(
+                    'estimated_start_date')) < \
+                        record.ticket_predecessor.estimated_start_date:
                 error_message = \
-                    "Ticket StartDate should be not earlier than Predecessor StartDate"
-                logger.error("Failed to update record %s: %s", record.id, error_message)
+                    "Ticket StartDate should be not " + \
+                    "earlier than Predecessor StartDate"
+                logger.error(
+                    "Failed to update record %s: %s",
+                    record.id, error_message
+                )
                 raise ConnectWiseInvalidInputError(error_message)
 
-            if convert_str_to_datetime(changed_fields.get('required_date_utc')) < record.ticket_predecessor.required_date_utc:
+            if convert_str_to_datetime(
+                changed_fields.get('required_date_utc')) < \
+                    record.ticket_predecessor.required_date_utc:
                 error_message = \
-                    "Ticket EndDate should be not earlier than Predecessor EndDate"
-                logger.error("Failed to update record %s: %s", record.id, error_message)
+                    "Ticket EndDate should be not earlier " + \
+                    "than Predecessor EndDate"
+                logger.error(
+                    "Failed to update record %s: %s",
+                    record.id, error_message
+                )
                 raise ConnectWiseInvalidInputError(error_message)
-            
+
             predecessor_reset_fields = {
                 'ticket_predecessor': None,
                 'predecessor_type': None,
@@ -2961,8 +2975,10 @@ class TicketSynchronizerMixin:
                     "Failed to reset predecessor fields for record " + \
                     f"{record.id}"
                 logger.error("%s: %s", error_message, str(e))
-                raise ConnectWiseAPIError("The update request failed. " +
-                    "Please refresh the page and try again.")
+                error_message = \
+                    "The update request failed. " + \
+                    "Please refresh the page and try again."
+                raise ConnectWiseAPIError(error_message)
 
         try:
             # convert the fields to the format that the API expects
