@@ -68,6 +68,11 @@ class ConnectWiseRecordNotFoundError(ConnectWiseAPIClientError):
     pass
 
 
+class ConnectWiseInvalidInputError(Exception):
+    """Raise this, when input is invalid."""
+    pass
+
+
 class ConnectWiseSecurityPermissionsException(ConnectWiseAPIClientError):
     """The API credentials have insufficient security permissions."""
     pass

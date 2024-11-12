@@ -1,6 +1,7 @@
 import hashlib
 import re
 from io import BytesIO
+from datetime import datetime
 
 from PIL import Image, ImageOps
 from django.conf import settings
@@ -84,6 +85,10 @@ def generate_image_url(company_id, guid):
 
     return settings.CONNECTWISE_SERVER_URL + \
         '/v4_6_release/api/inlineimages/' + company_id + '/' + guid
+
+
+def convert_str_to_datetime(date):
+    return datetime.fromisoformat(date.replace("Z", "+00:00")) 
 
 
 class DjconnectwiseSettings:
