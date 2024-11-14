@@ -18,8 +18,7 @@ from djconnectwise import models
 from djconnectwise.utils import DjconnectwiseSettings
 from djconnectwise.api import ConnectWiseAPIError, ConnectWiseInvalidInputError
 from djconnectwise.utils import get_hash, get_filename_extension, \
-    generate_thumbnail, generate_filename, remove_thumbnail, \
-    convert_str_to_datetime
+    generate_thumbnail, generate_filename, remove_thumbnail
 
 DEFAULT_AVATAR_EXTENSION = 'jpg'
 
@@ -2916,47 +2915,50 @@ class TicketSynchronizerMixin:
         # a predecessor. To work around this, we first remove the predecessor,
         # update the required fields, and then re-add the predecessor after
         # the update.
-        predecessor_removed = True
+        predecessor_removed = False
         if record.ticket_predecessor_id and (
             changed_fields.get('estimated_start_date') or
             changed_fields.get('required_date_utc')
         ):
-            if convert_str_to_datetime(
-                changed_fields.get(
-                    'estimated_start_date')) < \
-                        record.ticket_predecessor.estimated_start_date:
-                error_message = \
-                    "Ticket StartDate should be not " + \
-                    "earlier than Predecessor StartDate"
-                logger.error(
-                    "Failed to update record %s: %s",
-                    record.id, error_message
-                )
-                raise ConnectWiseInvalidInputError(error_message)
-
-            if convert_str_to_datetime(
-                changed_fields.get('required_date_utc')) < \
-                    record.ticket_predecessor.required_date_utc:
-                error_message = \
-                    "Ticket EndDate should be not earlier " + \
-                    "than Predecessor EndDate"
-                logger.error(
-                    "Failed to update record %s: %s",
-                    record.id, error_message
-                )
-                raise ConnectWiseInvalidInputError(error_message)
-
-            predecessor_reset_fields = {
-                'ticket_predecessor': None,
-                'predecessor_type': None,
-                'required_date_utc': None,
-                'estimated_start_date': None
-            }
             try:
+                start_date = changed_fields.get('estimated_start_date')
+                end_date = changed_fields.get('estimated_start_date')
+
+                if start_date and start_date < \
+                        record.ticket_predecessor.estimated_start_date:
+                    error_message = \
+                        "Ticket StartDate should be not " + \
+                        "earlier than Predecessor StartDate"
+                    logger.error(
+                        "Failed to update record %s: %s",
+                        record.id, error_message
+                    )
+                    raise ConnectWiseInvalidInputError(error_message)
+
+                if end_date and end_date < \
+                        record.ticket_predecessor.required_date_utc:
+                    error_message = \
+                        "Ticket EndDate should be not earlier " + \
+                        "than Predecessor EndDate"
+                    logger.error(
+                        "Failed to update record %s: %s",
+                        record.id, error_message
+                    )
+                    raise ConnectWiseInvalidInputError(error_message)
+
+                predecessor_reset_fields = {
+                    'ticket_predecessor': None,
+                    'predecessor_type': None,
+                    'required_date_utc': None,
+                    'estimated_start_date': None
+                }
                 predecessor_reset_api_fields = \
                     self._convert_fields_to_api_format(
                         predecessor_reset_fields)
                 client.update_ticket(record, predecessor_reset_api_fields)
+                predecessor_removed = True
+
+                # Set the removed fields for adding back along with predecessor
                 changed_fields['ticket_predecessor'] = \
                     record.ticket_predecessor_id
                 changed_fields['predecessor_type'] = record.predecessor_type
@@ -2969,7 +2971,6 @@ class TicketSynchronizerMixin:
                     changed_fields['required_date_utc'] = \
                         record.required_date_utc
 
-                predecessor_removed = True
             except ConnectWiseAPIError as e:
                 error_message = \
                     "Failed to reset predecessor fields for record " + \
@@ -2983,7 +2984,11 @@ class TicketSynchronizerMixin:
         try:
             # convert the fields to the format that the API expects
             api_fields = self._convert_fields_to_api_format(changed_fields)
-            updated_record = client.update_ticket(record, api_fields)
+            if predecessor_removed and changed_fields['ticket_predecessor']:
+                updated_record = \
+                    client.update_ticket_with_retries(record, api_fields)
+            else:
+                updated_record = client.update_ticket(record, api_fields)
         except ConnectWiseAPIError as e:
             error_message = \
                 f"Failed to update record {record.id} with changed fields."

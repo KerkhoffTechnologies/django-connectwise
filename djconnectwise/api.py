@@ -1156,6 +1156,23 @@ class TicketAPIMixin:
             body
         )
 
+    def update_ticket_with_retries(self, ticket, changed_fields):
+        @retry(
+            stop_max_attempt_number=self.request_settings['max_attempts'],
+            wait_exponential_multiplier=RETRY_WAIT_EXPONENTIAL_MULTAPPLIER,
+            wait_exponential_max=RETRY_WAIT_EXPONENTIAL_MAX,
+            retry_on_exception=retry_if_api_error
+        )
+        def _update():
+            body = self._format_ticket_patch_body(changed_fields)
+            return self.request(
+                'patch',
+                '{}/{}'.format(self.ENDPOINT_TICKETS, ticket.id),
+                body
+            )
+
+        return _update()
+
     def create_ticket(self, fields):
         body = self._format_ticket_post_body(fields)
         return self.request('POST', '{}/'.format(self.ENDPOINT_TICKETS), body)
