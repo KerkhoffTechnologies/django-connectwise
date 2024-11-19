@@ -2998,13 +2998,16 @@ class TicketSynchronizerMixin:
                         'estimated_start_date': record.estimated_start_date
                     }
                     # convert the fields to the format that the API expects
-                    api_fields = self._convert_fields_to_api_format(rollback_fields)
-                    updated_record = client.update_ticket_with_retries(record, api_fields)
+                    api_fields = \
+                        self._convert_fields_to_api_format(rollback_fields)
+                    updated_record = \
+                        client.update_ticket_with_retries(record, api_fields)
                 except ConnectWiseAPIError as exc:
                     error_message = (
-                        f"An error occurred while updating record {record.id} " +
-                        "and the predecessor has been removed from the ticket. " +
-                        "You must re-add the predecessor manually to the ticket."
+                        "An error occurred while updating " +
+                        "record {record.id} and the predecessor has " +
+                        "been removed from the ticket. You must " +
+                        "re-add the predecessor manually to the ticket."
                     )
                     logger.error("%s: %s", error_message, str(exc))
                     raise ConnectWiseAPIError(error_message)
