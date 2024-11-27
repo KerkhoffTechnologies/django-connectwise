@@ -68,11 +68,6 @@ class ConnectWiseRecordNotFoundError(ConnectWiseAPIClientError):
     pass
 
 
-class ConnectWiseInvalidInputError(Exception):
-    """Raise this, when input is invalid."""
-    pass
-
-
 class ConnectWiseSecurityPermissionsException(ConnectWiseAPIClientError):
     """The API credentials have insufficient security permissions."""
     pass
@@ -1149,14 +1144,7 @@ class TicketAPIMixin:
         )
 
     def update_ticket(self, ticket, changed_fields):
-        body = self._format_ticket_patch_body(changed_fields)
-        return self.request(
-            'patch',
-            '{}/{}'.format(self.ENDPOINT_TICKETS, ticket.id),
-            body
-        )
 
-    def update_ticket_with_retries(self, ticket, changed_fields):
         @retry(
             stop_max_attempt_number=self.request_settings['max_attempts'],
             wait_exponential_multiplier=RETRY_WAIT_EXPONENTIAL_MULTAPPLIER,

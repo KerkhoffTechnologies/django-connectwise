@@ -16,7 +16,7 @@ from django.utils.text import normalize_newlines
 from djconnectwise import api
 from djconnectwise import models
 from djconnectwise.utils import DjconnectwiseSettings
-from djconnectwise.api import ConnectWiseAPIError, ConnectWiseInvalidInputError
+from djconnectwise.api import ConnectWiseAPIError
 from djconnectwise.utils import get_hash, get_filename_extension, \
     generate_thumbnail, generate_filename, remove_thumbnail
 
@@ -2921,31 +2921,6 @@ class TicketSynchronizerMixin:
             changed_fields.get('required_date_utc')
         ):
             try:
-                start_date = changed_fields.get('estimated_start_date')
-                end_date = changed_fields.get('required_date_utc')
-
-                if start_date and start_date < \
-                        record.ticket_predecessor.estimated_start_date:
-                    error_message = \
-                        "Ticket StartDate should be not " + \
-                        "earlier than Predecessor StartDate"
-                    logger.error(
-                        "Failed to update record %s: %s",
-                        record.id, error_message
-                    )
-                    raise ConnectWiseInvalidInputError(error_message)
-
-                if end_date and end_date < \
-                        record.ticket_predecessor.required_date_utc:
-                    error_message = \
-                        "Ticket EndDate should be not earlier " + \
-                        "than Predecessor EndDate"
-                    logger.error(
-                        "Failed to update record %s: %s",
-                        record.id, error_message
-                    )
-                    raise ConnectWiseInvalidInputError(error_message)
-
                 predecessor_reset_fields = {
                     'ticket_predecessor': None,
                     'predecessor_type': None,
@@ -2997,17 +2972,20 @@ class TicketSynchronizerMixin:
                         'required_date_utc': record.required_date_utc,
                         'estimated_start_date': record.estimated_start_date
                     }
+
                     # convert the fields to the format that the API expects
                     api_fields = \
                         self._convert_fields_to_api_format(rollback_fields)
-                    updated_record = \
-                        client.update_ticket_with_retries(record, api_fields)
+
+                    # Attempt rollback of predecessor and fields
+                    client.update_ticket(record, api_fields)
                 except ConnectWiseAPIError as exc:
                     error_message = (
                         "An error occurred while updating " +
-                        "record {record.id} and the predecessor has " +
+                        "record {record.id} and the predecessor, "
+                        "Estimated start date, and due date have " +
                         "been removed from the ticket. You must " +
-                        "re-add the predecessor manually to the ticket."
+                        "re-add these details manually to the ticket."
                     )
                     logger.error("%s: %s", error_message, str(exc))
                     raise ConnectWiseAPIError(error_message)
