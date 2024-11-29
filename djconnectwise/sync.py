@@ -4,6 +4,7 @@ import math
 import os
 from copy import deepcopy
 from decimal import Decimal
+from retrying import retry
 
 from botocore.exceptions import NoCredentialsError
 from dateutil.parser import parse
@@ -2978,7 +2979,7 @@ class TicketSynchronizerMixin:
                         self._convert_fields_to_api_format(rollback_fields)
 
                     # Attempt rollback of predecessor and fields
-                    client.update_ticket(record, api_fields)
+                    client._update_with_retries(record, api_fields)
                 except ConnectWiseAPIError as exc:
                     error_message = (
                         "An error occurred while updating " +
@@ -2994,6 +2995,19 @@ class TicketSynchronizerMixin:
             raise ConnectWiseAPIError(error_message)
 
         return self.update_or_create_instance(updated_record)
+
+    def _update_with_retries(self, client, record, api_fields):
+
+        @retry(
+            stop_max_attempt_number=client.request_settings['max_attempts'],
+            wait_exponential_multiplier=api.RETRY_WAIT_EXPONENTIAL_MULTAPPLIER,
+            wait_exponential_max=api.RETRY_WAIT_EXPONENTIAL_MAX,
+            retry_on_exception=True
+        )
+        def _update():
+            return client.update_ticket(record, api_fields)
+
+        return _update()
 
 
 class ServiceTicketSynchronizer(TicketSynchronizerMixin,
