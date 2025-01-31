@@ -350,6 +350,13 @@ def init_work_roles():
     return synchronizer.sync()
 
 
+def init_project_roles():
+    mocks.project_api_get_project_roles_call(
+        fixtures.API_PROJECT_ROLE)
+    synchronizer = sync.ProjectRoleSynchronizer()
+    return synchronizer.sync()
+
+
 def init_agreements():
     mocks.finance_api_get_agreements_call(
         fixtures.API_AGREEMENT_LIST)

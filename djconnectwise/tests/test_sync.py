@@ -492,6 +492,23 @@ class TestProjectTypeSynchronizer(TestCase, SynchronizerTestMixin):
         self.assertEqual(instance.inactive_flag, json_data['inactiveFlag'])
 
 
+class TestProjectRoleSynchronizer(TestCase, SynchronizerTestMixin):
+    synchronizer_class = sync.ProjectRoleSynchronizer
+    model_class = models.ProjectRoleTracker
+    fixture = fixtures.API_PROJECT_ROLE
+
+    def call_api(self, return_data):
+        return mocks.project_api_get_project_roles_call(return_data)
+
+    def _assert_fields(self, instance, json_data):
+        self.assertEqual(instance.id, json_data['id'])
+        self.assertEqual(instance.name, json_data['name'])
+        self.assertEqual(
+            instance.manager_role_flag, json_data['managerRoleFlag'])
+        self.assertEqual(
+            instance.default_contact_flag, json_data['defaultContactFlag'])
+
+
 class TestConfigurationStatusSynchronizer(TestCase, SynchronizerTestMixin):
     synchronizer_class = sync.ConfigurationStatusSynchronizer
     model_class = models.ConfigurationStatusTracker
@@ -2279,6 +2296,7 @@ class TestProjectTeamMemberSynchronizer(TestCase, SynchronizerTestMixin):
             (mocks.CW_MEMBER_IMAGE_FILENAME, mocks.get_member_avatar()))
         fixture_utils.init_members()
         fixture_utils.init_work_roles()
+        fixture_utils.init_project_roles()
         fixture_utils.init_project_statuses()
         fixture_utils.init_boards()
         fixture_utils.init_projects()
