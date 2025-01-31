@@ -606,6 +606,20 @@ API_PROJECT_TYPES = [
     },
 ]
 
+API_PROJECT_ROLE = [
+    {
+        "id": 1,
+        "name": "Team Member",
+        "managerRoleFlag": False,
+        "defaultContactFlag": False,
+        "_info": {
+            "lastUpdated": "2001-10-30T19:42:29Z",
+            "updatedBy": "MRosario",
+            "project_role_setting_href":
+                "https://example.com/v4_6_release/apis/3.0/project/securityroles/1/settings"
+        }
+    }
+]
 
 API_CONFIGURATION_TYPES = [
     {

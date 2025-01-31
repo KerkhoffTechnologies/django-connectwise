@@ -295,6 +295,14 @@ class TestSyncProjectTypesCommand(AbstractBaseSyncTest, TestCase):
     )
 
 
+class TestSyncProjectRoleCommand(AbstractBaseSyncTest, TestCase):
+    args = (
+        mocks.project_api_get_project_roles_call,
+        fixtures.API_PROJECT_ROLE,
+        'project_role',
+    )
+
+
 class TestSyncProjectsCommand(AbstractBaseSyncTest, TestCase):
     args = (
         mocks.project_api_get_projects_call,
@@ -354,6 +362,7 @@ class TestSyncProjectTeamMemberCommand(AbstractBaseSyncTest, TestCase):
         super().setUp()
         fixture_utils.init_work_roles()
         fixture_utils.init_work_types()
+        fixture_utils.init_project_roles()
         mocks.system_api_get_member_image_by_photo_id_call(
             (mocks.CW_MEMBER_IMAGE_FILENAME, mocks.get_member_avatar()))
         fixture_utils.init_members()
@@ -891,6 +900,7 @@ class TestSyncAllCommand(TestCase):
             TestSyncTypeSubTypeItemAssociationCommand,
             TestSyncAgreementCommand,
             TestSyncProjectTypesCommand,
+            TestSyncProjectRoleCommand,
             TestSyncProjectTeamMemberCommand,
             TestSyncSourceCommand,
             TestSyncCompanyNoteTypeCommand,
@@ -1009,6 +1019,7 @@ class TestSyncAllCommand(TestCase):
             'type_subtype_item_association': models.TypeSubTypeItemAssociation,
             'agreement': models.Agreement,
             'project_type': models.ProjectType,
+            'project_role': models.ProjectRole,
             'project_team_member': models.ProjectTeamMember,
             'source': models.Source,
             'company_note_type': models.CompanyNoteType,

@@ -2233,7 +2233,8 @@ class ProjectTeamMemberSynchronizer(ChildFetchRecordsMixin, Synchronizer):
 
     related_meta = {
         'member': (models.Member, 'member'),
-        'workRole': (models.WorkRole, 'work_role')
+        'workRole': (models.WorkRole, 'work_role'),
+        'projectRole': (models.ProjectRole, 'project_role')
     }
 
     def _assign_field_data(self, instance, json_data):
@@ -3531,6 +3532,22 @@ class WorkRoleSynchronizer(Synchronizer):
 
     def get_page(self, *args, **kwargs):
         return self.client.get_work_roles(*args, **kwargs)
+
+
+class ProjectRoleSynchronizer(Synchronizer):
+    client_class = api.ProjectAPIClient
+    model_class = models.ProjectRoleTracker
+
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data.get('id')
+        instance.name = json_data.get('name')
+        instance.manager_role_flag = json_data.get('managerRoleFlag')
+        instance.default_contact_flag = json_data.get('defaultContactFlag')
+
+        return instance
+
+    def get_page(self, *args, **kwargs):
+        return self.client.get_project_roles(*args, **kwargs)
 
 
 class AgreementSynchronizer(Synchronizer):

@@ -1251,9 +1251,25 @@ class ProjectTeamMember(TimeStampedModel):
     work_role = models.ForeignKey(
         'WorkRole', null=True, on_delete=models.SET_NULL
     )
+    project_role = models.ForeignKey(
+        'ProjectRole', null=True, on_delete=models.SET_NULL
+    )
 
     def __str__(self):
         return '{}/{}'.format(self.id, self.member)
+
+
+class ProjectRole(TimeStampedModel):
+    name = models.CharField(max_length=30)
+    manager_role_flag = models.BooleanField(default=False)
+    default_contact_flag = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ('name', )
+        verbose_name_plural = 'Project Role'
+
+    def __str__(self):
+        return self.name
 
 
 class AvailableProjectManager(models.Manager):
@@ -2815,6 +2831,14 @@ class WorkRoleTracker(WorkRole):
     class Meta:
         proxy = True
         db_table = 'djconnectwise_workrole'
+
+
+class ProjectRoleTracker(ProjectRole):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djconnectwise_projectrole'
 
 
 class AgreementTracker(Agreement):

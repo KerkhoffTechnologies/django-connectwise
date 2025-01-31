@@ -42,6 +42,8 @@ class Command(BaseCommand):
             ('project', sync.ProjectSynchronizer, _('Project')),
             ('project_phase', sync.ProjectPhaseSynchronizer,
              _('Project Phase')),
+            ('project_role', sync.ProjectRoleSynchronizer,
+             _('Project Role')),
             ('territory', sync.TerritorySynchronizer,
              _('Territory')),
             ('company_status', sync.CompanyStatusSynchronizer,
