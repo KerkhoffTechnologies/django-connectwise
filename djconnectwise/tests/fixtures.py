@@ -616,7 +616,7 @@ API_PROJECT_ROLE = [
             "lastUpdated": "2001-10-30T19:42:29Z",
             "updatedBy": "MRosario",
             "project_role_setting_href":
-                "https://api-staging.connectwisedev.com/v4_6_release/apis/3.0//project/securityroles/2/settings"
+                "https://example.com/v4_6_release/apis/3.0/project/securityroles/1/settings"
         }
     }
 ]
