@@ -1266,7 +1266,7 @@ class ProjectRole(TimeStampedModel):
 
     class Meta:
         ordering = ('name', )
-        verbose_name_plural = 'Project Role'
+        verbose_name_plural = 'Project role'
 
     def __str__(self):
         return self.name

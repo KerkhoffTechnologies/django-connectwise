@@ -23,7 +23,7 @@ class Migration(migrations.Migration):
                 ('default_contact_flag', models.BooleanField(default=False)),
             ],
             options={
-                'verbose_name_plural': 'Project Role',
+                'verbose_name_plural': 'Project role',
                 'ordering': ('name',),
             },
         ),
