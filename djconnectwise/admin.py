@@ -197,6 +197,7 @@ class TimeEntryAdmin(admin.ModelAdmin):
 @admin.register(models.Team)
 class TeamAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'board')
+    search_fields = ['id', 'name']
 
 
 @admin.register(models.TicketPriority)
