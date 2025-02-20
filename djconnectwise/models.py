@@ -2281,7 +2281,7 @@ class Type(TimeStampedModel):
         verbose_name_plural = 'Types'
 
     def __str__(self):
-        return "{} - {}".format(self.name, self.board)
+        return "{}/{}".format(self.board, self.name)
 
 
 class SubType(TimeStampedModel):
