@@ -79,8 +79,11 @@ class MemberAdmin(admin.ModelAdmin):
         'identifier', 'full_name', 'office_email', 'title', 'inactive',
         'license_class'
     )
-    search_fields = ('identifier', 'first_name', 'last_name', 'office_email', 'title', )
-    list_filter = ('license_class', 'inactive', 'title', )
+    search_fields = (
+        'identifier', 'first_name', 'last_name', 'office_email',
+        'title',
+    )
+    list_filter = ('license_class', 'inactive', 'title',)
 
     def full_name(self, obj):
         return str(obj)
