@@ -79,8 +79,8 @@ class MemberAdmin(admin.ModelAdmin):
         'identifier', 'full_name', 'office_email', 'title', 'inactive',
         'license_class'
     )
-    search_fields = ('identifier', 'first_name', 'last_name', 'office_email')
-    list_filter = ('license_class', 'inactive', )
+    search_fields = ('identifier', 'first_name', 'last_name', 'office_email', 'title', )
+    list_filter = ('license_class', 'inactive', 'title', )
 
     def full_name(self, obj):
         return str(obj)
@@ -286,7 +286,7 @@ class TicketAdmin(admin.ModelAdmin):
     list_filter = ('record_type',)
     search_fields = \
         ['id', 'summary', 'company__name', 'status__name', 'board__name']
-
+    autocomplete_fields = ['status', 'type', 'team']
     inlines = [
         ScheduleEntryInline
     ]
