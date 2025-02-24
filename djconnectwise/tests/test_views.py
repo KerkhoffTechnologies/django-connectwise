@@ -90,7 +90,6 @@ class TestTicketCallBackView(BaseTestCallBackView):
         fixture_utils.init_members()
         fixture_utils.init_holiday_lists()
         fixture_utils.init_calendars()
-        fixture_utils.init_slas()
         fixture_utils.init_board_statuses()
         fixture_utils.init_priorities()
         fixture_utils.init_locations()

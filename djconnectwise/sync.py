@@ -16,7 +16,8 @@ from django.utils import timezone
 from django.utils.text import normalize_newlines
 from djconnectwise import api
 from djconnectwise import models
-from djconnectwise.utils import DjconnectwiseSettings
+from djconnectwise.utils import DjconnectwiseSettings, \
+    parse_sla_status
 from djconnectwise.api import ConnectWiseAPIError
 from djconnectwise.utils import get_hash, get_filename_extension, \
     generate_thumbnail, generate_filename, remove_thumbnail
@@ -2581,7 +2582,6 @@ class TicketSynchronizerMixin:
         'serviceLocation': (models.Location, 'location'),
         'status': (models.BoardStatus, 'status'),
         'owner': (models.Member, 'owner'),
-        'sla': (models.Sla, 'sla'),
         'type': (models.Type, 'type'),
         'subType': (models.SubType, 'sub_type'),
         'item': (models.Item, 'sub_type_item'),
@@ -2770,7 +2770,7 @@ class TicketSynchronizerMixin:
 
         if instance.entered_date_utc:
             # Parse the date here so that a datetime object is
-            # available for SLA calculation.
+            # available for SLA parsing.
             instance.entered_date_utc = parse(instance.entered_date_utc)
         if instance.last_updated_utc:
             instance.last_updated_utc = parse(instance.last_updated_utc)
@@ -2996,7 +2996,9 @@ class TicketSynchronizerMixin:
             logger.error("%s: %s", error_message, str(e))
             raise ConnectWiseAPIError(error_message)
 
-        return self.update_or_create_instance(updated_record)
+        new_record = self.update_or_create_instance(updated_record)
+
+        return new_record
 
     def _update_with_retries(self, client, record, api_fields):
 
@@ -3031,19 +3033,18 @@ class ServiceTicketSynchronizer(TicketSynchronizerMixin,
         instance.record_type = json_data.get('recordType')
         instance.parent_ticket_id = json_data.get('parentTicketId')
         instance.has_child_ticket = json_data.get('hasChildTicket')
-        instance.respond_mins = json_data.get('respondMinutes')
-        instance.res_plan_mins = json_data.get('resPlanMinutes')
-        instance.resolve_mins = json_data.get('resolveMinutes')
-        instance.date_resolved_utc = json_data.get('dateResolved')
-        instance.date_resplan_utc = json_data.get('dateResplan')
-        instance.date_responded_utc = json_data.get('dateResponded')
 
-        if instance.date_resolved_utc:
-            instance.date_resolved_utc = parse(instance.date_resolved_utc)
-        if instance.date_resplan_utc:
-            instance.date_resplan_utc = parse(instance.date_resplan_utc)
-        if instance.date_responded_utc:
-            instance.date_responded_utc = parse(instance.date_responded_utc)
+        instance_sla = json_data.get('slaStatus')
+        if instance_sla:
+            sla_stage, sla_date = parse_sla_status(
+                instance_sla,
+                instance.entered_date_utc
+            )
+
+            instance.sla_stage = sla_stage
+
+            # If resolved or waiting, this will be None
+            instance.sla_expire_date = sla_date
 
         self.set_relations(instance, json_data)
         return instance
@@ -3202,53 +3203,6 @@ class HolidayListSynchronizer(Synchronizer):
 
     def get_page(self, *args, **kwargs):
         return self.client.get_holiday_lists(*args, **kwargs)
-
-
-class SLAPrioritySynchronizer(ChildFetchRecordsMixin, Synchronizer):
-    client_class = api.ServiceAPIClient
-    model_class = models.SlaPriorityTracker
-    parent_model_class = models.Sla
-
-    related_meta = {
-        'priority': (models.TicketPriority, 'priority'),
-        'sla': (models.Sla, 'sla')
-    }
-
-    def _assign_field_data(self, instance, json_data):
-        instance.id = json_data.get('id')
-        instance.respond_hours = json_data.get('respondHours')
-        instance.plan_within = json_data.get('planWithin')
-        instance.resolution_hours = json_data.get('resolutionHours')
-
-        self.set_relations(instance, json_data)
-        return instance
-
-    def client_call(self, sla_id, *args, **kwargs):
-        return self.client.get_slapriorities(sla_id, *args, **kwargs)
-
-
-class SLASynchronizer(Synchronizer):
-    client_class = api.ServiceAPIClient
-    model_class = models.SlaTracker
-
-    related_meta = {
-        'customCalendar': (models.Calendar, 'calendar'),
-    }
-
-    def _assign_field_data(self, instance, json_data):
-        instance.id = json_data.get('id')
-        instance.name = json_data.get('name')
-        instance.default_flag = json_data.get('defaultFlag')
-        instance.respond_hours = json_data.get('respondHours')
-        instance.plan_within = json_data.get('planWithin')
-        instance.resolution_hours = json_data.get('resolutionHours')
-        instance.based_on = json_data.get('basedOn')
-
-        self.set_relations(instance, json_data)
-        return instance
-
-    def get_page(self, *args, **kwargs):
-        return self.client.get_slas(*args, **kwargs)
 
 
 class OpportunitySynchronizer(UpdateRecordMixin, Synchronizer):

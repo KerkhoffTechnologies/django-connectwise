@@ -391,32 +391,6 @@ class TestSyncBoardsStatusesCommand(AbstractBaseSyncTest, TestCase):
         fixture_utils.init_boards()
 
 
-class TestSyncSLAsCommand(AbstractBaseSyncTest, TestCase):
-    args = (
-        mocks.service_api_get_slas_call,
-        fixtures.API_SERVICE_SLA_LIST,
-        'sla',
-    )
-
-    def setUp(self):
-        fixture_utils.init_holiday_lists()
-        fixture_utils.init_calendars()
-
-
-class TestSyncSLAPrioritiesCommand(AbstractBaseSyncTest, TestCase):
-    args = (
-        mocks.service_api_get_sla_priorities_call,
-        fixtures.API_SERVICE_SLA_PRIORITY_LIST,
-        'sla_priority'
-    )
-
-    def setUp(self):
-        fixture_utils.init_holiday_lists()
-        fixture_utils.init_calendars()
-        fixture_utils.init_priorities()
-        fixture_utils.init_slas()
-
-
 class TestSyncServiceNotesCommand(AbstractBaseSyncTest, TestCase):
     args = (
         mocks.service_api_get_notes_call,
@@ -433,7 +407,6 @@ class TestSyncServiceNotesCommand(AbstractBaseSyncTest, TestCase):
         fixture_utils.init_members()
         fixture_utils.init_holiday_lists()
         fixture_utils.init_calendars()
-        fixture_utils.init_slas()
         fixture_utils.init_locations()
         fixture_utils.init_territories()
         fixture_utils.init_company_statuses()
@@ -548,7 +521,6 @@ class TestSyncTimeEntriesCommand(AbstractBaseSyncTest, TestCase):
         fixture_utils.init_members()
         fixture_utils.init_holiday_lists()
         fixture_utils.init_calendars()
-        fixture_utils.init_slas()
         fixture_utils.init_locations()
         fixture_utils.init_territories()
         fixture_utils.init_company_statuses()
@@ -580,7 +552,6 @@ class TestSyncScheduleEntriesCommand(AbstractBaseSyncTest, TestCase):
         fixture_utils.init_members()
         fixture_utils.init_holiday_lists()
         fixture_utils.init_calendars()
-        fixture_utils.init_slas()
         fixture_utils.init_locations()
         fixture_utils.init_territories()
         fixture_utils.init_company_statuses()
@@ -888,8 +859,6 @@ class TestSyncAllCommand(TestCase):
             TestSyncScheduleStatusesCommand,
             TestSyncScheduleEntriesCommand,
             TestSyncTerritoriesCommand,
-            TestSyncSLAPrioritiesCommand,
-            TestSyncSLAsCommand,
             TestSyncCalendarsCommand,
             TestSyncMyCompanyOtherCommand,
             TestSyncHolidayCommand,
@@ -1007,9 +976,7 @@ class TestSyncAllCommand(TestCase):
             'schedule_type': models.ScheduleType,
             'schedule_status': models.ScheduleStatus,
             'time_entry': models.TimeEntry,
-            'sla': models.Sla,
             'calendar': models.Calendar,
-            'sla_priority': models.SlaPriority,
             'company_other': models.MyCompanyOther,
             'holiday': models.Holiday,
             'holiday_list': models.HolidayList,
@@ -1052,7 +1019,6 @@ class TestSyncAllCommand(TestCase):
                     'team',
                     'service_note',
                     'opportunity_note',
-                    'sla_priority',
                     'holiday',
                     'contact',
                     'contact_communication',
