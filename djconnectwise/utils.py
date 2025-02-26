@@ -130,8 +130,14 @@ def parse_sla_status(sla_status, date_created):
         # Create with string because this makes handling AM/PM much easier.
         # Otherwise, we have to manually convert 12-hour to 24-hour, then
         # handle the case when it crosses midnight, it's a whole thing.
+
         date_string = f"{check_year} {month:02d} {day:02d} {time_str} {am_pm}"
-        check_date = datetime.strptime(date_string, "%Y %m %d %I:%M %p")
+
+        try:
+            check_date = datetime.strptime(date_string, "%Y %m %d %I:%M %p")
+        except ValueError:
+            check_date = datetime.strptime(date_string, "%Y %d %m %I:%M %p")
+
         check_date = check_date.replace(tzinfo=tz_info)
 
         # Skip dates that occur before the ticket was created.
