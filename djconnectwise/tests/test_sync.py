@@ -1346,103 +1346,6 @@ class TestMyCompanyOtherSynchronizer(TestCase, SynchronizerTestMixin):
         self.assertEqual(instance.id, json_data['id'])
 
 
-class TestSLASynchronizer(TestCase, SynchronizerTestMixin):
-    synchronizer_class = sync.SLASynchronizer
-    model_class = models.SlaTracker
-    fixture = fixtures.API_SERVICE_SLA_LIST
-
-    def setUp(self):
-        fixture_utils.init_calendars()
-
-    def call_api(self, return_data):
-        return mocks.service_api_get_slas_call(return_data)
-
-    def test_sync_update(self):
-        self._sync(self.fixture)
-
-        json_data = self.fixture[0]
-
-        instance_id = json_data['id']
-        original = self.model_class.objects.get(id=instance_id)
-
-        name = 'A Different SLA'
-        new_json = deepcopy(json_data)
-        new_json['name'] = name
-        new_json_list = [new_json]
-
-        self._sync(new_json_list)
-
-        changed = self.model_class.objects.get(id=instance_id)
-        self.assertNotEqual(original.name, name)
-        self._assert_fields(changed, new_json)
-
-    def _assert_fields(self, instance, json_data):
-        self.assertEqual(instance.id, json_data['id'])
-        self.assertEqual(instance.name, json_data['name'])
-        self.assertEqual(instance.default_flag, json_data['defaultFlag'])
-        self.assertEqual(instance.respond_hours, json_data['respondHours'])
-        self.assertEqual(instance.plan_within, json_data['planWithin'])
-        self.assertEqual(instance.resolution_hours,
-                         json_data['resolutionHours'])
-
-
-class TestSLAPrioritySynchronizer(TestCase, SynchronizerTestMixin):
-    synchronizer_class = sync.SLAPrioritySynchronizer
-    model_class = models.SlaPriorityTracker
-    fixture = fixtures.API_SERVICE_SLA_PRIORITY_LIST
-
-    def setUp(self):
-        fixture_utils.init_calendars()
-        fixture_utils.init_slas()
-        fixture_utils.init_priorities()
-
-    def call_api(self, return_data):
-        return mocks.service_api_get_sla_priorities_call(return_data)
-
-    def test_sync_update(self):
-        self._sync(self.fixture)
-
-        json_data = self.fixture[0]
-
-        instance_id = json_data['id']
-
-        original = self.model_class.objects.get(id=instance_id)
-
-        respond_hours = 500
-        new_json = deepcopy(json_data)
-        new_json['respondHours'] = respond_hours
-        new_json_list = [new_json]
-
-        self._sync(new_json_list)
-
-        changed = self.model_class.objects.get(id=instance_id)
-        self.assertNotEqual(original.respond_hours, respond_hours)
-        self._assert_fields(changed, new_json)
-
-    def test_sync_skips(self):
-        self._sync(self.fixture)
-
-        respond_hours = 500
-        new_json = deepcopy(self.fixture[0])
-        new_json['respondHours'] = respond_hours
-        new_json_list = [new_json]
-
-        # Sync it twice to be sure that the data will be updated, then ignored
-        self._sync(new_json_list)
-        _, updated_count, skipped_count, _ = \
-            self._sync_with_results(new_json_list)
-
-        self.assertEqual(skipped_count, 1)
-        self.assertEqual(updated_count, 0)
-
-    def _assert_fields(self, instance, json_data):
-        self.assertEqual(instance.id, json_data['id'])
-        self.assertEqual(instance.respond_hours, json_data['respondHours'])
-        self.assertEqual(instance.plan_within, json_data['planWithin'])
-        self.assertEqual(instance.resolution_hours,
-                         json_data['resolutionHours'])
-
-
 class TestTicketSynchronizerMixin(AssertSyncMixin):
     model_class = models.TicketTracker
 
@@ -1460,7 +1363,6 @@ class TestTicketSynchronizerMixin(AssertSyncMixin):
 
         fixture_utils.init_holiday_lists()
         fixture_utils.init_calendars()
-        fixture_utils.init_slas()
         fixture_utils.init_board_statuses()
         fixture_utils.init_teams()
         fixture_utils.init_types()

@@ -338,30 +338,6 @@ class SalesProbabilityAdmin(admin.ModelAdmin):
     list_display = ('id', 'probability',)
 
 
-class SlaPriorityInline(admin.StackedInline):
-    model = models.SlaPriority
-
-
-@admin.register(models.Sla)
-class SlaAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'default_flag', 'respond_hours',
-                    'plan_within', 'resolution_hours')
-    search_fields = ['name', 'respond_hours',
-                     'plan_within', 'resolution_hours']
-    inlines = [
-        SlaPriorityInline
-    ]
-
-
-@admin.register(models.SlaPriority)
-class SlaPriorityAdmin(admin.ModelAdmin):
-    list_display = ('id', 'sla', 'priority', 'respond_hours',
-                    'plan_within', 'resolution_hours')
-    list_filter = ['sla', 'priority']
-    search_fields = ['sla', 'priority', 'respond_hours',
-                     'plan_within', 'resolution_hours']
-
-
 @admin.register(models.Calendar)
 class CalendarAdmin(admin.ModelAdmin):
     list_display = ('id', 'name',)

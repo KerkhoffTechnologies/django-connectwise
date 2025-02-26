@@ -1,6 +1,7 @@
-import hashlib
 import re
+import hashlib
 from io import BytesIO
+from datetime import datetime, timedelta, timezone
 
 from PIL import Image, ImageOps
 from django.conf import settings
@@ -10,6 +11,9 @@ from django.core.files.storage import default_storage
 _underscorer1 = re.compile(r'(.)([A-Z][a-z]+)')
 _underscorer2 = re.compile(r'([a-z0-9])([A-Z])')
 FILENAME_EXTENSION_RE = re.compile(r'\.([\w]*)$')
+
+# Any more than this, the days of the week will likely have all repeated.
+YEARS_TO_CHECK = 6
 
 
 def camel_to_snake(s):
@@ -84,6 +88,67 @@ def generate_image_url(company_id, guid):
 
     return settings.CONNECTWISE_SERVER_URL + \
         '/v4_6_release/api/inlineimages/' + company_id + '/' + guid
+
+
+def parse_sla_status(sla_status, date_created):
+    """
+    Parse the SLA status string from ConnectWise into a datetime object and
+    SLA stage name.
+
+    :param sla_status: The SLA status string from ConnectWise.
+    :param date_created: The creation date of the ticket, UTC
+
+    :return: A tuple containing the SLA stage name and the datetime object,
+             or the SLA stage and None if the SLA status is Waiting or
+             Resolved.
+    """
+
+    # Regex matches day-of-week, month/day, time, and timezone offset.
+    # Example SLA data from CW: "Respond by Mon 01/27 4:00 PM UTC-08"
+    pattern = (r'\w+\sby\s(\w{3})\s(\d{2})/(\d{2})\s(\d{1,2}:\d{2})\s'
+               r'(AM|PM)\sUTC([+-]\d{1,2})')
+    match = re.search(pattern, sla_status)
+
+    if not match:
+        # There is no date, so it is Waiting or Resolved. Just return the
+        # status.
+        return sla_status.strip(), None
+
+    day_of_week, month, day, time_str, am_pm, tz_offset_str = match.groups()
+    month = int(month)
+    day = int(day)
+    tz_offset_hours = int(tz_offset_str)
+    tz_info = timezone(timedelta(hours=tz_offset_hours))
+
+    utc_date = None
+
+    # We'll iterate over several years, starting with date_created.year (as
+    # the SLA can't be before the ticket was created).
+    for check_year in range(
+            date_created.year, date_created.year + YEARS_TO_CHECK):
+
+        # Create with string because this makes handling AM/PM much easier.
+        # Otherwise, we have to manually convert 12-hour to 24-hour, then
+        # handle the case when it crosses midnight, it's a whole thing.
+        date_string = f"{check_year} {month:02d} {day:02d} {time_str} {am_pm}"
+        check_date = datetime.strptime(date_string, "%Y %m %d %I:%M %p")
+        check_date = check_date.replace(tzinfo=tz_info)
+
+        # Skip dates that occur before the ticket was created.
+        if check_date < date_created:
+            continue
+
+        # Check if the date's day-of-week matches the expected day.
+        if check_date.strftime("%a") == day_of_week:
+            # Convert to UTC
+            utc_date = check_date.astimezone(timezone.utc)
+            break
+
+    # If we reach this point, we couldn't find a valid date. Just return the
+    # stage with utc date as None I guess. There isn't really much we can do,
+    # and if you have a 6 year old SLA, that's a you problem.
+    stage = sla_status.split()[0].lower()
+    return stage, utc_date
 
 
 class DjconnectwiseSettings:

@@ -314,16 +314,6 @@ def service_api_get_notes_call(return_value):
     return create_mock_call(method_name, return_value)
 
 
-def service_api_get_slas_call(return_value):
-    method_name = 'djconnectwise.api.ServiceAPIClient.get_slas'
-    return create_mock_call(method_name, return_value)
-
-
-def service_api_get_sla_priorities_call(return_value):
-    method_name = 'djconnectwise.api.ServiceAPIClient.get_slapriorities'
-    return create_mock_call(method_name, return_value)
-
-
 def service_api_get_types_call(return_value):
     method_name = 'djconnectwise.api.ServiceAPIClient.get_types'
     return create_mock_call(method_name, return_value)

@@ -1229,7 +1229,6 @@ class ServiceAPIClient(TicketAPIMixin, ConnectWiseAPIClient):
     ENDPOINT_BOARDS = 'boards'
     ENDPOINT_PRIORITIES = 'priorities'
     ENDPOINT_LOCATIONS = 'locations'
-    ENDPOINT_SLAS = 'SLAs'
     ENDPOINT_SOURCES = 'sources'
 
     def get_notes(self, ticket_id, *args, **kwargs):
@@ -1314,21 +1313,12 @@ class ServiceAPIClient(TicketAPIMixin, ConnectWiseAPIClient):
         return self.fetch_resource(self.ENDPOINT_PRIORITIES, should_page=True,
                                    *args, **kwargs)
 
-    def get_slapriorities(self, sla_id, *args, **kwargs):
-        endpoint_url = '{}/{}/priorities'.format(self.ENDPOINT_SLAS, sla_id)
-        return self.fetch_resource(endpoint_url, should_page=True,
-                                   *args, **kwargs)
-
     def get_teams(self, board_id, *args, **kwargs):
         endpoint = '{}/{}/teams/'.format(self.ENDPOINT_BOARDS, board_id)
         return self.fetch_resource(endpoint, should_page=True, *args, **kwargs)
 
     def get_locations(self, *args, **kwargs):
         return self.fetch_resource(self.ENDPOINT_LOCATIONS, should_page=True,
-                                   *args, **kwargs)
-
-    def get_slas(self, *args, **kwargs):
-        return self.fetch_resource(self.ENDPOINT_SLAS, should_page=True,
                                    *args, **kwargs)
 
     def get_types(self, board_id, *args, **kwargs):
