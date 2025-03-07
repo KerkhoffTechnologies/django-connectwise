@@ -103,6 +103,15 @@ def parse_sla_status(sla_status, date_created):
              Resolved.
     """
 
+    def _parse_check_date(check_date_string):
+        for fmt in ['%Y %m %d %I:%M %p', '%Y %d %m %I:%M %p']:
+            try:
+                return datetime.strptime(check_date_string, fmt)
+            except ValueError as e:
+                if "day is out of range for month" in str(e):
+                    # Likely Leap day on a non-leap year, return None
+                    return None
+
     # Regex matches day-of-week, month/day, time, and timezone offset.
     # Example SLA data from CW: "Respond by Mon 01/27 4:00 PM UTC-08"
     pattern = (r'\w+\sby\s(\w{3})\s(\d{2})/(\d{2})\s(\d{1,2}:\d{2})\s'
@@ -133,15 +142,14 @@ def parse_sla_status(sla_status, date_created):
 
         date_string = f"{check_year} {month:02d} {day:02d} {time_str} {am_pm}"
 
-        try:
-            check_date = datetime.strptime(date_string, "%Y %m %d %I:%M %p")
-        except ValueError:
-            check_date = datetime.strptime(date_string, "%Y %d %m %I:%M %p")
+        # Nested function to make this easier to read.
+        check_date = _parse_check_date(date_string)
 
         check_date = check_date.replace(tzinfo=tz_info)
 
-        # Skip dates that occur before the ticket was created.
-        if check_date < date_created:
+        # Skip dates that occur before the ticket was created, or leap
+        # days that don't exist in the year.
+        if not check_date or check_date < date_created:
             continue
 
         # Check if the date's day-of-week matches the expected day.
