@@ -127,8 +127,6 @@ def parse_sla_status(sla_status, date_created):
 
         return ambiguous_date
 
-
-
     # Regex matches day-of-week, month/day, time, and timezone offset.
     # Example SLA data from CW: "Respond by Mon 01/27 4:00 PM UTC-08"
     pattern = (r'\w+\sby\s(\w{3})\s(\d{2})/(\d{2})\s(\d{1,2}:\d{2})\s'
