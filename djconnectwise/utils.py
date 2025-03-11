@@ -139,8 +139,6 @@ def parse_sla_status(sla_status, date_created):
             ambiguous_date = check_date.replace(
                 day=ambiguous_date.month, month=ambiguous_date.day)
 
-
-
         return ambiguous_date
 
     # Regex matches day-of-week, month/day, time, and timezone offset.
