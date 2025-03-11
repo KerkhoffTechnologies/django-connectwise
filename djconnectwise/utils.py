@@ -114,16 +114,32 @@ def parse_sla_status(sla_status, date_created):
                     # Likely Leap day on a non-leap year, return None
                     return None
 
-    def _check_ambiguity(ambiguous_date):
+    def _check_ambiguity(ambiguous_date, dow):
+        if ambiguous_date.month > 12 or ambiguous_date.day > 12:
+            # Can't be ambiguous, return
+            return ambiguous_date
+
         # Dates can be ambiguous like 3/5 or 5/3, but SLAs can't be further
         # than ~40 days out, so reverse the date if the check date is over
         # 40 days from today's date
         today_utc = datetime.now(timezone.utc)
+        days_delta = (ambiguous_date - today_utc).days
 
         # If the check_date is more than 40 days from today, reverse the date
-        if abs((check_date - today_utc).days) > 40:
-            ambiguous_date = \
-                check_date.replace(day=check_date.month, month=check_date.day)
+        if days_delta > SLA_MAX_DAYS:
+            ambiguous_date = check_date.replace(
+                day=ambiguous_date.month, month=ambiguous_date.day)
+
+        elif ambiguous_date.strftime("%a") != dow:
+            # Check if the date's day-of-week matches the expected day.
+            # If not, reverse the date. This handles cases if a ticket
+            # DOES have an expired sla, and it expired several months
+            # earlier.
+
+            ambiguous_date = check_date.replace(
+                day=ambiguous_date.month, month=ambiguous_date.day)
+
+
 
         return ambiguous_date
 
@@ -163,7 +179,7 @@ def parse_sla_status(sla_status, date_created):
         check_date = check_date.replace(tzinfo=tz_info)
 
         # Dates can be ambiguous like 3/5 or 5/3, handle it
-        check_date = _check_ambiguity(check_date)
+        check_date = _check_ambiguity(check_date, day_of_week)
 
         # Skip dates that occur before the ticket was created, or leap
         # days that don't exist in the year.
