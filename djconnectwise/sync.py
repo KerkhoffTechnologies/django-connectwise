@@ -18,7 +18,8 @@ from djconnectwise import api
 from djconnectwise import models
 from djconnectwise.utils import DjconnectwiseSettings, \
     parse_sla_status
-from djconnectwise.api import ConnectWiseAPIError
+from djconnectwise.api import ConnectWiseAPIError, \
+    ConnectWiseSecurityPermissionsException
 from djconnectwise.utils import get_hash, get_filename_extension, \
     generate_thumbnail, generate_filename, remove_thumbnail
 
@@ -617,11 +618,16 @@ class ChildFetchRecordsMixin:
     def fetch_records(self, results, conditions=None):
 
         for object_id in self.parent_object_ids:
-            self.get_total_pages(
-                results,
-                conditions=conditions,
-                object_id=object_id,
-            )
+            try:
+                self.get_total_pages(
+                    results,
+                    conditions=conditions,
+                    object_id=object_id,
+                )
+            except ConnectWiseSecurityPermissionsException:
+                # Pass boards TopLeft may not have access to so the
+                #  whole sync doesn't fail
+                continue
 
         return results
 
@@ -2207,6 +2213,8 @@ class ProjectPhaseSynchronizer(ChildFetchRecordsMixin, Synchronizer):
 
         self.set_relations(instance, json_data)
         return instance
+
+
 
     def client_call(self, project_id, *args, **kwargs):
         return self.client.get_project_phases(project_id, *args, **kwargs)
