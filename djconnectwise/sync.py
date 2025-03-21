@@ -2215,7 +2215,6 @@ class ProjectPhaseSynchronizer(ChildFetchRecordsMixin, Synchronizer):
         return instance
 
 
-
     def client_call(self, project_id, *args, **kwargs):
         return self.client.get_project_phases(project_id, *args, **kwargs)
 
