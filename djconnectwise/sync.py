@@ -2214,7 +2214,6 @@ class ProjectPhaseSynchronizer(ChildFetchRecordsMixin, Synchronizer):
         self.set_relations(instance, json_data)
         return instance
 
-
     def client_call(self, project_id, *args, **kwargs):
         return self.client.get_project_phases(project_id, *args, **kwargs)
 
