@@ -30,14 +30,14 @@ jobs:
           python -m pip install --upgrade pip
           pip install --upgrade -r requirements.txt
           pip install --upgrade -r requirements_test.txt
-          python setup.py install
+          python -m pip install .
       - name: Run tests
         run: |
           flake8 .
           python setup.py test
       - name: Create source distribution
         run: |
-          python setup.py sdist
+          python python -m build
       - name: Publish package
         uses: pypa/gh-action-pypi-publish@81e9d935c883d0b210363ab89cf05f3894778450
         with:
