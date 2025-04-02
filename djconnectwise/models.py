@@ -1090,7 +1090,7 @@ class Project(UpdateConnectWiseMixin, TimeStampedModel):
     estimated_start = models.DateField(blank=True, null=True)
     estimated_end = models.DateField(blank=True, null=True)
     percent_complete = models.DecimalField(
-        blank=True, null=True, decimal_places=2, max_digits=3)
+        blank=True, null=True, decimal_places=2, max_digits=5)
     scheduled_start = models.DateField(blank=True, null=True)
     scheduled_end = models.DateField(blank=True, null=True)
     description = models.TextField(blank=True, null=True)
