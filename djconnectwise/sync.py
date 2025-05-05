@@ -1204,7 +1204,31 @@ class CompanySynchronizer(M2MAssignmentMixin, Synchronizer):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.api_conditions = ['deletedFlag=False']
+        self.api_conditions = [
+            'deletedFlag=False',
+        ]
+
+        request_settings = DjconnectwiseSettings().get_settings()
+        company_exclude_status_ids = request_settings.get(
+            'company_exclude_status_ids'
+        ).split(',')
+        if company_exclude_status_ids:
+            try:
+                integer_stripped_ids = [
+                    str(int(i.strip())) for i in company_exclude_status_ids
+                ]
+                self.api_conditions.append(
+                    'status/id not in ({})'.format(
+                        ','.join(integer_stripped_ids)
+                    )
+                )
+            except ValueError:
+                logger.warning(
+                    'Invalid status ID(s) in company_exclude_status_ids:'
+                    ' {}'.format(
+                        company_exclude_status_ids
+                    )
+                )
 
     def _assign_field_data(self, company, company_json):
         """
