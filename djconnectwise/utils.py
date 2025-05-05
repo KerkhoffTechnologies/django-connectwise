@@ -213,6 +213,7 @@ class DjconnectwiseSettings:
             'sync_contact_communications': True,
             'keep_closed_ticket_days': 0,
             'keep_closed_status_board_ids': 0,
+            'company_exclude_status_ids': '',
             'send_naive_datetimes': True,
         }
 
