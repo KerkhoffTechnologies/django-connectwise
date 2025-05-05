@@ -1209,10 +1209,14 @@ class CompanySynchronizer(M2MAssignmentMixin, Synchronizer):
         ]
 
         request_settings = DjconnectwiseSettings().get_settings()
-        company_exclude_status_ids = request_settings.get('company_exclude_status_ids').split(',')
+        company_exclude_status_ids = request_settings.get(
+            'company_exclude_status_ids'
+        ).split(',')
         if company_exclude_status_ids:
             try:
-                integer_stripped_ids = [str(int(i.strip())) for i in company_exclude_status_ids]
+                integer_stripped_ids = [
+                    str(int(i.strip())) for i in company_exclude_status_ids
+                ]
                 self.api_conditions.append(
                     'status/id not in ({})'.format(
                         ','.join(integer_stripped_ids)
@@ -1220,7 +1224,8 @@ class CompanySynchronizer(M2MAssignmentMixin, Synchronizer):
                 )
             except ValueError:
                 logger.warning(
-                    'Invalid status ID(s) in company_exclude_status_ids: {}'.format(
+                    'Invalid status ID(s) in company_exclude_status_ids:'
+                    ' {}'.format(
                         company_exclude_status_ids
                     )
                 )
