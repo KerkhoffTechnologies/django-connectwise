@@ -882,9 +882,9 @@ class TicketTaskSynchronizer:
         ticket_qs = self._get_queryset()
 
         for ticket in ticket_qs:
-            self.sync_tasks(ticket)
+            self.sync_items(ticket)
 
-    def sync_tasks(self, instance):
+    def sync_items(self, instance):
         tasks = self.get(parent=instance.id)
 
         # When the PSA goes crazy, stay within the bounds of a small int.
@@ -2752,7 +2752,7 @@ class TicketSynchronizerMixin:
             activity_sync.api_conditions = ['ticket/id={}'.format(instance_id)]
             sync_classes.append((activity_sync, Q(ticket=instance)))
 
-        self.task_synchronizer_class().sync_tasks(instance)
+        self.task_synchronizer_class().sync_items(instance)
 
         self.sync_children(*sync_classes)
 
