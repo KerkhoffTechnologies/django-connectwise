@@ -1991,7 +1991,7 @@ class TestSyncTicketTasks(TestCase):
         self.assertIsNone(self.ticket.tasks_completed)
 
         synchronizer = sync.ServiceTicketTaskSynchronizer()
-        synchronizer.sync_tasks(self.ticket)
+        synchronizer.sync_items(self.ticket)
 
         self.assertEqual(3, self.ticket.tasks_total)
         self.assertEqual(1, self.ticket.tasks_completed)
