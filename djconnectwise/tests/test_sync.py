@@ -1424,7 +1424,7 @@ class TestTicketSynchronizerMixin(AssertSyncMixin):
         mock_call, _patch = mocks.create_mock_call(method_name, fixture_list)
 
         _, _task_patch = mocks.create_mock_call(
-            "djconnectwise.sync.TicketTaskSynchronizer.sync_tasks",
+            "djconnectwise.sync.TicketTaskSynchronizer.sync_items",
             None
         )
 
@@ -1548,7 +1548,7 @@ class TestTicketSynchronizerMixin(AssertSyncMixin):
         mocks.service_api_get_notes_call(fixtures.API_SERVICE_NOTE_LIST)
         mocks.sales_api_get_activities_call(fixtures.API_SALES_ACTIVITIES)
         _, _task_patch = mocks.create_mock_call(
-            "djconnectwise.sync.TicketTaskSynchronizer.sync_tasks",
+            "djconnectwise.sync.TicketTaskSynchronizer.sync_items",
             None
         )
 
@@ -1694,7 +1694,7 @@ class TestServiceTicketSynchronizer(TestTicketSynchronizerMixin, TestCase):
         mocks.sales_api_get_activities_call(fixtures.API_SALES_ACTIVITIES)
 
         _, _task_patch = mocks.create_mock_call(
-            "djconnectwise.sync.TicketTaskSynchronizer.sync_tasks",
+            "djconnectwise.sync.TicketTaskSynchronizer.sync_items",
             None
         )
 
@@ -1977,7 +1977,7 @@ class TestSyncTicketTasks(TestCase):
     def tearDown(self):
         self.ticket.delete()
 
-    def test_sync_tasks(self):
+    def test_sync_items(self):
         mocks.create_mock_call(
             "djconnectwise.sync.ServiceTicketTaskSynchronizer.get",
             [
