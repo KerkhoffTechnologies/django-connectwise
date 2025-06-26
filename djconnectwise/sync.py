@@ -2994,8 +2994,7 @@ class TicketSynchronizerMixin:
             api_fields = self._convert_fields_to_api_format(changed_fields)
             updated_record = client.update_ticket(record, api_fields)
         except ConnectWiseAPIError as e:
-            error_message = \
-                f"Failed to update record {record.id} with changed fields."
+            error_message = ''
 
             if predecessor_removed:
                 try:
@@ -3023,8 +3022,8 @@ class TicketSynchronizerMixin:
                     logger.error("%s: %s", error_message, str(exc))
                     raise ConnectWiseAPIError(error_message)
 
-            logger.error("%s: %s", error_message, str(e))
-            raise ConnectWiseAPIError(error_message)
+            logger.error(str(e))
+            raise ConnectWiseAPIError(str(e))
 
         new_record = self.update_or_create_instance(updated_record)
 
