@@ -860,6 +860,10 @@ class TimeEntry(UpdateRecordMixin, models.Model):
     objects = models.Manager()
     non_internal_objects = NonInternalTimeEntryManager()
 
+    @property
+    def note(self):
+        return self.notes
+
     def get_entered_time(self):
         if self.time_end:
             entered_time = self.time_end
@@ -886,9 +890,20 @@ class TimeEntry(UpdateRecordMixin, models.Model):
 
         return time_start
 
-    @property
-    def note(self):
-        return self.notes
+    def get_time_end(self):
+        return self.time_end
+
+    def get_time_actual(self):
+        return self.actual_hours
+
+    def get_sort_date(self):
+        """
+        Return the appropriate date field of the given item. Used for sorting
+        service notes and time entries together.
+        """
+        date_field = self.time_end if self.time_end else self.time_start
+
+        return date_field
 
     def update_cw(self, **kwargs):
 
@@ -1646,15 +1661,38 @@ class ServiceNote(UpdateRecordMixin, TimeStampedModel):
         ordering = ('-date_created', 'id')
         verbose_name_plural = 'Notes'
 
+    @property
+    def note(self):
+        return self.text
+
     def __str__(self):
         return 'Ticket {} note: {}'.format(self.ticket, str(self.date_created))
 
     def get_entered_time(self):
         return self.date_created
 
-    @property
-    def note(self):
-        return self.text
+    def get_time_start(self):
+        return self.date_created
+
+    def get_time_end(self):
+        return None
+
+    def get_time_actual(self):
+        return None
+
+    def get_sort_date(self):
+        """
+        Return the appropriate date field of the given item. Used for sorting
+        service notes and time entries together.
+        """
+        date_field = self.date_created
+
+        # In the unlikely event of one of the date fields being null simply
+        # use the time when the item was inserted in database.
+        if not date_field:
+            date_field = self.created
+
+        return date_field
 
     def update_cw(self, **kwargs):
         api_class = self.ticket.api_class
