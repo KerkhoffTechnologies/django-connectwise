@@ -650,6 +650,7 @@ class ChildFetchRecordsMixin:
 
 class CreateRecordMixin:
 
+
     def create(self, fields, **kwargs):
         """
         Send POST request to ConnectWise to create a record.
@@ -691,7 +692,9 @@ class UpdateRecordMixin:
         raise NotImplementedError
 
 
-class ServiceNoteSynchronizer(ChildFetchRecordsMixin, CallbackSyncMixin,
+class ServiceNoteSynchronizer(ChildFetchRecordsMixin,
+                              CreateRecordMixin,
+                              CallbackSyncMixin,
                               Synchronizer):
     client_class = api.ServiceAPIClient
     model_class = models.ServiceNoteTracker
@@ -748,6 +751,7 @@ class ServiceNoteSynchronizer(ChildFetchRecordsMixin, CallbackSyncMixin,
         Send POST request to ConnectWise to create a new note and then
         create it in the local database from the response
         """
+        # TODO This is note creation, do not use.
 
         target_data = {}
 
@@ -766,6 +770,19 @@ class ServiceNoteSynchronizer(ChildFetchRecordsMixin, CallbackSyncMixin,
         instance = service_client.post_note(target_data, **kwargs)
 
         return self.update_or_create_instance(instance)
+
+    def create_record(self, client, api_fields):
+        # For handling legacy note API. DO NOT REFERENCE FOR DJPSA
+        target_data = {}
+        target_data['id'] = api_fields.pop('id', None)
+        target_data['type'] = api_fields.pop('type', None)
+
+        return client.post_note(target_data, **api_fields)
+
+    def _translate_fields_to_api_format(self, api_fields):
+        # Note client does this itself already, legacy reasons, pass
+        return api_fields
+
 
 
 ###################################################################
@@ -1971,7 +1988,9 @@ class TerritorySynchronizer(Synchronizer):
 
 
 class TimeEntrySynchronizer(BatchConditionMixin,
-                            CallbackSyncMixin, Synchronizer):
+                            CreateRecordMixin,
+                            CallbackSyncMixin,
+                            Synchronizer):
     client_class = api.TimeAPIClient
     model_class = models.TimeEntryTracker
     batch_condition_list = []
@@ -2079,6 +2098,7 @@ class TimeEntrySynchronizer(BatchConditionMixin,
         Send POST request to ConnectWise to create a new entry and then
         create it in the local database from the response
         """
+        # TODO This is legacy time entry creation, do not use.
         target_data = {}
         if isinstance(target, models.Ticket):
             target_data['id'] = target.id
@@ -2103,6 +2123,25 @@ class TimeEntrySynchronizer(BatchConditionMixin,
         )
         instance = time_client.post_time_entry(target_data, **kwargs)
         return self.update_or_create_instance(instance)
+
+    def create_record(self, client, api_fields):
+        # For handling legacy time entry API. DO NOT REFERENCE FOR DJPSA
+        target_data = {}
+        target_data['id'] = api_fields.pop('id', None)
+        target_data['type'] = api_fields.pop('type', None)
+
+        if target_data['type'] == models.Ticket.PROJECT_ISSUE:
+            target_data['type'] = models.Ticket.PROJECT_TICKET
+
+        for key, value in api_fields.items():
+            if isinstance(value, Decimal):
+                api_fields[key] = str(value)
+
+        return client.post_time_entry(target_data, **api_fields)
+
+    def _translate_fields_to_api_format(self, api_fields):
+        # Time entry client does this itself already, legacy reasons, pass
+        return api_fields
 
 
 class LocationSynchronizer(Synchronizer):
