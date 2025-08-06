@@ -751,7 +751,7 @@ class ServiceNoteSynchronizer(ChildFetchRecordsMixin,
         Send POST request to ConnectWise to create a new note and then
         create it in the local database from the response
         """
-        # TODO This is note creation, do not use.
+        # TODO This is legacy note creation, do not use.
 
         target_data = {}
 
