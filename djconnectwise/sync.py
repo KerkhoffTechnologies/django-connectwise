@@ -649,8 +649,6 @@ class ChildFetchRecordsMixin:
 
 
 class CreateRecordMixin:
-
-
     def create(self, fields, **kwargs):
         """
         Send POST request to ConnectWise to create a record.
@@ -784,12 +782,9 @@ class ServiceNoteSynchronizer(ChildFetchRecordsMixin,
         return api_fields
 
 
-
 ###################################################################
 # Dummy Synchronizers                                             #
 ###################################################################
-
-
 class DummySynchronizer:
     # Use FIELDS to list fields we submit to create or update a record, used
     # as a kind of validation method and way to link the snake_case field
