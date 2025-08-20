@@ -3191,10 +3191,21 @@ class ProjectTicketSynchronizer(TicketSynchronizerMixin,
     def _instance_ids(self, filter_params=None):
         tickets_qset = self.filter_by_record_type()
 
-        tickets_qset = tickets_qset.filter(
-            Q(project__isnull=True) |
-            Q(project__status__closed_flag=True)
-        )
+        settings = DjconnectwiseSettings().get_settings()
+        keep_closed = settings.get('keep_closed_ticket_days')
+
+        if keep_closed:
+            cutoff = timezone.now() - timezone.timedelta(days=keep_closed)
+            tickets_qset = tickets_qset.filter(
+                Q(project__isnull=True) |
+                (
+                    Q(project__status__closed_flag=True) &
+                    (
+                        Q(project__modified__lt=cutoff) |
+                        Q(project__modified__isnull=True)
+                    )
+                )
+            )
 
         if not filter_params:
             ids = tickets_qset.values_list(self.lookup_key, flat=True)
