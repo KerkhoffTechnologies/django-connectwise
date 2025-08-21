@@ -218,20 +218,7 @@ class Synchronizer:
                 else:
                     results.skipped_count += 1
 
-                # Only add to synced_ids if:
-                # 1. This is not a ticket, OR
-                # 2. It's a project ticket/issue with an open project
-                # This prevents closed project tickets from being considered "synced"
-                # which we delete in prune_stale_records.
-                if (
-                    self.model_class is not models.TicketTracker
-                    or (
-                        instance.record_type in (models.Ticket.PROJECT_TICKET, models.Ticket.PROJECT_ISSUE)
-                        and instance.project
-                        and not (instance.project.status and instance.project.status.closed_flag)
-                    )
-                ):
-                    results.synced_ids.add(record["id"])
+                results.synced_ids.add(record["id"])
 
             except (IntegrityError, InvalidObjectException) as e:
                 logger.warning('{}'.format(e))
@@ -3162,20 +3149,11 @@ class ProjectTicketSynchronizer(TicketSynchronizerMixin,
 
         self.set_relations(instance, json_data)
 
-        # Check if project is None or has closed status - skip if so
+        # Check if project exists - skip if not
         if instance.project is None:
             raise InvalidObjectException(
                 'Project ticket {} has no project - skipping.'.format(
                     instance.id
-                )
-            )
-
-        # Check if the project has a closed status
-        if (instance.project.status and
-            instance.project.status.closed_flag):
-            raise InvalidObjectException(
-                'Project ticket {} belongs to closed project {} - skipping.'.format(
-                    instance.id, instance.project.id
                 )
             )
 
@@ -3190,22 +3168,6 @@ class ProjectTicketSynchronizer(TicketSynchronizerMixin,
 
     def _instance_ids(self, filter_params=None):
         tickets_qset = self.filter_by_record_type()
-
-        settings = DjconnectwiseSettings().get_settings()
-        keep_closed = settings.get('keep_closed_ticket_days')
-
-        if keep_closed:
-            cutoff = timezone.now() - timezone.timedelta(days=keep_closed)
-            tickets_qset = tickets_qset.filter(
-                Q(project__isnull=True) |
-                (
-                    Q(project__status__closed_flag=True) &
-                    (
-                        Q(project__modified__lt=cutoff) |
-                        Q(project__modified__isnull=True)
-                    )
-                )
-            )
 
         if not filter_params:
             ids = tickets_qset.values_list(self.lookup_key, flat=True)
