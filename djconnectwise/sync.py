@@ -3149,13 +3149,8 @@ class ProjectTicketSynchronizer(TicketSynchronizerMixin,
 
         self.set_relations(instance, json_data)
 
-        # Check if project exists - skip if not
         if instance.project is None:
-            raise InvalidObjectException(
-                'Project ticket {} has no project - skipping.'.format(
-                    instance.id
-                )
-            )
+            return None
 
         return instance
 
@@ -3165,22 +3160,6 @@ class ProjectTicketSynchronizer(TicketSynchronizerMixin,
         ]
         return self.model_class.objects.filter(
             record_type__in=project_record_types)
-
-    def _instance_ids(self, filter_params=None):
-        tickets_qset = self.filter_by_record_type()
-
-        if not filter_params:
-            ids = tickets_qset.values_list(self.lookup_key, flat=True)
-        else:
-            ids = tickets_qset.filter(filter_params).values_list(
-                self.lookup_key, flat=True
-            )
-        return set(ids)
-
-    def get_delete_qset(self, stale_ids):
-        tickets = self.filter_by_record_type()
-        return tickets.filter(pk__in=stale_ids)
-
 
 class CalendarSynchronizer(Synchronizer):
     client_class = api.ScheduleAPIClient
