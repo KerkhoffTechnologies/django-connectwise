@@ -217,11 +217,10 @@ class Synchronizer:
                     results.updated_count += 1
                 else:
                     results.skipped_count += 1
-
-                results.synced_ids.add(record["id"])
-
             except (IntegrityError, InvalidObjectException) as e:
                 logger.warning('{}'.format(e))
+
+            results.synced_ids.add(record['id'])
 
         return results
 
@@ -285,11 +284,13 @@ class Synchronizer:
             result = CREATED
 
         try:
-            self._assign_field_data(instance, api_instance)
+            record = self._assign_field_data(instance, api_instance)
 
             # This will return the created instance, the updated instance, or
             # if the instance is skipped an unsaved copy of the instance.
-            if result == CREATED:
+            if record is None:
+                result = SKIPPED
+            elif result == CREATED:
                 if self.model_class is models.TicketTracker:
                     instance.save(force_insert=True)
                 else:
@@ -403,6 +404,7 @@ class Synchronizer:
         # Set of IDs of all records prior to sync,
         # to find stale records for deletion.
         initial_ids = self._instance_ids() if self.full else []
+
         results = self.get(results, )
 
         if self.full:
@@ -3160,6 +3162,7 @@ class ProjectTicketSynchronizer(TicketSynchronizerMixin,
         ]
         return self.model_class.objects.filter(
             record_type__in=project_record_types)
+
 
 class CalendarSynchronizer(Synchronizer):
     client_class = api.ScheduleAPIClient
