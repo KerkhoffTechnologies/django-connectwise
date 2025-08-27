@@ -287,7 +287,7 @@ class Synchronizer:
             result = CREATED
 
         try:
-            record = self._assign_field_data(instance, api_instance)
+            self._assign_field_data(instance, api_instance)
 
             # This will return the created instance, the updated instance, or
             # if the instance is skipped an unsaved copy of the instance.
