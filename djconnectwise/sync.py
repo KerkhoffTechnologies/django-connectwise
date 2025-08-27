@@ -270,6 +270,9 @@ class Synchronizer:
     def _is_instance_changed(self, instance):
         return instance.tracker.changed()
 
+    def _is_instance_valid(self, instance):
+        return instance
+
     def update_or_create_instance(self, api_instance):
         """
         Creates and returns an instance if it does not already exist.
@@ -288,7 +291,9 @@ class Synchronizer:
 
             # This will return the created instance, the updated instance, or
             # if the instance is skipped an unsaved copy of the instance.
-            if result == CREATED:
+            if not self._is_instance_valid(instance):
+                result = SKIPPED
+            elif result == CREATED:
                 if self.model_class is models.TicketTracker:
                     instance.save(force_insert=True)
                 else:
@@ -3132,6 +3137,9 @@ class ProjectTicketSynchronizer(TicketSynchronizerMixin,
     client_class = api.ProjectAPIClient
     task_synchronizer_class = ProjectTicketTaskSynchronizer
 
+    def _is_instance_valid(self, instance):
+        return instance.project is not None
+
     def _assign_field_data(self, instance, json_data):
         instance = super()._assign_field_data(instance, json_data)
 
@@ -3148,6 +3156,7 @@ class ProjectTicketSynchronizer(TicketSynchronizerMixin,
             instance.record_type = models.Ticket.PROJECT_TICKET
 
         self.set_relations(instance, json_data)
+
         return instance
 
     def filter_by_record_type(self):
