@@ -383,6 +383,18 @@ class Company(TimeStampedModel):
     def get_identifier(self):
         return self.identifier
 
+    def get_connectwise_url(self):
+        params = dict(
+            recordType='CompanyFV',
+            recid=self.id,
+            companyName=settings.CONNECTWISE_CREDENTIALS['company_id']
+        )
+        return '{}/{}?{}'.format(
+            settings.CONNECTWISE_SERVER_URL,
+            settings.CONNECTWISE_TICKET_PATH,
+            urllib.parse.urlencode(params)
+        )
+
 
 class CompanyStatus(models.Model):
     name = models.CharField(max_length=50)
@@ -538,6 +550,18 @@ class Contact(models.Model):
     def default_fax_number(self):
         return self.contactcommunication_set.filter(
             default_flag=True, type_id__fax_flag=True).first()
+
+    def get_connectwise_url(self):
+        params = dict(
+            recordType='ContactFV',
+            recid=self.id,
+            companyName=settings.CONNECTWISE_CREDENTIALS['company_id']
+        )
+        return '{}/{}?{}'.format(
+            settings.CONNECTWISE_SERVER_URL,
+            settings.CONNECTWISE_TICKET_PATH,
+            urllib.parse.urlencode(params)
+        )
 
 
 class ContactCommunication(models.Model):
@@ -1905,6 +1929,18 @@ class Agreement(TimeStampedModel):
 
     def __str__(self):
         return '{}/{}'.format(self.agreement_type, self.name)
+
+    def get_connectwise_url(self):
+        params = dict(
+            recordType='AgreementFV',
+            recid=self.id,
+            companyName=settings.CONNECTWISE_CREDENTIALS['company_id']
+        )
+        return '{}/{}?{}'.format(
+            settings.CONNECTWISE_SERVER_URL,
+            settings.CONNECTWISE_TICKET_PATH,
+            urllib.parse.urlencode(params)
+        )
 
 
 class Source(TimeStampedModel):
