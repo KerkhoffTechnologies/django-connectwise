@@ -2209,13 +2209,29 @@ class ProjectStatusSynchronizer(Synchronizer):
         return self.client.get_project_statuses(*args, **kwargs)
 
 
-class ProjectPhaseSynchronizer(ChildFetchRecordsMixin, Synchronizer):
+class ProjectPhaseSynchronizer(UpdateRecordMixin, ChildFetchRecordsMixin, Synchronizer):
     client_class = api.ProjectAPIClient
     model_class = models.ProjectPhaseTracker
     parent_model_class = models.Project
 
     related_meta = {
         'board': (models.ConnectWiseBoard, 'board')
+    }
+
+    API_FIELD_NAMES = {
+        'description': 'description',
+        'notes': 'notes',
+        'wbs_code': 'wbsCode',
+        'scheduled_hours': 'scheduledHours',
+        'budget_hours': 'budgetHours',
+        'actual_hours': 'actualHours',
+        'bill_time': 'billTime',
+        'scheduled_start': 'scheduledStart',
+        'scheduled_end': 'scheduledEnd',
+        'actual_start': 'actualStart',
+        'actual_end': 'actualEnd',
+        'required_date': 'deadlineDate',
+        'board': 'board',
     }
 
     def _assign_field_data(self, instance, json_data):
@@ -2279,6 +2295,9 @@ class ProjectPhaseSynchronizer(ChildFetchRecordsMixin, Synchronizer):
 
     def client_call(self, project_id, *args, **kwargs):
         return self.client.get_project_phases(project_id, *args, **kwargs)
+
+    def update_record(self, client, record, api_fields):
+        return client.update_project_phase(record, api_fields)
 
 
 class ProjectTypeSynchronizer(Synchronizer):

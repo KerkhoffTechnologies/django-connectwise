@@ -1404,6 +1404,15 @@ class ProjectAPIClient(TicketAPIMixin, ConnectWiseAPIClient):
             '{}{}'.format(self.ENDPOINT_PROJECTS, project.id)
         )
 
+    def update_project_phase(self, phase, changed_fields):
+        endpoint_url = '{}{}/{}{}'.format(
+            self.ENDPOINT_PROJECTS,
+            phase.project_id,
+            self.ENDPOINT_PROJECT_PHASES,
+            phase.id,
+        )
+        return self.update_instance(changed_fields, endpoint_url)
+
     def get_project_notes(self, project_id, *args, **kwargs):
         endpoint_url = '{}{}/{}'.format(self.ENDPOINT_PROJECTS, project_id,
                                         self.ENDPOINT_PROJECT_NOTES)

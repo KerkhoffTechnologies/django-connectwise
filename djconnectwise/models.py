@@ -1039,7 +1039,7 @@ class ProjectType(TimeStampedModel):
         return self.name
 
 
-class ProjectPhase(TimeStampedModel):
+class ProjectPhase(UpdateConnectWiseMixin, TimeStampedModel):
     description = models.CharField(max_length=100)
     scheduled_start = models.DateField(blank=True, null=True)
     scheduled_end = models.DateField(blank=True, null=True)
@@ -1070,6 +1070,13 @@ class ProjectPhase(TimeStampedModel):
 
     def __str__(self):
         return self.description
+
+    @property
+    def api_class(self):
+        return api.ProjectAPIClient
+
+    def _update_cw(self, api_client, updated_objects):
+        return api_client.update_project_phase(self, updated_objects)
 
 
 class ProjectTeamMember(TimeStampedModel):
