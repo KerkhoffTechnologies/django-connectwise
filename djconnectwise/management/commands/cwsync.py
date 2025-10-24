@@ -46,6 +46,8 @@ class Command(BaseCommand):
              _('Project Role')),
             ('territory', sync.TerritorySynchronizer,
              _('Territory')),
+            ('system_location', sync.SystemLocationSynchronizer,
+             _('System Location')),
             ('company_status', sync.CompanyStatusSynchronizer,
              _('Company Status')),
             ('company_type', sync.CompanyTypeSynchronizer, _('Company Type')),

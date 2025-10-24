@@ -815,6 +815,22 @@ class Territory(models.Model):
         return self.name
 
 
+class SystemLocation(models.Model):
+    name = models.CharField(max_length=250, blank=True, null=True)
+    owner_level_id = models.IntegerField(blank=True, null=True)
+    reports_to = models.ForeignKey('self', blank=True, null=True,
+                                   on_delete=models.SET_NULL)
+    location_flag = models.BooleanField(default=False)
+    client_flag = models.BooleanField(default=False)
+
+    class Meta:
+        verbose_name = 'System Location'
+        verbose_name_plural = 'System Locations'
+        ordering = ('name', )
+
+    def __str__(self):
+        return self.name or ''
+
 class UpdateRecordMixin:
 
     def save(self, *args, **kwargs):
@@ -1516,6 +1532,9 @@ class Ticket(UpdateConnectWiseMixin, TimeStampedModel):
     location = models.ForeignKey(
         'Location', blank=True, null=True, related_name='location_tickets',
         on_delete=models.SET_NULL)
+    system_location = models.ForeignKey(
+        'SystemLocation', blank=True, null=True,
+        related_name='tickets', on_delete=models.SET_NULL)
     members = models.ManyToManyField(
         'Member', through='ScheduleEntry',
         related_name='member_tickets')
@@ -2171,6 +2190,14 @@ class TerritoryTracker(Territory):
     class Meta:
         proxy = True
         db_table = 'djconnectwise_territory'
+
+
+class SystemLocationTracker(SystemLocation):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djconnectwise_systemlocation'
 
 
 class TimeEntryTracker(TimeEntry):
