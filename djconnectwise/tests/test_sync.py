@@ -171,6 +171,29 @@ class TestTerritorySynchronizer(TestCase, SynchronizerTestMixin):
         self.assertEqual(instance.name, json_data['name'])
 
 
+class TestSystemLocationSynchronizer(TestCase, SynchronizerTestMixin):
+    synchronizer_class = sync.SystemLocationSynchronizer
+    model_class = models.SystemLocationTracker
+    fixture = fixtures.API_SYSTEM_LOCATION_LIST
+
+    def _assert_fields(self, location, api_location):
+        self.assertEqual(location.name, api_location['name'])
+        self.assertEqual(location.id, api_location['id'])
+        self.assertEqual(
+            location.owner_level_id, api_location.get('ownerLevelId'))
+        self.assertEqual(
+            location.location_flag, api_location.get('locationFlag'))
+        self.assertEqual(
+            location.client_flag, api_location.get('clientFlag'))
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_system_locations()
+
+    def call_api(self, return_data):
+        return mocks.system_api_get_system_locations_call(return_data)
+
+
 class TestCompanySynchronizer(TestCase, SynchronizerTestMixin):
     synchronizer_class = sync.CompanySynchronizer
     model_class = models.CompanyTracker

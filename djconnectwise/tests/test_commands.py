@@ -102,6 +102,14 @@ class TestSyncTerritoriesCommand(AbstractBaseSyncTest, TestCase):
     )
 
 
+class TestSyncSystemLocationCommand(AbstractBaseSyncTest, TestCase):
+    args = (
+        mocks.system_api_get_system_locations_call,
+        fixtures.API_SYSTEM_LOCATION_LIST,
+        'system_location',
+    )
+
+
 class TestSyncContactsCommand(AbstractBaseSyncTest, TestCase):
     args = (
         mocks.company_api_get_contacts,
@@ -859,6 +867,7 @@ class TestSyncAllCommand(TestCase):
             TestSyncScheduleStatusesCommand,
             TestSyncScheduleEntriesCommand,
             TestSyncTerritoriesCommand,
+            TestSyncSystemLocationCommand,
             TestSyncCalendarsCommand,
             TestSyncMyCompanyOtherCommand,
             TestSyncHolidayCommand,
@@ -949,6 +958,7 @@ class TestSyncAllCommand(TestCase):
             'project_phase': models.ProjectPhase,
             'board_status': models.BoardStatus,
             'territory': models.Territory,
+            'system_location': models.SystemLocation,
             'company_status': models.CompanyStatus,
             'company_type': models.CompanyType,
             'company_team': models.CompanyTeam,

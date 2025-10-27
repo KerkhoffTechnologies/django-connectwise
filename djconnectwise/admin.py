@@ -95,6 +95,13 @@ class TerritoryAdmin(admin.ModelAdmin):
     search_fields = ['id', 'name']
 
 
+@admin.register(models.SystemLocation)
+class SystemLocationAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'owner_level_id', 'reports_to',
+                    'location_flag', 'client_flag')
+    search_fields = ['id', 'name']
+
+
 @admin.register(models.Company)
 class CompanyAdmin(admin.ModelAdmin):
     list_display = ('id', 'name',

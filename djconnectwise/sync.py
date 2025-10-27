@@ -1987,6 +1987,29 @@ class TerritorySynchronizer(Synchronizer):
         return self.client.get_territories(*args, **kwargs)
 
 
+class SystemLocationSynchronizer(Synchronizer):
+    client_class = api.SystemAPIClient
+    model_class = models.SystemLocationTracker
+
+    related_meta = {
+        'reportsTo': (models.SystemLocation, 'reports_to'),
+    }
+
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data.get('id')
+        instance.name = json_data.get('name')
+        instance.owner_level_id = json_data.get('ownerLevelId')
+        instance.location_flag = json_data.get('locationFlag')
+        instance.client_flag = json_data.get('clientFlag')
+
+        self.set_relations(instance, json_data)
+
+        return instance
+
+    def get_page(self, *args, **kwargs):
+        return self.client.get_system_locations(*args, **kwargs)
+
+
 class TimeEntrySynchronizer(BatchConditionMixin,
                             CreateRecordMixin,
                             CallbackSyncMixin,
@@ -2668,6 +2691,7 @@ class TicketSynchronizerMixin:
         'project': (models.Project, 'project'),
         'phase': (models.ProjectPhase, 'phase'),
         'serviceLocation': (models.Location, 'location'),
+        'location': (models.SystemLocation, 'system_location'),
         'status': (models.BoardStatus, 'status'),
         'owner': (models.Member, 'owner'),
         'type': (models.Type, 'type'),
@@ -2695,7 +2719,8 @@ class TicketSynchronizerMixin:
         'priority': 'priority',
         'board': 'board',
         'company': 'company',
-        'location': 'location',
+        'location': 'serviceLocation',
+        'system_location': 'location',
         'contact': 'contact',
         'contact_name': 'contactName',
         'contact_phone_number': 'contactPhoneNumber',

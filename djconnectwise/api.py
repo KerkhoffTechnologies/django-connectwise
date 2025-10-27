@@ -961,6 +961,13 @@ class SystemAPIClient(ConnectWiseAPIClient):
         return self.fetch_resource(self.ENDPOINT_LOCATIONS,
                                    should_page=True, *args, **kwargs)
 
+    def get_system_locations(self, *args, **kwargs):
+        """
+        Fetch system locations from /system/locations endpoint.
+        """
+        return self.fetch_resource(self.ENDPOINT_LOCATIONS,
+                                   should_page=True, *args, **kwargs)
+
     def get_callbacks(self, *args, **kwargs):
         return self.fetch_resource(self.ENDPOINT_CALLBACKS,
                                    should_page=True, *args, **kwargs)
