@@ -831,6 +831,7 @@ class SystemLocation(models.Model):
     def __str__(self):
         return self.name or ''
 
+
 class UpdateRecordMixin:
 
     def save(self, *args, **kwargs):

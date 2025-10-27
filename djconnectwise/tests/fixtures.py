@@ -1363,6 +1363,22 @@ API_SYSTEM_TERRITORY = {
 
 API_SYSTEM_TERRITORY_LIST = [API_SYSTEM_TERRITORY]
 
+API_SYSTEM_LOCATION = {
+    'id': 1,
+    'name': 'Tampa Office',
+    'ownerLevelId': 1,
+    'reportsTo': None,
+    'locationFlag': True,
+    'clientFlag': False,
+    '_info': {
+        'lastUpdated': '2015-08-21T20:22:06Z',
+        'updatedBy': 'zAdmin'
+    }
+}
+
+
+API_SYSTEM_LOCATION_LIST = [API_SYSTEM_LOCATION]
+
 API_AGREEMENT = {
     "id": 1,
     "name": "Gold Rate",

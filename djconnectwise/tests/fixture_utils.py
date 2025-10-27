@@ -147,6 +147,13 @@ def init_territories():
     return synchronizer.sync()
 
 
+def init_system_locations():
+    mocks.system_api_get_system_locations_call(
+        fixtures.API_SYSTEM_LOCATION_LIST)
+    synchronizer = sync.SystemLocationSynchronizer()
+    return synchronizer.sync()
+
+
 def init_contacts():
     mocks.company_api_get_contacts(fixtures.API_COMPANY_CONTACT_LIST)
     synchronizer = sync.ContactSynchronizer()

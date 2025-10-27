@@ -2009,6 +2009,7 @@ class SystemLocationSynchronizer(Synchronizer):
     def get_page(self, *args, **kwargs):
         return self.client.get_system_locations(*args, **kwargs)
 
+
 class TimeEntrySynchronizer(BatchConditionMixin,
                             CreateRecordMixin,
                             CallbackSyncMixin,
