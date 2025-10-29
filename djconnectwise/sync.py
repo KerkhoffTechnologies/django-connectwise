@@ -2232,7 +2232,8 @@ class ProjectStatusSynchronizer(Synchronizer):
         return self.client.get_project_statuses(*args, **kwargs)
 
 
-class ProjectPhaseSynchronizer(UpdateRecordMixin, ChildFetchRecordsMixin, Synchronizer):
+class ProjectPhaseSynchronizer(
+        UpdateRecordMixin, ChildFetchRecordsMixin, Synchronizer):
     client_class = api.ProjectAPIClient
     model_class = models.ProjectPhaseTracker
     parent_model_class = models.Project
