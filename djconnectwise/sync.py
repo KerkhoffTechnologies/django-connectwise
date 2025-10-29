@@ -2234,6 +2234,7 @@ class ProjectStatusSynchronizer(Synchronizer):
 
 class ProjectPhaseSynchronizer(
         UpdateRecordMixin, ChildFetchRecordsMixin, Synchronizer):
+
     client_class = api.ProjectAPIClient
     model_class = models.ProjectPhaseTracker
     parent_model_class = models.Project
