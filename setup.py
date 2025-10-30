@@ -2,13 +2,16 @@
 # -*- coding: utf-8 -*-
 
 from setuptools import setup, find_packages
-import djconnectwise
 
 LONG_DESCRIPTION = open('README.md').read()
 
+VERSION = (1, 13, 3)
+
+project_version = '.'.join(map(str, VERSION))
+
 setup(
     name="django-connectwise",
-    version=djconnectwise.__version__,
+    version=project_version,
     description='Django app for working with ConnectWise. '
                 'Defines models (tickets, members, companies, etc.) '
                 'and callbacks.',
