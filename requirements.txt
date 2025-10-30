@@ -3,5 +3,5 @@ botocore==1.25.4
 boto3==1.22.4
 django-storages==1.12.3
 Pillow==10.3.0
-setuptools==75.3.2
+setuptools==78.1.1
 build==1.2.2.post1
