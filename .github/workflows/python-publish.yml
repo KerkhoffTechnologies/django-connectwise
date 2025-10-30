@@ -37,7 +37,7 @@ jobs:
           python setup.py test
       - name: Create source distribution
         run: |
-          python -m build
+          python3 -m build
       - name: Publish package
         uses: pypa/gh-action-pypi-publish@81e9d935c883d0b210363ab89cf05f3894778450
         with:
