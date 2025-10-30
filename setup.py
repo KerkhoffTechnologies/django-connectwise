@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 
 LONG_DESCRIPTION = open('README.md').read()
 
-VERSION = (1, 13, 3)
+VERSION = (1, 13, 4)
 
 project_version = '.'.join(map(str, VERSION))
 
