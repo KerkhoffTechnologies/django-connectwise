@@ -34,7 +34,7 @@ jobs:
       - name: Run tests
         run: |
           flake8 .
-          python setup.py test
+          python runtests.py
       - name: Create source distribution
         run: |
           python3 -m build
