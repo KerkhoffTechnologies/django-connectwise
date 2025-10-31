@@ -1174,6 +1174,7 @@ class TicketAPIMixin:
         body = {}
 
         for field, value in fields.items():
+
             if isinstance(value, datetime.datetime):
                 value = value.astimezone(
                         pytz.timezone('UTC')).strftime(
@@ -1193,6 +1194,7 @@ class TicketAPIMixin:
         body = []
 
         for field, value in changed_fields.items():
+
             field_update = {
                 'op': 'replace',
                 'path': field,
