@@ -821,6 +821,10 @@ class TimeAPIClient(ConnectWiseAPIClient):
                 }
             })
 
+        system_location = kwargs.get("system_location")
+        if system_location:
+            body.update({"locationId": system_location.id})
+
         notes = kwargs.get("notes")
         if notes:
             body.update({"notes": notes})
@@ -1170,7 +1174,6 @@ class TicketAPIMixin:
         body = {}
 
         for field, value in fields.items():
-
             if isinstance(value, datetime.datetime):
                 value = value.astimezone(
                         pytz.timezone('UTC')).strftime(
@@ -1190,7 +1193,6 @@ class TicketAPIMixin:
         body = []
 
         for field, value in changed_fields.items():
-
             field_update = {
                 'op': 'replace',
                 'path': field,

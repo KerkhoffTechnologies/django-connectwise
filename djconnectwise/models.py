@@ -897,6 +897,8 @@ class TimeEntry(UpdateRecordMixin, models.Model):
         'WorkType', blank=True, null=True, on_delete=models.SET_NULL)
     agreement = models.ForeignKey(
         'Agreement', blank=True, null=True, on_delete=models.SET_NULL)
+    system_location = models.ForeignKey(
+        'SystemLocation', blank=True, null=True, on_delete=models.SET_NULL)
 
     objects = models.Manager()
     non_internal_objects = NonInternalTimeEntryManager()
