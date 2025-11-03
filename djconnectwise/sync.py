@@ -2111,6 +2111,17 @@ class TimeEntrySynchronizer(BatchConditionMixin,
                 ' ObjectDoesNotExist Exception: {}.'.format(e)
             )
 
+        location_id = json_data.get('locationId')
+        if location_id:
+            try:
+                related_location = models.SystemLocation.objects.get(pk=location_id)
+                setattr(instance, 'system_location', related_location)
+            except ObjectDoesNotExist:
+                logger.warning(
+                    'SystemLocation {} not found for TimeEntry {}.'.format(
+                        location_id, instance.id)
+                )
+
         return instance
 
     def get_page(self, *args, **kwargs):
