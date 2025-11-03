@@ -2114,7 +2114,8 @@ class TimeEntrySynchronizer(BatchConditionMixin,
         location_id = json_data.get('locationId')
         if location_id:
             try:
-                related_location = models.SystemLocation.objects.get(pk=location_id)
+                related_location = models.SystemLocation.objects.get(
+                    pk=location_id)
                 setattr(instance, 'system_location', related_location)
             except ObjectDoesNotExist:
                 logger.warning(
