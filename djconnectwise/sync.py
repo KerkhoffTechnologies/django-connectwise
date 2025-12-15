@@ -2487,8 +2487,10 @@ class ProjectSynchronizer(CreateRecordMixin,
         instance.name = json_data.get('name')
         instance.billing_method = json_data.get('billingMethod')
         description = json_data.get('description')
-        if description:
-            instance.description = normalize_newlines(description)
+        if description is not None:
+            instance.description = (
+                normalize_newlines(description) if description else ''
+            )
 
         actual_hours = json_data.get('actualHours')
         budget_hours = json_data.get('budgetHours')
