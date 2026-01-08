@@ -2858,7 +2858,7 @@ class TicketSynchronizerMixin:
     def fetch_sync_by_id(self, instance_id, sync_config={}):
         request_settings = DjconnectwiseSettings().get_settings()
         board_ids = request_settings.get('board_status_filter')
-        
+
         if board_ids:
             api_instance = self.get_single(instance_id)
             try:
@@ -2866,14 +2866,14 @@ class TicketSynchronizerMixin:
             except (KeyError, TypeError):
                 # Must be 2017.5 or earlier
                 board_id = api_instance.get('boardId')
-            
+
             if board_id is not None and board_id not in board_ids:
                 # Ticket is in a non-permitted board, ignore this callback
                 raise InvalidObjectException(
                     'Ticket {} is in board {} which is not in the permitted '
                     'boards list.'.format(instance_id, board_id)
                 )
-            
+
             instance, result = self.update_or_create_instance(api_instance)
         else:
             api_instance = self.get_single(instance_id)
