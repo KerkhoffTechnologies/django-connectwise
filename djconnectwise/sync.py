@@ -2754,7 +2754,10 @@ class TicketSynchronizerMixin:
         'team': 'team',
         'company_site': 'site',
         'ticket_predecessor': 'predecessorId',
-        'predecessor_type': 'predecessorType'
+        'predecessor_type': 'predecessorType',
+        'lag_days': 'lagDays',
+        'predecessor_closed_flag': 'predecessorClosedFlag',
+        'lag_non_working_days_flag': 'lagNonworkingDaysFlag'
     }
 
     def __init__(self, *args, **kwargs):
@@ -2973,13 +2976,18 @@ class TicketSynchronizerMixin:
         try:
             predecessor_id = json_data.get('predecessorId')
 
-            if predecessor_id:
+            if predecessor_id and instance.predecessor_type:
                 if instance.predecessor_type == self.model_class.TICKET:
                     instance.ticket_predecessor = \
                         models.Ticket.objects.get(pk=predecessor_id)
-                else:
+                    instance.phase_predecessor = None
+                elif instance.predecessor_type == self.model_class.PHASE:
                     instance.phase_predecessor = \
                         models.ProjectPhase.objects.get(pk=predecessor_id)
+                    instance.ticket_predecessor = None
+            else:
+                instance.ticket_predecessor = None
+                instance.phase_predecessor = None
 
         except ObjectDoesNotExist as e:
             logger.warning(
