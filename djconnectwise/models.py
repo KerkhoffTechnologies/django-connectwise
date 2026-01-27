@@ -1451,33 +1451,33 @@ class Ticket(UpdateConnectWiseMixin, TimeStampedModel):
     approved = models.BooleanField(null=True)
     budget_hours = models.DecimalField(
         blank=True, null=True, decimal_places=2, max_digits=12)
-    closed_by = models.CharField(blank=True, null=True, max_length=250)
+    closed_by = models.CharField(blank=True, null=True, max_length=1000)
     closed_date_utc = models.DateTimeField(blank=True, null=True)
     closed_flag = models.BooleanField(null=True)
     customer_updated = models.BooleanField(default=False)
 
     entered_date_utc = models.DateTimeField(blank=True, null=True)
     has_child_ticket = models.BooleanField(null=True)
-    impact = models.CharField(blank=True, null=True, max_length=250)
+    impact = models.CharField(blank=True, null=True, max_length=1000)
     is_in_sla = models.BooleanField(null=True)
     last_updated_utc = models.DateTimeField(blank=True, null=True)
     parent_ticket_id = models.IntegerField(blank=True, null=True)
     record_type = models.CharField(blank=True, null=True,
-                                   max_length=250, choices=RECORD_TYPES,
+                                   max_length=1000, choices=RECORD_TYPES,
                                    db_index=True)
     required_date_utc = models.DateTimeField(blank=True, null=True)
 
     sla_expire_date = models.DateTimeField(blank=True, null=True)
     sla_stage = models.CharField(blank=True, null=True,
-                                 max_length=250, choices=SLA_STAGE,
+                                 max_length=1000, choices=SLA_STAGE,
                                  db_index=True)
 
-    resources = models.CharField(blank=True, null=True, max_length=250)
-    severity = models.CharField(blank=True, null=True, max_length=250)
-    site_name = models.CharField(blank=True, null=True, max_length=250)
+    resources = models.CharField(blank=True, null=True, max_length=1000)
+    severity = models.CharField(blank=True, null=True, max_length=1000)
+    site_name = models.CharField(blank=True, null=True, max_length=1000)
     summary = models.CharField(blank=True, null=True, db_index=True,
-                               max_length=250)
-    updated_by = models.CharField(blank=True, null=True, max_length=250)
+                               max_length=1000)
+    updated_by = models.CharField(blank=True, null=True, max_length=1000)
 
     bill_time = models.CharField(blank=True, null=True,
                                  max_length=20, choices=BILL_TIME_TYPES)
