@@ -215,6 +215,7 @@ class DjconnectwiseSettings:
             'keep_closed_status_board_ids': 0,
             'company_exclude_status_ids': '',
             'send_naive_datetimes': True,
+            'mass_delete_protection': False,
         }
 
         if hasattr(settings, 'DJCONNECTWISE_CONF_CALLABLE'):
