@@ -954,7 +954,7 @@ class TimeEntry(UpdateRecordMixin, models.Model):
             api_public_key=kwargs.get('api_public_key'),
             api_private_key=kwargs.get('api_private_key')
         )
-        return api_client.update_time_entry(self)
+        return api_client.update_time_entry(self, {'notes': self.notes})
 
 
 class AvailableBoardTeamManager(models.Manager):
@@ -1747,7 +1747,7 @@ class ServiceNote(UpdateRecordMixin, TimeStampedModel):
             api_public_key=kwargs.get('api_public_key'),
             api_private_key=kwargs.get('api_private_key')
         )
-        return api_client.update_note(self)
+        return api_client.update_note(self, {'text': self.text})
 
 
 class OpportunityNote(TimeStampedModel):
