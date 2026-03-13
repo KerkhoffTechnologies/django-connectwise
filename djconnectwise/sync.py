@@ -17,7 +17,7 @@ from django.utils.text import normalize_newlines
 from djconnectwise import api
 from djconnectwise import models
 from djconnectwise.utils import DjconnectwiseSettings, \
-    parse_sla_status
+    parse_sla_status, caption_to_snake_case, parse_udf, CW_DATA_TYPE_MAP
 from djconnectwise.api import ConnectWiseAPIError, \
     ConnectWiseSecurityPermissionsException
 from djconnectwise.utils import get_hash, get_filename_extension, \
@@ -1736,8 +1736,10 @@ class ActivitySynchronizer(UpdateRecordMixin, Synchronizer):
                 'skipping.'.format(instance.id)
             )
 
+        custom_fields = json_data.get('customFields', list())
         instance.udf = {str(item['id']): item
-                        for item in json_data.get('customFields', list())}
+                        for item in custom_fields}
+        instance.udf_data = parse_udf(custom_fields)
 
         self.set_relations(instance, json_data)
         return instance
@@ -2512,8 +2514,10 @@ class ProjectSynchronizer(CreateRecordMixin,
         budget_hours = json_data.get('budgetHours')
         scheduled_hours = json_data.get('scheduledHours')
         percent_complete = json_data.get('percentComplete')
+        custom_fields = json_data.get('customFields', list())
         instance.udf = {str(item['id']): item
-                        for item in json_data.get('customFields', list())}
+                        for item in custom_fields}
+        instance.udf_data = parse_udf(custom_fields)
 
         instance.actual_hours = Decimal(str(actual_hours)) \
             if actual_hours is not None else None
@@ -2950,8 +2954,10 @@ class TicketSynchronizerMixin:
 
         # Key is comes out of db as string, so we add it as a string here
         # so the tracker can compare it properly.
+        custom_fields = json_data.get('customFields', list())
         instance.udf = {str(item['id']): item
-                        for item in json_data.get('customFields', list())}
+                        for item in custom_fields}
+        instance.udf_data = parse_udf(custom_fields)
 
         instance.automatic_email_cc_flag = \
             json_data.get('automaticEmailCcFlag', False)
@@ -3458,8 +3464,10 @@ class OpportunitySynchronizer(UpdateRecordMixin, Synchronizer):
         instance.location_id = json_data.get('locationId')
         instance.business_unit_id = json_data.get('businessUnitId')
         instance.customer_po = json_data.get('customerPO')
+        custom_fields = json_data.get('customFields', list())
         instance.udf = {str(item['id']): item
-                        for item in json_data.get('customFields', list())}
+                        for item in custom_fields}
+        instance.udf_data = parse_udf(custom_fields)
 
         # handle dates
         expected_close_date = json_data.get('expectedCloseDate')
@@ -3727,6 +3735,7 @@ class SourceSynchronizer(Synchronizer):
 
 
 class UDFSynchronizer(Synchronizer):
+    record_type = None  # Override in subclasses
 
     def fetch_records(self, results, conditions=None):
         """
@@ -3743,7 +3752,9 @@ class UDFSynchronizer(Synchronizer):
         for record in page_records:
             # Should only run once, or not at all if there are 0 records of
             # requested type.
-            self.persist_page(record.get('customFields', list()), results)
+            custom_fields = record.get('customFields', list())
+            self.persist_page(custom_fields, results)
+            self._sync_udf_definitions(custom_fields)
 
         return results
 
@@ -3756,10 +3767,40 @@ class UDFSynchronizer(Synchronizer):
 
         return instance
 
+    def _sync_udf_definitions(self, custom_fields):
+        """
+        Sync UDF definitions to the new UDFDefinition model.
+        This is done in addition to the old UDFs for backwards compatibility
+        """
+        for field in custom_fields:
+            caption = field.get('caption', '')
+            name = caption_to_snake_case(caption)
+            if not name:
+                continue
+
+            udf_type = field.get('type', '')
+            models.UDFDefinition.objects.update_or_create(
+                record_type=self.record_type,
+                name=name,
+                defaults={
+                    'display': caption,
+                    'udf_type': udf_type,
+                    'data_type': CW_DATA_TYPE_MAP.get(udf_type, 'string'),
+                    'is_list': field.get('entryMethod') == 'List',
+                    'extra': {
+                        'connectWiseId': field.get('connectWiseId'),
+                        'podId': field.get('podId'),
+                        'numberOfDecimals': field.get('numberOfDecimals'),
+                        'entryMethod': field.get('entryMethod'),
+                    },
+                },
+            )
+
 
 class TicketUDFSynchronizer(UDFSynchronizer):
     client_class = api.ServiceAPIClient
     model_class = models.TicketUDFTracker
+    record_type = 'ticket'
 
     def get_page(self, *args, **kwargs):
         # Using the Service API Client fine for both service and project
@@ -3770,6 +3811,7 @@ class TicketUDFSynchronizer(UDFSynchronizer):
 class ProjectUDFSynchronizer(UDFSynchronizer):
     client_class = api.ProjectAPIClient
     model_class = models.ProjectUDFTracker
+    record_type = 'project'
 
     def get_page(self, *args, **kwargs):
         return self.client.get_projects(*args, **kwargs)
@@ -3778,6 +3820,7 @@ class ProjectUDFSynchronizer(UDFSynchronizer):
 class ActivityUDFSynchronizer(UDFSynchronizer):
     client_class = api.SalesAPIClient
     model_class = models.ActivityUDFTracker
+    record_type = 'activity'
 
     def get_page(self, *args, **kwargs):
         return self.client.get_activities(*args, **kwargs)
@@ -3786,6 +3829,7 @@ class ActivityUDFSynchronizer(UDFSynchronizer):
 class OpportunityUDFSynchronizer(UDFSynchronizer):
     client_class = api.SalesAPIClient
     model_class = models.OpportunityUDFTracker
+    record_type = 'opportunity'
 
     def get_page(self, *args, **kwargs):
         return self.client.get_opportunities(*args, **kwargs)
