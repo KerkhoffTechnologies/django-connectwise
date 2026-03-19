@@ -250,7 +250,6 @@ def parse_udf(custom_fields):
             'name': caption,
             'value': value,
             'display_value': value,
-            'is_list': field.get('entryMethod') == 'List',
             'extra': {},
         }
     return result

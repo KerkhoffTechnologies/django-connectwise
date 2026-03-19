@@ -3786,7 +3786,6 @@ class UDFSynchronizer(Synchronizer):
                     'display': caption,
                     'udf_type': udf_type,
                     'data_type': CW_DATA_TYPE_MAP.get(udf_type, 'string'),
-                    'is_list': field.get('entryMethod') == 'List',
                     'extra': {
                         'connectWiseId': field.get('connectWiseId'),
                         'podId': field.get('podId'),

@@ -2033,7 +2033,6 @@ class UDFDefinition(TimeStampedModel):
     display = models.CharField(max_length=255)
     udf_type = models.CharField(max_length=50)
     data_type = models.CharField(max_length=50)
-    is_list = models.BooleanField(default=False)
     extra = models.JSONField(default=dict, blank=True)
 
     class Meta:
