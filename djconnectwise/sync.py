@@ -713,6 +713,7 @@ class UpdateRecordMixin:
 
 class ServiceNoteSynchronizer(ChildFetchRecordsMixin,
                               CreateRecordMixin,
+                              UpdateRecordMixin,
                               CallbackSyncMixin,
                               Synchronizer):
     client_class = api.ServiceAPIClient
@@ -722,6 +723,23 @@ class ServiceNoteSynchronizer(ChildFetchRecordsMixin,
     related_meta = {
         'member': (models.Member, 'member')
     }
+
+    API_FIELD_NAMES = {
+        'text': 'text',
+        'detail_description_flag': 'detailDescriptionFlag',
+        'internal_analysis_flag': 'internalAnalysisFlag',
+        'resolution_flag': 'resolutionFlag',
+    }
+
+    def update(self, record, changed_fields, **kwargs):
+        translated = {
+            self.API_FIELD_NAMES.get(k, k): v
+            for k, v in changed_fields.items()
+        }
+        return super().update(record, translated, **kwargs)
+
+    def update_record(self, client, record, api_fields):
+        return client.update_note(record, api_fields)
 
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data.get('id')
@@ -2028,6 +2046,7 @@ class SystemLocationSynchronizer(Synchronizer):
 
 class TimeEntrySynchronizer(BatchConditionMixin,
                             CreateRecordMixin,
+                            UpdateRecordMixin,
                             CallbackSyncMixin,
                             Synchronizer):
     client_class = api.TimeAPIClient
@@ -2036,8 +2055,39 @@ class TimeEntrySynchronizer(BatchConditionMixin,
 
     related_meta = {
         'company': (models.Company, 'company'),
-        'member': (models.Member, 'member')
+        'member': (models.Member, 'member'),
+        'workType': (models.WorkType, 'work_type'),
+        'agreement': (models.Agreement, 'agreement'),
     }
+
+    API_FIELD_NAMES = {
+        'notes': 'notes',
+        'time_start': 'timeStart',
+        'time_end': 'timeEnd',
+        'actual_hours': 'actualHours',
+        'hours_deduct': 'hoursDeduct',
+        'billable_option': 'billableOption',
+        'work_type': 'workType',
+        'work_role': 'workRole',
+        'agreement': 'agreement',
+        'system_location': 'locationId',
+        'detail_description_flag': 'addToDetailDescriptionFlag',
+        'internal_analysis_flag': 'addToInternalAnalysisFlag',
+        'resolution_flag': 'addToResolutionFlag',
+    }
+
+    def update(self, record, changed_fields, **kwargs):
+        translated = {}
+        for key, value in changed_fields.items():
+            api_key = self.API_FIELD_NAMES.get(key, key)
+            if api_key == 'locationId' and hasattr(value, 'pk'):
+                value = value.pk
+            translated[api_key] = value
+
+        return super().update(record, translated, **kwargs)
+
+    def update_record(self, client, record, api_fields):
+        return client.update_time_entry(record, api_fields)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
