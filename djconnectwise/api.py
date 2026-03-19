@@ -2,6 +2,7 @@ import datetime
 import json
 import logging
 import re
+from decimal import Decimal
 from json import JSONDecodeError
 from urllib.parse import urlparse
 
@@ -438,21 +439,22 @@ class ConnectWiseAPIClient(object):
                 'path': field,
             }
 
-            if isinstance(value, datetime.datetime):
-                field_update.update({
-                    'value': value.astimezone(
-                        pytz.timezone('UTC')).strftime(
-                            "%Y-%m-%dT%H:%M:%SZ")
-                })
+            if isinstance(value, bool):
+                field_update['value'] = value
+
+            elif isinstance(value, datetime.datetime):
+                field_update['value'] = value.astimezone(
+                    pytz.timezone('UTC')
+                ).strftime("%Y-%m-%dT%H:%M:%SZ")
 
             elif isinstance(value, models.Model):
-                field_update.update({
-                    'value': {
-                        'id': value.id,
-                    }
-                })
+                field_update['value'] = {'id': value.id}
+
+            elif isinstance(value, Decimal):
+                field_update['value'] = str(value)
+
             else:
-                field_update.update({'value': str(value) if value else ''})
+                field_update['value'] = str(value) if value else ''
 
             body.append(field_update)
 
@@ -837,16 +839,10 @@ class TimeAPIClient(ConnectWiseAPIClient):
 
         return self.request('post', self.ENDPOINT_ENTRIES, body)
 
-    def update_time_entry(self, time_entry):
-        body = [{
-            'op': 'replace',
-            'path': 'notes',
-            'value': time_entry.notes
-        }]
-        return self.request(
-            'patch',
-            '{}/{}'.format(self.ENDPOINT_ENTRIES, time_entry.id),
-            body
+    def update_time_entry(self, time_entry, changed_fields):
+        return self.update_instance(
+            changed_fields,
+            '{}/{}'.format(self.ENDPOINT_ENTRIES, time_entry.id)
         )
 
 
@@ -1220,18 +1216,12 @@ class TicketAPIMixin:
 
         return body
 
-    def update_note(self, note):
-        body = [{
-            'op': 'replace',
-            'path': 'text',
-            'value': note.text
-        }]
-        return self.request(
-            'patch',
+    def update_note(self, note, changed_fields):
+        return self.update_instance(
+            changed_fields,
             '{}/{}/notes/{}'.format(
                 self.ENDPOINT_TICKETS, note.ticket.id, note.id
-            ),
-            body
+            )
         )
 
 
