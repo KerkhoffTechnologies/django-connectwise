@@ -1,5 +1,6 @@
 import re
 import hashlib
+import logging
 from io import BytesIO
 from datetime import datetime, timedelta, timezone
 
@@ -7,6 +8,8 @@ from PIL import Image, ImageOps
 from django.conf import settings
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
+
+logger = logging.getLogger(__name__)
 
 _underscorer1 = re.compile(r'(.)([A-Z][a-z]+)')
 _underscorer2 = re.compile(r'([a-z0-9])([A-Z])')
@@ -195,6 +198,61 @@ def parse_sla_status(sla_status, date_created):
     # and if you have a 6 year old SLA, that's a you problem.
     stage = sla_status.split()[0].lower()
     return stage, utc_date
+
+
+CW_DATA_TYPE_MAP = {
+    'Number': 'number',
+    'Percent': 'number',
+    'Currency': 'number',
+    'Date': 'datetime',
+    'Text': 'string',
+    'TextArea': 'string',
+    'Button': 'string',
+    'Hyperlink': 'string',
+    'Checkbox': 'boolean',
+}
+
+
+def caption_to_snake_case(caption):
+    """
+    Convert a UDF caption to a snake_case key.
+    Removes special characters, preserves numbers, collapses whitespace.
+    e.g. "Hello 3 there?" -> "hello_3_there"
+    """
+    s = caption.lower()
+    s = re.sub(r'[^a-z0-9\s]', '', s)
+    s = re.sub(r'\s+', '_', s.strip())
+    s = re.sub(r'_+', '_', s)
+    return s.strip('_')
+
+
+def parse_udf(custom_fields):
+    """
+    Convert a list of CW customField dicts to the standardized format.
+    """
+    result = {}
+    for field in custom_fields:
+        caption = field.get('caption', '')
+        name = caption_to_snake_case(caption)
+        if not name:
+            # I should hope this would never happen, but ping it to
+            # sentry if it does so we can handle it.
+            logger.exception(
+                f"UDF name stripped became empty string: {name}.")
+            continue
+
+        udf_type = field.get('type', '')
+        value = field.get('value')
+        result[name] = {
+            'id': field.get('id'),
+            'udf_type': udf_type,
+            'data_type': CW_DATA_TYPE_MAP.get(udf_type, 'string'),
+            'name': caption,
+            'value': value,
+            'display_value': value,
+            'extra': {},
+        }
+    return result
 
 
 class DjconnectwiseSettings:

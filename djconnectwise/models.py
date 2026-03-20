@@ -4,6 +4,7 @@ import re
 import urllib
 
 from django.conf import settings
+from django.contrib.postgres.indexes import GinIndex
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -1153,6 +1154,7 @@ class Project(UpdateConnectWiseMixin, TimeStampedModel):
     scheduled_end = models.DateField(blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     udf = models.JSONField(blank=True, null=True)
+    udf_data = models.JSONField(default=dict, blank=True)
 
     ACTUAL_RATES = 'ActualRates'
     FIXED_FEE = 'FixedFee'
@@ -1203,6 +1205,9 @@ class Project(UpdateConnectWiseMixin, TimeStampedModel):
 
     class Meta:
         ordering = ('name', )
+        indexes = [
+            GinIndex(fields=['udf_data'], name='project_udf_data_gin'),
+        ]
 
     def __str__(self):
         return self.name or ''
@@ -1340,10 +1345,14 @@ class Opportunity(UpdateConnectWiseMixin, TimeStampedModel):
                                          blank=True, null=True,
                                          on_delete=models.SET_NULL)
     udf = models.JSONField(blank=True, null=True)
+    udf_data = models.JSONField(default=dict, blank=True)
 
     class Meta:
         ordering = ('name', )
         verbose_name_plural = 'Opportunities'
+        indexes = [
+            GinIndex(fields=['udf_data'], name='opportunity_udf_data_gin'),
+        ]
 
     def __str__(self):
         return self.name
@@ -1496,6 +1505,7 @@ class Ticket(UpdateConnectWiseMixin, TimeStampedModel):
     estimated_start_date = models.DateTimeField(blank=True, null=True)
     wbs_code = models.CharField(blank=True, null=True, max_length=50)
     udf = models.JSONField(blank=True, null=True)
+    udf_data = models.JSONField(default=dict, blank=True)
     tasks_completed = models.PositiveSmallIntegerField(blank=True, null=True)
     tasks_total = models.PositiveSmallIntegerField(blank=True, null=True)
     is_issue_flag = models.BooleanField(default=False)
@@ -1583,6 +1593,9 @@ class Ticket(UpdateConnectWiseMixin, TimeStampedModel):
         verbose_name = 'Ticket'
         verbose_name_plural = 'Tickets'
         ordering = ('summary', )
+        indexes = [
+            GinIndex(fields=['udf_data'], name='ticket_udf_data_gin'),
+        ]
 
     def __str__(self):
         return '{}-{}'.format(self.id, self.summary)
@@ -1818,6 +1831,7 @@ class Activity(UpdateConnectWiseMixin, TimeStampedModel):
     agreement = models.ForeignKey(
         'Agreement', blank=True, null=True, on_delete=models.SET_NULL)
     udf = models.JSONField(blank=True, null=True)
+    udf_data = models.JSONField(default=dict, blank=True)
     members = models.ManyToManyField(
         'Member',
         through='ScheduleEntry',
@@ -1826,6 +1840,9 @@ class Activity(UpdateConnectWiseMixin, TimeStampedModel):
 
     class Meta:
         verbose_name_plural = 'activities'
+        indexes = [
+            GinIndex(fields=['udf_data'], name='activity_udf_data_gin'),
+        ]
 
     def __str__(self):
         return self.name or ''
@@ -2001,6 +2018,28 @@ class ActivityUDF(BaseUDF):
 
 class OpportunityUDF(BaseUDF):
     pass
+
+
+class UDFDefinition(TimeStampedModel):
+    RECORD_TYPES = [
+        ('ticket', 'Ticket'),
+        ('project', 'Project'),
+        ('activity', 'Activity'),
+        ('opportunity', 'Opportunity'),
+    ]
+
+    record_type = models.CharField(max_length=50, choices=RECORD_TYPES)
+    name = models.CharField(max_length=255)
+    display = models.CharField(max_length=255)
+    udf_type = models.CharField(max_length=50)
+    data_type = models.CharField(max_length=50)
+    extra = models.JSONField(default=dict, blank=True)
+
+    class Meta:
+        unique_together = ('record_type', 'name')
+
+    def __str__(self):
+        return f"{self.display} ({self.record_type})"
 
 
 class TicketTracker(Ticket):
@@ -2473,3 +2512,11 @@ class OpportunityUDFTracker(OpportunityUDF):
     class Meta:
         proxy = True
         db_table = 'djconnectwise_opportunityudf'
+
+
+class UDFDefinitionTracker(UDFDefinition):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djconnectwise_udfdefinition'
