@@ -688,16 +688,34 @@ class ScheduleAPIClient(ConnectWiseAPIClient):
     def patch_schedule_entry(self, **kwargs):
         schedule_id = kwargs.get("id")
         endpoint_url = "{}/{}".format(self.ENDPOINT_ENTRIES, schedule_id)
-        # Yeah, this schema is a bit bizarre. See CW docs at
-        # https://developer.connectwise.com/Manage/Developer_Guide#Patch
-        body = [
-            {
-                'op': 'replace',
-                'path': 'doneFlag',
-                'value': kwargs.get("done_flag")
-            }
-        ]
-        return self.request('patch', endpoint_url, body)
+
+        changed_fields = {}
+        if 'done_flag' in kwargs:
+            changed_fields['doneFlag'] = kwargs.pop('done_flag')
+        if 'date_start' in kwargs:
+            changed_fields['dateStart'] = kwargs.pop('date_start')
+        if 'date_end' in kwargs:
+            changed_fields['dateEnd'] = kwargs.pop('date_end')
+        if 'allow_conflicts' in kwargs:
+            changed_fields['allowScheduleConflictsFlag'] = kwargs.pop(
+                'allow_conflicts'
+            )
+
+        member = kwargs.pop('member', None)
+        if member is not None:
+            changed_fields['member/identifier'] = member.identifier
+
+        status = kwargs.pop('status', None)
+        if status is not None:
+            changed_fields['status/id'] = status.id
+
+        where = kwargs.pop('where', None)
+        if where is not None:
+            changed_fields['where/id'] = where.id
+
+        changed_fields.update(kwargs)
+
+        return self.update_instance(changed_fields, endpoint_url)
 
     def delete_schedule_entry(self, entry_id):
         return self.request(
