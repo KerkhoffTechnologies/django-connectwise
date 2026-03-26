@@ -689,33 +689,71 @@ class ScheduleAPIClient(ConnectWiseAPIClient):
         schedule_id = kwargs.get("id")
         endpoint_url = "{}/{}".format(self.ENDPOINT_ENTRIES, schedule_id)
 
-        changed_fields = {}
+        # Yeah, this schema is a bit bizarre. See CW docs at
+        # https://developer.connectwise.com/Manage/Developer_Guide#Patch
+        body = []
+
         if 'done_flag' in kwargs:
-            changed_fields['doneFlag'] = kwargs.pop('done_flag')
+            body.append({
+                'op': 'replace',
+                'path': 'doneFlag',
+                'value': kwargs.pop('done_flag')
+            })
+
         if 'date_start' in kwargs:
-            changed_fields['dateStart'] = kwargs.pop('date_start')
+            date_start = kwargs.pop('date_start')
+            if date_start is not None:
+                date_start = date_start.astimezone(
+                    pytz.timezone('UTC')).strftime("%Y-%m-%dT%H:%M:%SZ")
+            body.append({
+                'op': 'replace',
+                'path': 'dateStart',
+                'value': date_start
+            })
+
         if 'date_end' in kwargs:
-            changed_fields['dateEnd'] = kwargs.pop('date_end')
+            date_end = kwargs.pop('date_end')
+            if date_end is not None:
+                date_end = date_end.astimezone(
+                    pytz.timezone('UTC')).strftime("%Y-%m-%dT%H:%M:%SZ")
+            body.append({
+                'op': 'replace',
+                'path': 'dateEnd',
+                'value': date_end
+            })
+
         if 'allow_conflicts' in kwargs:
-            changed_fields['allowScheduleConflictsFlag'] = kwargs.pop(
-                'allow_conflicts'
-            )
+            body.append({
+                'op': 'replace',
+                'path': 'allowScheduleConflictsFlag',
+                'value': kwargs.pop('allow_conflicts')
+            })
 
         member = kwargs.pop('member', None)
         if member is not None:
-            changed_fields['member/identifier'] = member.identifier
+            body.append({
+                'op': 'replace',
+                'path': 'member/identifier',
+                'value': member.identifier
+            })
 
         status = kwargs.pop('status', None)
         if status is not None:
-            changed_fields['status/id'] = status.id
+            body.append({
+                'op': 'replace',
+                'path': 'status/id',
+                'value': status.id
+            })
 
         where = kwargs.pop('where', None)
         if where is not None:
-            changed_fields['where/id'] = where.id
+            body.append({
+                'op': 'replace',
+                'path': 'where/id',
+                'value': where.id
+            })
 
-        changed_fields.update(kwargs)
-
-        return self.update_instance(changed_fields, endpoint_url)
+        return self.request('patch', endpoint_url, body)
 
     def delete_schedule_entry(self, entry_id):
         return self.request(
