@@ -102,6 +102,19 @@ class SystemLocationAdmin(admin.ModelAdmin):
     search_fields = ['id', 'name']
 
 
+@admin.register(models.Department)
+class DepartmentAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'identifier')
+    search_fields = ['name', 'identifier']
+
+
+@admin.register(models.StandardNote)
+class StandardNoteAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'department', 'location', 'board')
+    search_fields = ['name', 'location__name', 'board__name']
+    list_filter = ('location__name', 'board__name')
+
+
 @admin.register(models.Company)
 class CompanyAdmin(admin.ModelAdmin):
     list_display = ('id', 'name',

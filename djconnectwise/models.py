@@ -833,6 +833,49 @@ class SystemLocation(models.Model):
         return self.name or ''
 
 
+class Department(models.Model):
+    identifier = models.CharField(max_length=50, blank=True, null=True)
+    name = models.CharField(max_length=250, blank=True, null=True)
+
+    class Meta:
+        ordering = ('name',)
+
+    def __str__(self):
+        return self.name or ''
+
+
+class StandardNote(models.Model):
+    name = models.CharField(max_length=500, blank=True, null=True)
+    contents = models.TextField(blank=True, null=True)
+    location = models.ForeignKey(
+        SystemLocation,
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name='standard_notes',
+    )
+    department = models.ForeignKey(
+        Department,
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name='standard_notes',
+    )
+    board = models.ForeignKey(
+        ConnectWiseBoard,
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name='standard_notes',
+    )
+
+    class Meta:
+        ordering = ('name',)
+
+    def __str__(self):
+        return self.name or ''
+
+
 class UpdateRecordMixin:
 
     def save(self, *args, **kwargs):
@@ -2240,6 +2283,22 @@ class SystemLocationTracker(SystemLocation):
     class Meta:
         proxy = True
         db_table = 'djconnectwise_systemlocation'
+
+
+class DepartmentTracker(Department):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djconnectwise_department'
+
+
+class StandardNoteTracker(StandardNote):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djconnectwise_standardnote'
 
 
 class TimeEntryTracker(TimeEntry):
