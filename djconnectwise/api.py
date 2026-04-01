@@ -1001,6 +1001,8 @@ class SystemAPIClient(ConnectWiseAPIClient):
     ENDPOINT_LOCATIONS = 'locations/'
     ENDPOINT_OTHER = 'myCompany/other/'
     ENDPOINT_DOCUMENTS = 'documents/'
+    ENDPOINT_DEPARTMENTS = 'departments/'
+    ENDPOINT_STANDARD_NOTES = 'standardNotes/'
 
     def get_connectwise_version(self):
         result = self.fetch_resource(self.ENDPOINT_INFO)
@@ -1022,6 +1024,14 @@ class SystemAPIClient(ConnectWiseAPIClient):
         Fetch system locations from /system/locations endpoint.
         """
         return self.fetch_resource(self.ENDPOINT_LOCATIONS,
+                                   should_page=True, *args, **kwargs)
+
+    def get_departments(self, *args, **kwargs):
+        return self.fetch_resource(self.ENDPOINT_DEPARTMENTS,
+                                   should_page=True, *args, **kwargs)
+
+    def get_standard_notes(self, *args, **kwargs):
+        return self.fetch_resource(self.ENDPOINT_STANDARD_NOTES,
                                    should_page=True, *args, **kwargs)
 
     def get_callbacks(self, *args, **kwargs):

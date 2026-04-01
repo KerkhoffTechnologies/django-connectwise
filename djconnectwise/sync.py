@@ -2046,6 +2046,41 @@ class SystemLocationSynchronizer(Synchronizer):
         return self.client.get_system_locations(*args, **kwargs)
 
 
+class DepartmentSynchronizer(Synchronizer):
+    client_class = api.SystemAPIClient
+    model_class = models.DepartmentTracker
+
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data.get('id')
+        instance.identifier = json_data.get('identifier')
+        instance.name = json_data.get('name')
+        return instance
+
+    def get_page(self, *args, **kwargs):
+        return self.client.get_departments(*args, **kwargs)
+
+
+class StandardNoteSynchronizer(Synchronizer):
+    client_class = api.SystemAPIClient
+    model_class = models.StandardNoteTracker
+
+    related_meta = {
+        'location': (models.SystemLocation, 'location'),
+        'department': (models.Department, 'department'),
+        'board': (models.ConnectWiseBoard, 'board'),
+    }
+
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data.get('id')
+        instance.name = json_data.get('name')
+        instance.contents = json_data.get('contents')
+        self.set_relations(instance, json_data)
+        return instance
+
+    def get_page(self, *args, **kwargs):
+        return self.client.get_standard_notes(*args, **kwargs)
+
+
 class TimeEntrySynchronizer(BatchConditionMixin,
                             CreateRecordMixin,
                             UpdateRecordMixin,

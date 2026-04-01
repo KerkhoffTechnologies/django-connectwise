@@ -194,6 +194,66 @@ class TestSystemLocationSynchronizer(TestCase, SynchronizerTestMixin):
         return mocks.system_api_get_system_locations_call(return_data)
 
 
+class TestDepartmentSynchronizer(TestCase, SynchronizerTestMixin):
+    synchronizer_class = sync.DepartmentSynchronizer
+    model_class = models.DepartmentTracker
+    fixture = fixtures.API_DEPARTMENT_LIST
+
+    def call_api(self, return_data):
+        return mocks.system_api_get_departments_call(return_data)
+
+    def _assert_fields(self, instance, json_data):
+        self.assertEqual(instance.id, json_data['id'])
+        self.assertEqual(instance.identifier, json_data.get('identifier'))
+        self.assertEqual(instance.name, json_data.get('name'))
+
+
+class TestStandardNoteSynchronizer(TestCase, SynchronizerTestMixin):
+    synchronizer_class = sync.StandardNoteSynchronizer
+    model_class = models.StandardNoteTracker
+    fixture = fixtures.API_STANDARD_NOTE_LIST
+
+    def setUp(self):
+        super().setUp()
+        sl = fixtures.API_SYSTEM_LOCATION
+        models.SystemLocation.objects.update_or_create(
+            id=sl['id'],
+            defaults={
+                'name': sl['name'],
+                'owner_level_id': sl.get('ownerLevelId'),
+                'location_flag': sl.get('locationFlag', False),
+                'client_flag': sl.get('clientFlag', False),
+            },
+        )
+        dept = fixtures.API_DEPARTMENT
+        models.Department.objects.update_or_create(
+            id=dept['id'],
+            defaults={
+                'identifier': dept.get('identifier'),
+                'name': dept.get('name'),
+            },
+        )
+        b = fixtures.API_BOARD
+        models.ConnectWiseBoard.objects.update_or_create(
+            id=b['id'],
+            defaults={
+                'name': b['name'],
+                'inactive': b.get('inactiveFlag', False),
+            },
+        )
+
+    def call_api(self, return_data):
+        return mocks.system_api_get_standard_notes_call(return_data)
+
+    def _assert_fields(self, instance, json_data):
+        self.assertEqual(instance.id, json_data['id'])
+        self.assertEqual(instance.name, json_data.get('name'))
+        self.assertEqual(instance.contents, json_data.get('contents'))
+        self.assertEqual(instance.location_id, json_data['location']['id'])
+        self.assertEqual(instance.department_id, json_data['department']['id'])
+        self.assertEqual(instance.board_id, json_data['board']['id'])
+
+
 class TestCompanySynchronizer(TestCase, SynchronizerTestMixin):
     synchronizer_class = sync.CompanySynchronizer
     model_class = models.CompanyTracker

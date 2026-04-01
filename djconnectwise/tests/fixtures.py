@@ -1379,6 +1379,35 @@ API_SYSTEM_LOCATION = {
 
 API_SYSTEM_LOCATION_LIST = [API_SYSTEM_LOCATION]
 
+API_DEPARTMENT = {
+    'id': 10,
+    'identifier': 'IT',
+    'name': 'IT Department',
+}
+
+API_DEPARTMENT_LIST = [API_DEPARTMENT]
+
+API_STANDARD_NOTE = {
+    'id': 100,
+    'name': 'Standard greeting',
+    'contents': '<p>Hello</p>',
+    'location': {
+        'id': API_SYSTEM_LOCATION['id'],
+        'name': API_SYSTEM_LOCATION['name'],
+    },
+    'department': {
+        'id': API_DEPARTMENT['id'],
+        'identifier': API_DEPARTMENT['identifier'],
+        'name': API_DEPARTMENT['name'],
+    },
+    'board': {
+        'id': API_BOARD['id'],
+        'name': API_BOARD['name'],
+    },
+}
+
+API_STANDARD_NOTE_LIST = [API_STANDARD_NOTE]
+
 API_AGREEMENT = {
     "id": 1,
     "name": "Gold Rate",

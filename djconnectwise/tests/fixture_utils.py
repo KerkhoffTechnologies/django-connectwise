@@ -154,6 +154,13 @@ def init_system_locations():
     return synchronizer.sync()
 
 
+def init_departments():
+    models.Department.objects.all().delete()
+    mocks.system_api_get_departments_call(fixtures.API_DEPARTMENT_LIST)
+    synchronizer = sync.DepartmentSynchronizer()
+    return synchronizer.sync()
+
+
 def init_contacts():
     mocks.company_api_get_contacts(fixtures.API_COMPANY_CONTACT_LIST)
     synchronizer = sync.ContactSynchronizer()
