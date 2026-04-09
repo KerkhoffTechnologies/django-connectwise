@@ -1185,6 +1185,11 @@ class TicketAPIMixin:
             self.ENDPOINT_TICKETS, ticket_id)
         return self.fetch_resource(endpoint_url, should_page=True, **kwargs)
 
+    def get_ticket_configurations(self, ticket_id, **kwargs):
+        endpoint_url = '{}/{}/configurations'.format(
+            self.ENDPOINT_TICKETS, ticket_id)
+        return self.fetch_resource(endpoint_url, should_page=True, **kwargs)
+
     def create_ticket_task(self, ticket_id, **kwargs):
         return self.request(
             'post',
@@ -1509,6 +1514,20 @@ class ConfigurationAPIClient(ConnectWiseAPIClient):
         """
         api_conditions = f'company/id={company_id}'
         params = {'conditions': api_conditions}
+        return self.fetch_resource(self.ENDPOINT_CONFIGURATIONS,
+                                   params=params, should_page=True,
+                                   *args, **kwargs)
+
+    def get_configuration(self, configuration_id, *args, **kwargs):
+        endpoint_url = '{}{}'.format(
+            self.ENDPOINT_CONFIGURATIONS, configuration_id)
+        return self.fetch_resource(endpoint_url, *args, **kwargs)
+
+    def get_configurations_by_ids(self, configuration_ids, *args, **kwargs):
+        if not configuration_ids:
+            return []
+        ids_str = ','.join(str(cid) for cid in configuration_ids)
+        params = {'conditions': f'id in ({ids_str})'}
         return self.fetch_resource(self.ENDPOINT_CONFIGURATIONS,
                                    params=params, should_page=True,
                                    *args, **kwargs)
