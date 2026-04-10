@@ -2,12 +2,14 @@ import datetime
 import logging
 import math
 import os
+import urllib.parse
 from copy import deepcopy
 from decimal import Decimal
 from retrying import retry
 
 from botocore.exceptions import NoCredentialsError
 from dateutil.parser import parse
+from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.files.storage import default_storage
 from django.db import transaction, IntegrityError, DatabaseError
@@ -1038,6 +1040,11 @@ class OpportunityNoteSynchronizer(ChildFetchRecordsMixin, Synchronizer):
 
 class ConfigurationSynchronizer:
     client_class = api.ConfigurationAPIClient
+    TICKET_CLIENT_MAP = {
+        'ServiceTicket': api.ServiceAPIClient,
+        'ProjectTicket': api.ProjectAPIClient,
+        'ProjectIssue': api.ProjectAPIClient,
+    }
 
     def __init__(self, *args, **kwargs):
         self.api_conditions = []
@@ -1050,6 +1057,42 @@ class ConfigurationSynchronizer:
         Fetch configurations from a specific company.
         """
         return self.client.get_configurations(company_id)
+
+    def _get_ticket_client(self, record_type):
+        client_class = self.TICKET_CLIENT_MAP.get(
+            record_type, api.ServiceAPIClient
+        )
+        return client_class()
+
+    @staticmethod
+    def get_connectwise_url(config_id):
+        params = dict(
+            locale='en_US',
+            recordType='ConfigFV',
+            recid=config_id,
+            companyName=settings.CONNECTWISE_CREDENTIALS['company_id']
+        )
+        return '{}/{}?{}'.format(
+            settings.CONNECTWISE_SERVER_URL,
+            settings.CONNECTWISE_TICKET_PATH,
+            urllib.parse.urlencode(params)
+        )
+
+    def fetch_ticket_configurations(self, ticket_id, record_type=None):
+        """
+        Two-step fetch:
+        1. Get configuration references from the ticket endpoint.
+        2. Fetch full configuration details from the company
+           configurations endpoint.
+        """
+        ticket_client = self._get_ticket_client(record_type)
+        refs = ticket_client.get_ticket_configurations(ticket_id)
+
+        config_ids = [ref.get('id') for ref in refs if ref.get('id')]
+        if not config_ids:
+            return []
+
+        return self.client.get_configurations_by_ids(config_ids)
 
 
 class ConfigurationStatusSynchronizer(Synchronizer):
