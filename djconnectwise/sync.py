@@ -1041,6 +1041,7 @@ class OpportunityNoteSynchronizer(ChildFetchRecordsMixin, Synchronizer):
 class ConfigurationSynchronizer:
     client_class = api.ConfigurationAPIClient
     TICKET_CLIENT_MAP = {
+        'ServiceTicket': api.ServiceAPIClient,
         'ProjectTicket': api.ProjectAPIClient,
         'ProjectIssue': api.ProjectAPIClient,
     }
