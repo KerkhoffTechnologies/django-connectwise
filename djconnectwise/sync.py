@@ -2117,7 +2117,8 @@ class StandardNoteSynchronizer(Synchronizer):
         instance.id = json_data.get('id')
         instance.name = json_data.get('name')
         contents = json_data.get('contents')
-        # connectwise uses backslashes to escape periods, we need to remove them
+        # connectwise uses backslashes to escape periods, we need to remove
+        # them.
         instance.contents = contents.replace('\\', '')
 
         self.set_relations(instance, json_data)
