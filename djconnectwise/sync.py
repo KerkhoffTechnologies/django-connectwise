@@ -2116,7 +2116,11 @@ class StandardNoteSynchronizer(Synchronizer):
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data.get('id')
         instance.name = json_data.get('name')
-        instance.contents = json_data.get('contents')
+        contents = json_data.get('contents')
+        # connectwise uses backslashes to escape periods, we need to remove
+        # them.
+        instance.contents = contents.replace('\\', '')
+
         self.set_relations(instance, json_data)
         return instance
 
