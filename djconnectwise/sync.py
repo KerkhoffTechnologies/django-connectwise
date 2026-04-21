@@ -1097,6 +1097,39 @@ class ConfigurationSynchronizer:
 
         return self.client.get_configurations_by_ids(config_ids)
 
+    def fetch_ticket_configuration_ids(self, ticket_id, record_type=None):
+        """
+        Return the set of configuration IDs currently attached to a ticket.
+        """
+        ticket_client = self._get_ticket_client(record_type)
+        refs = ticket_client.get_ticket_configurations(ticket_id)
+        return {ref.get('id') for ref in refs if ref.get('id')}
+
+    def fetch_company_configurations(self, company_id, contact_id=None,
+                                     search=None,
+                                     page=1, page_size=50):
+        """
+        Fetch configurations for a company with optional filtering by
+        contact, search text
+        """
+        return self.client.get_configurations(
+            company_id,
+            contact_id=contact_id,
+            search=search,
+            page=page,
+            page_size=page_size,
+        )
+
+    def attach_ticket_configuration(self, ticket_id, configuration_id,
+                                    record_type=None):
+        """
+        Associate a configuration with a ticket.
+        """
+        ticket_client = self._get_ticket_client(record_type)
+        return ticket_client.create_ticket_configuration(
+            ticket_id, configuration_id
+        )
+
 
 class ConfigurationStatusSynchronizer(Synchronizer):
     client_class = api.ConfigurationAPIClient

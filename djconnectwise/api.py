@@ -1190,6 +1190,14 @@ class TicketAPIMixin:
             self.ENDPOINT_TICKETS, ticket_id)
         return self.fetch_resource(endpoint_url, should_page=True, **kwargs)
 
+    def create_ticket_configuration(self, ticket_id, configuration_id):
+        return self.request(
+            'post',
+            '{}/{}/configurations'.format(
+                self.ENDPOINT_TICKETS, ticket_id),
+            {'id': configuration_id}
+        )
+
     def create_ticket_task(self, ticket_id, **kwargs):
         return self.request(
             'post',
@@ -1508,12 +1516,29 @@ class ConfigurationAPIClient(ConnectWiseAPIClient):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def get_configurations(self, company_id, *args, **kwargs):
+    def get_configurations(
+            self,
+            company_id,
+            contact_id=None,
+            search=None,
+            *args,
+            **kwargs):
         """
-        Retrieves configurations for a given company ID.
+        Retrieves configurations for a company with optional contact,
+        search.
         """
-        api_conditions = f'company/id={company_id}'
-        params = {'conditions': api_conditions}
+        conditions = [f'company/id={company_id}']
+
+        if contact_id:
+            conditions.append(f'contact/id={contact_id}')
+
+        if search:
+            conditions.append(
+                f"(name contains '{search}' "
+                f"or serialNumber contains '{search}')"
+            )
+
+        params = {'conditions': ' and '.join(conditions)}
         return self.fetch_resource(self.ENDPOINT_CONFIGURATIONS,
                                    params=params, should_page=True,
                                    *args, **kwargs)
