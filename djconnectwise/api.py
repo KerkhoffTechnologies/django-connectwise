@@ -1198,6 +1198,14 @@ class TicketAPIMixin:
             {'id': configuration_id}
         )
 
+    def delete_ticket_configuration(self, ticket_id, configuration_id):
+        return self.request(
+            'delete',
+            '{}/{}/configurations/{}'.format(
+                self.ENDPOINT_TICKETS, ticket_id, configuration_id
+            )
+        )
+
     def create_ticket_task(self, ticket_id, **kwargs):
         return self.request(
             'post',

@@ -1138,6 +1138,16 @@ class ConfigurationSynchronizer:
             ticket_id, configuration_id
         )
 
+    def detach_ticket_configuration(self, ticket_id, configuration_id,
+                                    record_type=None):
+        """
+        Remove a configuration association from a ticket.
+        """
+        ticket_client = self._get_ticket_client(record_type)
+        return ticket_client.delete_ticket_configuration(
+            ticket_id, configuration_id
+        )
+
 
 class ConfigurationStatusSynchronizer(Synchronizer):
     client_class = api.ConfigurationAPIClient
