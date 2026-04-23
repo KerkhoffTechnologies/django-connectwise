@@ -1051,7 +1051,12 @@ class ConfigurationSynchronizer:
 
     def __init__(self, *args, **kwargs):
         self.api_conditions = []
-        self.client = self.client_class()
+        self.api_public_key = kwargs.get('api_public_key')
+        self.api_private_key = kwargs.get('api_private_key')
+        self.client = self.client_class(
+            api_public_key=self.api_public_key,
+            api_private_key=self.api_private_key,
+        )
         request_settings = DjconnectwiseSettings().get_settings()
         self.batch_size = request_settings['batch_size']
 
@@ -1065,7 +1070,10 @@ class ConfigurationSynchronizer:
         client_class = self.TICKET_CLIENT_MAP.get(
             record_type, api.ServiceAPIClient
         )
-        return client_class()
+        return client_class(
+            api_public_key=self.api_public_key,
+            api_private_key=self.api_private_key,
+        )
 
     @staticmethod
     def get_connectwise_url(config_id):
@@ -1096,6 +1104,39 @@ class ConfigurationSynchronizer:
             return []
 
         return self.client.get_configurations_by_ids(config_ids)
+
+    def fetch_ticket_configuration_ids(self, ticket_id, record_type=None):
+        """
+        Return the set of configuration IDs currently attached to a ticket.
+        """
+        ticket_client = self._get_ticket_client(record_type)
+        refs = ticket_client.get_ticket_configurations(ticket_id)
+        return {ref.get('id') for ref in refs if ref.get('id')}
+
+    def fetch_company_configurations(self, company_id, contact_id=None,
+                                     search=None,
+                                     page=1, page_size=50):
+        """
+        Fetch configurations for a company with optional filtering by
+        contact, search text
+        """
+        return self.client.get_configurations(
+            company_id,
+            contact_id=contact_id,
+            search=search,
+            page=page,
+            page_size=page_size,
+        )
+
+    def attach_ticket_configuration(self, ticket_id, configuration_id,
+                                    record_type=None):
+        """
+        Associate a configuration with a ticket.
+        """
+        ticket_client = self._get_ticket_client(record_type)
+        return ticket_client.create_ticket_configuration(
+            ticket_id, configuration_id
+        )
 
 
 class ConfigurationStatusSynchronizer(Synchronizer):
