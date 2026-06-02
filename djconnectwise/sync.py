@@ -2448,6 +2448,23 @@ class ProjectStatusSynchronizer(Synchronizer):
         return self.client.get_project_statuses(*args, **kwargs)
 
 
+class ProjectPhaseStatusSynchronizer(Synchronizer):
+
+    client_class = api.ProjectAPIClient
+    model_class = models.ProjectPhaseStatusTracker
+
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data.get('id')
+        instance.name = json_data.get('name')
+        instance.default_flag = json_data.get('defaultFlag')
+        instance.inactive_flag = json_data.get('inactiveFlag')
+        instance.closed_flag = json_data.get('closedFlag')
+        return instance
+
+    def get_page(self, *args, **kwargs):
+        return self.client.get_project_phase_statuses(*args, **kwargs)
+
+
 class ProjectPhaseSynchronizer(
         UpdateRecordMixin, ChildFetchRecordsMixin, Synchronizer):
 
@@ -2456,7 +2473,8 @@ class ProjectPhaseSynchronizer(
     parent_model_class = models.Project
 
     related_meta = {
-        'board': (models.ConnectWiseBoard, 'board')
+        'board': (models.ConnectWiseBoard, 'board'),
+        'status': (models.ProjectPhaseStatus, 'status'),
     }
 
     API_FIELD_NAMES = {
@@ -2473,6 +2491,7 @@ class ProjectPhaseSynchronizer(
         'actual_end': 'actualEnd',
         'required_date': 'deadlineDate',
         'board': 'board',
+        'status': 'status',
     }
 
     def _assign_field_data(self, instance, json_data):
