@@ -1439,6 +1439,7 @@ class ProjectAPIClient(TicketAPIMixin, ConnectWiseAPIClient):
     API = 'project'
     ENDPOINT_PROJECTS = 'projects/'
     ENDPOINT_PROJECT_STATUSES = 'statuses/'
+    ENDPOINT_PROJECT_PHASE_STATUSES = 'phaseStatuses/'
     ENDPOINT_PROJECT_PHASES = 'phases/'
     ENDPOINT_PROJECT_TYPES = 'projectTypes/'
     ENDPOINT_PROJECT_TEAM_MEMBERS = 'teamMembers/'
@@ -1455,6 +1456,11 @@ class ProjectAPIClient(TicketAPIMixin, ConnectWiseAPIClient):
 
     def get_project_statuses(self, *args, **kwargs):
         return self.fetch_resource(self.ENDPOINT_PROJECT_STATUSES,
+                                   should_page=True,
+                                   *args, **kwargs)
+
+    def get_project_phase_statuses(self, *args, **kwargs):
+        return self.fetch_resource(self.ENDPOINT_PROJECT_PHASE_STATUSES,
                                    should_page=True,
                                    *args, **kwargs)
 

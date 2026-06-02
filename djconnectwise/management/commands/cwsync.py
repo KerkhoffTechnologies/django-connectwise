@@ -37,6 +37,8 @@ class Command(BaseCommand):
             ('priority', sync.PrioritySynchronizer, _('Priority')),
             ('project_status', sync.ProjectStatusSynchronizer,
              _('Project Status')),
+            ('project_phase_status', sync.ProjectPhaseStatusSynchronizer,
+             _('Project Phase Status')),
             ('project_type', sync.ProjectTypeSynchronizer,
              _('Project Type')),
             ('project', sync.ProjectSynchronizer, _('Project')),
