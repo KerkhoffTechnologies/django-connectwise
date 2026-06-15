@@ -560,6 +560,22 @@ class TestProjectStatusSynchronizer(TestCase, SynchronizerTestMixin):
         self.assertEqual(instance.closed_flag, json_data['closedFlag'])
 
 
+class TestProjectPhaseStatusSynchronizer(TestCase, SynchronizerTestMixin):
+    synchronizer_class = sync.ProjectPhaseStatusSynchronizer
+    model_class = models.ProjectPhaseStatusTracker
+    fixture = fixtures.API_PROJECT_PHASE_STATUSES
+
+    def call_api(self, return_data):
+        return mocks.projects_api_get_project_phase_statuses_call(return_data)
+
+    def _assert_fields(self, instance, json_data):
+        self.assertEqual(instance.id, json_data['id'])
+        self.assertEqual(instance.name, json_data['name'])
+        self.assertEqual(instance.default_flag, json_data['defaultFlag'])
+        self.assertEqual(instance.inactive_flag, json_data['inactiveFlag'])
+        self.assertEqual(instance.closed_flag, json_data['closedFlag'])
+
+
 class TestProjectTypeSynchronizer(TestCase, SynchronizerTestMixin):
     synchronizer_class = sync.ProjectTypeSynchronizer
     model_class = models.ProjectTypeTracker
@@ -2240,6 +2256,20 @@ class TestWorkRoleSynchronizer(TestCase, SynchronizerTestMixin):
         self.assertEqual(instance.inactive_flag, json_data['inactiveFlag'])
 
 
+class TestAgreementTypeSynchronizer(TestCase, SynchronizerTestMixin):
+    synchronizer_class = sync.AgreementTypeSynchronizer
+    model_class = models.AgreementTypeTracker
+    fixture = fixtures.API_AGREEMENT_TYPE_LIST
+
+    def call_api(self, return_data):
+        return mocks.finance_api_get_agreement_types_call(return_data)
+
+    def _assert_fields(self, instance, json_data):
+        self.assertEqual(instance.id, json_data['id'])
+        self.assertEqual(instance.name, json_data['name'])
+        self.assertEqual(instance.default_flag, json_data['defaultFlag'])
+
+
 class TestAgreementSynchronizer(TestCase, SynchronizerTestMixin):
     synchronizer_class = sync.AgreementSynchronizer
     model_class = models.AgreementTracker
@@ -2253,6 +2283,7 @@ class TestAgreementSynchronizer(TestCase, SynchronizerTestMixin):
         fixture_utils.init_company_statuses()
         fixture_utils.init_company_types()
         fixture_utils.init_companies()
+        fixture_utils.init_agreement_types()
 
     def call_api(self, return_data):
         return mocks.finance_api_get_agreements_call(return_data)
@@ -2261,7 +2292,8 @@ class TestAgreementSynchronizer(TestCase, SynchronizerTestMixin):
         self.assertEqual(instance.id, json_data['id'])
         self.assertEqual(instance.name, json_data['name'])
         self.assertEqual(instance.bill_time, json_data['billTime'])
-        self.assertEqual(instance.agreement_type, json_data['type']['name'])
+        self.assertEqual(
+            instance.agreement_type.name, json_data['type']['name'])
         self.assertEqual(instance.cancelled_flag, json_data['cancelledFlag'])
         self.assertEqual(
             instance.work_role.name, json_data['workRole']['name'])

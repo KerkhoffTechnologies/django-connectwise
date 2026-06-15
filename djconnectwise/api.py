@@ -1589,10 +1589,15 @@ class ConfigurationAPIClient(ConnectWiseAPIClient):
 class FinanceAPIClient(ConnectWiseAPIClient):
     API = 'finance'
     ENDPOINT_AGREEMENTS = 'agreements'
+    ENDPOINT_AGREEMENT_TYPES = '{}/types'.format(ENDPOINT_AGREEMENTS)
 
     def get_agreements(self, *args, **kwargs):
         return self.fetch_resource(self.ENDPOINT_AGREEMENTS, should_page=True,
                                    *args, **kwargs)
+
+    def get_agreement_types(self, *args, **kwargs):
+        return self.fetch_resource(self.ENDPOINT_AGREEMENT_TYPES,
+                                   should_page=True, *args, **kwargs)
 
 
 class HostedAPIClient(SystemAPIClient):

@@ -854,3 +854,13 @@ class TestFinanceAPIClient(BaseAPITestCase):
 
         self.assertEqual(result, fixtures.API_AGREEMENT_LIST)
         self.assert_request_should_page(True)
+
+    @responses.activate
+    def test_get_agreement_types(self):
+        endpoint = self.client._endpoint(
+            self.client.ENDPOINT_AGREEMENT_TYPES)
+
+        mk.get(endpoint, fixtures.API_AGREEMENT_TYPE_LIST)
+        result = self.client.get_agreement_types()
+        self.assertEqual(result, fixtures.API_AGREEMENT_TYPE_LIST)
+        self.assert_request_should_page(True)
