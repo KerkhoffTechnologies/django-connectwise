@@ -38,7 +38,15 @@ class Migration(migrations.Migration):
             },
             bases=('djconnectwise.agreementtype',),
         ),
-        migrations.AlterField(
+        # Destructive swap: the old CharField stored the type *name* (e.g.
+        # "Block Time - One time"); those strings can't cast to the new FK's
+        # integer column, so drop the column and add a fresh nullable FK.
+        # A subsequent cwsync (agreement_type then agreement) repopulates it.
+        migrations.RemoveField(
+            model_name='agreement',
+            name='agreement_type',
+        ),
+        migrations.AddField(
             model_name='agreement',
             name='agreement_type',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='agreements', to='djconnectwise.agreementtype'),
