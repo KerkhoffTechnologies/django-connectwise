@@ -913,6 +913,18 @@ class TimeEntry(UpdateRecordMixin, models.Model):
 
     actual_hours = models.DecimalField(
         blank=True, null=True, decimal_places=2, max_digits=9)
+    # Financial fields (issue #4669) — billable amounts for project-health
+    # margin rollups. Nullable: not all entries populate them.
+    hourly_rate = models.DecimalField(
+        blank=True, null=True, decimal_places=2, max_digits=14)
+    hours_billed = models.DecimalField(
+        blank=True, null=True, decimal_places=2, max_digits=9)
+    invoice_hours = models.DecimalField(
+        blank=True, null=True, decimal_places=2, max_digits=9)
+    extended_invoice_amount = models.DecimalField(
+        blank=True, null=True, decimal_places=2, max_digits=14)
+    agreement_amount = models.DecimalField(
+        blank=True, null=True, decimal_places=2, max_digits=14)
     billable_option = models.CharField(choices=BILL_TYPES, max_length=250)
     charge_to_type = models.CharField(choices=CHARGE_TYPES, max_length=250)
     hours_deduct = models.DecimalField(
@@ -1212,6 +1224,32 @@ class Project(UpdateConnectWiseMixin, TimeStampedModel):
     )
     billing_method = models.CharField(null=True, blank=True,
                                       choices=BILLING_METHODS, max_length=50)
+
+    # Financial fields (issue #4669) — enable the project-health margin
+    # signal in #4664. All nullable: not all source projects populate them.
+    estimated_time_revenue = models.DecimalField(
+        blank=True, null=True, decimal_places=2, max_digits=14)
+    estimated_time_cost = models.DecimalField(
+        blank=True, null=True, decimal_places=2, max_digits=14)
+    estimated_expense_revenue = models.DecimalField(
+        blank=True, null=True, decimal_places=2, max_digits=14)
+    estimated_expense_cost = models.DecimalField(
+        blank=True, null=True, decimal_places=2, max_digits=14)
+    estimated_product_revenue = models.DecimalField(
+        blank=True, null=True, decimal_places=2, max_digits=14)
+    estimated_product_cost = models.DecimalField(
+        blank=True, null=True, decimal_places=2, max_digits=14)
+    billing_amount = models.DecimalField(
+        blank=True, null=True, decimal_places=2, max_digits=14)
+    po_amount = models.DecimalField(
+        blank=True, null=True, decimal_places=2, max_digits=14)
+    down_payment = models.DecimalField(
+        blank=True, null=True, decimal_places=2, max_digits=14)
+    billing_rate_type = models.CharField(
+        blank=True, null=True, max_length=50)
+    budget_flag = models.BooleanField(default=False)
+    budget_analysis = models.CharField(
+        blank=True, null=True, max_length=50)
 
     board = models.ForeignKey(
         'ConnectWiseBoard',
@@ -2002,6 +2040,16 @@ class Agreement(TimeStampedModel):
     bill_time = models.CharField(
         max_length=50, choices=BILL_TYPES, blank=True, null=True
     )
+    # Financial fields (issue #4669) — contracted amounts/rates for the
+    # project-health margin signal. Nullable: not all agreements populate them.
+    bill_amount = models.DecimalField(
+        blank=True, null=True, decimal_places=2, max_digits=14)
+    comp_hourly_rate = models.DecimalField(
+        blank=True, null=True, decimal_places=2, max_digits=14)
+    comp_limit_amount = models.DecimalField(
+        blank=True, null=True, decimal_places=2, max_digits=14)
+    application_limit = models.DecimalField(
+        blank=True, null=True, decimal_places=2, max_digits=14)
     work_type = models.ForeignKey(
         'WorkType', null=True, on_delete=models.SET_NULL)
     work_role = models.ForeignKey(

@@ -2277,6 +2277,19 @@ class TimeEntrySynchronizer(BatchConditionMixin,
         instance.actual_hours = Decimal(str(actual_hours)) \
             if actual_hours is not None else None
 
+        # Financial fields (issue #4669). See the actual_hours comment above
+        # for why decimals are built from str().
+        for field, api_key in (
+            ('hourly_rate', 'hourlyRate'),
+            ('hours_billed', 'hoursBilled'),
+            ('invoice_hours', 'invoiceHours'),
+            ('extended_invoice_amount', 'extendedInvoiceAmount'),
+            ('agreement_amount', 'agreementAmount'),
+        ):
+            value = json_data.get(api_key)
+            setattr(instance, field,
+                    Decimal(str(value)) if value is not None else None)
+
         detail_description_flag = json_data.get('addToDetailDescriptionFlag')
         if detail_description_flag:
             instance.detail_description_flag = detail_description_flag
@@ -2713,6 +2726,28 @@ class ProjectSynchronizer(CreateRecordMixin,
             if scheduled_hours is not None else None
         instance.percent_complete = Decimal(str(percent_complete)) \
             if percent_complete is not None else None
+
+        # Financial fields (issue #4669). Decimals are built from str() to
+        # match how django's to_python loads them from the DB, so the
+        # FieldTracker doesn't see spurious changes (see actual_hours above).
+        for field, api_key in (
+            ('estimated_time_revenue', 'estimatedTimeRevenue'),
+            ('estimated_time_cost', 'estimatedTimeCost'),
+            ('estimated_expense_revenue', 'estimatedExpenseRevenue'),
+            ('estimated_expense_cost', 'estimatedExpenseCost'),
+            ('estimated_product_revenue', 'estimatedProductRevenue'),
+            ('estimated_product_cost', 'estimatedProductCost'),
+            ('billing_amount', 'billingAmount'),
+            ('po_amount', 'poAmount'),
+            ('down_payment', 'downpayment'),
+        ):
+            value = json_data.get(api_key)
+            setattr(instance, field,
+                    Decimal(str(value)) if value is not None else None)
+
+        instance.billing_rate_type = json_data.get('billingRateType')
+        instance.budget_flag = bool(json_data.get('budgetFlag'))
+        instance.budget_analysis = json_data.get('budgetAnalysis')
 
         if actual_start:
             instance.actual_start = parse(actual_start).date()
@@ -3897,6 +3932,18 @@ class AgreementSynchronizer(Synchronizer):
             instance.bill_time = None
         else:
             instance.bill_time = json_data.get('billTime')
+
+        # Financial fields (issue #4669). Decimals built from str() to match
+        # how django's to_python loads them from the DB (FieldTracker safety).
+        for field, api_key in (
+            ('bill_amount', 'billAmount'),
+            ('comp_hourly_rate', 'compHourlyRate'),
+            ('comp_limit_amount', 'compLimitAmount'),
+            ('application_limit', 'applicationLimit'),
+        ):
+            value = json_data.get(api_key)
+            setattr(instance, field,
+                    Decimal(str(value)) if value is not None else None)
 
         self.set_relations(instance, json_data)
         return instance
