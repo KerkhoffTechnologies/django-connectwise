@@ -344,7 +344,7 @@ API_MEMBER = {
     'homeEmail': None,
     'homeExtension': None,
     'homePhone': None,
-    'hourlyCost': 0.0,
+    'hourlyCost': 65.00,
     'hourlyRate': None,
     'id': 176,
     'identifier': 'User1',

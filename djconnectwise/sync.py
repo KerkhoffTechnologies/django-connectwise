@@ -2831,6 +2831,11 @@ class MemberSynchronizer(Synchronizer):
         instance.inactive = json_data.get('inactiveFlag')
         instance.title = json_data.get('title')
 
+        # Member cost rate (issue #4669). Decimal(str()) for tracker safety.
+        hourly_cost = json_data.get('hourlyCost')
+        instance.hourly_cost = Decimal(str(hourly_cost)) \
+            if hourly_cost is not None else None
+
         self.set_relations(instance, json_data)
 
         return instance
@@ -3907,6 +3912,11 @@ class WorkRoleSynchronizer(Synchronizer):
         instance.id = json_data.get('id')
         instance.name = json_data.get('name')
         instance.inactive_flag = json_data.get('inactiveFlag')
+
+        # Work-role bill rate (issue #4669). Decimal(str()) for tracker safety.
+        hourly_rate = json_data.get('hourlyRate')
+        instance.hourly_rate = Decimal(str(hourly_rate)) \
+            if hourly_rate is not None else None
 
         return instance
 

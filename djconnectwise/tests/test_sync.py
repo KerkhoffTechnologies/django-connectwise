@@ -1047,6 +1047,9 @@ class TestMemberSynchronization(TransactionTestCase, AssertSyncMixin):
         self.assertEqual(local_member.first_name, api_member['firstName'])
         self.assertEqual(local_member.last_name, api_member['lastName'])
         self.assertEqual(local_member.office_email, api_member['officeEmail'])
+        # Cost rate (issue #4669): the cost basis for the margin signal.
+        self.assertEqual(
+            local_member.hourly_cost, Decimal(str(api_member['hourlyCost'])))
 
     def test_sync_member_update(self):
         member = models.Member()
@@ -2286,6 +2289,9 @@ class TestWorkRoleSynchronizer(TestCase, SynchronizerTestMixin):
         self.assertEqual(instance.id, json_data['id'])
         self.assertEqual(instance.name, json_data['name'])
         self.assertEqual(instance.inactive_flag, json_data['inactiveFlag'])
+        # Bill rate (issue #4669).
+        self.assertEqual(
+            instance.hourly_rate, Decimal(str(json_data['hourlyRate'])))
 
 
 class TestAgreementSynchronizer(TestCase, SynchronizerTestMixin):

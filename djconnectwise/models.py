@@ -305,6 +305,11 @@ class Member(TimeStampedModel):
 
     objects = models.Manager()
     title = models.CharField(blank=True, null=True, max_length=250)
+    # Member cost rate (issue #4669) -- the cost basis for the margin signal
+    # (#4664): cost = actual_hours * hourly_cost. Nullable; CW exposes this on
+    # the member endpoint (may be 0 where an org doesn't populate it).
+    hourly_cost = models.DecimalField(
+        blank=True, null=True, decimal_places=2, max_digits=14)
 
     regular_objects = RegularMemberManager()
 
@@ -2062,6 +2067,10 @@ class WorkType(TimeStampedModel):
 class WorkRole(TimeStampedModel):
     name = models.CharField(max_length=50)
     inactive_flag = models.BooleanField(default=False)
+    # Work-role default bill rate (issue #4669) -- a revenue-rate fallback /
+    # reference for the margin signal (#4664). Nullable.
+    hourly_rate = models.DecimalField(
+        blank=True, null=True, decimal_places=2, max_digits=14)
 
     def __str__(self):
         return self.name
