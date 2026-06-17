@@ -691,6 +691,25 @@ class TestProjectPhaseSynchronizer(TestCase, SynchronizerTestMixin):
             instance.actual_end, parse(json_data['actualEnd']).date()
         )
 
+        # Financial / billing fields (issue #4669).
+        self.assertEqual(instance.billing_method, json_data['billingMethod'])
+        self.assertEqual(
+            instance.mark_as_milestone_flag, json_data['markAsMilestoneFlag'])
+        for field, api_key in (
+            ('billing_amount', 'billingAmount'),
+            ('estimated_time_revenue', 'estimatedTimeRevenue'),
+            ('estimated_time_cost', 'estimatedTimeCost'),
+            ('estimated_expense_revenue', 'estimatedExpenseRevenue'),
+            ('estimated_expense_cost', 'estimatedExpenseCost'),
+            ('estimated_product_revenue', 'estimatedProductRevenue'),
+            ('estimated_product_cost', 'estimatedProductCost'),
+            ('po_amount', 'poAmount'),
+            ('down_payment', 'downpayment'),
+            ('hourly_rate', 'hourlyRate'),
+        ):
+            self.assertEqual(
+                getattr(instance, field), Decimal(str(json_data[api_key])))
+
     def test_sync_update(self):
         self._sync(self.fixture)
 

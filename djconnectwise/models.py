@@ -1133,6 +1133,41 @@ class ProjectPhase(TimeStampedModel):
         blank=True, null=True, decimal_places=2, max_digits=9)
     wbs_code = models.CharField(max_length=50, blank=True, null=True)
 
+    # Financial / billing fields (issue #4669). CW lets the billing method and
+    # amounts be overridden per phase (e.g. a FixedFee phase inside an
+    # ActualRates project), so the margin signal (#4664) must read them at this
+    # level, not just the project's. mark_as_milestone_flag also feeds #4664's
+    # milestone signal. All nullable: not every phase populates them.
+    PHASE_BILLING_METHODS = (
+        ('ActualRates', 'Actual Rates'),
+        ('FixedFee', 'Fixed Fee'),
+        ('NotToExceed', 'Not To Exceed'),
+        ('OverrideRate', 'Override Rate'),
+    )
+    billing_method = models.CharField(
+        blank=True, null=True, choices=PHASE_BILLING_METHODS, max_length=50)
+    billing_amount = models.DecimalField(
+        blank=True, null=True, decimal_places=2, max_digits=14)
+    estimated_time_revenue = models.DecimalField(
+        blank=True, null=True, decimal_places=2, max_digits=14)
+    estimated_time_cost = models.DecimalField(
+        blank=True, null=True, decimal_places=2, max_digits=14)
+    estimated_expense_revenue = models.DecimalField(
+        blank=True, null=True, decimal_places=2, max_digits=14)
+    estimated_expense_cost = models.DecimalField(
+        blank=True, null=True, decimal_places=2, max_digits=14)
+    estimated_product_revenue = models.DecimalField(
+        blank=True, null=True, decimal_places=2, max_digits=14)
+    estimated_product_cost = models.DecimalField(
+        blank=True, null=True, decimal_places=2, max_digits=14)
+    po_amount = models.DecimalField(
+        blank=True, null=True, decimal_places=2, max_digits=14)
+    down_payment = models.DecimalField(
+        blank=True, null=True, decimal_places=2, max_digits=14)
+    hourly_rate = models.DecimalField(
+        blank=True, null=True, decimal_places=2, max_digits=14)
+    mark_as_milestone_flag = models.BooleanField(default=False)
+
     project = models.ForeignKey(
         'Project', blank=True, null=True, on_delete=models.SET_NULL
     )

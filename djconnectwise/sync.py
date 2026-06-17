@@ -2508,6 +2508,27 @@ class ProjectPhaseSynchronizer(
         else:
             instance.bill_time = json_data.get('billTime')
 
+        # Financial / billing fields (issue #4669). Decimals built from str()
+        # to match how to_python loads them from the DB (FieldTracker safety).
+        instance.billing_method = json_data.get('billingMethod')
+        instance.mark_as_milestone_flag = bool(
+            json_data.get('markAsMilestoneFlag'))
+        for field, api_key in (
+            ('billing_amount', 'billingAmount'),
+            ('estimated_time_revenue', 'estimatedTimeRevenue'),
+            ('estimated_time_cost', 'estimatedTimeCost'),
+            ('estimated_expense_revenue', 'estimatedExpenseRevenue'),
+            ('estimated_expense_cost', 'estimatedExpenseCost'),
+            ('estimated_product_revenue', 'estimatedProductRevenue'),
+            ('estimated_product_cost', 'estimatedProductCost'),
+            ('po_amount', 'poAmount'),
+            ('down_payment', 'downpayment'),
+            ('hourly_rate', 'hourlyRate'),
+        ):
+            value = json_data.get(api_key)
+            setattr(instance, field,
+                    Decimal(str(value)) if value is not None else None)
+
         scheduled_start = json_data.get('scheduledStart')
         scheduled_end = json_data.get('scheduledEnd')
         actual_start = json_data.get('actualStart')
