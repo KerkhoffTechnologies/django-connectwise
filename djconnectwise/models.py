@@ -2011,9 +2011,19 @@ class WorkRole(TimeStampedModel):
         return self.name
 
 
+class AgreementType(TimeStampedModel):
+    name = models.CharField(max_length=100)
+    default_flag = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.name
+
+
 class Agreement(TimeStampedModel):
     name = models.CharField(max_length=100)
-    agreement_type = models.CharField(max_length=50, null=True)
+    agreement_type = models.ForeignKey(
+        'AgreementType', blank=True, null=True, on_delete=models.SET_NULL,
+        related_name='agreements')
     agreement_status = models.CharField(max_length=50, blank=True, null=True)
     cancelled_flag = models.BooleanField(default=False)
     bill_time = models.CharField(
@@ -2564,6 +2574,14 @@ class AgreementTracker(Agreement):
     class Meta:
         proxy = True
         db_table = 'djconnectwise_agreement'
+
+
+class AgreementTypeTracker(AgreementType):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djconnectwise_agreementtype'
 
 
 class TicketUDFTracker(TicketUDF):

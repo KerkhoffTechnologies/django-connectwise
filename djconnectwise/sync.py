@@ -3898,6 +3898,7 @@ class AgreementSynchronizer(Synchronizer):
     model_class = models.AgreementTracker
 
     related_meta = {
+        'type': (models.AgreementType, 'agreement_type'),
         'workRole': (models.WorkRole, 'work_role'),
         'workType': (models.WorkType, 'work_type'),
         'company': (models.Company, 'company')
@@ -3909,9 +3910,6 @@ class AgreementSynchronizer(Synchronizer):
         instance.agreement_status = json_data.get('agreementStatus')
         instance.cancelled_flag = json_data.get('cancelledFlag')
 
-        if json_data.get('type'):
-            instance.agreement_type = json_data['type'].get('name')
-
         if json_data.get('billTime') == 'NoDefault':
             instance.bill_time = None
         else:
@@ -3922,6 +3920,21 @@ class AgreementSynchronizer(Synchronizer):
 
     def get_page(self, *args, **kwargs):
         return self.client.get_agreements(*args, **kwargs)
+
+
+class AgreementTypeSynchronizer(Synchronizer):
+    client_class = api.FinanceAPIClient
+    model_class = models.AgreementTypeTracker
+
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data.get('id')
+        instance.name = json_data.get('name')
+        instance.default_flag = json_data.get('defaultFlag')
+
+        return instance
+
+    def get_page(self, *args, **kwargs):
+        return self.client.get_agreement_types(*args, **kwargs)
 
 
 class SourceSynchronizer(Synchronizer):
