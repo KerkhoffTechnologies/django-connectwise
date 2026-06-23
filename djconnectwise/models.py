@@ -1119,6 +1119,20 @@ class ProjectType(TimeStampedModel):
         return self.name
 
 
+class ProjectPhaseStatus(TimeStampedModel):
+    name = models.CharField(max_length=50)
+    default_flag = models.BooleanField(default=False)
+    inactive_flag = models.BooleanField(default=False)
+    closed_flag = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ('name', )
+        verbose_name_plural = 'Project phase statuses'
+
+    def __str__(self):
+        return self.name
+
+
 class ProjectPhase(TimeStampedModel):
     description = models.CharField(max_length=100)
     scheduled_start = models.DateField(blank=True, null=True)
@@ -1178,6 +1192,9 @@ class ProjectPhase(TimeStampedModel):
     )
     board = models.ForeignKey(
         'ConnectwiseBoard', blank=True, null=True, on_delete=models.SET_NULL
+    )
+    status = models.ForeignKey(
+        'ProjectPhaseStatus', blank=True, null=True, on_delete=models.SET_NULL
     )
 
     class Meta:
@@ -2076,9 +2093,19 @@ class WorkRole(TimeStampedModel):
         return self.name
 
 
+class AgreementType(TimeStampedModel):
+    name = models.CharField(max_length=100)
+    default_flag = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.name
+
+
 class Agreement(TimeStampedModel):
     name = models.CharField(max_length=100)
-    agreement_type = models.CharField(max_length=50, null=True)
+    agreement_type = models.ForeignKey(
+        'AgreementType', blank=True, null=True, on_delete=models.SET_NULL,
+        related_name='agreements')
     agreement_status = models.CharField(max_length=50, blank=True, null=True)
     cancelled_flag = models.BooleanField(default=False)
     bill_time = models.CharField(
@@ -2433,6 +2460,14 @@ class ProjectTypeTracker(ProjectType):
         db_table = 'djconnectwise_projecttype'
 
 
+class ProjectPhaseStatusTracker(ProjectPhaseStatus):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djconnectwise_projectphasestatus'
+
+
 class ProjectPhaseTracker(ProjectPhase):
     tracker = FieldTracker()
 
@@ -2631,6 +2666,14 @@ class AgreementTracker(Agreement):
     class Meta:
         proxy = True
         db_table = 'djconnectwise_agreement'
+
+
+class AgreementTypeTracker(AgreementType):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djconnectwise_agreementtype'
 
 
 class TicketUDFTracker(TicketUDF):

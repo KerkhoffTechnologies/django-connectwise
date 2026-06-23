@@ -573,6 +573,32 @@ API_PROJECT_STATUSES = [
     }
 ]
 
+API_PROJECT_PHASE_STATUSES = [
+    {
+        'id': 1,
+        'name': 'Open',
+        'defaultFlag': True,
+        'inactiveFlag': False,
+        'closedFlag': False,
+        '_info': {
+            'lastUpdated': '2001-01-08T18:05:13Z',
+            'updatedBy': None
+        }
+    },
+    {
+        'id': 2,
+        'name': 'Closed',
+        'defaultFlag': False,
+        'inactiveFlag': False,
+        'closedFlag': True,
+        '_info': {
+            'lastUpdated': '2001-01-08T18:05:21Z',
+            'updatedBy': None
+        }
+    }
+]
+
+
 API_PROJECT_TYPES = [
     {
         'id': 6,
@@ -1454,6 +1480,18 @@ API_AGREEMENT = {
 }
 
 API_AGREEMENT_LIST = [API_AGREEMENT]
+
+API_AGREEMENT_TYPE = {
+    'id': API_AGREEMENT['type']['id'],
+    'name': API_AGREEMENT['type']['name'],
+    'defaultFlag': False,
+    '_info': {
+        'lastUpdated': '2015-08-21T20:22:06Z',
+        'updatedBy': None
+    }
+}
+
+API_AGREEMENT_TYPE_LIST = [API_AGREEMENT_TYPE]
 
 API_SALES_OPPORTUNITY_TYPE = {
     'id': 2,

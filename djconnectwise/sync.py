@@ -2461,6 +2461,23 @@ class ProjectStatusSynchronizer(Synchronizer):
         return self.client.get_project_statuses(*args, **kwargs)
 
 
+class ProjectPhaseStatusSynchronizer(Synchronizer):
+
+    client_class = api.ProjectAPIClient
+    model_class = models.ProjectPhaseStatusTracker
+
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data.get('id')
+        instance.name = json_data.get('name')
+        instance.default_flag = json_data.get('defaultFlag')
+        instance.inactive_flag = json_data.get('inactiveFlag')
+        instance.closed_flag = json_data.get('closedFlag')
+        return instance
+
+    def get_page(self, *args, **kwargs):
+        return self.client.get_project_phase_statuses(*args, **kwargs)
+
+
 class ProjectPhaseSynchronizer(
         UpdateRecordMixin, ChildFetchRecordsMixin, Synchronizer):
 
@@ -2469,7 +2486,8 @@ class ProjectPhaseSynchronizer(
     parent_model_class = models.Project
 
     related_meta = {
-        'board': (models.ConnectWiseBoard, 'board')
+        'board': (models.ConnectWiseBoard, 'board'),
+        'status': (models.ProjectPhaseStatus, 'status'),
     }
 
     API_FIELD_NAMES = {
@@ -2486,6 +2504,7 @@ class ProjectPhaseSynchronizer(
         'actual_end': 'actualEnd',
         'required_date': 'deadlineDate',
         'board': 'board',
+        'status': 'status',
     }
 
     def _assign_field_data(self, instance, json_data):
@@ -3945,6 +3964,7 @@ class AgreementSynchronizer(Synchronizer):
     model_class = models.AgreementTracker
 
     related_meta = {
+        'type': (models.AgreementType, 'agreement_type'),
         'workRole': (models.WorkRole, 'work_role'),
         'workType': (models.WorkType, 'work_type'),
         'company': (models.Company, 'company')
@@ -3955,9 +3975,6 @@ class AgreementSynchronizer(Synchronizer):
         instance.name = json_data.get('name')
         instance.agreement_status = json_data.get('agreementStatus')
         instance.cancelled_flag = json_data.get('cancelledFlag')
-
-        if json_data.get('type'):
-            instance.agreement_type = json_data['type'].get('name')
 
         if json_data.get('billTime') == 'NoDefault':
             instance.bill_time = None
@@ -3981,6 +3998,21 @@ class AgreementSynchronizer(Synchronizer):
 
     def get_page(self, *args, **kwargs):
         return self.client.get_agreements(*args, **kwargs)
+
+
+class AgreementTypeSynchronizer(Synchronizer):
+    client_class = api.FinanceAPIClient
+    model_class = models.AgreementTypeTracker
+
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data.get('id')
+        instance.name = json_data.get('name')
+        instance.default_flag = json_data.get('defaultFlag')
+
+        return instance
+
+    def get_page(self, *args, **kwargs):
+        return self.client.get_agreement_types(*args, **kwargs)
 
 
 class SourceSynchronizer(Synchronizer):
