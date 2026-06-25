@@ -1483,6 +1483,27 @@ class TestTicketSynchronizerMixin(AssertSyncMixin):
         self._assert_sync(instance, json_data)
         self.assert_sync_job()
 
+    def test_sync_ticket_opportunity(self):
+        """
+        Test to ensure the ticket synchronizer maps the CW opportunity
+        reference onto the opportunity foreign key.
+        """
+        fixture_utils.init_sales_probabilities()
+        fixture_utils.init_opportunity_statuses()
+        fixture_utils.init_opportunity_stages()
+        fixture_utils.init_opportunity_types()
+        fixture_utils.init_opportunities()
+        opportunity = models.Opportunity.objects.first()
+
+        json_data = deepcopy(self.ticket_fixture)
+        json_data['opportunity'] = {
+            'id': opportunity.id,
+            'name': opportunity.name,
+        }
+        instance = self.sync_class()._assign_field_data(
+            models.Ticket(), json_data)
+        self.assertEqual(instance.opportunity_id, opportunity.id)
+
     def test_sync_ticket_truncates_automatic_cc_field(self):
         """
         Test to ensure ticket synchronizer truncates the automatic CC field
