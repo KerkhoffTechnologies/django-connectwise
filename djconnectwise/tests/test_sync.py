@@ -1,4 +1,5 @@
 from copy import deepcopy
+from decimal import Decimal
 from unittest import TestCase
 from django.test import TransactionTestCase
 from django.core.files.storage import default_storage
@@ -415,6 +416,16 @@ class TestTimeEntrySynchronizer(TestCase, SynchronizerTestMixin):
         self.assertEqual(instance.actual_hours, json_data['actualHours'])
         self.assertEqual(instance.billable_option, json_data['billableOption'])
         self.assertEqual(instance.notes, json_data['notes'])
+        # Financial fields (issue #4669).
+        for field, api_key in (
+            ('hourly_rate', 'hourlyRate'),
+            ('hours_billed', 'hoursBilled'),
+            ('invoice_hours', 'invoiceHours'),
+            ('extended_invoice_amount', 'extendedInvoiceAmount'),
+            ('agreement_amount', 'agreementAmount'),
+        ):
+            self.assertEqual(
+                getattr(instance, field), Decimal(str(json_data[api_key])))
 
 
 class TestCompanyTypeSynchronizer(TestCase, SynchronizerTestMixin):
@@ -696,6 +707,25 @@ class TestProjectPhaseSynchronizer(TestCase, SynchronizerTestMixin):
             instance.actual_end, parse(json_data['actualEnd']).date()
         )
 
+        # Financial / billing fields (issue #4669).
+        self.assertEqual(instance.billing_method, json_data['billingMethod'])
+        self.assertEqual(
+            instance.mark_as_milestone_flag, json_data['markAsMilestoneFlag'])
+        for field, api_key in (
+            ('billing_amount', 'billingAmount'),
+            ('estimated_time_revenue', 'estimatedTimeRevenue'),
+            ('estimated_time_cost', 'estimatedTimeCost'),
+            ('estimated_expense_revenue', 'estimatedExpenseRevenue'),
+            ('estimated_expense_cost', 'estimatedExpenseCost'),
+            ('estimated_product_revenue', 'estimatedProductRevenue'),
+            ('estimated_product_cost', 'estimatedProductCost'),
+            ('po_amount', 'poAmount'),
+            ('down_payment', 'downpayment'),
+            ('hourly_rate', 'hourlyRate'),
+        ):
+            self.assertEqual(
+                getattr(instance, field), Decimal(str(json_data[api_key])))
+
     def test_sync_update(self):
         self._sync(self.fixture)
 
@@ -775,6 +805,24 @@ class TestProjectSynchronizer(TestCase, SynchronizerTestMixin):
         self.assertEqual(
             instance.estimated_end, parse(json_data['estimatedEnd']).date()
         )
+        # Financial fields (issue #4669).
+        for field, api_key in (
+            ('estimated_time_revenue', 'estimatedTimeRevenue'),
+            ('estimated_time_cost', 'estimatedTimeCost'),
+            ('estimated_expense_revenue', 'estimatedExpenseRevenue'),
+            ('estimated_expense_cost', 'estimatedExpenseCost'),
+            ('estimated_product_revenue', 'estimatedProductRevenue'),
+            ('estimated_product_cost', 'estimatedProductCost'),
+            ('billing_amount', 'billingAmount'),
+            ('po_amount', 'poAmount'),
+            ('down_payment', 'downpayment'),
+        ):
+            self.assertEqual(
+                getattr(instance, field), Decimal(str(json_data[api_key])))
+        self.assertEqual(
+            instance.billing_rate_type, json_data['billingRateType'])
+        self.assertEqual(instance.budget_flag, json_data['budgetFlag'])
+        self.assertEqual(instance.budget_analysis, json_data['budgetAnalysis'])
 
 
 class TestTeamSynchronizer(TestCase, SynchronizerTestMixin):
@@ -1015,6 +1063,9 @@ class TestMemberSynchronization(TransactionTestCase, AssertSyncMixin):
         self.assertEqual(local_member.first_name, api_member['firstName'])
         self.assertEqual(local_member.last_name, api_member['lastName'])
         self.assertEqual(local_member.office_email, api_member['officeEmail'])
+        # Cost rate (issue #4669): the cost basis for the margin signal.
+        self.assertEqual(
+            local_member.hourly_cost, Decimal(str(api_member['hourlyCost'])))
 
     def test_sync_member_update(self):
         member = models.Member()
@@ -2275,6 +2326,9 @@ class TestWorkRoleSynchronizer(TestCase, SynchronizerTestMixin):
         self.assertEqual(instance.id, json_data['id'])
         self.assertEqual(instance.name, json_data['name'])
         self.assertEqual(instance.inactive_flag, json_data['inactiveFlag'])
+        # Bill rate (issue #4669).
+        self.assertEqual(
+            instance.hourly_rate, Decimal(str(json_data['hourlyRate'])))
 
 
 class TestAgreementTypeSynchronizer(TestCase, SynchronizerTestMixin):
@@ -2321,6 +2375,15 @@ class TestAgreementSynchronizer(TestCase, SynchronizerTestMixin):
         self.assertEqual(
             instance.work_type.name, json_data['workType']['name'])
         self.assertEqual(instance.company.name, json_data['company']['name'])
+        # Financial fields (issue #4669).
+        for field, api_key in (
+            ('bill_amount', 'billAmount'),
+            ('comp_hourly_rate', 'compHourlyRate'),
+            ('comp_limit_amount', 'compLimitAmount'),
+            ('application_limit', 'applicationLimit'),
+        ):
+            self.assertEqual(
+                getattr(instance, field), Decimal(str(json_data[api_key])))
 
 
 class TestProjectTeamMemberSynchronizer(TestCase, SynchronizerTestMixin):
