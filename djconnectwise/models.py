@@ -1678,6 +1678,9 @@ class Ticket(UpdateConnectWiseMixin, TimeStampedModel):
     company_site = models.ForeignKey(
         'CompanySite', blank=True, null=True, on_delete=models.SET_NULL
     )
+    opportunity = models.ForeignKey(
+        'Opportunity', blank=True, null=True,
+        related_name='opportunity_tickets', on_delete=models.SET_NULL)
     contact = models.ForeignKey('Contact', blank=True, null=True,
                                 on_delete=models.SET_NULL)
     location = models.ForeignKey(
