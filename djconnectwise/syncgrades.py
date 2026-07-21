@@ -4,7 +4,6 @@ need to be migrated when ConnectWiseSyncGrades is migrated.
 """
 from djconnectwise import sync
 
-
 class SyncGrade:
     description = ""
     synchronizers = []
