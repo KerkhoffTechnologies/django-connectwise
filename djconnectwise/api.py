@@ -1505,7 +1505,21 @@ class ProjectAPIClient(TicketAPIMixin, ConnectWiseAPIClient):
             self.ENDPOINT_PROJECT_PHASES,
             phase.id,
         )
-        return self.update_instance(changed_fields, endpoint_url)
+        return self.update_phase_instance(changed_fields, endpoint_url)
+
+    def update_phase_instance(self, changed_fields, endpoint_url):
+        clear_parent_phase = False
+        if 'parentPhase' in changed_fields:
+            if changed_fields['parentPhase'] is None:
+                # The parent phase is being cleared. Needs special handling.
+                clear_parent_phase = True
+            changed_fields.pop('parentPhase')  # Parent phase updates are
+            # done by changing WBS code except when making a phase top-level
+            # in which case it requires both WBS and removing parentPhase.
+        body = self._format_patch_request_body(changed_fields)
+        if clear_parent_phase:
+            body.append({"op": "remove", "path": "parentPhase"})
+        return self.request('patch', endpoint_url, body)
 
     def get_project_notes(self, project_id, *args, **kwargs):
         endpoint_url = '{}{}/{}'.format(self.ENDPOINT_PROJECTS, project_id,
@@ -1517,7 +1531,6 @@ class ProjectAPIClient(TicketAPIMixin, ConnectWiseAPIClient):
         endpoint_url = '{}{}/{}'.format(self.ENDPOINT_PROJECTS, project_id,
                                         self.ENDPOINT_PROJECT_NOTES)
         res = self.fetch_resource(endpoint_url)
-
         return len(res)
 
 
