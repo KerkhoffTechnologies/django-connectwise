@@ -135,6 +135,7 @@ class ConnectWiseSyncGrades(SyncGrades):
             sync.ProjectTypeSynchronizer,
             sync.ProjectStatusSynchronizer,
             sync.ProjectRoleSynchronizer,
+            sync.ProjectPhaseStatusSynchronizer,
             sync.ProjectUDFSynchronizer,
             sync.OpportunityStageSynchronizer,
             sync.OpportunityStatusSynchronizer,
