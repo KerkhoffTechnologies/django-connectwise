@@ -249,7 +249,8 @@ class ProjectPhaseAdmin(admin.ModelAdmin):
 
 @admin.register(models.ProjectPhaseStatus)
 class ProjectPhaseStatusAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'default_flag', 'inactive_flag', 'closed_flag')
+    list_display = ('id', 'name', 'default_flag',
+                    'inactive_flag', 'closed_flag')
     search_fields = ['description', 'name']
 
 
