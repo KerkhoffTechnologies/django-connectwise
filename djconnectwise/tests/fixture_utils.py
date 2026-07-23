@@ -107,6 +107,13 @@ def init_project_statuses():
     return synchronizer.sync()
 
 
+def init_project_phase_statuses():
+    mocks.projects_api_get_project_phase_statuses_call(
+        fixtures.API_PROJECT_PHASE_STATUSES)
+    synchronizer = sync.ProjectPhaseStatusSynchronizer()
+    return synchronizer.sync()
+
+
 def init_project_types():
     mocks.projects_api_get_project_types_call(
         fixtures.API_PROJECT_TYPES)
@@ -361,6 +368,13 @@ def init_agreements():
     mocks.finance_api_get_agreements_call(
         fixtures.API_AGREEMENT_LIST)
     synchronizer = sync.AgreementSynchronizer()
+    return synchronizer.sync()
+
+
+def init_agreement_types():
+    mocks.finance_api_get_agreement_types_call(
+        fixtures.API_AGREEMENT_TYPE_LIST)
+    synchronizer = sync.AgreementTypeSynchronizer()
     return synchronizer.sync()
 
 

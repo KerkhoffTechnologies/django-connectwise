@@ -344,7 +344,7 @@ API_MEMBER = {
     'homeEmail': None,
     'homeExtension': None,
     'homePhone': None,
-    'hourlyCost': 0.0,
+    'hourlyCost': 65.00,
     'hourlyRate': None,
     'id': 176,
     'identifier': 'User1',
@@ -573,6 +573,32 @@ API_PROJECT_STATUSES = [
     }
 ]
 
+API_PROJECT_PHASE_STATUSES = [
+    {
+        'id': 1,
+        'name': 'Open',
+        'defaultFlag': True,
+        'inactiveFlag': False,
+        'closedFlag': False,
+        '_info': {
+            'lastUpdated': '2001-01-08T18:05:13Z',
+            'updatedBy': None
+        }
+    },
+    {
+        'id': 2,
+        'name': 'Closed',
+        'defaultFlag': False,
+        'inactiveFlag': False,
+        'closedFlag': True,
+        '_info': {
+            'lastUpdated': '2001-01-08T18:05:21Z',
+            'updatedBy': None
+        }
+    }
+]
+
+
 API_PROJECT_TYPES = [
     {
         'id': 6,
@@ -659,7 +685,7 @@ API_PROJECT = {
     'actualHours': 8.03,
     'actualStart': '2005-08-24T00:00:00Z',
     'billExpenses': 'Billable',
-    'billingAmount': 0,
+    'billingAmount': 12000,
     'billingAttention': '',
     'billingMethod': 'ActualRates',
     'billingRateType': 'WorkRole',
@@ -669,7 +695,7 @@ API_PROJECT = {
     'billUnapprovedTimeAndExpense': False,
     'board': API_BOARD,
     'budgetAnalysis': 'ActualHours',
-    'budgetFlag': False,
+    'budgetFlag': True,
     'budgetHours': 91.5,
     'businessUnitId': 10,
     'company': API_COMPANY,
@@ -685,13 +711,14 @@ API_PROJECT = {
             'currency_href': 'https://example.com/v4_6_release/apis/3.0/finance/currencies/7'
         }
     },
-    'downpayment': 0,
+    'downpayment': 1000,
+    'poAmount': 3000,
     'estimatedEnd': '2005-12-30T00:00:00Z',
-    'estimatedExpenseRevenue': 0,
+    'estimatedExpenseRevenue': 500,
     'estimatedHours': 0,
-    'estimatedProductRevenue': 0,
+    'estimatedProductRevenue': 2000,
     'estimatedStart': '2005-05-02T00:00:00Z',
-    'estimatedTimeRevenue': 0,
+    'estimatedTimeRevenue': 10000,
     'scheduledStart': '2005-05-02T00:00:00Z',
     'scheduledEnd': '2005-12-30T00:00:00Z',
     'expenseApprover': API_MEMBER,
@@ -724,9 +751,9 @@ API_PROJECT = {
         'name': 'Implementations'
     },
     'doNotDisplayInPortalFlag': False,
-    'estimatedTimeCost': 0,
-    'estimatedExpenseCost': 0,
-    'estimatedProductCost': 0,
+    'estimatedTimeCost': 6000,
+    'estimatedExpenseCost': 300,
+    'estimatedProductCost': 1200,
     "customFields": [
         {
             "id": 1,
@@ -757,10 +784,13 @@ API_PROJECT_PHASE = {
     'billTime': 'Billable',
     'billExpenses': 'Billable',
     'billProducts': 'Billable',
-    'markAsMilestoneFlag': False,
+    'markAsMilestoneFlag': True,
     'notes': '\n',
     'billSeparatelyFlag': False,
-    'billingMethod': 'ActualRates',
+    # FixedFee phase with its own billingAmount, overriding the project's
+    # ActualRates method -- the real per-phase override case (issue #4669).
+    'billingMethod': 'FixedFee',
+    'billingAmount': 2000,
     'scheduledHours': 9,
     'scheduledStart': '2005-05-02T12:00:00Z',
     'scheduledEnd': '2017-07-26T19:00:00Z',
@@ -770,17 +800,17 @@ API_PROJECT_PHASE = {
     'budgetHours': 14,
     'locationId': 2,
     'businessUnitId': 10,
-    'hourlyRate': 0,
+    'hourlyRate': 150,
     'billPhaseClosedFlag': False,
     'billProjectClosedFlag': False,
-    'downpayment': 0,
-    'poAmount': 0,
-    'estimatedTimeCost': 0,
-    'estimatedExpenseCost': 0,
-    'estimatedProductCost': 0,
-    'estimatedTimeRevenue': 0,
-    'estimatedExpenseRevenue': 0,
-    'estimatedProductRevenue': 0,
+    'downpayment': 250,
+    'poAmount': 500,
+    'estimatedTimeCost': 600,
+    'estimatedExpenseCost': 100,
+    'estimatedProductCost': 200,
+    'estimatedTimeRevenue': 1000,
+    'estimatedExpenseRevenue': 150,
+    'estimatedProductRevenue': 300,
     'currency': {
         'id': 7,
         'symbol': '$',
@@ -1412,6 +1442,10 @@ API_AGREEMENT = {
     "id": 1,
     "name": "Gold Rate",
     "billTime": "Billable",
+    "billAmount": 10000,
+    "compHourlyRate": 125,
+    "compLimitAmount": 5000,
+    "applicationLimit": 2500,
     "company": {
         "id": API_COMPANY["id"],
         "name": API_COMPANY["name"],
@@ -1446,6 +1480,18 @@ API_AGREEMENT = {
 }
 
 API_AGREEMENT_LIST = [API_AGREEMENT]
+
+API_AGREEMENT_TYPE = {
+    'id': API_AGREEMENT['type']['id'],
+    'name': API_AGREEMENT['type']['name'],
+    'defaultFlag': False,
+    '_info': {
+        'lastUpdated': '2015-08-21T20:22:06Z',
+        'updatedBy': None
+    }
+}
+
+API_AGREEMENT_TYPE_LIST = [API_AGREEMENT_TYPE]
 
 API_SALES_OPPORTUNITY_TYPE = {
     'id': 2,
@@ -1968,6 +2014,9 @@ API_TIME_ENTRY = {
     'emailContactFlag': False,
     'emailCcFlag': False,
     'hoursBilled': 2,
+    'invoiceHours': 1.5,
+    'extendedInvoiceAmount': 150,
+    'agreementAmount': 200,
     'enteredBy': 'user10',
     'dateEntered': '2005-05-16T08:00:00Z',
     'invoice': {

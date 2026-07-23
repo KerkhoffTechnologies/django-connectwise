@@ -100,6 +100,8 @@ class Command(BaseCommand):
             ('ticket', sync.ServiceTicketSynchronizer, _('Ticket')),
             ('project_ticket', sync.ProjectTicketSynchronizer,
              _('Project Ticket')),
+            ('agreement_type', sync.AgreementTypeSynchronizer,
+             _('Agreement Type')),
             ('agreement', sync.AgreementSynchronizer,
              _('Agreement')),
             ('activity_status', sync.ActivityStatusSynchronizer,

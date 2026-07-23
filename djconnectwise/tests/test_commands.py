@@ -311,6 +311,14 @@ class TestSyncProjectStatusesCommand(AbstractBaseSyncTest, TestCase):
     )
 
 
+class TestSyncProjectPhaseStatusesCommand(AbstractBaseSyncTest, TestCase):
+    args = (
+        mocks.projects_api_get_project_phase_statuses_call,
+        fixtures.API_PROJECT_PHASE_STATUSES,
+        'project_phase_status',
+    )
+
+
 class TestSyncProjectTypesCommand(AbstractBaseSyncTest, TestCase):
     args = (
         mocks.projects_api_get_project_types_call,
@@ -794,6 +802,18 @@ class TestSyncAgreementCommand(AbstractBaseSyncTest, TestCase):
     )
 
 
+class TestSyncAgreementTypeCommand(AbstractBaseSyncTest, TestCase):
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_agreement_types()
+
+    args = (
+        mocks.finance_api_get_agreement_types_call,
+        fixtures.API_AGREEMENT_TYPE_LIST,
+        'agreement_type'
+    )
+
+
 class TestSyncProjectTicketCommand(AbstractBaseSyncTest, TestCase):
     def setUp(self):
         super().setUp()
@@ -865,6 +885,7 @@ class TestSyncAllCommand(TestCase):
             TestSyncPrioritiesCommand,
             TestSyncProjectPhaseCommand,
             TestSyncProjectStatusesCommand,
+            TestSyncProjectPhaseStatusesCommand,
             TestSyncProjectsCommand,
             TestSyncTeamsCommand,
             TestSyncBoardsStatusesCommand,
@@ -895,6 +916,7 @@ class TestSyncAllCommand(TestCase):
             TestSyncItemCommand,
             TestSyncTypeSubTypeItemAssociationCommand,
             TestSyncAgreementCommand,
+            TestSyncAgreementTypeCommand,
             TestSyncProjectTypesCommand,
             TestSyncProjectRoleCommand,
             TestSyncProjectTeamMemberCommand,
@@ -972,6 +994,7 @@ class TestSyncAllCommand(TestCase):
             'board': models.ConnectWiseBoard,
             'priority': models.TicketPriority,
             'project_status': models.ProjectStatus,
+            'project_phase_status': models.ProjectPhaseStatus,
             'project': models.Project,
             'project_phase': models.ProjectPhase,
             'board_status': models.BoardStatus,
@@ -1015,6 +1038,7 @@ class TestSyncAllCommand(TestCase):
             'item': models.Item,
             'type_subtype_item_association': models.TypeSubTypeItemAssociation,
             'agreement': models.Agreement,
+            'agreement_type': models.AgreementType,
             'project_type': models.ProjectType,
             'project_role': models.ProjectRole,
             'project_team_member': models.ProjectTeamMember,

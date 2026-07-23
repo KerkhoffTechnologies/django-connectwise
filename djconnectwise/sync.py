@@ -2277,6 +2277,19 @@ class TimeEntrySynchronizer(BatchConditionMixin,
         instance.actual_hours = Decimal(str(actual_hours)) \
             if actual_hours is not None else None
 
+        # Financial fields (issue #4669). See the actual_hours comment above
+        # for why decimals are built from str().
+        for field, api_key in (
+            ('hourly_rate', 'hourlyRate'),
+            ('hours_billed', 'hoursBilled'),
+            ('invoice_hours', 'invoiceHours'),
+            ('extended_invoice_amount', 'extendedInvoiceAmount'),
+            ('agreement_amount', 'agreementAmount'),
+        ):
+            value = json_data.get(api_key)
+            setattr(instance, field,
+                    Decimal(str(value)) if value is not None else None)
+
         detail_description_flag = json_data.get('addToDetailDescriptionFlag')
         if detail_description_flag:
             instance.detail_description_flag = detail_description_flag
@@ -2516,6 +2529,27 @@ class ProjectPhaseSynchronizer(
         else:
             instance.bill_time = json_data.get('billTime')
 
+        # Financial / billing fields (issue #4669). Decimals built from str()
+        # to match how to_python loads them from the DB (FieldTracker safety).
+        instance.billing_method = json_data.get('billingMethod')
+        instance.mark_as_milestone_flag = bool(
+            json_data.get('markAsMilestoneFlag'))
+        for field, api_key in (
+            ('billing_amount', 'billingAmount'),
+            ('estimated_time_revenue', 'estimatedTimeRevenue'),
+            ('estimated_time_cost', 'estimatedTimeCost'),
+            ('estimated_expense_revenue', 'estimatedExpenseRevenue'),
+            ('estimated_expense_cost', 'estimatedExpenseCost'),
+            ('estimated_product_revenue', 'estimatedProductRevenue'),
+            ('estimated_product_cost', 'estimatedProductCost'),
+            ('po_amount', 'poAmount'),
+            ('down_payment', 'downpayment'),
+            ('hourly_rate', 'hourlyRate'),
+        ):
+            value = json_data.get(api_key)
+            setattr(instance, field,
+                    Decimal(str(value)) if value is not None else None)
+
         scheduled_start = json_data.get('scheduledStart')
         scheduled_end = json_data.get('scheduledEnd')
         actual_start = json_data.get('actualStart')
@@ -2735,6 +2769,28 @@ class ProjectSynchronizer(CreateRecordMixin,
         instance.percent_complete = Decimal(str(percent_complete)) \
             if percent_complete is not None else None
 
+        # Financial fields (issue #4669). Decimals are built from str() to
+        # match how django's to_python loads them from the DB, so the
+        # FieldTracker doesn't see spurious changes (see actual_hours above).
+        for field, api_key in (
+            ('estimated_time_revenue', 'estimatedTimeRevenue'),
+            ('estimated_time_cost', 'estimatedTimeCost'),
+            ('estimated_expense_revenue', 'estimatedExpenseRevenue'),
+            ('estimated_expense_cost', 'estimatedExpenseCost'),
+            ('estimated_product_revenue', 'estimatedProductRevenue'),
+            ('estimated_product_cost', 'estimatedProductCost'),
+            ('billing_amount', 'billingAmount'),
+            ('po_amount', 'poAmount'),
+            ('down_payment', 'downpayment'),
+        ):
+            value = json_data.get(api_key)
+            setattr(instance, field,
+                    Decimal(str(value)) if value is not None else None)
+
+        instance.billing_rate_type = json_data.get('billingRateType')
+        instance.budget_flag = bool(json_data.get('budgetFlag'))
+        instance.budget_analysis = json_data.get('budgetAnalysis')
+
         if actual_start:
             instance.actual_start = parse(actual_start).date()
 
@@ -2795,6 +2851,11 @@ class MemberSynchronizer(Synchronizer):
         instance.license_class = json_data.get('licenseClass')
         instance.inactive = json_data.get('inactiveFlag')
         instance.title = json_data.get('title')
+
+        # Member cost rate (issue #4669). Decimal(str()) for tracker safety.
+        hourly_cost = json_data.get('hourlyCost')
+        instance.hourly_cost = Decimal(str(hourly_cost)) \
+            if hourly_cost is not None else None
 
         self.set_relations(instance, json_data)
 
@@ -2941,6 +3002,7 @@ class TicketSynchronizerMixin:
         'subType': (models.SubType, 'sub_type'),
         'item': (models.Item, 'sub_type_item'),
         'agreement': (models.Agreement, 'agreement'),
+        'opportunity': (models.Opportunity, 'opportunity'),
         'source': (models.Source, 'source'),
         'workType': (models.WorkType, 'work_type'),
         'workRole': (models.WorkRole, 'work_role'),
@@ -2958,6 +3020,7 @@ class TicketSynchronizerMixin:
         'sub_type': 'subType',
         'sub_type_item': 'item',
         'agreement': 'agreement',
+        'opportunity': 'opportunity',
         'status': 'status',
         'priority': 'priority',
         'board': 'board',
@@ -3873,6 +3936,11 @@ class WorkRoleSynchronizer(Synchronizer):
         instance.name = json_data.get('name')
         instance.inactive_flag = json_data.get('inactiveFlag')
 
+        # Work-role bill rate (issue #4669). Decimal(str()) for tracker safety.
+        hourly_rate = json_data.get('hourlyRate')
+        instance.hourly_rate = Decimal(str(hourly_rate)) \
+            if hourly_rate is not None else None
+
         return instance
 
     def get_page(self, *args, **kwargs):
@@ -3900,6 +3968,7 @@ class AgreementSynchronizer(Synchronizer):
     model_class = models.AgreementTracker
 
     related_meta = {
+        'type': (models.AgreementType, 'agreement_type'),
         'workRole': (models.WorkRole, 'work_role'),
         'workType': (models.WorkType, 'work_type'),
         'company': (models.Company, 'company')
@@ -3911,19 +3980,43 @@ class AgreementSynchronizer(Synchronizer):
         instance.agreement_status = json_data.get('agreementStatus')
         instance.cancelled_flag = json_data.get('cancelledFlag')
 
-        if json_data.get('type'):
-            instance.agreement_type = json_data['type'].get('name')
-
         if json_data.get('billTime') == 'NoDefault':
             instance.bill_time = None
         else:
             instance.bill_time = json_data.get('billTime')
+
+        # Financial fields (issue #4669). Decimals built from str() to match
+        # how django's to_python loads them from the DB (FieldTracker safety).
+        for field, api_key in (
+            ('bill_amount', 'billAmount'),
+            ('comp_hourly_rate', 'compHourlyRate'),
+            ('comp_limit_amount', 'compLimitAmount'),
+            ('application_limit', 'applicationLimit'),
+        ):
+            value = json_data.get(api_key)
+            setattr(instance, field,
+                    Decimal(str(value)) if value is not None else None)
 
         self.set_relations(instance, json_data)
         return instance
 
     def get_page(self, *args, **kwargs):
         return self.client.get_agreements(*args, **kwargs)
+
+
+class AgreementTypeSynchronizer(Synchronizer):
+    client_class = api.FinanceAPIClient
+    model_class = models.AgreementTypeTracker
+
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data.get('id')
+        instance.name = json_data.get('name')
+        instance.default_flag = json_data.get('defaultFlag')
+
+        return instance
+
+    def get_page(self, *args, **kwargs):
+        return self.client.get_agreement_types(*args, **kwargs)
 
 
 class SourceSynchronizer(Synchronizer):
