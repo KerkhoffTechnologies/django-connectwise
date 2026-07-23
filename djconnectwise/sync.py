@@ -2488,6 +2488,7 @@ class ProjectPhaseSynchronizer(
     related_meta = {
         'board': (models.ConnectWiseBoard, 'board'),
         'status': (models.ProjectPhaseStatus, 'status'),
+        'parentPhase': (models.ProjectPhaseStatus, 'parent_phase'),
     }
 
     API_FIELD_NAMES = {
@@ -2505,6 +2506,7 @@ class ProjectPhaseSynchronizer(
         'required_date': 'deadlineDate',
         'board': 'board',
         'status': 'status',
+        'parent_phase': 'parentPhase',
     }
 
     def _assign_field_data(self, instance, json_data):
