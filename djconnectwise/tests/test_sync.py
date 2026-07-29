@@ -711,6 +711,8 @@ class TestProjectPhaseSynchronizer(TestCase, SynchronizerTestMixin):
         self.assertEqual(instance.billing_method, json_data['billingMethod'])
         self.assertEqual(
             instance.mark_as_milestone_flag, json_data['markAsMilestoneFlag'])
+        self.assertEqual(
+            instance.bill_separately_flag, json_data['billSeparatelyFlag'])
         for field, api_key in (
             ('billing_amount', 'billingAmount'),
             ('estimated_time_revenue', 'estimatedTimeRevenue'),
@@ -725,6 +727,19 @@ class TestProjectPhaseSynchronizer(TestCase, SynchronizerTestMixin):
         ):
             self.assertEqual(
                 getattr(instance, field), Decimal(str(json_data[api_key])))
+
+    def test_sync_phase_inheriting_project_billing(self):
+        """A phase that doesn't bill separately still reports the project's
+        billingMethod and billingAmount, so only the flag tells the two
+        apart."""
+        json_data = deepcopy(fixtures.API_PROJECT_PHASE)
+        json_data['billSeparatelyFlag'] = False
+        self._sync([json_data])
+
+        instance = models.ProjectPhase.objects.get(id=json_data['id'])
+        self.assertFalse(instance.bill_separately_flag)
+        self.assertEqual(instance.billing_method, 'FixedFee')
+        self.assertEqual(instance.billing_amount, Decimal('2000'))
 
     def test_sync_update(self):
         self._sync(self.fixture)

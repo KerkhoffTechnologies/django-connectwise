@@ -786,9 +786,12 @@ API_PROJECT_PHASE = {
     'billProducts': 'Billable',
     'markAsMilestoneFlag': True,
     'notes': '\n',
-    'billSeparatelyFlag': False,
-    # FixedFee phase with its own billingAmount, overriding the project's
+    # FixedFee phase that bills on its own, overriding the project's
     # ActualRates method -- the real per-phase override case (issue #4669).
+    # billSeparatelyFlag is what makes it an override: a phase that inherits
+    # the project's billing carries the same billingMethod/billingAmount with
+    # the flag off.
+    'billSeparatelyFlag': True,
     'billingMethod': 'FixedFee',
     'billingAmount': 2000,
     'scheduledHours': 9,
