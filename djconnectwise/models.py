@@ -1157,6 +1157,12 @@ class ProjectPhase(TimeStampedModel):
     # ActualRates project), so the margin signal (#4664) must read them at this
     # level, not just the project's. mark_as_milestone_flag also feeds #4664's
     # milestone signal. All nullable: not every phase populates them.
+    #
+    # billing_method / billing_amount are populated on EVERY phase, inherited
+    # from the project when the phase doesn't bill on its own, so they can't
+    # tell the two apart. bill_separately_flag is what distinguishes a real
+    # per-phase contract; without it a fixed-fee project's contract gets counted
+    # once per phase.
     PHASE_BILLING_METHODS = (
         ('ActualRates', 'Actual Rates'),
         ('FixedFee', 'Fixed Fee'),
@@ -1186,6 +1192,7 @@ class ProjectPhase(TimeStampedModel):
     hourly_rate = models.DecimalField(
         blank=True, null=True, decimal_places=2, max_digits=14)
     mark_as_milestone_flag = models.BooleanField(default=False)
+    bill_separately_flag = models.BooleanField(default=False)
 
     project = models.ForeignKey(
         'Project', blank=True, null=True, on_delete=models.SET_NULL

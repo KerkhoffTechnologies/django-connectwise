@@ -2534,6 +2534,8 @@ class ProjectPhaseSynchronizer(
         instance.billing_method = json_data.get('billingMethod')
         instance.mark_as_milestone_flag = bool(
             json_data.get('markAsMilestoneFlag'))
+        instance.bill_separately_flag = bool(
+            json_data.get('billSeparatelyFlag'))
         for field, api_key in (
             ('billing_amount', 'billingAmount'),
             ('estimated_time_revenue', 'estimatedTimeRevenue'),
