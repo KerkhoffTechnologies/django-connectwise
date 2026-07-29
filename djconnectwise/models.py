@@ -1161,8 +1161,8 @@ class ProjectPhase(TimeStampedModel):
     # billing_method / billing_amount are populated on EVERY phase, inherited
     # from the project when the phase doesn't bill on its own, so they can't
     # tell the two apart. bill_separately_flag is what distinguishes a real
-    # per-phase contract; without it a fixed-fee project's contract gets counted
-    # once per phase.
+    # per-phase contract; without it a fixed-fee project's contract gets
+    # counted once per phase.
     PHASE_BILLING_METHODS = (
         ('ActualRates', 'Actual Rates'),
         ('FixedFee', 'Fixed Fee'),
