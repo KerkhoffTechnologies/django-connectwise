@@ -6,7 +6,6 @@ from decimal import Decimal
 from json import JSONDecodeError
 from urllib.parse import urlparse
 
-import pytz
 import requests
 from django.conf import settings
 from django.core.cache import cache
@@ -444,7 +443,7 @@ class ConnectWiseAPIClient(object):
 
             elif isinstance(value, datetime.datetime):
                 field_update['value'] = value.astimezone(
-                    pytz.timezone('UTC')
+                    datetime.timezone.utc
                 ).strftime("%Y-%m-%dT%H:%M:%SZ")
 
             elif isinstance(value, models.Model):
@@ -483,7 +482,7 @@ class ConnectWiseAPIClient(object):
 
             if isinstance(value, datetime.datetime):
                 value = value.astimezone(
-                    pytz.timezone('UTC')).strftime(
+                    datetime.timezone.utc).strftime(
                     "%Y-%m-%dT%H:%M:%SZ")
             elif isinstance(value, models.Model):
                 value = {'id': value.id}
@@ -671,13 +670,13 @@ class ScheduleAPIClient(ConnectWiseAPIClient):
         date_start = kwargs.get("date_start")
         if date_start:
             body["dateStart"] = date_start.astimezone(
-                pytz.timezone('UTC')).strftime("%Y-%m-%dT%H:%M:%SZ")
+                datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
         date_end = kwargs.get("date_end")
         if date_end:
             body["dateEnd"] = kwargs.get("date_end")
             body["dateEnd"] = date_end.astimezone(
-                pytz.timezone('UTC')).strftime("%Y-%m-%dT%H:%M:%SZ")
+                datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
         allow_conflicts = kwargs.get("allow_conflicts")
         if allow_conflicts is not None:
@@ -704,7 +703,7 @@ class ScheduleAPIClient(ConnectWiseAPIClient):
             date_start = kwargs.pop('date_start')
             if date_start is not None:
                 date_start = date_start.astimezone(
-                    pytz.timezone('UTC')).strftime("%Y-%m-%dT%H:%M:%SZ")
+                    datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
             body.append({
                 'op': 'replace',
                 'path': 'dateStart',
@@ -715,7 +714,7 @@ class ScheduleAPIClient(ConnectWiseAPIClient):
             date_end = kwargs.pop('date_end')
             if date_end is not None:
                 date_end = date_end.astimezone(
-                    pytz.timezone('UTC')).strftime("%Y-%m-%dT%H:%M:%SZ")
+                    datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
             body.append({
                 'op': 'replace',
                 'path': 'dateEnd',
@@ -810,7 +809,7 @@ class TimeAPIClient(ConnectWiseAPIClient):
 
     def post_time_entry(self, target_data, **kwargs):
         time_start = kwargs.get("time_start")
-        time_start = time_start.astimezone(pytz.timezone('UTC')).strftime(
+        time_start = time_start.astimezone(datetime.timezone.utc).strftime(
             "%Y-%m-%dT%H:%M:%SZ")
 
         body = {
@@ -838,7 +837,7 @@ class TimeAPIClient(ConnectWiseAPIClient):
 
         time_end = kwargs.get("time_end")
         if time_end:
-            time_end = time_end.astimezone(pytz.timezone('UTC')).strftime(
+            time_end = time_end.astimezone(datetime.timezone.utc).strftime(
                 "%Y-%m-%dT%H:%M:%SZ")
             body.update({"timeEnd": time_end})
 
@@ -1260,7 +1259,7 @@ class TicketAPIMixin:
 
             if isinstance(value, datetime.datetime):
                 value = value.astimezone(
-                        pytz.timezone('UTC')).strftime(
+                        datetime.timezone.utc).strftime(
                         "%Y-%m-%dT%H:%M:%SZ")
             elif isinstance(value, models.Model):
                 value = {'id': value.id}
@@ -1286,7 +1285,7 @@ class TicketAPIMixin:
             if isinstance(value, datetime.datetime):
                 field_update.update({
                     'value': value.astimezone(
-                        pytz.timezone('UTC')).strftime(
+                        datetime.timezone.utc).strftime(
                             "%Y-%m-%dT%H:%M:%SZ")
                 })
 

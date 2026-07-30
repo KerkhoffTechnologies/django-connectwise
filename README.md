@@ -5,10 +5,14 @@ members, companies, etc.) and callbacks.
 
 ## Requirements
 
--  Python 3.5
--  Django 2.0
+-  Python 3.12, 3.13 or 3.14
+-  Django 4.2, 5.2 or 6.0
 
-Other versions may work; we haven't tried.
+Other versions may work; we haven't tried. Django 4.2 is only tested on
+Python 3.12, since that's the newest Python it supports.
+
+The models define `GinIndex`es on their user-defined-field data, so PostgreSQL
+is the expected database backend.
 
 ## Installation
 
@@ -20,7 +24,7 @@ From source:
 
     git clone git@github.com:KerkhoffTechnologies/django-connectwise.git
     cd django-connectwise
-    python setup.py install
+    pip install -e .
 
 ## Usage
 
@@ -30,6 +34,7 @@ From source:
     INSTALLED_APPS = [
         ...
         'djconnectwise',
+        'django.contrib.postgres',  # Required by the models' GinIndexes.
         ...
     ]
     ```
@@ -85,13 +90,14 @@ To de-register your callbacks, use the `callbacks_deleted` management command.
 Prepare your environment:
 
 ```
+pip install --upgrade -r requirements.txt
 pip install --upgrade -r requirements_test.txt
+pip install -e .
 ```
 
 Try one of:
 
     ./runtests.py
-    python setup.py test
     make test
 
 ## Contributing

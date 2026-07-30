@@ -4,7 +4,6 @@ import sys
 
 from django.conf import settings
 from django.core.management import call_command
-from django.test.utils import get_runner
 import django
 import tempfile
 
@@ -28,6 +27,9 @@ settings.configure(
         'django.contrib.contenttypes',
         'django.contrib.auth',
         'django.contrib.sessions',
+        # Required by the GinIndex definitions on Ticket, Project,
+        # Opportunity and Activity (Django 6.0 system check postgres.E005).
+        'django.contrib.postgres',
     ),
     CONNECTWISE_SERVER_URL='https://localhost',
     CONNECTWISE_CREDENTIALS={
@@ -95,15 +97,6 @@ def flake8_main():
 
     print("Failed: flake8 failed." if command else "Success. flake8 passed.")
     return command
-
-
-def suite():
-    """
-    Set up and return a test suite. This is used in `python setup.py test`.
-    """
-    _setup()
-    runner_cls = get_runner(settings)
-    return runner_cls().build_suite(test_labels=None)
 
 
 if __name__ == '__main__':

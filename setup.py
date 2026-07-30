@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 
 LONG_DESCRIPTION = open('README.md').read()
 
-VERSION = (1, 25, 3)
+VERSION = (1, 26, 0)
 
 project_version = '.'.join(map(str, VERSION))
 
@@ -24,22 +24,19 @@ setup(
     url="https://github.com/KerkhoffTechnologies/django-connectwise",
     include_package_data=True,
     license='MIT',
+    python_requires='>=3.12',
     install_requires=[
         'requests',
-        'django',
+        'django>=4.2',
         'python-dateutil',
         'django-model-utils',
         'django-braces',
         'django-extensions',
         'retrying',
         'Pillow',
-    ],
-    test_suite='runtests.suite',
-    tests_require=[
-        'responses',
-        'model-mommy',
-        'django-coverage',
-        'names'
+        # sync.py catches botocore's NoCredentialsError when writing member
+        # avatars to storage.
+        'botocore',
     ],
     # Django likes to inspect apps for /migrations directories, and can't if
     # package is installed as a egg. zip_safe=False disables installation as
@@ -48,11 +45,17 @@ setup(
     classifiers=[
         'Environment :: Web Environment',
         'Framework :: Django',
+        'Framework :: Django :: 4.2',
+        'Framework :: Django :: 5.2',
+        'Framework :: Django :: 6.0',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: MIT License',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
         'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.12',
+        'Programming Language :: Python :: 3.13',
+        'Programming Language :: Python :: 3.14',
         'Topic :: Internet :: WWW/HTTP',
         'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
         'Development Status :: 3 - Alpha',

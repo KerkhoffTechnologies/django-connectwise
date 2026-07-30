@@ -92,3 +92,7 @@ ENV/
 
 .idea/
 .swp
+
+# Local virtualenvs
+.venv/
+.venv*/

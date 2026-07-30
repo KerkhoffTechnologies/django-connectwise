@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 from djconnectwise.models import MyCompanyOther, Holiday, HolidayList, \
     Ticket, Calendar, TicketPriority, BoardStatus
-from model_mommy import mommy
+from model_bakery import baker
 from test_plus.test import TestCase
 
 ticket_statuses_names = [
@@ -29,23 +29,23 @@ escalation_stages = [
 class ModelTestCase(TestCase):
 
     def setUp(self):
-        self.members = mommy.make_recipe(
+        self.members = baker.make_recipe(
             'djconnectwise.tests.member',
             _quantity=3
         )
-        self.projects = mommy.make_recipe(
+        self.projects = baker.make_recipe(
             'djconnectwise.tests.project',
             _quantity=4,
         )
-        self.companies = mommy.make_recipe(
+        self.companies = baker.make_recipe(
             'djconnectwise.tests.company',
             _quantity=2
         )
-        self.ticket_priorities = mommy.make_recipe(
+        self.ticket_priorities = baker.make_recipe(
             'djconnectwise.tests.ticket_priority',
             _quantity=3
         )
-        self.connectwise_boards = mommy.make_recipe(
+        self.connectwise_boards = baker.make_recipe(
             'djconnectwise.tests.connectwise_board',
             _quantity=3,
         )
