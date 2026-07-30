@@ -21,17 +21,17 @@ coverage: ## check code coverage quickly with the default Python
 	coverage report -m
 
 install: clean
-	python setup.py install
+	pip install -e .
 
 lint: ## check style with flake8
 	# flake8 config file at tox.ini
 	flake8 .
 
 test: clean lint
-	python setup.py test
+	python runtests.py
 
 sdist: test
-	python setup.py sdist
+	python -m build --sdist
 
 upload: sdist
     # You must have a ~/.pypirc file with your username and password.
