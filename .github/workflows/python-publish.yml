@@ -39,7 +39,11 @@ jobs:
         run: |
           python3 -m build
       - name: Publish package
-        uses: pypa/gh-action-pypi-publish@81e9d935c883d0b210363ab89cf05f3894778450
+        # v1.14.1. The previous pin was a March 2024 commit whose bundled
+        # twine/pkginfo only understood up to Metadata-Version 2.3, so it read
+        # no Name or Version out of the 2.4 metadata modern setuptools emits
+        # and rejected the distribution as incomplete.
+        uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33
         with:
           user: __token__
           password: ${{ secrets.PYPI_API_TOKEN }}
