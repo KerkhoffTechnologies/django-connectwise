@@ -3514,6 +3514,17 @@ class ServiceTicketSynchronizer(TicketSynchronizerMixin,
         return service_client.post_merge_ticket(merge_data, **kwargs)
 
 
+def open_project_ids():
+    """
+    IDs of the projects that are still open.
+
+    A project's tickets are kept for as long as the project itself is open,
+    so the retention pass scopes to this set.
+    """
+    return models.Project.objects.filter(
+        status__closed_flag=False).values_list('id', flat=True).order_by('id')
+
+
 class ProjectTicketSynchronizer(TicketSynchronizerMixin,
                                 BatchConditionMixin, Synchronizer):
     client_class = api.ProjectAPIClient
@@ -3521,6 +3532,49 @@ class ProjectTicketSynchronizer(TicketSynchronizerMixin,
 
     def _is_instance_valid(self, instance):
         return instance.project is not None
+
+    def get(self, results, conditions=None):
+        results = super().get(results, conditions=conditions)
+
+        if self.full:
+            results = self._fetch_open_project_tickets(results)
+
+        return results
+
+    def _fetch_open_project_tickets(self, results):
+        """
+        Second pass: fetch the closed tickets of every open project.
+
+        The main pass asks for closedFlag=False plus whatever closed work
+        falls inside keep_closed_ticket_days, so a project loses its closed
+        tickets while it is still running and its closed/total counts go
+        wrong. Fetching every closed ticket ever is unbounded, so scope to
+        the open projects already stored locally.
+
+        Deliberately no date floor: the point is to recover tickets that were
+        pruned long ago, not just the recent ones. Their IDs join
+        results.synced_ids, so the prune that follows a full sync leaves them
+        alone. Once the project itself closes it drops out of this set and
+        its tickets become prunable again.
+        """
+        project_ids = list(open_project_ids())
+        max_url_length = self.client.request_settings['max_url_length']
+
+        while project_ids:
+            # Same URL-length budgeting the status batching uses -- the open
+            # project list is just as capable of overflowing the URL.
+            size = self.get_optimal_size(project_ids, max_url_length)
+            batch = project_ids[:size]
+            del project_ids[:size]
+
+            condition = 'closedFlag=True and project/id in ({})'.format(
+                ','.join(str(project_id) for project_id in batch)
+            )
+            # Straight to the plain fetch: this pass batches on projects, not
+            # on the board statuses BatchConditionMixin.get would page over.
+            results = Synchronizer.get(self, results, conditions=[condition])
+
+        return results
 
     def _assign_field_data(self, instance, json_data):
         instance = super()._assign_field_data(instance, json_data)
