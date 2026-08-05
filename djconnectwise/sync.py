@@ -1187,10 +1187,6 @@ class ConfigurationStatusSynchronizer(Synchronizer):
     client_class = api.ConfigurationAPIClient
     model_class = models.ConfigurationStatusTracker
 
-    related_meta = {
-        'company': (models.Company, 'company'),
-    }
-
     def _assign_field_data(self, instance, json_data):
         """
         Assigns the data from the API instance to the model instance.
@@ -1200,7 +1196,6 @@ class ConfigurationStatusSynchronizer(Synchronizer):
         instance.closed_flag = json_data.get('closedFlag', False)
         instance.default_flag = json_data.get('defaultFlag', False)
 
-        self.set_relations(instance, json_data)
         return instance
 
     def get_page(self, *args, **kwargs):
@@ -1214,10 +1209,6 @@ class ConfigurationTypeSynchronizer(Synchronizer):
     client_class = api.ConfigurationAPIClient
     model_class = models.ConfigurationTypeTracker
 
-    related_meta = {
-        'company': (models.Company, 'company'),
-    }
-
     def _assign_field_data(self, instance, json_data):
         """
         Assigns the data from the API instance to the model instance.
@@ -1227,7 +1218,6 @@ class ConfigurationTypeSynchronizer(Synchronizer):
         instance.inactive_flag = json_data.get('inactiveFlag', False)
         instance.system_flag = json_data.get('systemFlag', False)
 
-        self.set_relations(instance, json_data)
         return instance
 
     def get_page(self, *args, **kwargs):
@@ -2508,7 +2498,6 @@ class ProjectPhaseSynchronizer(
     related_meta = {
         'board': (models.ConnectWiseBoard, 'board'),
         'status': (models.ProjectPhaseStatus, 'status'),
-        'parentPhase': (models.ProjectPhaseStatus, 'parent_phase'),
     }
 
     API_FIELD_NAMES = {
