@@ -113,6 +113,13 @@ class Synchronizer:
         self.pre_delete_args = kwargs.pop('pre_delete_args', None)
         self.post_delete_callback = kwargs.pop('post_delete_callback', None)
 
+        # Memo of which related primary keys exist, keyed by model class, for
+        # the life of this synchronizer. A page of records refers to the same
+        # handful of boards, statuses and members over and over, so the first
+        # record pays for the lookup and the rest are free. Its size is bounded
+        # by the number of distinct PKs actually referenced, not by table size.
+        self._related_pk_cache = {}
+
     def set_relations(self, instance, json_data):
         for json_field, value in self.related_meta.items():
             model_class, field_name = value
@@ -142,6 +149,18 @@ class Synchronizer:
                 format(model_field, instance)
             )
 
+    def _related_pk_exists(self, model_class, uid):
+        """
+        Say whether a related record exists, remembering the answer.
+
+        Uses an existence query rather than fetching the row: we only need to
+        know the target is there, and `exists()` builds no model instance.
+        """
+        cache = self._related_pk_cache.setdefault(model_class, {})
+        if uid not in cache:
+            cache[uid] = model_class.objects.filter(pk=uid).exists()
+        return cache[uid]
+
     def _assign_relation(self, instance, json_data,
                          json_field, model_class, model_field):
         """
@@ -153,12 +172,16 @@ class Synchronizer:
             self._assign_null_relation(instance, model_field)
             return
 
-        uid = relation_json['id']
+        field = instance._meta.get_field(model_field)
 
-        try:
-            related_instance = model_class.objects.get(pk=uid)
-            setattr(instance, model_field, related_instance)
-        except model_class.DoesNotExist:
+        # Coerce to the primary key's own type. Fetching the row used to do
+        # this implicitly, so a PSA that reports an ID as a string still ended
+        # up assigning the int the database returned. Assigning the raw value
+        # instead would leave the FieldTracker comparing '1' against 1 and
+        # reporting a change on every sync, rewriting the row forever.
+        uid = field.target_field.get_prep_value(relation_json['id'])
+
+        if not self._related_pk_exists(model_class, uid):
             logger.warning(
                 'Failed to find {} {} for {} {}.'.format(
                     json_field,
@@ -168,6 +191,17 @@ class Synchronizer:
                 )
             )
             self._assign_null_relation(instance, model_field)
+            return
+
+        # Assign the relation by ID. Fetching the row to assign it costs a
+        # query, a model instantiation and a FieldTracker setup per foreign key
+        # per record, and nothing downstream reads anything but the primary key
+        # we already have here. Drop whatever Django may have cached for the
+        # field so that a later attribute access doesn't hand back the record
+        # this one replaced.
+        setattr(instance, field.attname, uid)
+        if field.is_cached(instance):
+            field.delete_cached_value(instance)
 
     def _instance_ids(self, filter_params=None):
         if not filter_params:
@@ -1548,9 +1582,10 @@ class CompanyNoteTypesSynchronizer(Synchronizer):
         return self.client.get_company_note_types(*args, **kwargs)
 
 
-class CompanyTeamSynchronizer(Synchronizer):
+class CompanyTeamSynchronizer(ChildFetchRecordsMixin, Synchronizer):
     client_class = api.CompanyAPIClient
     model_class = models.CompanyTeamTracker
+    parent_model_class = models.Company
 
     related_meta = {
         'company': (models.Company, 'company'),
@@ -1569,21 +1604,14 @@ class CompanyTeamSynchronizer(Synchronizer):
 
         self.set_relations(instance, json_data)
 
-    def get_page(self, *args, **kwargs):
-        records = []
-        company_qs = models.Company.objects.all().values_list('id', flat=True)
-        for company_id in company_qs:
-            if company_id:
-                record = self.client.get_company_team(
-                    *args, **kwargs, company_id=company_id)
-                if record:
-                    records.extend(record)
-        return records
+    def client_call(self, company_id, *args, **kwargs):
+        return self.client.get_company_team(company_id, *args, **kwargs)
 
 
-class CompanySiteSynchronizer(Synchronizer):
+class CompanySiteSynchronizer(ChildFetchRecordsMixin, Synchronizer):
     client_class = api.CompanyAPIClient
     model_class = models.CompanySiteTracker
+    parent_model_class = models.Company
 
     related_meta = {
         'company': (models.Company, 'company'),
@@ -1597,16 +1625,8 @@ class CompanySiteSynchronizer(Synchronizer):
 
         self.set_relations(instance, json_data)
 
-    def get_page(self, *args, **kwargs):
-        records = []
-        company_qs = models.Company.objects.all().values_list('id', flat=True)
-        for company_id in company_qs:
-            if company_id:
-                record = self.client.get_company_site(
-                    *args, **kwargs, company_id=company_id)
-                if record:
-                    records.extend(record)
-        return records
+    def client_call(self, company_id, *args, **kwargs):
+        return self.client.get_company_site(company_id, *args, **kwargs)
 
 
 class CompanyTeamRoleSynchronizer(Synchronizer):
