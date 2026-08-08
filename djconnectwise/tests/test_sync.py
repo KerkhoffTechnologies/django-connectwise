@@ -2459,3 +2459,60 @@ class TestProjectTeamMemberSynchronizer(TestCase, SynchronizerTestMixin):
 
         self.assertEqual(skipped_count, 1)
         self.assertEqual(updated_count, 0)
+
+
+class TestProjectTicketRetention(TransactionTestCase):
+    """
+    A project's closed tickets are kept for as long as the project is open.
+    """
+
+    def setUp(self):
+        super().setUp()
+        self.open_status = models.ProjectStatus.objects.create(
+            id=1, name='Open', closed_flag=False)
+        self.closed_status = models.ProjectStatus.objects.create(
+            id=2, name='Closed', closed_flag=True)
+        self.open_project = models.Project.objects.create(
+            id=101, name='Open project', status=self.open_status)
+        self.closed_project = models.Project.objects.create(
+            id=102, name='Closed project', status=self.closed_status)
+
+    def _conditions_used(self, full):
+        """Every set of api_conditions the synchronizer fetches with."""
+        synchronizer = sync.ProjectTicketSynchronizer(full=full)
+        captured = []
+
+        def fetch_records(results, conditions=None):
+            captured.append(conditions)
+            return results
+
+        synchronizer.fetch_records = fetch_records
+        synchronizer.get(sync.SyncResults())
+
+        return [c for c in captured if c]
+
+    def _retention_pass(self, conditions):
+        return [c for c in conditions
+                if any('closedFlag=True' in part for part in c)]
+
+    def test_open_project_ids_excludes_closed_projects(self):
+        ids = list(sync.open_project_ids())
+
+        self.assertIn(self.open_project.id, ids)
+        self.assertNotIn(self.closed_project.id, ids)
+
+    def test_full_sync_fetches_open_projects_closed_tickets(self):
+        retention = self._retention_pass(self._conditions_used(full=True))
+
+        self.assertEqual(len(retention), 1)
+        condition = retention[0][0]
+        self.assertIn(
+            'project/id in ({})'.format(self.open_project.id), condition)
+        self.assertNotIn(str(self.closed_project.id), condition)
+        # No date floor: recovering long-pruned tickets is the whole point.
+        self.assertNotIn('closedDate', condition)
+
+    def test_partial_sync_skips_the_retention_pass(self):
+        retention = self._retention_pass(self._conditions_used(full=False))
+
+        self.assertEqual(retention, [])
