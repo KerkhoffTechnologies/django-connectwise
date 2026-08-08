@@ -1543,7 +1543,7 @@ class ConfigurationStatus(TimeStampedModel):
 
 
 class ConfigurationType(TimeStampedModel):
-    name = models.TextField(max_length=250)
+    name = models.TextField(max_length=250, null=True, blank=True)
     inactive_flag = models.BooleanField(default=False)
     system_flag = models.BooleanField(default=False)
 
@@ -1552,7 +1552,7 @@ class ConfigurationType(TimeStampedModel):
         verbose_name_plural = 'Configuration Types'
 
     def __str__(self):
-        return self.name
+        return self.name if self.name else str(self.pk)
 
     @property
     def api_class(self):
