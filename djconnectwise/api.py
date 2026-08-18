@@ -1488,6 +1488,11 @@ class ProjectAPIClient(TicketAPIMixin, ConnectWiseAPIClient):
                                    should_page=True,
                                    *args, **kwargs)
 
+    def create_project_team_member(self, project_id, fields):
+        endpoint_url = '{}{}/{}'.format(self.ENDPOINT_PROJECTS, project_id,
+                                        self.ENDPOINT_PROJECT_TEAM_MEMBERS)
+        return self.create(endpoint_url, fields)
+
     def create_project(self, fields):
         return self.create(self.ENDPOINT_PROJECTS, fields)
 

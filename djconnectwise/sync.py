@@ -2633,6 +2633,27 @@ class ProjectTeamMemberSynchronizer(ChildFetchRecordsMixin, Synchronizer):
         'projectRole': (models.ProjectRole, 'project_role')
     }
 
+    API_FIELD_NAMES = {
+        'member': 'member',
+        'work_role': 'workRole',
+        'project_role': 'projectRole',
+    }
+
+    def create(self, project, fields, **kwargs):
+        """
+        Add a member to a project's team.
+
+        The project is in the endpoint URL, so it isn't part of the body.
+        """
+        client = self.client_class(
+            api_public_key=kwargs.get('api_public_key'),
+            api_private_key=kwargs.get('api_private_key')
+        )
+        api_fields = self._translate_fields_to_api_format(fields)
+        new_record = client.create_project_team_member(project.id, api_fields)
+
+        return self.update_or_create_instance(new_record)
+
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data.get('id')
         start_date = json_data.get('startDate')
@@ -2662,6 +2683,9 @@ class ProjectTeamMemberSynchronizer(ChildFetchRecordsMixin, Synchronizer):
 
     @property
     def parent_object_ids(self):
+        if self.sync_single_id:
+            return [self.sync_single_id]
+
         return self.parent_model_class.objects.filter(
             status__closed_flag=False).order_by(
             self.lookup_key).values_list(self.lookup_key, flat=True)
