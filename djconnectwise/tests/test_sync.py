@@ -1,6 +1,6 @@
 from copy import deepcopy
 from decimal import Decimal
-from unittest import TestCase
+from unittest import TestCase, mock
 from django.test import TransactionTestCase
 from django.core.files.storage import default_storage
 
@@ -96,6 +96,132 @@ class SynchronizerTestMixin(AssertSyncMixin):
 
         self.assertEqual(skipped_count, 1)
         self.assertEqual(updated_count, 0)
+
+
+class KeepClosedConditionMixin:
+    """Build a synchronizer's condition with settings of our choosing."""
+
+    def settings(self, **overrides):
+        from djconnectwise.utils import DjconnectwiseSettings
+        request_settings = DjconnectwiseSettings().get_settings()
+        request_settings.update(overrides)
+        return mock.patch.object(
+            sync.DjconnectwiseSettings, 'get_settings',
+            return_value=request_settings)
+
+    def whole_query(self, synchronizer, conditions):
+        """What actually reaches ConnectWise.
+
+        api_conditions are joined onto the batch condition with `and` by
+        TicketAPIMixin.prepare_conditions, which is where an ungrouped `or`
+        does its damage -- so the assertions have to be made on the join, not
+        on the batch condition alone.
+        """
+        batch = synchronizer.get_batch_condition(conditions)
+        return synchronizer.client.prepare_conditions(
+            list(synchronizer.api_conditions) + [batch])
+
+
+class TestKeepClosedTicketConditions(KeepClosedConditionMixin, TestCase):
+    """The keep-closed window is a second, independent half of the query.
+
+    `and` binds tighter than `or`, so the halves have to be grouped -- and
+    `closedFlag=False` has to stay out of the closed half, or it matches
+    nothing and the full sync's prune deletes the closed tickets we hold.
+    """
+
+    def ticket_query(self, full=True, api_conditions=None, **overrides):
+        with self.settings(**overrides):
+            synchronizer = sync.ServiceTicketSynchronizer(full=full)
+            if api_conditions is not None:
+                synchronizer.api_conditions = api_conditions
+            return self.whole_query(synchronizer, [1, 2])
+
+    def test_the_two_halves_are_grouped(self):
+        query = self.ticket_query(keep_closed_ticket_days=30)
+
+        self.assertIn('(closedFlag=False and status/id in (1,2))', query)
+        self.assertIn(') or (closedDate>[', query)
+
+    def test_the_closed_half_is_never_asked_for_open_tickets(self):
+        # The whole point: a closed ticket has closedFlag=True, so a query
+        # that applies closedFlag=False to both halves returns none of them.
+        query = self.ticket_query(keep_closed_ticket_days=30)
+
+        closed_half = query.split(' or ')[1]
+        self.assertNotIn('closedFlag', closed_half)
+
+    def test_the_closed_half_is_scoped_to_the_boards_being_synced(self):
+        query = self.ticket_query(
+            keep_closed_ticket_days=30, board_status_filter=[30, 31])
+
+        self.assertIn('and board/id in (30,31))', query)
+
+    def test_its_own_board_setting_wins_when_there_is_one(self):
+        query = self.ticket_query(
+            keep_closed_ticket_days=30,
+            keep_closed_status_board_ids='7,8',
+            board_status_filter=[30, 31])
+
+        self.assertIn('and board/id in (7,8))', query)
+        self.assertNotIn('30,31', query)
+
+    def test_with_no_boards_anywhere_the_window_stays_open(self):
+        # Nothing is being filtered out, so nothing needs scoping.
+        query = self.ticket_query(
+            keep_closed_ticket_days=30,
+            keep_closed_status_board_ids='', board_status_filter=[])
+
+        self.assertNotIn('board/id', query)
+
+    def test_a_partial_sync_reaches_both_halves(self):
+        # lastUpdated arrives on api_conditions and is joined onto the front,
+        # so the pair has to be grouped as a whole for it to reach the closed
+        # half. It also means the closed half needs no copy of its own.
+        query = self.ticket_query(
+            full=False, api_conditions=['lastUpdated>[2026-08-01]'],
+            keep_closed_ticket_days=30)
+
+        self.assertTrue(query.startswith('(lastUpdated>[2026-08-01] and (('))
+        self.assertEqual(query.count('lastUpdated'), 1)
+        self.assertNotIn('closedFlag', query)
+
+    def test_without_a_window_the_query_is_left_alone(self):
+        query = self.ticket_query(keep_closed_ticket_days=0)
+
+        self.assertEqual(query, '(closedFlag=False and status/id in (1,2))')
+
+
+class TestKeepClosedProjectConditions(KeepClosedConditionMixin, TestCase):
+
+    def project_query(self, **overrides):
+        with self.settings(**overrides):
+            synchronizer = sync.ProjectSynchronizer(full=True)
+            return self.whole_query(synchronizer, [1, 2])
+
+    def test_the_two_halves_are_grouped(self):
+        query = self.project_query(keep_closed_ticket_days=30)
+
+        self.assertIn('((status/id in (1,2)) or (lastUpdated>[', query)
+
+    def test_the_open_status_filter_does_not_reach_the_recent_half(self):
+        query = self.project_query(keep_closed_ticket_days=30)
+
+        recent_half = query.split(' or ')[1]
+        self.assertNotIn('status/id', recent_half)
+
+    def test_a_board_list_is_not_mangled_into_single_digits(self):
+        # The setting is a comma-separated string; joining it character by
+        # character turned '30,31' into '3,0,,,3,1'.
+        query = self.project_query(
+            keep_closed_ticket_days=30, keep_closed_status_board_ids='30,31')
+
+        self.assertIn('and board/id in (30,31))', query)
+
+    def test_without_a_window_the_query_is_left_alone(self):
+        query = self.project_query(keep_closed_ticket_days=0)
+
+        self.assertEqual(query, '(status/id in () and status/id in (1,2))')
 
 
 class TestBatchConditionMixin(TestCase):
