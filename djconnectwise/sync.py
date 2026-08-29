@@ -537,6 +537,33 @@ class BatchConditionMixin:
     def get_batch_condition(self, conditions):
         raise NotImplementedError
 
+    @staticmethod
+    def condition_id_list(ids):
+        """Ids as a ConnectWise `in (...)` list, whatever shape they arrive in.
+
+        The keep-closed board setting is a comma-separated string somebody
+        typed; the board filter is a sequence of ids.
+        """
+        if not ids:
+            return ''
+        if isinstance(ids, str):
+            return ids
+        return ','.join(str(board_id) for board_id in ids)
+
+    @classmethod
+    def keep_closed_board_ids(cls, request_settings):
+        """Which boards the keep-closed ticket window covers.
+
+        Its own setting when there is one, otherwise the boards being synced.
+        A customer who narrowed the board filter is not asking for a year of
+        closed tickets from the boards they left out -- and while this did not
+        fall back, the unscoped window fetched every board's closed tickets and
+        then kept them from the full sync's prune.
+        """
+        return cls.condition_id_list(
+            request_settings.get('keep_closed_status_board_ids')
+            or request_settings.get('board_status_filter'))
+
     def get(self, results, conditions=None):
         """Buffer and return all pages of results."""
         unfetched_conditions = deepcopy(self.batch_condition_list)
@@ -2708,18 +2735,26 @@ class ProjectSynchronizerMixin(BatchConditionMixin):
 
     def format_conditions(self, keep_closed,
                           batch_condition, request_settings):
+        """Projects in an open status, plus the ones touched recently.
+
+        Grouped for the same reason as the ticket version: `and` binds tighter
+        than `or`, so an ungrouped second half escapes the open-status filter
+        the caller joins onto the front of this, and the sync comes back with
+        every recently-updated project whatever status it is in.
+
+        The board list is only ever the keep-closed setting here. Unlike
+        tickets, this window is not scoped to the boards being synced -- see
+        `keep_closed_board_ids`.
+        """
         closed_date = timezone.now() - timezone.timedelta(days=keep_closed)
         condition = 'lastUpdated>[{}]'.format(closed_date)
 
-        keep_closed_board_ids = \
-            request_settings.get('keep_closed_status_board_ids')
-        if keep_closed_board_ids:
-            condition = '{} and board/id in ({})'.format(
-                condition, ','.join(map(str, keep_closed_board_ids))
-            )
+        board_ids = self.condition_id_list(
+            request_settings.get('keep_closed_status_board_ids'))
+        if board_ids:
+            condition = '{} and board/id in ({})'.format(condition, board_ids)
 
-        batch_condition = '{} or {}'.format(batch_condition, condition)
-        return batch_condition
+        return '(({}) or ({}))'.format(batch_condition, condition)
 
 
 class ProjectSynchronizer(CreateRecordMixin,
@@ -2759,7 +2794,12 @@ class ProjectSynchronizer(CreateRecordMixin,
         filtered_statuses = \
             models.ProjectStatus.objects.filter(closed_flag=False)
 
-        if self.full:
+        keep_closed = DjconnectwiseSettings().get_settings().get(
+            'keep_closed_ticket_days')
+        if self.full and not keep_closed:
+            # With a keep-closed window the open-status filter belongs to the
+            # open half of the batch condition alone -- and the batch condition
+            # already carries it. See format_conditions.
             self.api_conditions = ['status/id in ({})'.format(
                 ','.join(str(i.id) for i in filtered_statuses)
             )]
@@ -3088,14 +3128,17 @@ class TicketSynchronizerMixin:
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        if self.full:
+        request_settings = DjconnectwiseSettings().get_settings()
+        if self.full and not request_settings.get('keep_closed_ticket_days'):
+            # With a keep-closed window this moves into the open half of the
+            # batch condition instead, where it cannot reach the closed half.
+            # See format_conditions.
             self.api_conditions = ['closedFlag=False']
         # To get all open tickets, we can simply supply a `closedFlag=False`
         # condition for on-premise ConnectWise. But for hosted ConnectWise,
         # this results in timeouts for requests, so we also need to add a
         # condition for all the open statuses. This doesn't impact on-premise
         # ConnectWise, so we just do it for all cases.
-        request_settings = DjconnectwiseSettings().get_settings()
         board_ids = request_settings.get('board_status_filter')
 
         filtered_statuses = models.BoardStatus.available_objects.filter(
@@ -3130,22 +3173,30 @@ class TicketSynchronizerMixin:
 
     def format_conditions(self, keep_closed,
                           batch_condition, request_settings):
+        """Open tickets in these statuses, plus the recently closed ones.
+
+        Each half is parenthesised, and so is the pair. `and` binds tighter
+        than `or` in a ConnectWise condition, so without the grouping the
+        closed half escapes everything the query is otherwise scoped by --
+        including the `lastUpdated` a partial sync carries in api_conditions,
+        which the caller joins onto the front of this.
+
+        `closedFlag=False` belongs to the open half alone. A closed ticket
+        carries `closedFlag=True`, so a version of this that let it reach both
+        halves would fetch no closed tickets at all -- and the full sync's
+        prune would then delete the ones already stored.
+        """
+        if self.full:
+            batch_condition = 'closedFlag=False and {}'.format(batch_condition)
+
         closed_date = timezone.now() - timezone.timedelta(days=keep_closed)
         condition = 'closedDate>[{}]'.format(closed_date)
 
-        keep_closed_board_ids = \
-            request_settings.get('keep_closed_status_board_ids')
-        if keep_closed_board_ids:
-            condition = '{} and board/id in ({})'.format(
-                condition, keep_closed_board_ids)
+        board_ids = self.keep_closed_board_ids(request_settings)
+        if board_ids:
+            condition = '{} and board/id in ({})'.format(condition, board_ids)
 
-        # lastUpdated is only present when running partial syncs.
-        if not self.full and self.api_conditions:
-            last_updated = self.api_conditions[-1]
-            condition = '{} and {}'.format(condition, last_updated)
-
-        batch_condition = '{} or {}'.format(batch_condition, condition)
-        return batch_condition
+        return '(({}) or ({}))'.format(batch_condition, condition)
 
     def get_page(self, *args, **kwargs):
         return self.client.get_tickets(*args, **kwargs)
