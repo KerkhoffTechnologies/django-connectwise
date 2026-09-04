@@ -3288,6 +3288,7 @@ class TicketSynchronizerMixin:
         instance.id = json_data.get('id')
         instance.summary = json_data.get('summary')
         instance.closed_flag = json_data.get('closedFlag')
+        instance.closed_date_utc = json_data.get('closedDate')
         instance.entered_date_utc = json_data.get('_info').get('dateEntered')
         instance.last_updated_utc = json_data.get('_info').get('lastUpdated')
         instance.required_date_utc = json_data.get('requiredDate')
@@ -3307,6 +3308,8 @@ class TicketSynchronizerMixin:
         if instance.estimated_start_date:
             instance.estimated_start_date = \
                 parse(instance.estimated_start_date)
+        if instance.closed_date_utc:
+            instance.closed_date_utc = parse(instance.closed_date_utc)
 
         # Key is comes out of db as string, so we add it as a string here
         # so the tracker can compare it properly.

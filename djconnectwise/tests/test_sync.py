@@ -1696,6 +1696,34 @@ class TestTicketSynchronizerMixin(AssertSyncMixin):
             models.Ticket(), json_data)
         self.assertEqual(instance.opportunity_id, opportunity.id)
 
+    def test_sync_ticket_stores_closed_date(self):
+        """
+        Test to ensure a closed ticket keeps the date it closed, so a caller
+        can tell which period it closed in and not merely that it is closed.
+        """
+        json_data = deepcopy(self.ticket_fixture)
+        json_data['closedFlag'] = True
+        json_data['closedDate'] = '2026-08-27T14:05:00Z'
+
+        instance = self.sync_class()._assign_field_data(
+            models.Ticket(), json_data)
+
+        self.assertEqual(instance.closed_date_utc,
+                         parse('2026-08-27T14:05:00Z'))
+
+    def test_sync_ticket_without_closed_date(self):
+        """
+        Test to ensure an open ticket, which CW sends with a null closedDate,
+        leaves the field empty rather than failing to parse it.
+        """
+        json_data = deepcopy(self.ticket_fixture)
+        json_data['closedDate'] = None
+
+        instance = self.sync_class()._assign_field_data(
+            models.Ticket(), json_data)
+
+        self.assertIsNone(instance.closed_date_utc)
+
     def test_sync_ticket_truncates_automatic_cc_field(self):
         """
         Test to ensure ticket synchronizer truncates the automatic CC field
