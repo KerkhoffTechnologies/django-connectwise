@@ -2545,6 +2545,21 @@ class ProjectPhaseSynchronizer(
         'parent_phase': 'parentPhase',
     }
 
+    def create(self, project, fields, **kwargs):
+        """
+        Add a phase to a project.
+
+        The project is in the endpoint URL, so it isn't part of the body.
+        """
+        client = self.client_class(
+            api_public_key=kwargs.get('api_public_key'),
+            api_private_key=kwargs.get('api_private_key')
+        )
+        api_fields = self._translate_fields_to_api_format(fields)
+        new_record = client.create_project_phase(project.id, api_fields)
+
+        return self.update_or_create_instance(new_record)
+
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data.get('id')
         instance.description = json_data.get('description')
