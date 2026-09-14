@@ -2642,3 +2642,69 @@ class TestProjectTicketRetention(TransactionTestCase):
         retention = self._retention_pass(self._conditions_used(full=False))
 
         self.assertEqual(retention, [])
+
+
+class TestProjectTicketUpdatePredecessor(TestCase):
+    """ConnectWise refuses to change the dates or the predecessor of a
+    ticket that has a predecessor, so update() removes it first."""
+
+    def record(self, predecessor, new_predecessor=None):
+        tracker = mock.Mock()
+        changed = {}
+        if new_predecessor is not None:
+            changed['ticket_predecessor_id'] = predecessor
+        tracker.has_changed.side_effect = lambda field: field in changed
+        tracker.previous.side_effect = lambda field: changed[field]
+        return mock.Mock(
+            id=7,
+            tracker=tracker,
+            ticket_predecessor_id=new_predecessor or predecessor,
+            predecessor_type=models.Ticket.TICKET if predecessor else None,
+            estimated_start_date='2026-09-01',
+            required_date_utc='2026-09-05',
+        )
+
+    def update(self, record, changed_fields, update_side_effect=None):
+        synchronizer = sync.ProjectTicketSynchronizer.__new__(
+            sync.ProjectTicketSynchronizer)
+        client = mock.Mock()
+        client.update_ticket.side_effect = update_side_effect
+        client.request_settings = {'max_attempts': 1}
+        synchronizer.client_class = mock.Mock(return_value=client)
+        with mock.patch.object(
+                sync.ProjectTicketSynchronizer, 'update_or_create_instance'):
+            synchronizer.update(record, changed_fields)
+        return [c.args[1] for c in client.update_ticket.call_args_list]
+
+    def test_replacing_a_predecessor_removes_the_old_one_first(self):
+        record = self.record(predecessor=3454, new_predecessor=3456)
+
+        calls = self.update(record, {'ticket_predecessor': 3456})
+
+        self.assertEqual(len(calls), 2)
+        self.assertIsNone(calls[0]['predecessorId'])
+        self.assertEqual(calls[1]['predecessorId'], 3456)
+        self.assertEqual(calls[1]['predecessorType'], models.Ticket.TICKET)
+        self.assertEqual(calls[1]['requiredDate'], '2026-09-05')
+
+    def test_a_first_predecessor_is_set_in_one_request(self):
+        record = self.record(predecessor=None)
+
+        calls = self.update(record, {'ticket_predecessor': 3456})
+
+        self.assertEqual(calls, [{'predecessorId': 3456}])
+
+    def test_the_rollback_restores_the_stored_predecessor(self):
+        record = self.record(predecessor=3454, new_predecessor=3456)
+        refused = sync.ConnectWiseAPIError('Ticket object is invalid')
+        sent = []
+
+        def update_ticket(ticket, fields):
+            sent.append(fields)
+            if len(sent) == 2:
+                raise refused
+
+        with self.assertRaises(sync.ConnectWiseAPIError):
+            self.update(record, {'ticket_predecessor': 3456},
+                        update_side_effect=update_ticket)
+        self.assertEqual(sent[2]['predecessorId'], 3454)
