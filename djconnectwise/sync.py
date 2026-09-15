@@ -3506,6 +3506,17 @@ class TicketSynchronizerMixin:
                 raise ConnectWiseAPIError(error_message)
 
         try:
+            if predecessor_removed:
+                # The API refuses a predecessor sent in the same request as
+                # the dates it was cleared with, so the dates go back first.
+                predecessor_fields = {
+                    field: changed_fields.pop(field)
+                    for field in ('ticket_predecessor', 'predecessor_type')
+                    if field in changed_fields
+                }
+                client.update_ticket(
+                    record, self._convert_fields_to_api_format(changed_fields))
+                changed_fields = predecessor_fields
             # convert the fields to the format that the API expects
             api_fields = self._convert_fields_to_api_format(changed_fields)
             updated_record = client.update_ticket(record, api_fields)

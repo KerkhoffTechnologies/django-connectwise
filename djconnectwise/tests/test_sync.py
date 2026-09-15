@@ -2681,11 +2681,12 @@ class TestProjectTicketUpdatePredecessor(TestCase):
 
         calls = self.update(record, {'ticket_predecessor': 3456})
 
-        self.assertEqual(len(calls), 2)
+        self.assertEqual(len(calls), 3)
         self.assertIsNone(calls[0]['predecessorId'])
-        self.assertEqual(calls[1]['predecessorId'], 3456)
-        self.assertEqual(calls[1]['predecessorType'], models.Ticket.TICKET)
-        self.assertEqual(calls[1]['requiredDate'], '2026-09-05')
+        self.assertEqual(calls[1], {'estimatedStartDate': '2026-09-01',
+                                    'requiredDate': '2026-09-05'})
+        self.assertEqual(calls[2], {'predecessorId': 3456,
+                                    'predecessorType': models.Ticket.TICKET})
 
     def test_a_first_predecessor_is_set_in_one_request(self):
         record = self.record(predecessor=None)
@@ -2701,10 +2702,10 @@ class TestProjectTicketUpdatePredecessor(TestCase):
 
         def update_ticket(ticket, fields):
             sent.append(fields)
-            if len(sent) == 2:
+            if len(sent) == 3:
                 raise refused
 
         with self.assertRaises(sync.ConnectWiseAPIError):
             self.update(record, {'ticket_predecessor': 3456},
                         update_side_effect=update_ticket)
-        self.assertEqual(sent[2]['predecessorId'], 3454)
+        self.assertEqual(sent[3]['predecessorId'], 3454)
