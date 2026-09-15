@@ -3449,14 +3449,21 @@ class TicketSynchronizerMixin:
             api_private_key=kwargs.get('api_private_key')
         )
 
-        # Handle dependency error: The API throws an error if a ticket has
-        # a predecessor. To work around this, we first remove the predecessor,
-        # update the required fields, and then re-add the predecessor after
-        # the update.
+        # Handle dependency error: the API refuses to change the dates or the
+        # predecessor of a ticket that has a predecessor. To work around
+        # this, we first remove the predecessor, then send the update with
+        # the predecessor (the stored one, or the new one) put back.
+        stored_predecessor = \
+            self._stored_value(record, 'ticket_predecessor_id')
+        predecessor_changed = (
+            'ticket_predecessor' in changed_fields and
+            changed_fields['ticket_predecessor'] != stored_predecessor
+        )
         predecessor_removed = False
-        if record.ticket_predecessor and (
+        if stored_predecessor and (
             changed_fields.get('estimated_start_date') or
-            changed_fields.get('required_date_utc')
+            changed_fields.get('required_date_utc') or
+            predecessor_changed
         ):
             try:
                 predecessor_reset_fields = {
@@ -3472,9 +3479,13 @@ class TicketSynchronizerMixin:
                 predecessor_removed = True
 
                 # Set the removed fields for adding back along with predecessor
-                changed_fields['ticket_predecessor'] = \
-                    record.ticket_predecessor_id
-                changed_fields['predecessor_type'] = record.predecessor_type
+                if not predecessor_changed:
+                    changed_fields['ticket_predecessor'] = stored_predecessor
+                if 'predecessor_type' not in changed_fields:
+                    changed_fields['predecessor_type'] = (
+                        record.predecessor_type
+                        if changed_fields['ticket_predecessor'] else None
+                    )
 
                 if not changed_fields.get('estimated_start_date'):
                     changed_fields['estimated_start_date'] = \
@@ -3495,6 +3506,17 @@ class TicketSynchronizerMixin:
                 raise ConnectWiseAPIError(error_message)
 
         try:
+            if predecessor_removed:
+                # The API refuses a predecessor sent in the same request as
+                # the dates it was cleared with, so the dates go back first.
+                predecessor_fields = {
+                    field: changed_fields.pop(field)
+                    for field in ('ticket_predecessor', 'predecessor_type')
+                    if field in changed_fields
+                }
+                client.update_ticket(
+                    record, self._convert_fields_to_api_format(changed_fields))
+                changed_fields = predecessor_fields
             # convert the fields to the format that the API expects
             api_fields = self._convert_fields_to_api_format(changed_fields)
             updated_record = client.update_ticket(record, api_fields)
@@ -3504,10 +3526,13 @@ class TicketSynchronizerMixin:
             if predecessor_removed:
                 try:
                     rollback_fields = {
-                        'ticket_predecessor': record.ticket_predecessor_id,
-                        'predecessor_type': record.predecessor_type,
-                        'required_date_utc': record.required_date_utc,
-                        'estimated_start_date': record.estimated_start_date
+                        'ticket_predecessor': stored_predecessor,
+                        'predecessor_type':
+                            self._stored_value(record, 'predecessor_type'),
+                        'required_date_utc':
+                            self._stored_value(record, 'required_date_utc'),
+                        'estimated_start_date':
+                            self._stored_value(record, 'estimated_start_date')
                     }
 
                     # convert the fields to the format that the API expects
@@ -3515,13 +3540,12 @@ class TicketSynchronizerMixin:
                         self._convert_fields_to_api_format(rollback_fields)
 
                     # Attempt rollback of predecessor and fields
-                    client._update_with_retries(record, api_fields)
+                    self._update_with_retries(client, record, api_fields)
                 except ConnectWiseAPIError as exc:
                     error_message = (
-                        "An error occurred while updating " +
-                        "record {record.id} and the predecessor, "
-                        "Estimated start date, and due date have " +
-                        "been removed from the ticket. You must " +
+                        f"An error occurred while updating record {record.id} "
+                        "and the predecessor, Estimated start date, and due "
+                        "date have been removed from the ticket. You must "
                         "re-add these details manually to the ticket."
                     )
                     logger.error("%s: %s", error_message, str(exc))
@@ -3533,6 +3557,15 @@ class TicketSynchronizerMixin:
         new_record = self.update_or_create_instance(updated_record)
 
         return new_record
+
+    @staticmethod
+    def _stored_value(record, field):
+        """The value ConnectWise holds for a field. A tracked record may
+        already carry the new value, so read what it was loaded with."""
+        tracker = getattr(record, 'tracker', None)
+        if tracker is not None and tracker.has_changed(field):
+            return tracker.previous(field)
+        return getattr(record, field)
 
     def _update_with_retries(self, client, record, api_fields):
 
