@@ -309,6 +309,11 @@ class OpportunityAdmin(admin.ModelAdmin):
 
 class ScheduleEntryInline(admin.StackedInline):
     model = models.ScheduleEntry
+    extra = 0
+    # Select widgets would load every related row once per inline form.
+    raw_id_fields = [
+        'activity_object', 'member', 'where', 'status', 'schedule_type',
+    ]
 
 
 @admin.register(models.Ticket)
@@ -318,6 +323,15 @@ class TicketAdmin(admin.ModelAdmin):
     search_fields = \
         ['id', 'summary', 'company__name', 'status__name', 'board__name']
     autocomplete_fields = ['status', 'type', 'team']
+    # Select widgets would load every row of these tables, which times out
+    # the change page in large environments.
+    raw_id_fields = [
+        'ticket_predecessor', 'merged_parent', 'phase_predecessor', 'board',
+        'company', 'company_site', 'opportunity', 'contact', 'location',
+        'system_location', 'owner', 'priority', 'project', 'phase',
+        'sub_type', 'sub_type_item', 'agreement', 'source', 'work_type',
+        'work_role',
+    ]
     inlines = [
         ScheduleEntryInline
     ]
