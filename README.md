@@ -1,5 +1,9 @@
 # django-connectwise
 
+> [!WARNING]
+> **This repository is deprecated.**
+> As of September 2026 this project is no longer publicly maintained or supported.
+
 Django app for working with ConnectWise. Defines models (tickets,
 members, companies, etc.) and callbacks.
 
